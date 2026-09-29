@@ -83,6 +83,35 @@ class UpdateFixtureInputTests(unittest.TestCase):
         self.run_invalid()
         self.assertEqual(marker.read_text(), "keep evidence")
 
+    def test_unsupported_host_architecture_stops_before_build(self):
+        with patch.object(MODULE.platform, "machine", return_value="unknown"):
+            self.run_invalid()
+
+    def test_build_failure_never_signs_and_uses_host_destination(self):
+        for architecture in ("arm64", "x86_64"):
+            with self.subTest(architecture=architecture):
+                args = dict(self.args, output=str(self.root / architecture))
+                argv = ["build_update_fixture.py"]
+                for name, value in args.items():
+                    argv.extend(["--" + name, value])
+                selected = subprocess.CompletedProcess(["xcode-select", "-p"], 0,
+                                                       "/Applications/Xcode.app/Contents/Developer\n", "")
+                failed_build = subprocess.CompletedProcess(["xcodebuild"], 65)
+                output = io.StringIO()
+                with patch.object(MODULE.platform, "system", return_value="Darwin"), \
+                     patch.object(MODULE.platform, "machine", return_value=architecture), \
+                     patch.object(MODULE.sys, "argv", argv), \
+                     patch.object(MODULE.subprocess, "run", side_effect=[selected, failed_build]) as run, \
+                     contextlib.redirect_stdout(output):
+                    self.assertEqual(MODULE.main(), 1)
+                # A failed build must stop before signing or packaging any candidate.
+                self.assertEqual(run.call_count, 2)
+                build_command = run.call_args_list[1].args[0]
+                self.assertEqual(build_command[build_command.index("-destination") + 1],
+                                 "platform=macOS,arch=" + architecture)
+                self.assertEqual(json.loads(output.getvalue())["status"], "FAIL")
+                self.assertFalse((self.root / architecture / "signature.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

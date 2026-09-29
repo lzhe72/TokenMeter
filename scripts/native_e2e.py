@@ -118,7 +118,7 @@ def check_native_result(tree: dict, summary: dict, expected: str) -> list[str]:
         if not isinstance(node, dict):
             raise EvidenceError("Malformed native test node")
         kind = node.get("nodeType")
-        if kind == "Test Bundle":
+        if kind in ("Test Bundle", "UI test bundle"):
             bundle = node.get("name", "").removesuffix(".xctest")
         if kind == "Test Suite":
             suite = node.get("name", "")
@@ -144,6 +144,31 @@ def check_native_result(tree: dict, summary: dict, expected: str) -> list[str]:
     if summary.get("result") != "Passed" or summary.get("testFailures", []) != []:
         raise EvidenceError("Native summary contains unsuccessful results")
     return [expected]
+
+
+def architecture_family(architecture: str) -> str:
+    # xcresult reports arm64e for macOS on Apple Silicon even when the requested
+    # Xcode destination is arm64. Preserve the observed value in evidence.
+    families = {"arm64": "arm64", "arm64e": "arm64", "x86_64": "x86_64", "x86_64h": "x86_64"}
+    if not isinstance(architecture, str) or architecture not in families:
+        raise EvidenceError("Unknown native architecture")
+    return families[architecture]
+
+
+def native_destination(summary: dict, architecture: str, macos: str) -> dict:
+    configurations = summary.get("devicesAndConfigurations")
+    if (not isinstance(configurations, list) or len(configurations) != 1
+            or not isinstance(configurations[0], dict)):
+        raise EvidenceError("Expected one actual native device/configuration")
+    device = configurations[0].get("device")
+    if not isinstance(device, dict) or device.get("platform") != "macOS":
+        raise EvidenceError("Native destination is not macOS")
+    observed = architecture_family(device.get("architecture"))
+    if observed != architecture_family(architecture) or device.get("osVersion") != macos:
+        raise EvidenceError("Actual native destination differs from requested platform")
+    if not isinstance(device.get("deviceId"), str) or not device["deviceId"]:
+        raise EvidenceError("Native destination has no device identity")
+    return {key: device[key] for key in ("architecture", "deviceId", "osVersion", "platform")} | {"architecture_family": observed}
 
 
 def command(args: list[str], *, root: Path, log: Path, env: dict | None = None,
@@ -222,6 +247,9 @@ def verify_report(root: Path, path: Path, *, run_id: str, phase: str,
             raise EvidenceError("Native bundle predates current execution")
         tree, summary = parse_bundle(root, bundle)
         check_native_result(tree, summary, expected[case_id])
+        actual = native_destination(summary, report["platform"]["architecture"], report["platform"]["macos"])
+        if suite.get("destination") != actual:
+            raise EvidenceError("Recorded native destination differs from original xcresult")
         for relative_key, digest_key in (("fixture_manifest", "fixture_sha256"), ("app_artifact", "app_sha256")):
             artifact = path.parent / suite.get(relative_key, "")
             if (not artifact.resolve().is_relative_to(path.parent.resolve()) or artifact.is_symlink()
@@ -314,8 +342,14 @@ def test_configuration(derived: Path, values: dict[str, str]) -> Path:
 
 def build_command(project: Path, derived: Path) -> list[str]:
     return ["xcodebuild", "-project", str(project), "-scheme", "TokenMeter", "-configuration", "UITesting",
-            "-derivedDataPath", str(derived), "-destination", "platform=macOS",
+            "-derivedDataPath", str(derived), "-destination", "platform=macOS,arch=" + architecture_family(platform.machine()),
             "-parallel-testing-enabled", "NO"]
+
+
+def progress(case_id: str, stage: str) -> None:
+    # These values are repository-owned case IDs and fixed stage names. Never
+    # print environment dictionaries, subprocess arguments or fixture contents.
+    print(json.dumps({"event": "e2e_progress", "case_id": case_id, "stage": stage}), flush=True)
 
 
 def execute(root: Path, output: Path, report: dict) -> None:
@@ -346,6 +380,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
         private = Path(temporary).resolve()
         derived = private / "derived"
         for index, (case_id, identifier) in enumerate(expected.items(), 1):
+            progress(case_id, "prepare-fixtures")
             case_output = output / case_id
             case_output.mkdir()
             case_private = private / case_id
@@ -374,22 +409,26 @@ def execute(root: Path, output: Path, report: dict) -> None:
                                             "--host", "127.0.0.1", "--port", str(port), "--no-proxy-headers"], cwd=root, env=environment,
                                            stdout=service_log, stderr=subprocess.STDOUT)
                 try:
+                    progress(case_id, "start-service")
                     wait_for_service(process, address)
                     update_env: dict[str, str] = {}
                     build_settings = ["CURRENT_PROJECT_VERSION=100", "CODE_SIGN_IDENTITY=-", "CODE_SIGNING_ALLOWED=YES",
                                       "TM_TEST_API_URL=" + address, "TM_TEST_RUN_ID=" + isolation_id]
                     if case_id == "E2E-TM001-004":
+                        progress(case_id, "prepare-signing")
                         signing = signing_data.SigningIdentity(case_private / "code-signing")
                         identity = signing.prepare()
                         build_settings = [setting for setting in build_settings if not setting.startswith("CODE_SIGN_IDENTITY=")]
                         build_settings += ["CODE_SIGN_IDENTITY=" + identity,
                                            "OTHER_CODE_SIGN_FLAGS=--keychain " + shlex.quote(str(signing.keychain))]
                         update = update_data.UpdateSource(case_private / "update-secrets", case_output)
+                        progress(case_id, "prepare-https-update")
                         public_key = update.prepare()
                         update.trust_on_ephemeral_ci()
                         feed = update.url + "/appcast.xml"
                         build_settings += ["TM_UPDATE_FEED_URL=" + feed, "TM_UPDATE_PUBLIC_KEY=" + public_key]
                         package_output = case_private / "update-package"
+                        progress(case_id, "build-update-package")
                         try:
                             command([sys.executable, str(root / "apps/macos/build_update_fixture.py"),
                                      "--derived-data", str(case_private / "derived-update"), "--output", str(package_output),
@@ -413,6 +452,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                                       "TM_TEST_UPDATE_INVALID_FEED": update.url + "/invalid.xml",
                                       "TM_TEST_EXPECTED_BUILD": "101"}
                     base = build_command(project, derived)
+                    progress(case_id, "build-native-tests")
                     command(base + ["build-for-testing"] + build_settings, root=root, log=case_output / "build.log")
                     app = derived / "Build/Products/UITesting/TokenMeter.app"
                     if not app.is_dir():
@@ -440,8 +480,10 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     config = test_configuration(derived, {key: value for key, value in test_env.items() if key.startswith("TM_TEST_")})
                     bundle = case_output / "native.xcresult"
                     args = ["xcodebuild", "test-without-building", "-xctestrun", str(config),
-                            "-destination", "platform=macOS", "-parallel-testing-enabled", "NO", "-only-testing:" + identifier,
+                            "-destination", "platform=macOS,arch=" + architecture_family(report["platform"]["architecture"]),
+                            "-parallel-testing-enabled", "NO", "-only-testing:" + identifier,
                             "-resultBundlePath", str(bundle), "-resultBundleVersion", "3"]
+                    progress(case_id, "execute-native-test")
                     result = command(args, root=root, log=case_output / "xcodebuild.log", env=test_env,
                                      timeout=600, required=False)
                     suite = {"case_id": case_id, "native_test": identifier, "exit_code": result.returncode,
@@ -452,13 +494,18 @@ def execute(root: Path, output: Path, report: dict) -> None:
                              "app_sha256": sha256(archived_app), "state": "FAIL"}
                     report["suites"].append(suite)
                     if bundle.is_dir():
+                        progress(case_id, "parse-native-results")
                         suite["xcresult_sha256"] = tree_digest(bundle)
                         tree, summary = parse_bundle(root, bundle)
                         (case_output / "native-tests.json").write_text(json.dumps(tree, indent=2) + "\n")
                         (case_output / "native-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+                        suite["native_failures"] = [failure["failureText"][:1000]
+                            for failure in summary.get("testFailures", [])[:3]
+                            if isinstance(failure, dict) and isinstance(failure.get("failureText"), str)]
                         if summary.get("totalTestCount", 0) > summary.get("skippedTests", 0):
                             report["executed_cases"] += 1
                         try:
+                            suite["destination"] = native_destination(summary, report["platform"]["architecture"], report["platform"]["macos"])
                             check_native_result(tree, summary, identifier)
                             if result.returncode:
                                 raise EvidenceError(f"xcodebuild exited {result.returncode} despite passing case")
@@ -475,6 +522,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     else:
                         raise Blocked(f"No native result bundle for {case_id}; xcodebuild exit {result.returncode}")
                 finally:
+                    progress(case_id, "cleanup")
                     cleanup_errors = []
                     try:
                         process.terminate()

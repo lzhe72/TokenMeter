@@ -19,6 +19,8 @@ class SigningIdentity:
         self.keychain = private / "codesign.keychain-db"
         self.certificate = private / "codesign.pem"
         self.password = secrets.token_urlsafe(32)
+        self.bundle_password = secrets.token_urlsafe(32)
+        self.bundle_password_file = private / "bundle-password"
         self.previous_keychains: list[str] | None = None
         self.keychain_created = False
         self.trust_attempted = False
@@ -32,10 +34,8 @@ class SigningIdentity:
             raise RuntimeError(f"Isolated code-signing {operation} failed ({result.returncode})")
         return result.stdout.strip()
 
-    def prepare(self) -> str:
-        if os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP"):
-            raise RuntimeError("Temporary signing identity requires an isolated GitHub runner")
-        self.previous_keychains = shlex.split(self._run(["security", "list-keychains", "-d", "user"], "read keychain list"))
+    def create_private_bundle(self) -> Path:
+        """Create only owned files; importing/trusting remains guarded in prepare."""
         config = self.private / "codesign.cnf"
         config.write_text("[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=signing\n"
                           "[dn]\nCN=TokenMeter E2E " + secrets.token_hex(12) + "\n"
@@ -45,14 +45,29 @@ class SigningIdentity:
         p12 = self.private / "codesign.p12"
         self._run(["openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509", "-days", "1", "-sha256",
                    "-config", str(config), "-keyout", str(key), "-out", str(self.certificate)], "create certificate")
+        key.chmod(0o600)
+        self.bundle_password_file.write_text(self.bundle_password + "\n")
+        self.bundle_password_file.chmod(0o600)
+        # Apple's PKCS12 importer requires interoperable legacy wrapping. This
+        # changes this temporary encrypted container only; certificate and App
+        # signatures remain RSA/SHA256 and update archives remain Ed25519.
         self._run(["openssl", "pkcs12", "-export", "-inkey", str(key), "-in", str(self.certificate),
-                   "-out", str(p12), "-passout", "pass:"], "create private bundle")
+                   "-keypbe", "PBE-SHA1-3DES", "-certpbe", "PBE-SHA1-3DES", "-macalg", "sha1",
+                   "-out", str(p12), "-passout", "file:" + str(self.bundle_password_file)], "create private bundle")
         p12.chmod(0o600)
+        return p12
+
+    def prepare(self) -> str:
+        if os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP"):
+            raise RuntimeError("Temporary signing identity requires an isolated GitHub runner")
+        self.previous_keychains = shlex.split(self._run(["security", "list-keychains", "-d", "user"], "read keychain list"))
+        p12 = self.create_private_bundle()
         self.keychain_created = True  # Also clean up partially successful creation.
         self._run(["security", "create-keychain", "-p", self.password, str(self.keychain)], "create keychain")
         self._run(["security", "set-keychain-settings", "-lut", "21600", str(self.keychain)], "keychain settings")
         self._run(["security", "unlock-keychain", "-p", self.password, str(self.keychain)], "unlock keychain")
-        self._run(["security", "import", str(p12), "-k", str(self.keychain), "-P", "", "-T", "/usr/bin/codesign"], "import identity")
+        self._run(["security", "import", str(p12), "-k", str(self.keychain), "-P", self.bundle_password,
+                   "-T", "/usr/bin/codesign"], "import identity")
         self._run(["security", "set-key-partition-list", "-S", "apple-tool:,apple:,codesign:", "-s", "-k", self.password,
                    str(self.keychain)], "grant codesign access")
         self.trust_attempted = True

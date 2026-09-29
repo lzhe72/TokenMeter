@@ -1,0 +1,66 @@
+{
+  "devices": [
+    {
+      "architecture": "arm64e",
+      "deviceId": "0d2723e0b593174ddd4f4bb7a9c516821d73dda5",
+      "deviceName": "My Mac",
+      "modelName": "Apple Virtual Machine 1",
+      "osBuildNumber": "24G830",
+      "osVersion": "15.7.9",
+      "platform": "macOS"
+    }
+  ],
+  "testNodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "name": "TM001AccountUITests.swift:62: XCTAssertEqual failed: (\"\") is not equal to (\"test-alice\")",
+                      "nodeType": "Failure Message",
+                      "result": "Failed"
+                    }
+                  ],
+                  "duration": "31s",
+                  "durationInSeconds": 31.464509963989258,
+                  "name": "testE2E_TM001_001()",
+                  "nodeIdentifier": "TM001AccountUITests/testE2E_TM001_001()",
+                  "nodeIdentifierURL": "test://com.apple.xcode/TokenMeter/TokenMeterUITests/TM001AccountUITests/testE2E_TM001_001",
+                  "nodeType": "Test Case",
+                  "result": "Failed"
+                }
+              ],
+              "name": "TM001AccountUITests",
+              "nodeIdentifierURL": "test://com.apple.xcode/TokenMeter/TokenMeterUITests/TM001AccountUITests",
+              "nodeType": "Test Suite",
+              "result": "Failed"
+            }
+          ],
+          "name": "TokenMeterUITests",
+          "nodeIdentifierURL": "test://com.apple.xcode/TokenMeter/TokenMeterUITests",
+          "nodeType": "UI test bundle",
+          "result": "Failed"
+        }
+      ],
+      "name": "TokenMeter",
+      "nodeType": "Test Plan",
+      "result": "Failed"
+    }
+  ],
+  "testPlanConfigurations": [
+    {
+      "configurationId": "1",
+      "configurationName": "Test Scheme Action"
+    }
+  ],
+  "_fixture_provenance": {
+    "ci_run": "36543142719",
+    "xcode": "16.4",
+    "original_result": "Failed",
+    "purpose": "native format regression, never product PASS evidence"
+  }
+}

@@ -7,7 +7,7 @@
 - 已按001建立版本、分支、00–06草稿，按002–007逐步编制并执行structure；008基线与追踪检查已通过（68份文档）。[本轮档案](../releases/v0.1.0-20260929T074814Z/00-manifest.json)保存完整任务/API/测试与发布计划。
 - 实际发现并修复001写死旧版本、019缺PR闭环两处流程缺口；记录在[执行记录](../releases/v0.1.0-20260929T074814Z/06-iteration-record.md)。
 - 服务端、SwiftUI/XCUITest/Sparkle和原生runner已建立，TM-001为in_progress，四个真实测试/数据入口已绑定；原生结果尚未齐全，不宣称功能完成。
-- 本机完整Xcode缺失；将使用明确的macOS15 arm64/Intel CI验证开发矩阵。生产签名、全发布矩阵、MySQL与受保护环境仍未具备，发布BLOCKED。
+- 本机完整Xcode缺失；已在macOS15 arm64/Intel CI实际构建并执行原生测试，当前存在失败，尚未通过开发矩阵。生产签名、全发布矩阵、MySQL与受保护环境仍未具备，发布BLOCKED。
 
 ## 一致性修复完成
 
@@ -27,9 +27,9 @@
 
 ## 本轮实现与待验证能力
 
-- 服务API已取得真实失败基线19失败/9通过，实现并补充边界后34项通过；包含uvicorn TCP、SQLite迁移/备份、账号CLI与权限/会话验证。SwiftUI/App原生行为仍需CI结果。
+- 服务API已取得真实失败基线19失败/9通过，实现并补充边界后34项通过；包含uvicorn TCP、SQLite迁移/备份、账号CLI与权限/会话验证。原生业务断言已在CI执行，尚未全部通过。
 - 真实账号生成/初始化/重置已落地；原始Codex/Claude Code日志fixture按后续采集功能建立。更新fixture程序需专用Mac CI实际造包与签名验证。
-- 本机缺完整Xcode；已配置macOS15 arm64/Intel远端开发矩阵，实际原生执行待确认。完整发布支持矩阵仍未验证。
+- 本机缺完整Xcode；远端开发矩阵已确认macOS15.7.9、Xcode16.4、arm64/Intel。两平台各执行前三个原生用例并失败，第四例因临时签名导入失败尚未执行。完整发布支持矩阵仍未验证。
 - Developer ID、公证、生产部署、GitHub required checks和受保护发布凭据缺失；临时测试签名不能替代正式签名。
 - 本次只读工具链检查：`xcode-select -p` 退出 2，未配置开发目录；没有发现完整 Xcode，未执行原生产品 E2E。
 
@@ -45,4 +45,4 @@
 
 本轮过程证据：`.local/process/v0.1.0-20260929T074814Z/`；服务首轮红绿位于其`server/`，runner工具负测位于`.local/governance/tm001-native/`。这些本机结果不构成发布通行证。
 
-远端实际运行已通过131项治理、34项服务和7项升级工具检查（run36542491053）；两Mac平台已确认Xcode16.4、真实服务/数据可启动，原生构建因Sparkle重复复制配置失败，修复后继续完整回归。原始结果见本轮06执行记录。
+远端基础检查已通过131项治理、34项服务和7项升级工具检查。最新[run36543142719](https://github.com/lzhe72/TokenMeter/actions/runs/36543142719)的两个Mac平台均已成功构建App并执行001–003；失败原因包括macOS静态文本取值方式，004被临时签名身份导入阻断。另发现结果解析未识别实际Xcode bundle类型、FAIL被后续BLOCKED覆盖，均按015保留失败并修复。原始xcresult与日志由CI归档；小日志副本在`.local/ci/summaries/36543142719/`，不能替代原始证据或发布通行证。

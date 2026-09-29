@@ -34,6 +34,9 @@ def main() -> int:
         selected = subprocess.run(["xcode-select", "-p"], text=True, capture_output=True)
         if selected.returncode != 0 or not selected.stdout.strip().endswith(".app/Contents/Developer"):
             raise ValueError("Full Xcode is not selected; build remains BLOCKED")
+        architecture = platform.machine()
+        if architecture not in ("arm64", "x86_64"):
+            raise ValueError("The update fixture requires an arm64 or x86_64 macOS host")
         if not re.fullmatch(r"[A-Za-z0-9_-]+", args.run_id) or not re.fullmatch(r"[1-9][0-9]*", args.build_version):
             raise ValueError("Invalid run ID or build version")
         if not re.fullmatch(r"[0-9A-Fa-f]{40}", args.code_sign_identity):
@@ -62,7 +65,7 @@ def main() -> int:
         output.mkdir(parents=True, mode=0o700)
         project = Path(__file__).resolve().parent / "TokenMeter.xcodeproj"
         command = ["xcodebuild", "build", "-project", str(project), "-scheme", "TokenMeter",
-                   "-configuration", "UITesting", "-destination", "platform=macOS",
+                   "-configuration", "UITesting", "-destination", "platform=macOS,arch=" + architecture,
                    "-derivedDataPath", str(derived), "-disableAutomaticPackageResolution",
                    "CODE_SIGN_IDENTITY=" + args.code_sign_identity,
                    "OTHER_CODE_SIGN_FLAGS=--keychain " + shlex.quote(str(signing_keychain)),

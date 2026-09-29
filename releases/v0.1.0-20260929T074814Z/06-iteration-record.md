@@ -23,7 +23,7 @@
 
 ## 尚未完成
 
-本轮App、服务、测试数据和原生执行器正在实现与联调，全部原生产品验收仍待执行。正式支持矩阵、证书、生产MySQL和受保护发布环境缺失，产品发布BLOCKED。后续实际结果继续追加，不能用文档基线或Python测试代替原生E2E。
+本轮App、服务、测试数据和原生执行器正在联调，原生产品验收已在CI执行但未通过，当前结果见文末。正式支持矩阵、证书、生产MySQL和受保护发布环境缺失，产品发布BLOCKED。后续实际结果继续追加，不能用文档基线或Python测试代替原生E2E。
 
 
 ## 开发中发现的流程与实现问题
@@ -69,3 +69,23 @@
 入口复核同步AGENTS：删除过期的“产品未接通/原生命令无需依赖”断言，分别指向标准库治理检查、隔离Python服务环境及专用Mac原生执行前提；当前结果统一从status读取。
 
 Intel任务随后确认同一Sparkle复制错误，证据在`.local/ci/36542491053/intel/`。日志证明Xcode已自动复制并签名Sparkle.framework，额外手工Copy才查找错误路径；修复仅删除重复Copy阶段，保留SPM依赖与链接。该轮远端治理131项、服务34项、升级工具7项通过，仍无原生产品通过。
+
+### BUG-TM001-MAC-002：macOS静态文本断言
+
+[run36543142719](https://github.com/lzhe72/TokenMeter/actions/runs/36543142719)两平台App构建成功，实际各执行001–003并失败。001/003服务登录、改密返回200，界面账号控件存在，但其AXLabel为空；002错误登录返回401，等待label错误文案超时。macOS静态文本显示值位于AXValue。修复测试统一读取value，保留相同用户名、错误码、角色和版本号预期；修复后仍须完整原生回归。
+
+### BUG-TM001-RUNNER-002：原始结果解析与判定
+
+同轮原始native-tests.json的bundle类型为`UI test bundle`，旧解析只接受`Test Bundle`，导致用例缺目标前缀。使用该轮脱敏原始结构加入永久回归，保留精确用例集合、计数、零跳过和全部通过检查。原始设备为macOS15.7.9，Apple Silicon显示arm64e、Intel显示x86_64h；以真实结果核对实际平台和架构家族。另修正前三例确定性FAIL不能被第四例环境BLOCKED覆盖的问题，独立记录阻塞和失败。
+
+### BUG-TM001-FIXTURE-001：临时签名身份导入
+
+同轮004在`security import`临时P12时退出1，未进入原生UI。现代OpenSSL默认PKCS12封装存在Apple Security兼容性限制，与本轮故障线索一致；按[Apple DTS说明](https://developer.apple.com/forums/thread/723242)与OpenSSL文档指定临时P12容器的兼容算法和随机非空口令，App的RSA/SHA256签名及更新包EdDSA签名保持原有设计。临时私钥及口令不进入日志/工件；实际导入和升级仍待新候选CI确认。
+
+本轮原始完整工件保存在远端run36543142719；本机通过有界ZIP读取获取原始小日志与JSON副本到`.local/ci/summaries/36543142719/{arm64,intel}/`。补充执行器逐例阶段与失败诊断，避免仅显示总状态导致无法及时定位。两平台均未PASS，PR保持草稿。
+
+### BUG-TM001-MAC-003：非沙盒更新器配置审查
+
+代码审查发现App所有配置均`ENABLE_APP_SANDBOX=NO`，Info却启用`SUEnableInstallerLauncherService`。按[Sparkle官方配置说明](https://sparkle-project.org/documentation/customization/)，该服务仅供沙盒App使用；移除沙盒专用服务键，沿用非沙盒默认配置。此项来自实现与官方契约比对，004此前未运行，不能声称已观察或修复了原生升级失败。HTTPS、EdDSA及解压前签名验证保持启用，仍执行完整004。
+
+上述修复的本机回归：139项治理检查通过（`.local/governance/tm001-native/ci-repair-green.log`），9项升级helper检查通过；基线与追踪检查通过。签名容器实际生成并验证非空口令、封装算法及SHA256证书，但没有在本机导入Keychain，实际原生升级继续由新候选CI验证。原失败和永久回归的红绿日志均保留，未通过修改业务预期放行。

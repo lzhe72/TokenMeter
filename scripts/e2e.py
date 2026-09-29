@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import platform
+import re
 import subprocess
 import sys
 import uuid
@@ -16,6 +17,36 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import native_e2e
+
+
+def safe_diagnostic(message: object) -> str:
+    value = str(message)
+    value = re.sub(r"(?i)\bBearer\s+[A-Za-z0-9_.~+/-]+=*", "Bearer <redacted>", value)
+    return re.sub(r"(?i)(\b(?:password|passwd|secret|private_key|access_token|authorization|TM_TEST_UPDATE_CONTROL_TOKEN)\b\s*['\"]?\s*[:=]\s*['\"]?)[^\s,'\"}\]]+",
+                  r"\1<redacted>", value)
+
+
+def exception_message(error: Exception) -> str:
+    # subprocess exception strings include command arguments, which may contain
+    # the isolated keychain password. Only expose the operation's exit/timeout.
+    if isinstance(error, subprocess.TimeoutExpired):
+        return f"Subprocess timed out after {error.timeout} seconds"
+    if isinstance(error, subprocess.CalledProcessError):
+        return f"Subprocess failed with exit code {error.returncode}"
+    return safe_diagnostic(error)
+
+
+def print_result(report: dict, path: Path) -> None:
+    cases = [{key: safe_diagnostic(suite[key]) if key == "error" else suite[key]
+              for key in ("case_id", "state", "exit_code", "error") if key in suite}
+             for suite in report.get("suites", [])]
+    for case, suite in zip(cases, report.get("suites", [])):
+        case["native_failures"] = [safe_diagnostic(message) for message in suite.get("native_failures", [])[:3]]
+    print(json.dumps({"event": "e2e_result", "state": report["state"], "report": str(path),
+                      "executed_cases": report["executed_cases"], "passed_cases": report["passed_cases"],
+                      "cases": cases, "errors": report.get("errors", []), "blockers": report.get("blockers", []),
+                      "cleanup_errors": report.get("cleanup_errors", []), "release_eligible": False},
+                     ensure_ascii=False), flush=True)
 
 
 def digest(path: Path) -> str | None:
@@ -81,7 +112,7 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
     try:
         path = record_blocked(root, args.phase, args.run_id)
     except (OSError, ValueError, RuntimeError) as exc:
-        print(json.dumps({"state": "BLOCKED", "reason": str(exc), "release_eligible": False}, ensure_ascii=False))
+        print(json.dumps({"state": "BLOCKED", "reason": exception_message(exc), "release_eligible": False}, ensure_ascii=False))
         return 2
     report = json.loads(path.read_text(encoding="utf-8"))
     try:
@@ -90,15 +121,29 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
         if args.phase == "release":
             raise native_e2e.Blocked("Final signed package, supported platform/MySQL matrix, protected CI and passport issuer are not ready")
     except native_e2e.EvidenceError as exc:
-        report["state"], report["errors"] = "FAIL", [str(exc)]
+        report["state"], report["errors"] = "FAIL", [exception_message(exc)]
         report["blockers"] = []
     except (native_e2e.Blocked, OSError, ValueError, RuntimeError, KeyError, subprocess.SubprocessError) as exc:
-        report["state"], report["blockers"] = "BLOCKED", [str(exc)]
+        # A later missing environment must not erase already observed failures.
+        failures = [f"{suite['case_id']}: {suite['error']}" for suite in report.get("suites", [])
+                    if suite.get("state") == "FAIL" and suite.get("error")]
+        report["state"] = "FAIL" if failures else "BLOCKED"
+        report["blockers"] = [exception_message(exc)]
+        if failures:
+            report["errors"] = failures
     finally:
         report["finished_at"] = datetime.now(timezone.utc).isoformat()
         report["release_eligible"] = False
+        for field in ("errors", "blockers", "cleanup_errors"):
+            if field in report:
+                report[field] = [safe_diagnostic(message) for message in report[field]]
+        for suite in report.get("suites", []):
+            if "error" in suite:
+                suite["error"] = safe_diagnostic(suite["error"])
+            if "native_failures" in suite:
+                suite["native_failures"] = [safe_diagnostic(message)[:1000] for message in suite["native_failures"][:3]]
         path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"state": report["state"], "report": str(path), "release_eligible": False}, ensure_ascii=False))
+    print_result(report, path)
     return {"PASS": 0, "FAIL": 1, "BLOCKED": 2}[report["state"]]
 
 

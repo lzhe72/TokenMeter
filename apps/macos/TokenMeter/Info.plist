@@ -17,7 +17,5 @@
     <key>SUVerifyUpdateBeforeExtraction</key><true/>
     <key>SUEnableAutomaticChecks</key><true/>
     <key>SUAutomaticallyUpdate</key><false/>
-    <key>SUEnableInstallerLauncherService</key><true/>
-    <key>SUEnableDownloaderService</key><false/>
     <key>SUShowReleaseNotes</key><false/>
 </dict></plist>

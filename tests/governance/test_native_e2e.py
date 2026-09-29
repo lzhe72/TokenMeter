@@ -62,6 +62,42 @@ class NativeContractTests(unittest.TestCase):
     def test_native_tree_and_summary_require_exact_one_pass(self):
         self.assertEqual(native.check_native_result(self.tree, self.summary, self.identity), [self.identity])
 
+    def test_xcode_16_4_ui_bundle_name_is_preserved_and_original_failure_stays_failed(self):
+        tree = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-tests.json").read_text())
+        summary = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-summary.json").read_text())
+        with self.assertRaises(native.EvidenceError) as caught:
+            native.check_native_result(tree, summary, self.identity)
+        self.assertIn(self.identity, str(caught.exception))
+        self.assertNotIn("('/TM001", str(caught.exception))
+        # Synthetic passing format variant tests parsing only, not product behavior.
+        def mark_nodes(node):
+            node["result"] = "Passed"
+            for child in node.get("children", []):
+                mark_nodes(child)
+        for node in tree["testNodes"]:
+            mark_nodes(node)
+        summary.update(result="Passed", failedTests=0, passedTests=1, testFailures=[])
+        self.assertEqual(native.check_native_result(tree, summary, self.identity), [self.identity])
+        tree["testNodes"][0]["children"][0]["name"] = "WrongUITestBundle"
+        with self.assertRaises(native.EvidenceError):
+            native.check_native_result(tree, summary, self.identity)
+
+    def test_native_destination_architecture_family_must_match_requested_architecture(self):
+        summary = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-summary.json").read_text())
+        observed = native.native_destination(summary, "arm64", "15.7.9")
+        self.assertEqual(observed["architecture"], "arm64e")
+        self.assertEqual(observed["architecture_family"], "arm64")
+        intel = copy.deepcopy(summary)
+        intel["devicesAndConfigurations"][0]["device"]["architecture"] = "x86_64h"
+        self.assertEqual(native.native_destination(intel, "x86_64", "15.7.9")["architecture_family"], "x86_64")
+        with self.assertRaises(native.EvidenceError):
+            native.native_destination(summary, "x86_64", "15.7.9")
+        for field, bad in (("platform", "iOS"), ("architecture", "unknown"), ("osVersion", "14.0")):
+            mutated = copy.deepcopy(summary)
+            mutated["devicesAndConfigurations"][0]["device"][field] = bad
+            with self.subTest(field=field), self.assertRaises(native.EvidenceError):
+                native.native_destination(mutated, "arm64", "15.7.9")
+
     def test_failed_skipped_unknown_and_duplicate_native_cases_rejected(self):
         for status in ("Failed", "Skipped", "Expected Failure", "Unknown", "Passed"):
             tree = copy.deepcopy(self.tree)
@@ -123,6 +159,10 @@ class NativeContractTests(unittest.TestCase):
         arguments = native.build_command(Path("TokenMeter.xcodeproj"), Path("derived"))
         self.assertEqual({argument for argument in arguments if argument.startswith("-")}, supported)
         self.assertEqual(arguments[arguments.index("-parallel-testing-enabled") + 1], "NO")
+        for architecture in ("arm64", "x86_64"):
+            with mock.patch.object(native.platform, "machine", return_value=architecture):
+                arguments = native.build_command(Path("TokenMeter.xcodeproj"), Path("derived"))
+            self.assertEqual(arguments[arguments.index("-destination") + 1], "platform=macOS,arch=" + architecture)
 
 
 class EvidenceVerificationTests(unittest.TestCase):
@@ -137,21 +177,24 @@ class EvidenceVerificationTests(unittest.TestCase):
         (self.output / "case/app.zip").write_bytes(b"Synthetic artifact, never real E2E")
         (self.output / "case/manifest.json").write_text("{}")
         self.now = time.time()
+        self.summary = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-summary.json").read_text())
+        self.destination = native.native_destination(self.summary, "arm64", "15.7.9")
         self.report = {
             "state": "PASS", "runner_implemented": True, "run_id": "nonce", "phase": "iteration",
             "started_at": datetime.fromtimestamp(self.now, timezone.utc).isoformat(),
             "finished_at": datetime.now(timezone.utc).isoformat(),
             "source_commit": "a" * 40, "working_tree_dirty": False,
+            "platform": {"architecture": "arm64", "macos": "15.7.9"},
             "manifest_sha256": {"fixture": "digest"}, "executed_cases": 1, "cleanup_completed": True,
             "suites": [{"case_id": "E2E-TM001-001", "exit_code": 0, "xcresult": "case/native.xcresult",
                         "xcresult_sha256": native.tree_digest(self.bundle), "fixture_manifest": "case/manifest.json",
                         "fixture_sha256": native.sha256(self.output / "case/manifest.json"), "app_artifact": "case/app.zip",
-                        "app_sha256": native.sha256(self.output / "case/app.zip")}],
+                        "app_sha256": native.sha256(self.output / "case/app.zip"), "destination": self.destination}],
         }
         self.path = self.output / "result.json"
         for function, value in (("git", None), ("snapshot", {"fixture": "digest"}),
                                 ("required_cases", {"E2E-TM001-001": "target/suite/testCase"}),
-                                ("parse_bundle", ({"native": "tree"}, {"native": "summary"})),
+                                ("parse_bundle", ({"native": "tree"}, self.summary)),
                                 ("check_native_result", ["target/suite/testCase"])):
             patcher = mock.patch.object(native, function, return_value=value)
             mocked = patcher.start()
@@ -190,6 +233,11 @@ class EvidenceVerificationTests(unittest.TestCase):
             with self.subTest(relative=relative), self.assertRaises(native.EvidenceError):
                 self.verify()
             path.write_bytes(original)
+
+    def test_forged_native_destination_is_rejected(self):
+        self.report["suites"][0]["destination"] = dict(self.destination, architecture="x86_64h")
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
 
     def test_release_cannot_reuse_iteration_pass(self):
         self.report["phase"] = "release"

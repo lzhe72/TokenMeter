@@ -57,9 +57,12 @@ final class TM001AccountUITests: XCTestCase {
     }
 
     private func assertIdentity(_ username: String) {
-        let label = app.staticTexts["session.username"]
-        XCTAssertTrue(label.waitForExistence(timeout: 15))
-        XCTAssertEqual(label.label, username)
+        let identity = app.staticTexts["session.username"]
+        XCTAssertTrue(identity.waitForExistence(timeout: 15))
+        // AppKit static text exposes its displayed string as AXValue. Its AXLabel
+        // can be empty; reading label would not verify the visible account name.
+        XCTAssertEqual(identity.value as? String, username,
+                       "session.username value=\(String(describing: identity.value)), label=\(identity.label)")
     }
 
     private func refreshIdentity(_ username: String) throws {
@@ -149,16 +152,16 @@ final class TM001AccountUITests: XCTestCase {
         app.launch()
         login("bob", password: "TEST-ONLY-Wrong-42!")
         let incorrect = app.staticTexts["auth.error"]
-        expectation(for: NSPredicate(format: "label CONTAINS %@", "invalid_credentials"), evaluatedWith: incorrect)
+        expectation(for: NSPredicate(format: "value CONTAINS %@", "invalid_credentials"), evaluatedWith: incorrect)
         waitForExpectations(timeout: 15)
         login("disabled")
         let error = app.staticTexts["auth.error"]
-        expectation(for: NSPredicate(format: "label CONTAINS %@", "account_disabled"), evaluatedWith: error)
+        expectation(for: NSPredicate(format: "value CONTAINS %@", "account_disabled"), evaluatedWith: error)
         waitForExpectations(timeout: 15)
         login("bob")
         changePassword(current: "TEST-ONLY-bob-42!", new: changedPassword)
         assertIdentity("test-bob")
-        XCTAssertEqual(app.staticTexts["session.role"].label, "member")
+        XCTAssertEqual(app.staticTexts["session.role"].value as? String, "member")
         XCTAssertFalse(app.buttons["admin.accounts"].exists)
         let memberToken = try token("bob", password: changedPassword)
         let me = try request("GET", "/v1/me", token: memberToken)
@@ -183,11 +186,12 @@ final class TM001AccountUITests: XCTestCase {
         click("admin.reset.confirm")
         let resetStatus = app.staticTexts["admin.status"]
         XCTAssertTrue(resetStatus.waitForExistence(timeout: 15))
-        XCTAssertTrue(resetStatus.label.contains("password_reset"))
+        expectation(for: NSPredicate(format: "value CONTAINS %@", "password_reset"), evaluatedWith: resetStatus)
+        waitForExpectations(timeout: 15)
         XCTAssertEqual(try request("GET", "/v1/me", token: oldMemberToken).0, 401)
         click("admin.disable.test-bob")
         let inactive = app.staticTexts["admin.state.test-bob"]
-        let disabled = NSPredicate(format: "label == %@", "disabled")
+        let disabled = NSPredicate(format: "value == %@", "disabled")
         expectation(for: disabled, evaluatedWith: inactive)
         waitForExpectations(timeout: 15)
         XCTAssertEqual(try request("POST", "/v1/auth/login", body: [
@@ -215,7 +219,8 @@ final class TM001AccountUITests: XCTestCase {
         login("alice")
         changePassword(current: "TEST-ONLY-alice-42!", new: changedPassword)
         assertIdentity("test-alice")
-        let originalBuild = app.staticTexts["app.build"].label
+        let originalBuild = try XCTUnwrap(app.staticTexts["app.build"].value as? String)
+        XCTAssertFalse(originalBuild.isEmpty)
         XCTAssertNotEqual(originalBuild, expectedBuild)
         click("updates.check")
         let installInvalid = app.buttons["Install Update"].firstMatch
@@ -225,9 +230,9 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertTrue(cancelInvalid.waitForExistence(timeout: 45))
         cancelInvalid.click()
         let updateError = app.staticTexts["updates.status"]
-        expectation(for: NSPredicate(format: "label CONTAINS %@", "update_signature_rejected"), evaluatedWith: updateError)
+        expectation(for: NSPredicate(format: "value CONTAINS %@", "update_signature_rejected"), evaluatedWith: updateError)
         waitForExpectations(timeout: 45)
-        XCTAssertEqual(app.staticTexts["app.build"].label, originalBuild)
+        XCTAssertEqual(app.staticTexts["app.build"].value as? String, originalBuild)
         app.terminate()
         // Only the external fixture changes; the application keeps the exact same feed and trust policy.
         var control = URLRequest(url: try XCTUnwrap(URL(string: controlURL)))
@@ -251,7 +256,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertTrue(relaunch.waitForExistence(timeout: 60))
         relaunch.click()
         // Sparkle must replace and relaunch the app; no test calls launch() here.
-        expectation(for: NSPredicate(format: "label == %@", expectedBuild),
+        expectation(for: NSPredicate(format: "value == %@", expectedBuild),
                     evaluatedWith: app.staticTexts["app.build"])
         waitForExpectations(timeout: 90)
         assertIdentity("test-alice")
