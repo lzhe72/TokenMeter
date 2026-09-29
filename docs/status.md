@@ -6,14 +6,14 @@
 
 - 已按001建立版本、分支、00–06草稿，按002–007逐步编制并执行structure；008基线与追踪检查已通过（68份文档）。[本轮档案](../releases/v0.1.0-20260929T074814Z/00-manifest.json)保存完整任务/API/测试与发布计划。
 - 实际发现并修复001写死旧版本、019缺PR闭环两处流程缺口；记录在[执行记录](../releases/v0.1.0-20260929T074814Z/06-iteration-record.md)。
-- 服务端、SwiftUI/XCUITest/Sparkle、真实native runner正在按已基线文件边界实现；程序和原生测试结果尚未齐全，不宣称功能完成。
+- 服务端、SwiftUI/XCUITest/Sparkle和原生runner已建立，TM-001为in_progress，四个真实测试/数据入口已绑定；原生结果尚未齐全，不宣称功能完成。
 - 本机完整Xcode缺失；将使用明确的macOS15 arm64/Intel CI验证开发矩阵。生产签名、全发布矩阵、MySQL与受保护环境仍未具备，发布BLOCKED。
 
 ## 一致性修复完成
 
 2026-09-29 已修复审查中的 R01–R08 和 D01，详见[审查与解决记录](reviews/2026-09-29-plan-consistency.md)。草稿编制、文档基线、程序绑定和工程骨架有各自前提；早期用例依赖、技术设计模板、最小更新器交付时间和候选 CI 顺序已统一。双向验收覆盖与完整版本合同已有负向回归；高级价格数据明确保持待实现。
 
-## 已建立并验证
+## 基础版本归档结果
 
 - 根 SOP 总索引、25 份按工作步骤拆分的独立文件；AGENTS.md 强制先索引、后详细 SOP，检查输入、验证输出和保留证据。
 - 文档规范、11 份模板/模板索引、首版产品与架构设计、本轮六类档案；含本次审查报告的 62 份 Markdown 均有元数据登记。
@@ -25,12 +25,12 @@
 
 以上是基础版本验证结果。远端已实际运行基础CI：master run36538259111治理检查通过，产品入口按既有阻断逻辑失败；仓库保护规则及发布环境尚未配置。本轮产品结果另行记录，基础检查不能替代它。
 
-## 尚未建立的运行与发布能力
+## 本轮实现与待验证能力
 
-- SwiftUI App、FastAPI 服务端、真实原生 UI E2E 测试目标及证据校验器。
-- 与受支持工具版本匹配的原始 Codex/Claude Code 日志 fixture；真实测试账号数据库初始化和重置。
-- 完整 Xcode、可交互的 macOS GUI runner、系统授权/安装升级自动化、Apple Silicon/Intel 支持矩阵。
-- Developer ID、公证及更新签名、生产部署、GitHub required checks 和受保护发布凭据。
+- 服务API已取得真实失败基线19失败/9通过，再实现后首轮29项通过；包含uvicorn TCP、SQLite迁移/备份、账号CLI与权限/会话验证。SwiftUI/App原生行为仍需CI结果。
+- 真实账号生成/初始化/重置已落地；原始Codex/Claude Code日志fixture按后续采集功能建立。更新fixture程序需专用Mac CI实际造包与签名验证。
+- 本机缺完整Xcode；已配置macOS15 arm64/Intel远端开发矩阵，实际原生执行待确认。完整发布支持矩阵仍未验证。
+- Developer ID、公证、生产部署、GitHub required checks和受保护发布凭据缺失；临时测试签名不能替代正式签名。
 - 本次只读工具链检查：`xcode-select -p` 退出 2，未配置开发目录；没有发现完整 Xcode，未执行原生产品 E2E。
 
 上述缺项按依赖阻断实际运行和发布；SOP-009 的工程骨架准备，以及有独立验证条件的源码、数据、测试编写可继续。生产签名/公证凭据只作为最终包与发布验证前提。
@@ -39,6 +39,8 @@
 
 最新验证证据：`.local/governance/consistency-fixes-20260929T073101Z/summary.json`，保存命令、退出码、日志及工具/用例源码摘要。失败复现和重放记录位于 `.local/reviews/consistency-fix-r01-r08/`、`.local/reviews/consistency-fix-r06/`、`.local/reviews/consistency-fixes/`。详见[本轮执行与交接记录](../releases/v0.0.1-20260929T060944Z/06-iteration-record.md)。这些本机诊断文件未上传，不作为正式发布证据。
 
-本轮接续入口：按0.1.0计划完成SOP-009工程、010/011数据与测试、012业务实现及013/014验证；严格保留未执行项，不将计划或程序文件存在当作产品通过。
+本轮接续入口：按0.1.0计划完成013/014综合回归和远端原生验证，保留首个失败并按015修复后完整重跑。源码、服务端通过和原生通过分别记录。草稿[PR #2](https://github.com/lzhe72/TokenMeter/pull/2)跟踪本轮实现，适用检查通过才合并。
 
-接通 runner 必须同时实现证据验证和负向门禁测试。完成之前 `iteration` / `release` 保持 BLOCKED，不能只把退出码改成零。恢复条件见 [发布门禁](standards/release.md)。
+原生runner和证据复核已同时实现并通过工具负测，但实际产品E2E仍需运行证明。缺环境的 `iteration` 为BLOCKED；正式 `release` 继续受最终签名/全矩阵/生产数据库与保护条件阻断。恢复条件见[发布门禁](standards/release.md)。
+
+本轮过程证据：`.local/process/v0.1.0-20260929T074814Z/`；服务首轮红绿位于其`server/`，runner工具负测位于`.local/governance/tm001-native/`。这些本机结果不构成发布通行证。

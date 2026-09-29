@@ -1,6 +1,6 @@
 # SOP-013 构建与检查
 
-**修订：** 2　**状态：** baselined　**适用：** all
+**修订：** 3　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -22,7 +22,7 @@ SOP-009 环境可用，待测实现及构建入口真实存在；清楚哪些检
 
 1. 运行 python3 scripts/check_docs.py 与 python3 scripts/quality_gate.py check，核对规范、版本和追踪关系。
 2. 当前治理工具自测执行 python3 -m unittest discover -s tests/governance -p 'test_*.py'，保存测试数量、退出码和结果。
-3. 产品实现后使用已提交且写入测试计划的真实构建/静态/单元/集成入口；尚不存在时记录具体 BLOCKED，不杜撰构建命令。
+3. TM-001 服务端先在隔离 Python 环境安装 `python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt`，再执行 `python3 -m pytest tests/server -q`。依赖安装失败单独记录，不能当成业务红测；不在缺编译器的本机退回源码包安装。原生构建使用版本计划固定的 Xcode、项目和 scheme，由 SOP-014 runner 调用真实 `xcodebuild build-for-testing`。尚未具备入口或环境的检查记录具体 BLOCKED。
 4. 构建与检查必须使用同一候选依赖和配置；记录客户端/服务端版本、产物摘要和工具链。
 5. 失败立即定位；修复后的候选重新执行受影响检查，再进入完整产品 E2E。治理测试通过只说明治理工具有效。
 

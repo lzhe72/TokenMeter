@@ -1,0 +1,7 @@
+--only-binary=:all:
+-c requirements-lock.txt
+fastapi==0.141.1
+SQLAlchemy==2.0.54
+alembic==1.20.0
+pwdlib[argon2]==0.3.1
+uvicorn==0.54.0

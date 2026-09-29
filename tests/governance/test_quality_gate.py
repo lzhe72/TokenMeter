@@ -85,7 +85,7 @@ class GateTests(unittest.TestCase):
         feature = self.matrix["features"][0]
         feature["status"] = "implemented"
         feature["cases"][0].update(dataset="available-data", data_program="scripts/fixtures.py",
-                                     automated_test="tests/product_case.py")
+                                     automated_test="tests/product_case.py", native_test="ProductUITests/FirstFeatureTests/testBehavior")
         return feature, feature["cases"][0]
 
     def test_planned_manifest_passes_traceability_only_with_correct_counts(self):
@@ -316,6 +316,16 @@ class GateTests(unittest.TestCase):
         with contextlib.redirect_stdout(output):
             self.assertEqual(gate.main(["check"], root=self.root), 0)
         self.assertFalse(json.loads(output.getvalue())["release_eligible"])
+
+    def test_active_native_identity_is_required_valid_and_unique(self):
+        _, case = self.activate_first()
+        for invalid in (None, "testBehavior", "Product/Suite/test()/extra"):
+            case["native_test"] = invalid
+            with self.subTest(invalid=invalid):
+                self.assertTrue(any("native_test" in error for error in self.errors()))
+        case["native_test"] = "ProductUITests/FirstFeatureTests/testBehavior"
+        self.matrix["features"][1]["cases"][0]["native_test"] = case["native_test"]
+        self.assertTrue(any("duplicate native_test" in error for error in self.errors()))
 
     def test_data_program_must_match_registered_generator(self):
         _, case = self.activate_first()

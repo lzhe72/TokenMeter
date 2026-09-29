@@ -7,7 +7,11 @@
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
       "criterion": "有效账号可登录；首次改密生效；退出后的凭据不能继续访问",
-      "data_requirements": []
+      "data_requirements": [
+        "account_roles",
+        "forced_password_change",
+        "session_revocation"
+      ]
     },
     {
       "id": "AC-TM001-002",
@@ -15,7 +19,11 @@
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
       "criterion": "成员只能查看本人身份且不能调用管理员账号管理；停用账号不能登录，UI 显示对应错误",
-      "data_requirements": []
+      "data_requirements": [
+        "account_roles",
+        "forced_password_change",
+        "session_revocation"
+      ]
     },
     {
       "id": "AC-TM001-003",
@@ -23,7 +31,11 @@
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
       "criterion": "新密码生效、旧会话失效，管理动作产生审计记录",
-      "data_requirements": []
+      "data_requirements": [
+        "account_roles",
+        "forced_password_change",
+        "session_revocation"
+      ]
     },
     {
       "id": "AC-TM001-004",
@@ -31,7 +43,12 @@
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
       "criterion": "最小更新器随首个产品版本交付；有效包替换与重启成功且保留账号状态，无效签名被拒绝并保留原版",
-      "data_requirements": []
+      "data_requirements": [
+        "https_feed",
+        "valid_eddsa",
+        "invalid_eddsa",
+        "candidate_upgrade"
+      ]
     },
     {
       "id": "AC-TM002-001",

@@ -8,3 +8,6 @@ DerivedData/
 .env
 .env.*
 !.env.example
+
+.pytest_cache/
+xcuserdata/

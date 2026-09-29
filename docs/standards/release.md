@@ -2,9 +2,9 @@
 
 ## 当前真实状态
 
-本仓库已经有可执行的规范检查、造数工具和阻断入口；**尚未实现产品 App、服务端、原生 E2E 执行器及发布证据校验器**。因此当前 `iteration` 和 `release` 均返回 `BLOCKED`，不会放行产品。
+TM-001 已建立 App、服务端、原生执行器和原始结果复核，当前验收结果统一记录在[状态页](../status.md)。迭代门禁根据本次真实原生执行判定；最终签名、公证、完整发布矩阵、MySQL 和受保护签发条件未就绪时，发布门禁仍为 `BLOCKED`。
 
-下面定义后续执行器必须满足的合同。不能通过删除阻断、手写 PASS JSON 或让空脚本返回零来宣称完成。
+下面定义执行器必须持续满足的合同。不能通过删除阻断、手写 PASS JSON 或让空脚本返回零来宣称完成。
 
 ## Codex 的自动闭环
 
@@ -19,15 +19,15 @@ SOP 负责让 Codex 可重放每一步；门禁结论由程序根据本次执行
 | 命令 | 用途 | 当前行为 |
 | --- | --- | --- |
 | `python3 scripts/quality_gate.py check` | 检查文档基线、功能、用例、数据程序和 SOP 引用 | 仅规范检查；通过也无发布资格 |
-| `python3 scripts/quality_gate.py iteration` | 本次产品迭代门禁 | 规范检查后启动 E2E 入口，当前 BLOCKED |
-| `python3 scripts/quality_gate.py release` | 发布候选门禁 | 同上；产品执行器与证据校验未完成，当前 BLOCKED |
-| `python3 scripts/e2e.py --phase iteration` | 直接运行产品 E2E 适配层 | 当前仅记录阻塞，不执行产品用例 |
+| `python3 scripts/quality_gate.py iteration` | 本次产品迭代门禁 | 规范检查后启动真实原生 E2E，复核本次结果 |
+| `python3 scripts/quality_gate.py release` | 发布候选门禁 | 在原生回归外检查最终包/全矩阵/受保护签发；当前 BLOCKED |
+| `python3 scripts/e2e.py --phase iteration` | 直接运行产品 E2E 适配层 | 真实构建与逐例执行；缺环境记录 BLOCKED |
 
 - `0 / PASS`：该命令对应检查已通过；只有产品发布门禁的 PASS 才有发布资格。
 - `1 / FAIL`：规范无效、测试断言失败或证据校验失败。
 - `2 / BLOCKED`：缺运行条件、执行器、必需数据、平台或有效证据。
 
-报告写入 `.local/e2e/<run-id>/result.json`。当前报告必须包含 `runner_implemented: false`、`executed_cases: 0`、`release_eligible: false`；这些值意味着阻断。门禁不接收用户提供的“通过报告”路径。
+报告写入 `.local/e2e/<run-id>/result.json`。`runner_implemented`、`executed_cases`、逐例结果和清理状态必须来自实际执行；零执行/未接入不能通过。父门禁分配本次运行ID并重新解析原始xcresult，检查提交、清单、产物和数据摘要。当前没有发布通行证签发，`release_eligible`保持false；迭代PASS不代表可发布。门禁不接收用户提供的“通过报告”路径。
 
 ## 必须自动执行的检查
 
@@ -46,7 +46,7 @@ SOP 负责让 Codex 可重放每一步；门禁结论由程序根据本次执行
 
 ## 真实 runner 的接通要求
 
-首次产品功能实现时必须同时替换 `scripts/e2e.py` 中的阻断适配层，并在 `scripts/quality_gate.py` 接通原生证据验证，增加针对伪造/缺失/过期证据的负向测试。
+TM-001 的 `scripts/e2e.py` 与 `scripts/native_e2e.py` 已接入真实执行，`scripts/quality_gate.py` 负责父进程复核。伪造/缺失/过期证据、零用例、错ID和跳过场景都有负向工具测试；工具负测不替代产品结果。
 
 执行器负责：
 

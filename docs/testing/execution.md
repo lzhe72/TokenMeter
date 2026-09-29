@@ -8,7 +8,7 @@
 
 每次测试计划和执行记录顶部必须带同一 `release_id`，格式及分配规则见[统一版本规范](../standards/versioning.md)。该标识关联需求、功能拆分、开发计划、测试计划、发布说明、Changelog 和最终 Git 发布；每次测试仍分配独立的 `run_id`。
 
-当前产品 App、服务端和原生 E2E 执行器尚未实现，产品门禁为 **BLOCKED**。基础设施自检、数据生成或静态文档检查的成功不能解除此状态。后续落地执行器时，必须同时补齐所需依赖、环境配置和原生证据路径。
+TM-001 已进入 App、服务端与原生 E2E 联调，实际验收状态见[当前状态](../status.md)。执行器已接入 `xcodebuild` 和原始 `xcresult` 复核；源码存在不证明原生用例通过。缺完整 Xcode、GUI 或有效结果时为 **BLOCKED**；基础工具自检和文档检查不能替代产品验收。
 
 ### 当前可执行入口
 
@@ -32,7 +32,8 @@ python3 scripts/test_data.py reset --run-id demo
 - 种子 42 创建 `test-admin`、`test-alice`、`test-bob`、`test-disabled` 的合成账号资料，密码保存在生成的测试文件中；此时尚未导入任何实际 App/服务端用户库。
 - `manifest.json` 标记 `fixture_kind=normalized-test-spec`，固定参考时间为 `2026-09-29T04:00:00Z`、时区 `Asia/Shanghai`，并记录文件 SHA256。这些数据不能验证真实 Codex/Claude 日志解析。
 - `generate` 拒绝覆盖已存在的运行目录；`reset` 只清理固定根目录下有有效所有权标记的对应数据，不清理产品库、系统授权或 Keychain。完整产品重置入口仍须实现。
-- `e2e.py` 当前只输出阻断证据；`iteration`/`release` 不允许用任意外部 PASS 报告放行。预期结果均为 BLOCKED，不能忽略非零退出码继续发布。
+- TM-001 账号由 `tests/server/fixtures.py` 生成并由原生 runner 通过真实 CLI 导入逐例隔离库，详见 SOP-010。生成账号 JSON 与原生 UI 验收分别记录。
+- `e2e.py` 调用真实原生 runner；`iteration`/`release` 不允许用任意外部 PASS 报告放行。缺环境返回 BLOCKED；实际断言失败为 FAIL；所有必测原生结果和证据一致才可能得到迭代 PASS。正式发布条件仍单独检查。
 
 `quality_gate.py` 和 `e2e.py` 的退出码为 `0=PASS`、`1=FAIL`、`2=BLOCKED`；`check` 的 PASS 仅代表基础规范检查通过。E2E 每次生成独立的 `.local/e2e/<run-id>/result.json`，命令输出其绝对路径。`quality_gate.py iteration` 和 `release` 在检查元数据后会自动调用 E2E；单独调用 `e2e.py` 用于诊断，不需要为正式门禁重复执行。
 
@@ -81,7 +82,7 @@ python3 scripts/test_data.py reset --run-id demo
 
 首个没有上一稳定版的发布，记录历史基线不存在，并验证候选干净安装及候选→受控高版本签名测试包的 App 内更新。测试包只进入隔离源，登记来源、版本和摘要；不能冒充上一公开稳定版。首版已有数据库迁移需求时仍执行迁移测试。开发阶段可用开发签名包，最终发布必须重新验证最终签名、公证包。
 
-release-candidate.yml 在正式 Tag 之前按完整候选 SHA 执行上述门禁；只有取得有效通行证，发布任务才创建 Tag。当前仅有候选入口，远端保护配置、原生执行器、通行证签发和分发仍未实现/核实。
+release-candidate.yml 在正式 Tag 之前按完整候选 SHA 执行上述门禁；只有取得有效通行证，发布任务才创建 Tag。当前已接入开发原生执行器；最终产物/全发布矩阵、远端保护配置、通行证签发和分发尚未完成验证。
 
 ## 5. 失败、复现与清理
 

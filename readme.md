@@ -2,7 +2,7 @@
 
 macOS 团队模型用量监控工具。首版读取 Codex、Claude Code 本地日志，展示 Token、估算费用和团队统计。
 
-**当前只有开发规范、测试数据工具和门禁基础设施，App 与服务端尚未实现。产品 E2E 未通过，禁止发布产品。**
+**当前正在验收第一个功能 TM-001：账号、登录与最小更新器。SwiftUI App、FastAPI 服务及原生测试程序已建立；实际测试结果见[当前状态](docs/status.md)。产品尚未发布。**
 
 ## 开发入口
 
@@ -16,7 +16,7 @@ macOS 团队模型用量监控工具。首版读取 Codex、Claude Code 本地�
 
 ## 本地检查
 
-Python 3.10+，无需安装依赖：
+以下文档与治理检查使用 Python 3.10+ 标准库：
 
 ```sh
 python3 scripts/release_registry.py show
@@ -28,13 +28,21 @@ python3 scripts/test_data.py generate --run-id demo --seed 42
 python3 scripts/test_data.py reset --run-id demo
 ```
 
-自动产品门禁入口：
+服务端及真实产品测试先按 [SOP-009](sop/SOP-009-environment.md) 准备隔离环境：
 
 ```sh
-python3 scripts/quality_gate.py iteration
-python3 scripts/quality_gate.py release
+python3 -m venv .local/venv
+.local/venv/bin/python -m pip install --only-binary=:all: -r server/requirements-dev.txt
+.local/venv/bin/python -m pytest tests/server -q
 ```
 
-当前两条产品门禁会写出 `BLOCKED` 结果并返回非零；这说明实际 E2E 尚未具备，不是一个可以忽略的失败。测试数据自测通过不代表产品通过验收。
+在同一已安装依赖的环境执行自动产品门禁；原生测试还需完整 Xcode、Mac 桌面与隔离 CI 更新签名环境：
+
+```sh
+.local/venv/bin/python scripts/quality_gate.py iteration
+.local/venv/bin/python scripts/quality_gate.py release
+```
+
+门禁自动初始化真实测试库、构建 App、逐例执行原生 UI，并复核原始 `xcresult`。缺环境输出 `BLOCKED`，断言失败输出 `FAIL`，均返回非零。完整开发矩阵通过才可验收；正式发布还需最终签名、公证、完整支持矩阵、MySQL 和受保护流程。测试数据或服务端测试通过不能替代原生验收。
 
 structure 支持逐步编写草稿；baseline 验收完整计划。验收规格、独立清单和用例双向校验。常规 CI 执行 iteration，候选 CI 按完整 SHA 在创建 Tag 前执行 release；远端保护与可信签发仍待接通，详见[发布门禁](docs/standards/release.md)。

@@ -5,48 +5,52 @@
       "id": "TM-001",
       "title": "账号与登录",
       "version": "0.1.0",
-      "status": "planned",
+      "status": "in_progress",
       "spec": "docs/product/README.md",
       "cases": [
         {
           "id": "E2E-TM001-001",
           "scenario": "预置管理员和两名成员经真实 App 登录、首次改密、退出后重登",
           "expected": "有效账号可登录；首次改密生效；退出后的凭据不能继续访问",
-          "data_program": "scripts/test_data.py",
-          "dataset": "identity",
+          "data_program": "tests/server/fixtures.py",
+          "dataset": "auth_accounts",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": null,
-          "acceptance_id": "AC-TM001-001"
+          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "acceptance_id": "AC-TM001-001",
+          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_001"
         },
         {
           "id": "E2E-TM001-002",
           "scenario": "成员经真实 App 查看本人身份并尝试管理员账号管理操作；管理员停用账号后重新登录",
           "expected": "成员只能查看本人身份且不能调用管理员账号管理；停用账号不能登录，UI 显示对应错误",
-          "data_program": "scripts/test_data.py",
-          "dataset": "identity",
+          "data_program": "tests/server/fixtures.py",
+          "dataset": "auth_accounts",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": null,
-          "acceptance_id": "AC-TM001-002"
+          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "acceptance_id": "AC-TM001-002",
+          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_002"
         },
         {
           "id": "E2E-TM001-003",
           "scenario": "管理员重置密码并撤销已有会话",
           "expected": "新密码生效、旧会话失效，管理动作产生审计记录",
-          "data_program": "scripts/test_data.py",
-          "dataset": "identity",
+          "data_program": "tests/server/fixtures.py",
+          "dataset": "auth_accounts",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": null,
-          "acceptance_id": "AC-TM001-003"
+          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "acceptance_id": "AC-TM001-003",
+          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_003"
         },
         {
           "id": "E2E-TM001-004",
           "scenario": "最小更新器：首次候选干净安装后经 HTTPS 获取受控高版本签名测试包并点击更新；后续版本从上一稳定版升级，另尝试无效签名包",
           "expected": "最小更新器随首个产品版本交付；有效包替换与重启成功且保留账号状态，无效签名被拒绝并保留原版",
-          "data_program": null,
-          "dataset": "update_packages",
+          "data_program": "tests/e2e/update_source.py",
+          "dataset": "tm001_update_packages",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": null,
-          "acceptance_id": "AC-TM001-004"
+          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "acceptance_id": "AC-TM001-004",
+          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_004"
         }
       ],
       "source_requirement": "REQ-TM001",

@@ -15,28 +15,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install locked service and test dependencies
+        run: python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
       - name: Validate SOP and document baseline
         run: python3 scripts/check_docs.py
       - name: Validate feature traceability
         run: python3 scripts/quality_gate.py check
       - name: Test governance tooling
         run: python3 -m unittest discover -s tests/governance -p 'test_*.py' -v
+      - name: Test real account service and database
+        run: python3 -m pytest tests/server -q
+      - name: Test isolated update package input validation
+        run: python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
 
   product-e2e:
-    name: product-e2e
+    name: product-e2e (${{ matrix.runner }})
     needs: governance
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Select the documented native toolchain
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app/Contents/Developer
+      - name: Install locked service and test dependencies
+        run: python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
       - name: Execute product gate
-        # No skip/continue-on-error: bootstrap BLOCKED deliberately fails this job.
+        # All four TM-001 cases are required; missing native evidence blocks this job.
         run: python3 scripts/quality_gate.py iteration
       - name: Retain actual gate evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: product-e2e-${{ github.sha }}-${{ github.run_attempt }}
+          name: product-e2e-${{ matrix.runner }}-${{ github.sha }}-${{ github.run_attempt }}
           path: .local/e2e/
           include-hidden-files: true
           if-no-files-found: error

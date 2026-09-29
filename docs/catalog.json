@@ -24,7 +24,8 @@
       "base_release": null,
       "inputs": [
         "docs/standards/versioning.md",
-        "releases/v0.0.1-20260929T060944Z/05-release-plan.md"
+        "releases/v0.0.1-20260929T060944Z/05-release-plan.md",
+        "releases/v0.1.0-20260929T074814Z/05-release-plan.md"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-007-release-plan.md"
@@ -50,7 +51,9 @@
       "applicable_release": "all",
       "base_release": null,
       "inputs": [
-        "docs/product/README.md"
+        "docs/product/README.md",
+        "server/tokenmeter_server/main.py",
+        "apps/macos/TokenMeter/TokenMeterApp.swift"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-004-technical-design.md"
@@ -183,7 +186,9 @@
         "docs/testing/strategy.md",
         "docs/standards/versioning.md",
         ".github/workflows/release-candidate.yml",
-        "scripts/candidate_gate.py"
+        "scripts/candidate_gate.py",
+        "scripts/quality_gate.py",
+        "scripts/native_e2e.py"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-018-release-gate.md"
@@ -212,7 +217,8 @@
       "base_release": null,
       "inputs": [
         "docs/design-plan.md",
-        "releases/v0.0.1-20260929T060944Z/06-iteration-record.md"
+        "releases/v0.0.1-20260929T060944Z/06-iteration-record.md",
+        "releases/v0.1.0-20260929T074814Z/06-iteration-record.md"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-022-archive-handoff.md"
@@ -380,7 +386,11 @@
       "base_release": null,
       "inputs": [
         "docs/testing/strategy.md",
-        "scripts/test_data.py"
+        "scripts/test_data.py",
+        "scripts/native_e2e.py",
+        "tests/server/fixtures.py",
+        "tests/e2e/update_source.py",
+        "tests/e2e/code_signing.py"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-014-e2e.md"
@@ -877,7 +887,7 @@
       "sop": "sop/SOP-010-test-data.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-REQUIREMENTS-V010",
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-REQUIREMENTS",
       "path": "releases/v0.1.0-20260929T074814Z/01-requirements.md",
       "type": "plan",
       "status": "baselined",
@@ -891,7 +901,7 @@
       "sop": "sop/SOP-002-requirements.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-BREAKDOWN-V010",
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-BREAKDOWN",
       "path": "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
       "type": "plan",
       "status": "baselined",
@@ -904,7 +914,7 @@
       "sop": "sop/SOP-003-feature-breakdown.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-DEVELOPMENT-PLAN-V010",
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-DEVELOPMENT-PLAN",
       "path": "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
       "type": "plan",
       "status": "baselined",
@@ -918,7 +928,7 @@
       "sop": "sop/SOP-005-development-plan.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-TEST-PLAN-V010",
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-TEST-PLAN",
       "path": "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
       "type": "plan",
       "status": "baselined",
@@ -932,7 +942,7 @@
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-RELEASE-NOTES-V010",
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-RELEASE-NOTES",
       "path": "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
       "type": "plan",
       "status": "baselined",
@@ -946,7 +956,7 @@
       "sop": "sop/SOP-007-release-plan.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-ITERATION-RECORD-V010",
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-ITERATION-RECORD",
       "path": "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
       "type": "record",
       "status": "baselined",

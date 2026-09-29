@@ -135,8 +135,23 @@
       "description": "TM-001完整开发与验收追踪"
     }
   ],
-  "test_programs": [],
-  "test_data_program": null,
+  "test_programs": [
+    "tests/server/test_auth.py",
+    "tests/server/test_database.py",
+    "tests/server/test_network.py",
+    "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+    "scripts/e2e.py",
+    "scripts/native_e2e.py",
+    "tests/e2e/update_source.py",
+    "apps/macos/build_update_fixture.py",
+    "apps/macos/tests/test_update_fixture.py",
+    "tests/e2e/code_signing.py",
+    "tests/governance/test_native_e2e.py",
+    "tests/governance/test_update_source.py",
+    "tests/governance/test_code_signing.py",
+    "tests/governance/test_quality_gate.py"
+  ],
+  "test_data_program": "tests/server/fixtures.py",
   "test_sop": "sop/SOP-014-e2e.md",
   "gate_commands": {
     "metadata": "python3 scripts/quality_gate.py check",
@@ -154,5 +169,5 @@
   "lookup_command": "python3 scripts/release_registry.py show --release-id v0.1.0-20260929T074814Z",
   "sop_index": "sop/README.md",
   "document_catalog": "docs/catalog.json",
-  "program_bindings_status": "planned"
+  "program_bindings_status": "ready"
 }

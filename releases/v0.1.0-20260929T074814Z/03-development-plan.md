@@ -39,9 +39,15 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 
 官方依据：[FastAPI 安全](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/)、[SQLAlchemy SQLite](https://docs.sqlalchemy.org/en/20/dialects/sqlite.html)、[Sparkle2.10.0](https://github.com/sparkle-project/Sparkle/blob/2.10.0/Package.swift)、[GitHub macOS runner](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)。具体依赖解析后锁定到文件，失败不能静默升级。
 
+### 开发升级包的签名连续性
+
+原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离Mac CI生成短期自签测试证书和专用临时keychain，两个包显式指定同一identity和keychain；结束时独立清理临时信任、专用keychain和私钥。该测试签名不满足Developer ID、公证或正式发布条件。开发过程不改变用户本机的信任设置。
+
+依据：[Apple TN2206](https://developer.apple.com/library/archive/technotes/tn2206/)、[Code Signing Requirement Language](https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/RequirementLang/RequirementLang.html)。不同ad-hoc包的摘要变化，不能作为跨版本Keychain身份连续性的设计依据。
+
 ## 实施顺序（SOP-005）
 
-1. 完成 001–007 文档并保存 structure 与 008 baseline 证据；当前程序绑定 planned。
+1. 完成 001–007 文档并保存 structure 与 008 baseline 证据；此阶段程序绑定为planned，010/011真实入口完成后再改ready。
 2. 009 创建隔离 venv、服务/数据库和 Mac/native target 骨架。读取工具链状态，本机未配置 Xcode 不触发安装；远端验证 native 探针。
 3. 010/011 创建账号/更新数据、独立 oracle 与真实 API/native 测试，在实现前保存确定性失败；无法运行的 native 红测写 BLOCKED。可先推进有实际单元/接口验证的子任务。
 4. 012 实现服务/界面/更新；数据与测试绑定完整后设 ready/in_progress，产品通过以前不设 implemented。
@@ -57,3 +63,5 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 - root：版本文档、SOP、catalog、矩阵/数据清单、CI、集成与 PR。
 
 候选代码、测试、文档和数据一同提交；测试后代码或依赖变化重新验证。完整命令在入口真实建立后补入，未建立时明确待实现，不写伪造成功记录。
+
+服务启动使用 `python3 -m uvicorn server.tokenmeter_server.main:app --host 127.0.0.1 --port <隔离端口> --no-proxy-headers`，并显式设置 `TOKENMETER_DATABASE_URL`。当前限流按真实连接来源计数，不信任转发头；生产代理来源识别需另行设计验证。

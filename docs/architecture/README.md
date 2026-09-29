@@ -1,13 +1,13 @@
 # 架构与实现边界
 
-状态：设计约定，原生 App、服务端和产品 E2E runner 尚未实现。
+状态：全产品架构约定；TM-001 的 App、认证服务和原生 runner 已建立并正在验收，其余功能按路线图迭代。实际证据见[当前状态](../status.md)。
 
 ## 组成
 
-- `apps/macos/`（待建立）：SwiftUI 界面、只读日志适配器、用量归一化、本地 SQLite、离线队列、同步客户端、Sparkle。
-- `server/`（待建立）：FastAPI 认证、权限、幂等接收、统计、管理员 API；SQLAlchemy/Alembic 管理数据库。
-- `scripts/`：自动开发/测试/门禁入口。当前仅有规范工具，不能替代上述产品模块。
-- `tests/`：功能矩阵、数据集、规范工具测试；真实原生日志 fixture 和产品 UI E2E 随功能增加。
+- `apps/macos/`：已建立 SwiftUI 账号界面、Keychain 会话、Sparkle 与 XCUITest target；日志适配器、本地 SQLite、离线队列和同步客户端待后续功能实现。
+- `server/`：FastAPI 认证、角色权限、账号管理、审计及 SQLAlchemy/Alembic 数据库；用量接收与统计待后续实现。
+- `scripts/`：文档/追踪检查、真实原生测试编排与原始结果复核、发布候选检查。
+- `tests/`：功能与验收清单、隔离账号和更新数据程序、服务端与治理回归；原生用例位于 App 的 UI test target，真实工具日志 fixture 随采集功能增加。
 
 ## 数据流
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Product E2E adapter bootstrap: record BLOCKED, never fabricate execution."""
+"""Run real native product E2E, retaining failures and missing-environment evidence."""
 
 from __future__ import annotations
 
@@ -8,11 +8,14 @@ import hashlib
 import json
 import platform
 import subprocess
+import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import native_e2e
 
 
 def digest(path: Path) -> str | None:
@@ -27,16 +30,10 @@ def git_value(root: Path, *args: str) -> str | None:
         return None
 
 
-def record_blocked(root: Path, phase: str) -> Path:
+def record_blocked(root: Path, phase: str, run_id: str | None = None) -> Path:
     now = datetime.now(timezone.utc)
-    run_id = now.strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex
-    output_root = root / ".local" / "e2e"
-    # Never follow an externally supplied artifact-directory symlink.
-    for directory in (root / ".local", output_root):
-        if directory.is_symlink():
-            raise ValueError(f"Refusing symlink artifact directory: {directory}")
-    output = output_root / run_id
-    output.mkdir(parents=True, exist_ok=False)
+    run_id = run_id or now.strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex
+    output = native_e2e.new_run_directory(root, run_id)
     release_id = None
     try:
         current = json.loads((root / "releases/current.json").read_text(encoding="utf-8"))
@@ -68,11 +65,8 @@ def record_blocked(root: Path, phase: str) -> Path:
         "passed_cases": 0,
         "suites": [],
         "artifacts": [],
-        "blockers": [
-            "真实 SwiftUI App、FastAPI 服务端及原生产品 E2E 测试目标尚未建立。",
-            "自动构建、隔离账号初始化、GUI 驱动和原生结果校验尚未接通。",
-            "当前运行只记录阻塞；没有执行任何产品用例，不能获得发布资格。",
-        ],
+        "cleanup_completed": False,
+        "blockers": ["Native execution has not started."],
     }
     destination = output / "result.json"
     destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -82,14 +76,29 @@ def record_blocked(root: Path, phase: str) -> Path:
 def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase", choices=("iteration", "release"), required=True)
+    parser.add_argument("--run-id", help="Invocation nonce allocated by the parent gate")
     args = parser.parse_args(argv)
     try:
-        path = record_blocked(root, args.phase)
+        path = record_blocked(root, args.phase, args.run_id)
     except (OSError, ValueError, RuntimeError) as exc:
         print(json.dumps({"state": "BLOCKED", "reason": str(exc), "release_eligible": False}, ensure_ascii=False))
         return 2
-    print(json.dumps({"state": "BLOCKED", "report": str(path), "release_eligible": False}, ensure_ascii=False))
-    return 2
+    report = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        native_e2e.execute(root, path.parent, report)
+        report["blockers"] = []
+        if args.phase == "release":
+            raise native_e2e.Blocked("Final signed package, supported platform/MySQL matrix, protected CI and passport issuer are not ready")
+    except native_e2e.EvidenceError as exc:
+        report["state"], report["errors"] = "FAIL", [str(exc)]
+    except (native_e2e.Blocked, OSError, ValueError, RuntimeError, KeyError, subprocess.SubprocessError) as exc:
+        report["state"], report["blockers"] = "BLOCKED", [str(exc)]
+    finally:
+        report["finished_at"] = datetime.now(timezone.utc).isoformat()
+        report["release_eligible"] = False
+        path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({"state": report["state"], "report": str(path), "release_eligible": False}, ensure_ascii=False))
+    return {"PASS": 0, "FAIL": 1, "BLOCKED": 2}[report["state"]]
 
 
 if __name__ == "__main__":
