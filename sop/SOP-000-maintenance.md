@@ -1,6 +1,6 @@
 # SOP-000 规范维护
 
-**修订：** 1　**状态：** baselined　**适用：** all
+**修订：** 2　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -40,7 +40,7 @@
 
 ## 证据位置
 
-当前 `releases/<release_id>/iteration-record.md` 记录规则来源、映射、决定及实际检查命令/结果；目录和源码 diff 作为可追踪输入。
+当前 `releases/<release_id>/06-iteration-record.md` 记录规则来源、映射、决定及实际检查命令/结果；目录和源码 diff 作为可追踪输入。
 
 ## 下一步
 

@@ -10,6 +10,14 @@ import re
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
+RELEASE_DOCS = {
+    "requirements": "01-requirements.md",
+    "breakdown": "02-breakdown.md",
+    "development_plan": "03-development-plan.md",
+    "test_plan": "04-test-plan.md",
+    "release_plan": "05-release-plan.md",
+    "iteration_record": "06-iteration-record.md",
+}
 RELEASE = re.compile(r"v(\d+\.\d+\.\d+)-(\d{8}T\d{6}Z)\Z")
 
 
@@ -52,14 +60,16 @@ def show(root: Path, release_id: str | None = None) -> dict:
     ref = f"refs/tags/{release_id}"
     tag_commit = git(root, "rev-parse", "--verify", f"{ref}^{{commit}}")
     tag = tag_commit  # Every archived read uses one resolved immutable snapshot.
-    manifest_path = f"releases/{release_id}/manifest.json"
+    manifest_path = f"releases/{release_id}/00-manifest.json"
     manifest = obj(manifest_path, tag)
     if manifest.get("release_id") != release_id or manifest.get("version") != match[1] or manifest.get("created_at") != created_at:
         raise ValueError("Manifest release_id, version or created_at does not match requested ID")
     documents = manifest.get("documents")
-    required = {"requirements", "breakdown", "development_plan", "test_plan", "release_plan", "iteration_record"}
-    if not isinstance(documents, dict) or not required.issubset(documents):
+    if not isinstance(documents, dict) or not RELEASE_DOCS.keys() <= documents.keys():
         raise ValueError("Incomplete lifecycle documents")
+    for key, filename in RELEASE_DOCS.items():
+        if documents[key] != f"releases/{release_id}/{filename}":
+            raise ValueError(f"Lifecycle document {key} must use ordered filename {filename}")
     for path in documents.values():
         if not isinstance(path, str) or not path.startswith(f"releases/{release_id}/"):
             raise ValueError("Lifecycle documents must belong to this release")

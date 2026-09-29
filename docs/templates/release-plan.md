@@ -35,9 +35,9 @@
 
 ## 输出、验收与证据
 
-- 输出：本轮 `release-plan.md`、同编号 Changelog 与 manifest 发布索引。
+- 输出：本轮 `05-release-plan.md`、同编号 Changelog 与 manifest 发布索引。
 - 文档验收：范围、平台、构建、完整门禁、升级/迁移、分发和恢复已有确定方案，缺失执行条件明确登记。
 - 实际证据字段：`release_id`、候选 SHA、`run_id`、受信运行身份、原生报告、产物/数据/场景摘要、机器判定、passport、实际 tag/Release/部署记录。
 - 证据位置：`<实际外部运行/资产引用；尚未生成则 null>`。候选提交后由执行器生成，保存在被测源码提交之外；不得手写 PASS、回填“已上线”或覆盖旧证据。
 - 执行验收：只有受保护 CI 校验同一候选和最终产物取得完整 PASS 才能发布；已测产物不能在发布时重新构建替换。
-- 下一步：开发前走 [SOP-008](../../sop/SOP-008-baseline-check.md)；执行后按 [SOP-022](../../sop/SOP-022-archive-handoff.md)归档，并在本轮 `iteration-record.md` 记录实际结果。
+- 下一步：开发前走 [SOP-008](../../sop/SOP-008-baseline-check.md)；执行后按 [SOP-022](../../sop/SOP-022-archive-handoff.md)归档，并在本轮 `06-iteration-record.md` 记录实际结果。

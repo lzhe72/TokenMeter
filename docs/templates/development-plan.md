@@ -28,8 +28,8 @@
 
 ## 输出、验收与证据
 
-- 输出：本轮 `development-plan.md`、可执行任务顺序和完成条件；交接按 [SOP-022](../../sop/SOP-022-archive-handoff.md)。
+- 输出：本轮 `03-development-plan.md`、可执行任务顺序和完成条件；交接按 [SOP-022](../../sop/SOP-022-archive-handoff.md)。
 - 文档验收：每项任务有确定输入/输出/验证方式，数据与测试准备先于产品实现；没有遗漏的集成依赖。
 - 实施验收：按对应 SOP 验证真实产物和结果；缺环境/程序时记录 `BLOCKED`，计划完成不代表代码或测试完成。
-- 证据：本轮 `iteration-record.md` 记录实际任务结果、命令、报告引用和下一步，不预填成功。
+- 证据：本轮 `06-iteration-record.md` 记录实际任务结果、命令、报告引用和下一步，不预填成功。
 - 下一步：[SOP-006 测试计划](../../sop/SOP-006-test-plan.md)，采用[测试计划模板](test-plan.md)。

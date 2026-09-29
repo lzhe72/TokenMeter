@@ -1,6 +1,6 @@
 # SOP-006 测试计划
 
-**修订：** 1　**状态：** baselined　**适用：** all
+**修订：** 2　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -29,7 +29,7 @@ SOP-002–005 的需求、设计和任务明确；阅读 [测试策略](../docs/
 
 ## 输出
 
-test-plan.md、场景/数据登记、可被 Codex 执行的 SOP 合同和 E2E 实现任务。
+04-test-plan.md、场景/数据登记、可被 Codex 执行的 SOP 合同和 E2E 实现任务。
 
 ## 成功与失败判据
 
@@ -41,7 +41,7 @@ test-plan.md、场景/数据登记、可被 Codex 执行的 SOP 合同和 E2E �
 
 ## 证据位置
 
-版本测试计划、矩阵、数据清单和具体 SOP；iteration-record.md 记录覆盖决定与缺口。
+版本测试计划、矩阵、数据清单和具体 SOP；06-iteration-record.md 记录覆盖决定与缺口。
 
 ## 下一步
 

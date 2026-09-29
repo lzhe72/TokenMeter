@@ -75,6 +75,6 @@
 
 上述条件由执行程序和门禁检查，不使用人工勾选放行。只有受信执行器的完整证据能产生 PASS；模板填写完成、脚本自检通过或人工点验均不等于功能验收通过。
 
-输出为本功能需求/验收细节、同步的实现/测试/数据/SOP 和真实证据索引。文档检查及实际结果写入本轮 `iteration-record.md`；发布资格由 [SOP-018](../../sop/SOP-018-release-gate.md)判定，归档按 [SOP-022](../../sop/SOP-022-archive-handoff.md)。
+输出为本功能需求/验收细节、同步的实现/测试/数据/SOP 和真实证据索引。文档检查及实际结果写入本轮 `06-iteration-record.md`；发布资格由 [SOP-018](../../sop/SOP-018-release-gate.md)判定，归档按 [SOP-022](../../sop/SOP-022-archive-handoff.md)。
 
 无关的未来 `planned` 功能不加入本次应执行集合；本次目标不能通过改为 `planned` 或移动版本号被排除。

@@ -20,8 +20,10 @@ class RegistryTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
-        self.documents = {key: f"releases/{ID}/{key.replace('_', '-')}.md" for key in (
-            "requirements", "breakdown", "development_plan", "test_plan", "release_plan", "iteration_record")}
+        self.documents = {key: f"releases/{ID}/{filename}" for key, filename in (
+            ("requirements", "01-requirements.md"), ("breakdown", "02-breakdown.md"),
+            ("development_plan", "03-development-plan.md"), ("test_plan", "04-test-plan.md"),
+            ("release_plan", "05-release-plan.md"), ("iteration_record", "06-iteration-record.md"))}
         for path in self.documents.values():
             self.write(path, f"# {ID}\nSynthetic lifecycle record\n")
         self.write("releases/current.json", {"schema_version": 1, "release_id": ID})
@@ -41,13 +43,15 @@ class RegistryTests(unittest.TestCase):
         return file
 
     def persist(self):
-        self.write(f"releases/{ID}/manifest.json", self.manifest)
+        self.write(f"releases/{ID}/00-manifest.json", self.manifest)
 
     def test_default_and_explicit_lookup_preserve_unpublished_status(self):
         for identifier in (None, ID):
             result = registry.show(self.root, identifier)
             self.assertEqual(result["release_id"], ID)
             self.assertEqual(result["source"]["kind"], "working_tree")
+            self.assertEqual(result["source"]["manifest"], f"releases/{ID}/00-manifest.json")
+            self.assertEqual(result["documents"], self.documents)
             self.assertEqual(result["product_features"][0]["cases"], ["case-1"])
             self.assertNotIn("Old", result["changelog"]["entry"])
             self.assertIsNone(result["release_eligible"])
@@ -69,12 +73,14 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             registry.show(self.root)
 
-    def test_lifecycle_document_cannot_point_to_other_release(self):
-        self.manifest["documents"]["test_plan"] = "other.md"
-        self.write("other.md", ID)
-        self.persist()
-        with self.assertRaises(ValueError):
-            registry.show(self.root)
+    def test_lifecycle_documents_require_ordered_paths_in_same_release(self):
+        for path in ("other.md", f"releases/{ID}/test-plan.md", f"releases/{ID}/05-test-plan.md"):
+            with self.subTest(path=path):
+                self.manifest["documents"]["test_plan"] = path
+                self.write(path, ID)
+                self.persist()
+                with self.assertRaises(ValueError):
+                    registry.show(self.root)
 
     def test_external_references_and_symlinks_refused(self):
         self.manifest["changelog"] = "../outside.md"
@@ -107,6 +113,8 @@ class RegistryTests(unittest.TestCase):
         self.persist()
         result = registry.show(self.root, ID)
         self.assertEqual(result["source"]["kind"], "git_tag")
+        self.assertEqual(result["source"]["manifest"], f"releases/{ID}/00-manifest.json")
+        self.assertEqual(result["source"]["commit"], git("rev-parse", f"{ID}^{{commit}}").stdout.strip())
         self.assertEqual(result["version"], "0.1.0")
         self.assertEqual(len(result["commits"]), 1)
         self.assertFalse(result["passport"]["verified"])

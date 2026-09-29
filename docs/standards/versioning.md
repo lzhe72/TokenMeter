@@ -37,14 +37,16 @@ Changelog 每个版本记录状态、关联功能、变更、兼容/迁移影响
 
 ```text
 releases/<release_id>/
-  manifest.json          # 机器索引：版本、功能、文档、测试程序、预期通行证名
-  requirements.md       # 本版本需求与验收条件
-  breakdown.md          # 功能拆解和稳定需求 ID
-  development-plan.md   # 实现顺序、依赖、接口、交接
-  test-plan.md          # 用例、用户/数据程序、SOP、E2E、预期、环境
-  release-plan.md       # 发布内容、兼容性、部署/恢复、当前阻塞
-  iteration-record.md   # 步骤执行、证据、阻塞与交接
+  00-manifest.json         # 机器索引：版本、功能、文档、测试程序、预期通行证名
+  01-requirements.md       # 本版本需求与验收条件
+  02-breakdown.md          # 功能拆解和稳定需求 ID
+  03-development-plan.md   # 实现顺序、依赖、接口、交接
+  04-test-plan.md          # 用例、用户/数据程序、SOP、E2E、预期、环境
+  05-release-plan.md       # 发布内容、兼容性、部署/恢复、当前阻塞
+  06-iteration-record.md   # 步骤执行、证据、阻塞与交接
 ```
+
+文件名使用两位顺序前缀：`00` 为机器总索引，`01`–`06` 依次为需求、拆解、开发计划、测试计划、发布预案、迭代记录。编号体现主文档顺序，迭代记录从立项起持续追加。技术设计仍在开发计划中记录或链接独立设计附件，按 SOP-004 在开发计划前完成。模板复制到版本目录时使用这些目标文件名；机器索引的语义键和文档 ID 保持稳定。
 
 `releases/current.json` 指向当前迭代；切换只影响默认查询，历史档案保留。每个档案都记录相同编号并引用相关功能矩阵。产品阶段每个目标功能/验收条件必须落到具体用例 ID，实际测试绑定和数据程序不得为空。
 
@@ -57,10 +59,10 @@ python3 scripts/release_registry.py show --release-id v0.0.1-20260929T060944Z
 
 默认从 current.json 取编号；已有同名 Tag 时读取该 Tag 中的不可变档案，否则读取工作树。输出需求/功能/任务/用例、数据程序和 SOP、计划、Changelog、本地 Git 提交/Tag、预期通行证资产名。它不签发或验证通行证；发布资格仍由受保护门禁判定。尚未立项的路线图版本没有完整 release ID，不能当作已发布版本查询。
 
-未发布时直接读取 `releases/<release_id>/manifest.json`，索引中列出需求、拆解、计划、测试程序、Changelog、发布说明和预期通行证名。正式 Git 发布后可通过以下命令查询不可变版本档案：
+未发布时直接读取 `releases/<release_id>/00-manifest.json`，索引中列出需求、拆解、计划、测试程序、Changelog、发布说明和预期通行证名。正式 Git 发布后可通过以下命令查询不可变版本档案：
 
 ```sh
-git show <release_id>:releases/<release_id>/manifest.json
+git show <release_id>:releases/<release_id>/00-manifest.json
 git log --all --fixed-strings --grep='<release_id>'
 git show <release_id>:CHANGELOG.md
 ```

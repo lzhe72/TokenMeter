@@ -10,21 +10,21 @@
 
 - 输入引用：[文档规范](../../docs/standards/documentation.md)、[版本规范](../../docs/standards/versioning.md)、当前目标/反馈、比较基线和本轮 manifest。
 - 先按 SOP-001 确定不可变 `release_id` 和版本档案；首次没有比较基线时使用 `null`。
-- 将相应模板复制到本轮档案，填入真实输入、需求/任务 ID、决定、输出和验收条件；按目标位置检查链接。
-- 每份文档正文保留 `release_id`，元数据登记到 `docs/catalog.json`，文档关系登记到本轮 `manifest.json`。
+- 模板源文件保留现名；复制到本轮档案时使用下表的 01–06 编号目标文件名，填入真实输入、需求/任务 ID、决定、输出和验收条件；按目标位置检查链接。
+- 每份文档正文保留 `release_id`，元数据登记到 `docs/catalog.json`，文档关系登记到本轮 `00-manifest.json`。
 - 未存在的程序、测试、报告和产物绑定使用 `null` 并关联具体补齐任务。计划不能填写虚构路径或预填成功。
 
 ## 独立版本模板
 
-| 顺序 / 工作 | 模板及本轮文件名 | 适用 SOP | 主要输出 |
+| 顺序 / 工作 | 模板链接及本轮目标文件名 | 适用 SOP | 主要输出 |
 | --- | --- | --- | --- |
-| 需求定义 | [requirements.md](requirements.md) | [002](../../sop/SOP-002-requirements.md) | 范围、稳定需求 ID、可观察验收条件 |
-| 功能拆解 | [breakdown.md](breakdown.md) | [003](../../sop/SOP-003-feature-breakdown.md) | 需求→功能→任务、依赖与完成标准 |
+| 需求定义 | [01-requirements.md](requirements.md) | [002](../../sop/SOP-002-requirements.md) | 范围、稳定需求 ID、可观察验收条件 |
+| 功能拆解 | [02-breakdown.md](breakdown.md) | [003](../../sop/SOP-003-feature-breakdown.md) | 需求→功能→任务、依赖与完成标准 |
 | 技术设计 | [technical-design.md](technical-design.md) | [004](../../sop/SOP-004-technical-design.md) | 模块、接口/数据、隐私、兼容与恢复决定 |
-| 开发计划 | [development-plan.md](development-plan.md) | [005](../../sop/SOP-005-development-plan.md) | 实施顺序、数据/测试准备、集成和验证 |
-| 测试计划 | [test-plan.md](test-plan.md) | [006](../../sop/SOP-006-test-plan.md) | 需求→用例→数据/重置→SOP→原生测试→预期→报告 |
-| 发布预案 | [release-plan.md](release-plan.md) | [007](../../sop/SOP-007-release-plan.md) | 构建、门禁、分发、升级和恢复方案 |
-| 工作记录/复盘 | [iteration-record.md](iteration-record.md) | [022](../../sop/SOP-022-archive-handoff.md)、[023](../../sop/SOP-023-iteration.md) | 各步实际结果、证据、阻塞、交接与下一轮需求 |
+| 开发计划 | [03-development-plan.md](development-plan.md) | [005](../../sop/SOP-005-development-plan.md) | 实施顺序、数据/测试准备、集成和验证 |
+| 测试计划 | [04-test-plan.md](test-plan.md) | [006](../../sop/SOP-006-test-plan.md) | 需求→用例→数据/重置→SOP→原生测试→预期→报告 |
+| 发布预案 | [05-release-plan.md](release-plan.md) | [007](../../sop/SOP-007-release-plan.md) | 构建、门禁、分发、升级和恢复方案 |
+| 工作记录/复盘 | [06-iteration-record.md](iteration-record.md) | [022](../../sop/SOP-022-archive-handoff.md)、[023](../../sop/SOP-023-iteration.md) | 各步实际结果、证据、阻塞、交接与下一轮需求 |
 
 ## 工作专题模板
 
@@ -40,6 +40,6 @@
 
 - 输出：同一 `release_id` 的独立版本文档、manifest/文档目录关联、所需专题记录和 SOP。
 - 文档验收：每个阶段有确定输入、输出、验收条件及具体 SOP；关键决定已完成；文件、引用、版本和追踪链一致。
-- 执行 [SOP-008 基线检查](../../sop/SOP-008-baseline-check.md)，实际结构/引用检查结果及语义核对写入本轮 `iteration-record.md`。基线检查通过后再按 SOP 进入开发。
+- 执行 [SOP-008 基线检查](../../sop/SOP-008-baseline-check.md)，实际结构/引用检查结果及语义核对写入本轮 `06-iteration-record.md`。基线检查通过后再按 SOP 进入开发。
 - 实际测试与发布证据来自执行器；候选 SHA、原生结果、产物摘要和 passport 保存于对应机器运行/资产。没有执行时明确未执行或 `BLOCKED`。
 - 完整追踪：`release_id → 文档 → 需求/验收条件 → 任务 → 用例 → 数据/重置程序 → 具体 SOP → 原生测试 → run_id/报告 → passport → 发布 → 下一轮需求`。

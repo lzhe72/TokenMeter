@@ -34,7 +34,7 @@
 
 ## 输出、验收与证据
 
-- 输出：本轮 `requirements.md`、稳定需求/验收 ID，以及 manifest 中对应索引。
+- 输出：本轮 `01-requirements.md`、稳定需求/验收 ID，以及 manifest 中对应索引。
 - 文档验收：范围可判断，每项行为可验收；影响范围或设计的未决项已解决；输入与 release_id 可追踪。
-- 证据：在本轮 `iteration-record.md` 记录决定、依据和实际文档检查结果；未执行检查不得写通过。
+- 证据：在本轮 `06-iteration-record.md` 记录决定、依据和实际文档检查结果；未执行检查不得写通过。
 - 下一步：[SOP-003 功能拆解](../../sop/SOP-003-feature-breakdown.md)，采用[拆解模板](breakdown.md)。

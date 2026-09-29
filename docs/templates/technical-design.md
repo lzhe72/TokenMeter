@@ -39,5 +39,5 @@
 
 - 输出：独立 `technical-design.md`、必要的全局架构/接口更新及 manifest 中对应索引。
 - 文档验收：模块、数据流、权限、异常、兼容和恢复均有确定行为；关键设计无需实现者猜测；与需求/任务一致。
-- 证据：本轮 `iteration-record.md` 链接调研、设计决定和实际检查结果；验证未运行时如实记录。
+- 证据：本轮 `06-iteration-record.md` 链接调研、设计决定和实际检查结果；验证未运行时如实记录。
 - 下一步：[SOP-005 开发计划](../../sop/SOP-005-development-plan.md)，采用[开发计划模板](development-plan.md)。

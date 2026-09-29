@@ -29,4 +29,4 @@ python3 scripts/quality_gate.py release
 
 ## 证据
 
-基础测试保存运行输出；产品入口记录在 .local/e2e/ 的 result.json，必须为 BLOCKED、executed_cases=0。实际运行结果见 [本轮记录](iteration-record.md)。后续产品版本绑定真实原生报告与版本通行证，按 [发布门禁](../../docs/standards/release.md) 自动校验。
+基础测试保存运行输出；产品入口记录在 .local/e2e/ 的 result.json，必须为 BLOCKED、executed_cases=0。实际运行结果见 [本轮记录](06-iteration-record.md)。后续产品版本绑定真实原生报告与版本通行证，按 [发布门禁](../../docs/standards/release.md) 自动校验。

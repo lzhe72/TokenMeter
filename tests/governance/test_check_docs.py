@@ -25,8 +25,10 @@ class DocumentationTests(unittest.TestCase):
         self.root = self.base / "repository"
         self.root.mkdir()
         self.current = {"schema_version": 1, "release_id": RELEASE_ID}
-        release_docs = {key: f"releases/{RELEASE_ID}/{key.replace('_', '-')}.md"
-                        for key in checker.RELEASE_DOCS}
+        release_docs = {key: f"releases/{RELEASE_ID}/{filename}" for key, filename in (
+            ("requirements", "01-requirements.md"), ("breakdown", "02-breakdown.md"),
+            ("development_plan", "03-development-plan.md"), ("test_plan", "04-test-plan.md"),
+            ("release_plan", "05-release-plan.md"), ("iteration_record", "06-iteration-record.md"))}
         self.manifest = {"schema_version": 1, "release_id": RELEASE_ID, "version": "0.0.1",
                          "created_at": "2026-09-29T06:09:44Z", "documents": release_docs,
                          "publication": {"planned_git_tag": RELEASE_ID}, "changelog": "CHANGELOG.md"}
@@ -61,7 +63,7 @@ class DocumentationTests(unittest.TestCase):
     def persist(self):
         self.write("docs/catalog.json", json.dumps(self.catalog))
         self.write("releases/current.json", json.dumps(self.current))
-        self.write(f"releases/{RELEASE_ID}/manifest.json", json.dumps(self.manifest))
+        self.write(f"releases/{RELEASE_ID}/00-manifest.json", json.dumps(self.manifest))
 
     def errors(self):
         self.persist()
@@ -259,11 +261,11 @@ class DocumentationTests(unittest.TestCase):
         row = self.catalog["documents"][0]
         row.update(status="draft", applicable_release=historical, base_release=historical)
         self.assertTrue(any("existing same-ID manifest" in error for error in self.errors()))
-        self.write(f"releases/{historical}/manifest.json", json.dumps({"schema_version": 1, "release_id": RELEASE_ID}))
+        self.write(f"releases/{historical}/00-manifest.json", json.dumps({"schema_version": 1, "release_id": RELEASE_ID}))
         self.assertTrue(any("existing same-ID manifest" in error for error in self.errors()))
-        self.write(f"releases/{historical}/manifest.json", json.dumps({"schema_version": 1, "release_id": historical}))
+        self.write(f"releases/{historical}/00-manifest.json", json.dumps({"schema_version": 1, "release_id": historical}))
         self.assertEqual(self.errors(), [])
-        manifest = self.root / f"releases/{historical}/manifest.json"
+        manifest = self.root / f"releases/{historical}/00-manifest.json"
         external = self.base / "external-manifest.json"
         external.write_bytes(manifest.read_bytes())
         manifest.unlink()
@@ -278,7 +280,17 @@ class DocumentationTests(unittest.TestCase):
         for row in self.catalog["documents"]:
             if row["path"] == old:
                 row["path"] = replacement
-        self.assertTrue(any("expected release-plan.md" in error for error in self.errors()))
+        self.assertTrue(any("expected 05-release-plan.md" in error for error in self.errors()))
+
+    def test_unnumbered_release_document_is_rejected_even_with_updated_catalog(self):
+        old = self.manifest["documents"]["requirements"]
+        replacement = old.replace("01-requirements.md", "requirements.md")
+        (self.root / old).rename(self.root / replacement)
+        self.manifest["documents"]["requirements"] = replacement
+        for row in self.catalog["documents"]:
+            if row["path"] == old:
+                row["path"] = replacement
+        self.assertTrue(any("expected 01-requirements.md" in error for error in self.errors()))
 
     def test_release_document_keys_cannot_reuse_one_file(self):
         target = self.manifest["documents"]["release_plan"]

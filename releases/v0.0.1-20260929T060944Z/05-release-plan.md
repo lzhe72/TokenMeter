@@ -2,7 +2,7 @@
 
 ## 计划内容
 
-TM-000：全流程框架、首版设计、文档规范、自动 E2E 合同、版本索引与已有规范工具。详见 [Changelog](../../CHANGELOG.md) 和 [需求](requirements.md)。
+TM-000：全流程框架、首版设计、文档规范、自动 E2E 合同、版本索引与已有规范工具。详见 [Changelog](../../CHANGELOG.md) 和 [需求](01-requirements.md)。
 
 ## 当前状态
 
@@ -13,7 +13,7 @@ TM-000：全流程框架、首版设计、文档规范、自动 E2E 合同、版
 - 语义版本：0.0.1；release ID：v0.0.1-20260929T060944Z。
 - 预期 tag/Release 名：v0.0.1-20260929T060944Z，当前不创建。
 - 预期通行证：v0.0.1-20260929T060944Z.passport.json，当前未签发。
-- 提交、计划、测试和发布查询入口：[manifest.json](manifest.json)。
+- 提交、计划、测试和发布查询入口：[00-manifest.json](00-manifest.json)。
 
 ## 发布条件与恢复
 

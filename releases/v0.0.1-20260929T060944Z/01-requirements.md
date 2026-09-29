@@ -22,4 +22,4 @@
 
 ## 输出
 
-[功能拆解](breakdown.md)、[机器索引](manifest.json)。
+[功能拆解](02-breakdown.md)、[机器索引](00-manifest.json)。

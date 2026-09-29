@@ -24,7 +24,7 @@
       "base_release": null,
       "inputs": [
         "docs/standards/versioning.md",
-        "releases/v0.0.1-20260929T060944Z/release-plan.md"
+        "releases/v0.0.1-20260929T060944Z/05-release-plan.md"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-007-release-plan.md"
@@ -188,7 +188,7 @@
       "base_release": null,
       "inputs": [
         "docs/design-plan.md",
-        "releases/v0.0.1-20260929T060944Z/iteration-record.md"
+        "releases/v0.0.1-20260929T060944Z/06-iteration-record.md"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-022-archive-handoff.md"
@@ -391,26 +391,26 @@
     },
     {
       "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-BREAKDOWN",
-      "path": "releases/v0.0.1-20260929T060944Z/breakdown.md",
+      "path": "releases/v0.0.1-20260929T060944Z/02-breakdown.md",
       "type": "plan",
       "status": "baselined",
       "applicable_release": "v0.0.1-20260929T060944Z",
       "base_release": null,
       "inputs": [
-        "releases/v0.0.1-20260929T060944Z/requirements.md"
+        "releases/v0.0.1-20260929T060944Z/01-requirements.md"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-003-feature-breakdown.md"
     },
     {
       "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-DEVELOPMENT-PLAN",
-      "path": "releases/v0.0.1-20260929T060944Z/development-plan.md",
+      "path": "releases/v0.0.1-20260929T060944Z/03-development-plan.md",
       "type": "plan",
       "status": "baselined",
       "applicable_release": "v0.0.1-20260929T060944Z",
       "base_release": null,
       "inputs": [
-        "releases/v0.0.1-20260929T060944Z/breakdown.md",
+        "releases/v0.0.1-20260929T060944Z/02-breakdown.md",
         "docs/architecture/README.md"
       ],
       "updated_at": "2026-09-29",
@@ -418,27 +418,27 @@
     },
     {
       "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-ITERATION-RECORD",
-      "path": "releases/v0.0.1-20260929T060944Z/iteration-record.md",
+      "path": "releases/v0.0.1-20260929T060944Z/06-iteration-record.md",
       "type": "record",
       "status": "baselined",
       "applicable_release": "v0.0.1-20260929T060944Z",
       "base_release": null,
       "inputs": [
-        "releases/v0.0.1-20260929T060944Z/development-plan.md",
-        "releases/v0.0.1-20260929T060944Z/test-plan.md"
+        "releases/v0.0.1-20260929T060944Z/03-development-plan.md",
+        "releases/v0.0.1-20260929T060944Z/04-test-plan.md"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-023-iteration.md"
     },
     {
       "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-RELEASE-NOTES",
-      "path": "releases/v0.0.1-20260929T060944Z/release-plan.md",
+      "path": "releases/v0.0.1-20260929T060944Z/05-release-plan.md",
       "type": "plan",
       "status": "baselined",
       "applicable_release": "v0.0.1-20260929T060944Z",
       "base_release": null,
       "inputs": [
-        "releases/v0.0.1-20260929T060944Z/test-plan.md",
+        "releases/v0.0.1-20260929T060944Z/04-test-plan.md",
         "docs/standards/release.md"
       ],
       "updated_at": "2026-09-29",
@@ -446,7 +446,7 @@
     },
     {
       "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-REQUIREMENTS",
-      "path": "releases/v0.0.1-20260929T060944Z/requirements.md",
+      "path": "releases/v0.0.1-20260929T060944Z/01-requirements.md",
       "type": "plan",
       "status": "baselined",
       "applicable_release": "v0.0.1-20260929T060944Z",
@@ -460,13 +460,13 @@
     },
     {
       "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-TEST-PLAN",
-      "path": "releases/v0.0.1-20260929T060944Z/test-plan.md",
+      "path": "releases/v0.0.1-20260929T060944Z/04-test-plan.md",
       "type": "plan",
       "status": "baselined",
       "applicable_release": "v0.0.1-20260929T060944Z",
       "base_release": null,
       "inputs": [
-        "releases/v0.0.1-20260929T060944Z/development-plan.md",
+        "releases/v0.0.1-20260929T060944Z/03-development-plan.md",
         "docs/testing/strategy.md"
       ],
       "updated_at": "2026-09-29",

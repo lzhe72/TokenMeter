@@ -16,7 +16,14 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCUMENT_TYPES = {"standard", "design", "plan", "sop", "template", "record", "index", "instructions", "changelog"}
 STATUSES = {"draft", "baselined", "superseded"}
 RELEASE_PATTERN = re.compile(r"v(\d+\.\d+\.\d+)-(\d{8}T\d{6}Z)\Z")
-RELEASE_DOCS = {"requirements", "breakdown", "development_plan", "test_plan", "release_plan", "iteration_record"}
+RELEASE_DOCS = {
+    "requirements": "01-requirements.md",
+    "breakdown": "02-breakdown.md",
+    "development_plan": "03-development-plan.md",
+    "test_plan": "04-test-plan.md",
+    "release_plan": "05-release-plan.md",
+    "iteration_record": "06-iteration-record.md",
+}
 SOP_SECTIONS = ("目的与范围", "触发条件", "前置条件", "输入", "执行步骤", "输出", "成功与失败判据", "异常恢复", "证据位置", "下一步")
 SOP_ROUTES = ("新增功能", "修复问题", "准备发布", "维护文档")
 SOP_SLUGS = ("maintenance", "version-start", "requirements", "feature-breakdown", "technical-design",
@@ -124,7 +131,7 @@ def validate_docs(root: Path) -> tuple[list[str], dict[str, int]]:
         errors.append("releases/current.json: invalid release_id or timestamp")
         manifest = {}
     else:
-        manifest = document(f"releases/{release_id}/manifest.json")
+        manifest = document(f"releases/{release_id}/00-manifest.json")
         for key, expected in (("release_id", release_id), ("version", parts[0]), ("created_at", parts[1])):
             if manifest.get(key) != expected:
                 errors.append(f"release manifest: {key} must match current release ID")
@@ -132,9 +139,8 @@ def validate_docs(root: Path) -> tuple[list[str], dict[str, int]]:
         if not isinstance(release_documents, dict):
             errors.append("release manifest: documents object required")
             release_documents = {}
-        for key in sorted(RELEASE_DOCS):
+        for key, filename in RELEASE_DOCS.items():
             path = reference(release_documents.get(key), f"release.documents.{key}")
-            filename = key.replace("_", "-") + ".md"
             expected_relative = f"releases/{release_id}/{filename}"
             if release_documents.get(key) != expected_relative or (path is not None and path != root / expected_relative):
                 errors.append(f"release.documents.{key}: expected {filename} at {expected_relative}")
@@ -153,7 +159,7 @@ def validate_docs(root: Path) -> tuple[list[str], dict[str, int]]:
 
     def release_reference(value: str, label: str) -> None:
         if value not in referenced_releases:
-            referenced_releases[value] = document(f"releases/{value}/manifest.json")
+            referenced_releases[value] = document(f"releases/{value}/00-manifest.json")
         if referenced_releases[value].get("release_id") != value:
             errors.append(f"{label}: referenced release needs an existing same-ID manifest")
 

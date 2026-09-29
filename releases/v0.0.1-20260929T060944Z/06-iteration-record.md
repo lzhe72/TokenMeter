@@ -58,3 +58,14 @@ release 阻断报告：`.local/e2e/20260929T065735Z-78e92b05015b4bc5b05da5719db0
 ### 交接
 
 SOP、模板、规范工具和本版本基础档案已完成；产品开发仍须从 TM-001 的新版本计划开始。先按 SOP-009 补齐原生环境，按 SOP-010/011 建立真实数据和 UI 测试，再进入实现。其他独立设计工作可以继续；任何依赖缺失环境的步骤保持 BLOCKED。
+
+
+## 2026-09-29：版本档案按步骤编号
+
+- 输入：用户要求截图所示版本目录文件增加步骤前缀。按 SOP-000/024 修改命名规范，按 SOP-008/013 检查并由 SOP-022 交接。
+- 顺序：00-manifest.json 为索引；01-requirements.md → 02-breakdown.md → 03-development-plan.md → 04-test-plan.md → 05-release-plan.md → 06-iteration-record.md。迭代记录从立项起持续追加。
+- 同步：文件重命名、机器索引和文档目录、入站链接、模板输出名、SOP 及修订号、版本查询和文档校验。模板源文件及 fixture 的 manifest.json 保留原名。
+- 本次为当前未发布版本的整理，沿用原 release_id，未创建产品版本或发布 Tag。
+- 实际验证：文档检查、引用检查、版本查询均退出 0；完整工具回归 70 项通过（包含未编号及错序文档拒绝检查）；iteration/release 均退出 2，产品 E2E 仍为 BLOCKED。
+- 证据：`.local/governance/numbered-release-20260929T070405Z/summary.json` 保存实际命令、退出码、日志路径与摘要；各命令日志独立保存。
+- 下一步：后续版本按新的编号规范建立档案；产品开发的待办与环境条件见当前状态。

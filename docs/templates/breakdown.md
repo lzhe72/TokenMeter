@@ -6,7 +6,7 @@
 
 ## 输入引用
 
-- 本轮 `requirements.md`、验收条件、版本 manifest：`<实际引用>`。
+- 本轮 `01-requirements.md`、验收条件、版本 manifest：`<实际引用>`。
 - [产品设计](../../docs/product/README.md)、[架构](../../docs/architecture/README.md)与当前实现：`<具体章节/代码引用>`。
 - 历史缺陷、已交付功能与已有测试：`<实际引用或无>`。
 
@@ -27,7 +27,7 @@
 
 ## 输出、验收与证据
 
-- 输出：本轮 `breakdown.md`、需求到任务追踪表及 manifest 中对应索引。
+- 输出：本轮 `02-breakdown.md`、需求到任务追踪表及 manifest 中对应索引。
 - 文档验收：全部本轮验收条件都有任务；每项任务有明确输入、输出、依赖和 SOP；本轮目标不混入未确定的未来工作。
-- 证据：本轮 `iteration-record.md` 记录范围决定、覆盖核对和实际检查结果；代码与测试尚未存在时标记待实现。
+- 证据：本轮 `06-iteration-record.md` 记录范围决定、覆盖核对和实际检查结果；代码与测试尚未存在时标记待实现。
 - 下一步：[SOP-004 技术设计](../../sop/SOP-004-technical-design.md)，采用[技术设计模板](technical-design.md)。

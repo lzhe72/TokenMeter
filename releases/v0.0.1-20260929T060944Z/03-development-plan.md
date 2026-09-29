@@ -2,7 +2,7 @@
 
 ## 输入与前置条件
 
-[需求](requirements.md) 和 [拆解](breakdown.md) 已明确；遵守 [全流程框架](../../docs/lifecycle.md) 和 [文档标准](../../docs/standards/documentation.md)。本轮实施对象为设计档案和工程规范基础。
+[需求](01-requirements.md) 和 [拆解](02-breakdown.md) 已明确；遵守 [全流程框架](../../docs/lifecycle.md) 和 [文档标准](../../docs/standards/documentation.md)。本轮实施对象为设计档案和工程规范基础。
 
 ## 顺序与完成条件
 
@@ -18,7 +18,7 @@
 
 ## 风险与交接
 
-完整 Xcode、真实 App、Mac GUI runner、生产数据库、签名和受保护 CI 仍待接通。不得以基础脚本通过替代这些能力。实际执行与未完成项见 [本轮记录](iteration-record.md)、[项目状态](../../docs/status.md)。
+完整 Xcode、真实 App、Mac GUI runner、生产数据库、签名和受保护 CI 仍待接通。不得以基础脚本通过替代这些能力。实际执行与未完成项见 [本轮记录](06-iteration-record.md)、[项目状态](../../docs/status.md)。
 
 ## 输出
 
