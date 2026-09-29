@@ -75,6 +75,34 @@ class NativeContractTests(unittest.TestCase):
         with self.assertRaises(native.EvidenceError):
             native.record_cleanup_errors({}, ["cleanup failed without prior error"], None)
 
+    def test_attachment_export_requires_native_help_and_real_png_files(self):
+        bundle = self.root / "native.xcresult"
+        bundle.mkdir()
+        output = self.root / "evidence"
+        output.mkdir()
+        help_result = mock.Mock(returncode=0, stdout="USAGE: export attachments --path <path> --output-path <output-path>", stderr="")
+        def export(arguments, **kwargs):
+            destination = Path(arguments[arguments.index("--output-path") + 1])
+            destination.mkdir()
+            (destination / "screen.png").write_bytes(b"\x89PNG\r\n\x1a\nSynthetic unit fixture")
+            (destination / "manifest.json").write_text("[]")
+        with mock.patch.object(native.subprocess, "run", return_value=help_result), \
+             mock.patch.object(native, "command", side_effect=export):
+            result = native.export_attachments(self.root, bundle, output)
+        self.assertEqual(result[0]["path"], "attachments/screen.png")
+        self.assertEqual(result[0]["sha256"], native.sha256(output / result[0]["path"]))
+        self.assertTrue((output / "attachments-help.log").is_file())
+        with mock.patch.object(native.subprocess, "run", return_value=mock.Mock(returncode=0, stdout="unknown help", stderr="")), \
+             self.assertRaises(native.Blocked):
+            native.export_attachments(self.root, bundle, output)
+
+    def test_exported_attachment_missing_png_cannot_be_accepted(self):
+        output = self.root / "evidence"
+        output.mkdir()
+        with mock.patch.object(native.subprocess, "run", return_value=mock.Mock(returncode=0, stdout="--path --output-path", stderr="")), \
+             mock.patch.object(native, "command"), self.assertRaises(native.EvidenceError):
+            native.export_attachments(self.root, self.root / "native.xcresult", output)
+
     def test_xcode_16_4_ui_bundle_name_is_preserved_and_original_failure_stays_failed(self):
         tree = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-tests.json").read_text())
         summary = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-summary.json").read_text())
@@ -189,6 +217,8 @@ class EvidenceVerificationTests(unittest.TestCase):
         (self.bundle / "Info.plist").write_text("Synthetic verifier unit test artifact")
         (self.output / "case/app.zip").write_bytes(b"Synthetic artifact, never real E2E")
         (self.output / "case/manifest.json").write_text("{}")
+        (self.output / "E2E-TM001-001").mkdir()
+        (self.output / "E2E-TM001-001/screen.png").write_bytes(b"\x89PNG\r\n\x1a\nSynthetic evidence test fixture")
         self.now = time.time()
         self.summary = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-summary.json").read_text())
         self.destination = native.native_destination(self.summary, "arm64", "15.7.9")
@@ -202,7 +232,8 @@ class EvidenceVerificationTests(unittest.TestCase):
             "suites": [{"case_id": "E2E-TM001-001", "exit_code": 0, "xcresult": "case/native.xcresult",
                         "xcresult_sha256": native.tree_digest(self.bundle), "fixture_manifest": "case/manifest.json",
                         "fixture_sha256": native.sha256(self.output / "case/manifest.json"), "app_artifact": "case/app.zip",
-                        "app_sha256": native.sha256(self.output / "case/app.zip"), "destination": self.destination}],
+                        "app_sha256": native.sha256(self.output / "case/app.zip"), "destination": self.destination,
+                        "screenshots": [{"path": "screen.png", "sha256": native.sha256(self.output / "E2E-TM001-001/screen.png")}]}],
         }
         self.path = self.output / "result.json"
         for function, value in (("git", None), ("snapshot", {"fixture": "digest"}),
@@ -239,7 +270,7 @@ class EvidenceVerificationTests(unittest.TestCase):
                 self.report[field] = original
 
     def test_changed_or_missing_native_build_and_fixture_artifacts_fail(self):
-        for relative in ("case/app.zip", "case/manifest.json", "case/native.xcresult/Info.plist"):
+        for relative in ("case/app.zip", "case/manifest.json", "case/native.xcresult/Info.plist", "E2E-TM001-001/screen.png"):
             path = self.output / relative
             original = path.read_bytes()
             path.write_bytes(b"tampered")

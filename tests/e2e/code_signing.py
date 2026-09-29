@@ -5,11 +5,13 @@ Private files and keychain passwords are not written to release evidence.
 """
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 import secrets
 import shlex
 import subprocess
+import time
 
 
 class SigningIdentity:
@@ -24,17 +26,29 @@ class SigningIdentity:
         self.previous_keychains: list[str] | None = None
         self.keychain_created = False
         self.trust_attempted = False
+        self.certificate_added = False
         self.identity: str | None = None
 
     def _run(self, arguments: list[str], operation: str) -> str:
+        started = time.monotonic()
+        def progress(state: str, **details) -> None:
+            print(json.dumps({"event": "fixture_operation", "fixture": "code_signing", "operation": operation,
+                              "state": state, "elapsed_seconds": round(time.monotonic() - started, 3), **details}), flush=True)
+        progress("STARTED")
         try:
             result = subprocess.run(arguments, capture_output=True, text=True, check=False, timeout=60)
         except subprocess.TimeoutExpired as exc:
+            progress("TIMED_OUT")
             raise RuntimeError(f"Isolated code-signing {operation} timed out after 60 seconds") from exc
+        except OSError as exc:
+            progress("FAILED", errno=exc.errno)
+            raise RuntimeError(f"Isolated code-signing {operation} unavailable (errno={exc.errno})") from exc
         if result.returncode:
+            progress("FAILED", exit_code=result.returncode)
             # Never print arguments or security/openssl output: some commands
             # accept the temporary password as a process argument.
             raise RuntimeError(f"Isolated code-signing {operation} failed ({result.returncode})")
+        progress("SUCCEEDED")
         return result.stdout.strip()
 
     def create_private_bundle(self) -> Path:
@@ -67,6 +81,10 @@ class SigningIdentity:
         self._run(["sudo", "-n", "/usr/bin/true"], "check noninteractive administrator access")
         self.previous_keychains = shlex.split(self._run(["security", "list-keychains", "-d", "user"], "read keychain list"))
         p12 = self.create_private_bundle()
+        fingerprint = self._run(["openssl", "x509", "-in", str(self.certificate), "-noout", "-fingerprint", "-sha1"], "certificate fingerprint")
+        self.identity = fingerprint.split("=", 1)[1].replace(":", "").strip()
+        if len(self.identity) != 40 or any(character not in "0123456789abcdefABCDEF" for character in self.identity):
+            raise RuntimeError("Invalid code-signing certificate identity")
         self.keychain_created = True  # Also clean up partially successful creation.
         self._run(["security", "create-keychain", "-p", self.password, str(self.keychain)], "create keychain")
         self._run(["security", "set-keychain-settings", "-lut", "21600", str(self.keychain)], "keychain settings")
@@ -75,14 +93,10 @@ class SigningIdentity:
                    "-T", "/usr/bin/codesign"], "import identity")
         self._run(["security", "set-key-partition-list", "-S", "apple-tool:,apple:,codesign:", "-s", "-k", self.password,
                    str(self.keychain)], "grant codesign access")
-        self.trust_attempted = True
+        self.trust_attempted = self.certificate_added = True
         self._run(["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d", "-r", "trustRoot", "-p", "codeSign",
-                   str(self.certificate)], "trust ephemeral code-signing certificate")
+                   "-k", "/Library/Keychains/System.keychain", str(self.certificate)], "trust ephemeral code-signing certificate")
         self._run(["security", "list-keychains", "-d", "user", "-s", *self.previous_keychains, str(self.keychain)], "register keychain")
-        fingerprint = self._run(["openssl", "x509", "-in", str(self.certificate), "-noout", "-fingerprint", "-sha1"], "certificate fingerprint")
-        self.identity = fingerprint.split("=", 1)[1].replace(":", "").strip()
-        if len(self.identity) != 40 or any(character not in "0123456789abcdefABCDEF" for character in self.identity):
-            raise RuntimeError("Invalid code-signing certificate identity")
         identities = self._run(["security", "find-identity", "-v", "-p", "codesigning", str(self.keychain)], "verify identity")
         if self.identity.upper() not in identities.upper():
             raise RuntimeError("Ephemeral identity is not usable for code signing")
@@ -93,6 +107,9 @@ class SigningIdentity:
         actions = []
         if self.trust_attempted:
             actions.append((["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(self.certificate)], "remove signing trust"))
+        if self.certificate_added:
+            actions.append((["sudo", "-n", "/usr/bin/security", "delete-certificate", "-Z", self.identity,
+                             "/Library/Keychains/System.keychain"], "remove signing public certificate"))
         if self.previous_keychains is not None:
             actions.append((["security", "list-keychains", "-d", "user", "-s", *self.previous_keychains], "restore keychain list"))
         if self.keychain_created:
@@ -105,4 +122,4 @@ class SigningIdentity:
         if errors:
             raise RuntimeError("; ".join(errors))
         self.previous_keychains = None
-        self.keychain_created = self.trust_attempted = False
+        self.keychain_created = self.trust_attempted = self.certificate_added = False

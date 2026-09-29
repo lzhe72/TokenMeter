@@ -199,6 +199,31 @@ def parse_bundle(root: Path, bundle: Path) -> tuple[dict, dict]:
     return values[0], values[1]
 
 
+def export_attachments(root: Path, bundle: Path, output: Path) -> list[dict]:
+    help_result = subprocess.run(["xcrun", "xcresulttool", "help", "export", "attachments"],
+                                 cwd=root, capture_output=True, text=True, check=False, timeout=30)
+    help_text = help_result.stdout + help_result.stderr
+    (output / "attachments-help.log").write_text(help_text)
+    if help_result.returncode or not all(option in help_text for option in ("--path", "--output-path")):
+        raise Blocked("Selected xcresulttool does not advertise required attachment export arguments")
+    destination = output / "attachments"
+    if destination.exists() or destination.is_symlink():
+        raise EvidenceError("Native attachment export must use a new directory")
+    command(["xcrun", "xcresulttool", "export", "attachments", "--path", str(bundle), "--output-path", str(destination)],
+            root=root, log=output / "attachments-export.log", timeout=60)
+    screenshots = []
+    for picture in sorted(destination.rglob("*.png")):
+        if picture.is_symlink() or not picture.resolve().is_relative_to(destination.resolve()):
+            raise EvidenceError("Native screenshot escaped its export directory")
+        with picture.open("rb") as stream:
+            if stream.read(8) != b"\x89PNG\r\n\x1a\n":
+                raise EvidenceError("Native screenshot has an invalid PNG header")
+        screenshots.append({"path": picture.relative_to(output).as_posix(), "sha256": sha256(picture)})
+    if not screenshots:
+        raise EvidenceError("Native result exported no required window screenshots")
+    return screenshots
+
+
 def snapshot(root: Path) -> dict[str, str]:
     return {name: sha256(root / name) for name in (
         "releases/current.json", "tests/feature_matrix.json", "tests/acceptance.json",
@@ -250,6 +275,14 @@ def verify_report(root: Path, path: Path, *, run_id: str, phase: str,
         actual = native_destination(summary, report["platform"]["architecture"], report["platform"]["macos"])
         if suite.get("destination") != actual:
             raise EvidenceError("Recorded native destination differs from original xcresult")
+        screenshots = suite.get("screenshots")
+        if not isinstance(screenshots, list) or not screenshots:
+            raise EvidenceError("Required native window screenshots are absent")
+        for screenshot in screenshots:
+            artifact = path.parent / case_id / screenshot["path"]
+            if (artifact.is_symlink() or not artifact.resolve().is_relative_to((path.parent / case_id).resolve())
+                    or not artifact.is_file() or sha256(artifact) != screenshot["sha256"]):
+                raise EvidenceError("Native window screenshot changed or escaped its case")
         for relative_key, digest_key in (("fixture_manifest", "fixture_sha256"), ("app_artifact", "app_sha256")):
             artifact = path.parent / suite.get(relative_key, "")
             if (not artifact.resolve().is_relative_to(path.parent.resolve()) or artifact.is_symlink()
@@ -515,9 +548,19 @@ def execute(root: Path, output: Path, report: dict) -> None:
                             report["executed_cases"] += 1
                         try:
                             suite["destination"] = native_destination(summary, report["platform"]["architecture"], report["platform"]["macos"])
-                            check_native_result(tree, summary, identifier)
-                            if result.returncode:
-                                raise EvidenceError(f"xcodebuild exited {result.returncode} despite passing case")
+                            try:
+                                check_native_result(tree, summary, identifier)
+                                if result.returncode:
+                                    raise EvidenceError(f"xcodebuild exited {result.returncode} despite passing case")
+                            finally:
+                                primary_error = sys.exc_info()[1]
+                                progress(case_id, "export-native-attachments")
+                                try:
+                                    suite["screenshots"] = export_attachments(root, bundle, case_output)
+                                except (EvidenceError, Blocked, OSError, subprocess.SubprocessError) as exc:
+                                    suite["attachment_error"] = str(exc)
+                                    if primary_error is None:
+                                        raise
                             if update is not None:
                                 try:
                                     update.verify_exchange()

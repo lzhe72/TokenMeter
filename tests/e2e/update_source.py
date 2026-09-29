@@ -12,6 +12,7 @@ import secrets
 import ssl
 import subprocess
 import threading
+import time
 from xml.sax.saxutils import escape
 
 
@@ -80,13 +81,24 @@ class UpdateSource:
         self.thread: threading.Thread | None = None
 
     def _run(self, args: list[str], name: str) -> str:
+        started = time.monotonic()
+        def progress(state: str, **details) -> None:
+            print(json.dumps({"event": "fixture_operation", "fixture": "update_source", "operation": name,
+                              "state": state, "elapsed_seconds": round(time.monotonic() - started, 3), **details}), flush=True)
+        progress("STARTED")
         try:
             result = subprocess.run(args, capture_output=True, text=True, check=False, timeout=60)
         except subprocess.TimeoutExpired as exc:
+            progress("TIMED_OUT")
             raise RuntimeError(f"Isolated update fixture {name} timed out after 60 seconds") from exc
+        except OSError as exc:
+            progress("FAILED", errno=exc.errno)
+            raise RuntimeError(f"Isolated update fixture {name} unavailable (errno={exc.errno})") from exc
         # Tool output contains certificates' metadata, never private key file contents.
         if result.returncode:
+            progress("FAILED", exit_code=result.returncode)
             raise RuntimeError(f"Isolated update fixture {name} failed ({result.returncode})")
+        progress("SUCCEEDED")
         return result.stdout.strip()
 
     def prepare(self) -> str:

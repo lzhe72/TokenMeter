@@ -60,7 +60,11 @@ class SigningFixtureTests(unittest.TestCase):
             trust = next(args for args, operation in calls if operation == "trust ephemeral code-signing certificate")
             self.assertEqual(trust[:5], ["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d"])
             self.assertIn("codeSign", trust)
+            self.assertEqual(trust[trust.index("-k") + 1], "/Library/Keychains/System.keychain")
+            self.assertEqual(arguments[arguments.index("-k") + 1], str(identity.keychain))
             self.assertIn((["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(identity.certificate)], "remove signing trust"), calls)
+            self.assertIn((["sudo", "-n", "/usr/bin/security", "delete-certificate", "-Z", "AB" * 20,
+                            "/Library/Keychains/System.keychain"], "remove signing public certificate"), calls)
 
     def test_self_hosted_runner_cannot_mutate_trust(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -108,6 +112,22 @@ class SigningFixtureTests(unittest.TestCase):
             self.assertIn(["security", "list-keychains", "-d", "user", "-s", "/isolated/login.keychain-db"], calls)
             self.assertIn(["security", "delete-keychain", str(identity.keychain)], calls)
             self.assertFalse(any("delete-keychain" in args and "/isolated/login.keychain-db" in args for args in calls))
+
+    def test_failed_signing_trust_revocation_still_removes_only_owned_public_certificate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            identity = fixture.SigningIdentity(Path(directory) / "signing")
+            identity.trust_attempted = identity.certificate_added = True
+            identity.identity = "AB" * 20
+            calls = []
+            def run(arguments, operation):
+                calls.append(arguments)
+                if operation == "remove signing trust":
+                    raise RuntimeError("Synthetic trust revocation timeout")
+                return ""
+            with mock.patch.object(identity, "_run", side_effect=run), self.assertRaises(RuntimeError):
+                identity.close()
+            self.assertIn(["sudo", "-n", "/usr/bin/security", "delete-certificate", "-Z", "AB" * 20,
+                           "/Library/Keychains/System.keychain"], calls)
 
     def test_failing_tool_does_not_echo_private_password(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -42,6 +42,16 @@ final class TM001AccountUITests: XCTestCase {
         button.click()
     }
 
+    private func captureWindow(_ name: String) {
+        // Capture only this real test app, after assertions establish the state.
+        // Passwords use SecureField and credentials are never added as text attachments.
+        let attachment = XCTAttachment(data: app.screenshot().pngRepresentation,
+                                       uniformTypeIdentifier: "public.png")
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     private func login(_ name: String, password: String? = nil) {
         text("auth.username", "test-\(name)")
         text("auth.password", password ?? "TEST-ONLY-\(name)-42!", secure: true)
@@ -114,11 +124,14 @@ final class TM001AccountUITests: XCTestCase {
     func testE2E_TM001_001() throws {
         let oldToken = try token("alice")
         app.launch()
+        XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        captureWindow("TM001-001-01-login")
         login("alice")
         XCTAssertTrue(app.secureTextFields["password.new"].waitForExistence(timeout: 15))
         XCTAssertFalse(app.buttons["admin.accounts"].exists)
         changePassword(current: "TEST-ONLY-alice-42!", new: changedPassword)
         assertIdentity("test-alice")
+        captureWindow("TM001-001-02-authenticated-account")
         XCTAssertEqual(try request("GET", "/v1/me", token: oldToken).0, 401)
         XCTAssertEqual(try request("POST", "/v1/auth/login", body: [
             "username": "test-alice", "password": "TEST-ONLY-alice-42!"
@@ -172,6 +185,7 @@ final class TM001AccountUITests: XCTestCase {
         }
         XCTAssertEqual(try request("POST", "/v1/admin/users/00000000-0000-4000-8000-000000000002/disable", token: memberToken).0, 403)
         try refreshIdentity("test-bob")
+        captureWindow("TM001-002-01-member-permissions")
     }
 
     func testE2E_TM001_003() throws {
@@ -204,6 +218,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["audit.action.account_enabled"].firstMatch.exists)
         XCTAssertTrue(app.staticTexts["audit.target.password_reset.00000000-0000-4000-8000-000000000003"].firstMatch.exists)
         XCTAssertTrue(app.staticTexts["audit.actor.password_reset.00000000-0000-4000-8000-000000000001"].firstMatch.exists)
+        captureWindow("TM001-003-01-admin-audit")
         click("session.logout")
         login("bob", password: "TEST-ONLY-Reset-42!")
         changePassword(current: "TEST-ONLY-Reset-42!", new: "TEST-ONLY-Bob-New-42!")
@@ -261,5 +276,6 @@ final class TM001AccountUITests: XCTestCase {
         waitForExpectations(timeout: 90)
         assertIdentity("test-alice")
         try refreshIdentity("test-alice")
+        captureWindow("TM001-004-01-updated-account")
     }
 }

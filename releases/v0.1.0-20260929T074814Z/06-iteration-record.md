@@ -103,3 +103,17 @@ Intel任务随后确认同一Sparkle复制错误，证据在`.local/ci/365424910
 Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身份不保证信任操作免交互。因此先在两个CI工作流增加009环境探针，保存独立environment_only记录；探针失败保持job失败，014仍要求真实四例完整执行。探针不能签发通行证，也不修改系统授权规则。
 
 该修复本机完整治理147项通过，原生环境探针实际返回BLOCKED（缺完整Xcode），未修改本机证书信任。`security help verify-cert/add-trusted-cert`已只读核对实际参数；远端必须另行验证信任与完整产品用例。证据`.local/governance/tm001-native/ci-trust-green.log`及`environment-probe-{red,green,local-blocked}.log`。
+
+用户询问为何看不到DMG。已核对源码：未实现hdiutil/DMG打包入口，当前只有App工程与隔离更新ZIP helper；正式签名/公证配置与发布门禁也未就绪。明确记录安装包交付尚未完成，不能将测试包或源码PR视作正式安装包。
+
+### BUG-TM001-FIXTURE-003：代码签名信任清理挂起
+
+[run36547335412](https://github.com/lzhe72/TokenMeter/actions/runs/36547335412)两平台环境探针已实际完成代码签名身份准备、HTTPS CA信任及系统TLS验证，主操作无阻塞；只有代码签名信任撤销等待60秒超时。TLS信任及证书清理成功。产品四例未在此候选执行，environment_only不能替代上一候选的原生结果。
+
+[GitHub官方runner问题12116](https://github.com/actions/runner-images/issues/12116)记录同类撤销挂起，当前程序的对应差异是代码签名公钥证书仅在临时用户keychain。先更新03：将该公钥证书也导入System.keychain，私钥仍留专用keychain；继续严格先撤销admin信任，再按自身指纹删除证书及私有资源。此为待探针验证的最小修复，不把只删证书当作已撤销信任。增加安全操作阶段诊断，任何清理失败保持阻断。
+
+用户询问无DMG如何执行App测试，已澄清远端Mac由Xcode构建真实.app并由XCUITest启动窗口，不依赖DMG；最终DMG安装验收仍缺失。按04既有截图证据要求补充关键界面的自动截图附件，截图不替代业务断言或原始xcresult。
+
+按000将017修订至3，明确正式交付为DMG、需要从DMG安装后的.app执行完整回归，并分别绑定摘要；开发阶段直接测试.app仍按014执行。索引、执行规范和05同步，缺实际DMG程序仍BLOCKED，没有新增通过声明。
+
+本轮工具回归150项通过，升级helper9项通过；baseline与追踪检查通过。原生附件导出先核对CI实际xcresulttool help，再导出PNG并登记摘要，父门禁核对文件一致性。新截图和System证书清理仍待新候选CI实际执行；未用工具自测代替原生结果。
