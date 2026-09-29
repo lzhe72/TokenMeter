@@ -107,3 +107,11 @@ SOP、模板、规范工具和本版本基础档案已完成；产品开发仍�
 集成证据：`.local/governance/consistency-fixes-20260929T073101Z/summary.json`；对应目录保存各命令日志和工具/用例源码摘要。修复前失败、针对性回归与重放证据在 `.local/reviews/consistency-fix-r01-r08/`、`.local/reviews/consistency-fix-r06/`、`.local/reviews/consistency-fixes/`。结果文档按本次实际输出更新后再核对文档检查。
 
 仍未实现真实 App/服务端/原生 E2E 和可信证据验证，未运行远程 CI、配置远端保护、签发通行证或分发产品。下一步是 TM-001 的新版本计划和真实工程骨架；当前修复只完成治理基础与方案一致性，不改变产品发布 BLOCKED 状态。
+
+## 2026-09-29：首个基础版本远程提交
+
+- 输入：用户明确要求将当前成果作为第一个版本提交到远程 Git，并提炼版本说明。
+- 说明：建立文档驱动的开发规范、SOP 执行体系与测试门禁基础。范围包括 25 份 SOP、AGENTS 规则、全流程模板与版本追踪、确定性测试数据、双向验收校验和候选门禁入口。
+- 按 SOP-000 补齐 SOP-019 的源码推送分支与索引，按 SOP-024 更新本版说明；源码推送与正式产品发布分别记录，不改变产品门禁。
+- 目标：origin（https://github.com/lzhe72/TokenMeter.git），当前版本分支 `codex/v0.0.1-20260929T060944Z/agent-e2e-governance`。远端核对时仅有初始 README 提交；保留已有开发和审查历史，追加版本汇总提交。
+- 验证依据：前一轮 108 项治理工具测试通过，产品 iteration/release 均为 BLOCKED；本次文档变化重新执行基线、追踪及相关检查。实际命令、退出码、最终提交、推送结果及远端 SHA 核对保存在 `.local/git-sync/first-baseline/`，按执行结果生成，不预填产品通过结论。
