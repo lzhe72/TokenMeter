@@ -6,7 +6,9 @@ TM-001：预置账号与登录、权限管理和最小更新器。版本0.1.0，
 
 ## 候选、平台和资产
 
-源文档/代码/数据/测试先形成干净候选，release门禁在Tag之前运行。最终分发包使用DMG，需Developer ID、公证、Sparkle EdDSA签名；分别登记DMG与内部.app摘要，从DMG安装后执行完整验收，再以GitHub Release资产提供下载。当前DMG构建/公证/分发入口尚未实现，保留BLOCKED。macOS14+ arm64/Intel实际支持矩阵逐项验证。开发迭代可以使用开发签名和明确的开发矩阵，不能据此签发正式通行证。
+源文档/代码/数据/测试先形成干净候选，release门禁在Tag之前运行。最终分发包使用DMG，需Developer ID、公证、Sparkle EdDSA签名；分别登记DMG与内部.app摘要，从DMG安装后执行完整验收，再以GitHub Release资产提供下载。当前正式DMG构建/公证/分发入口尚未实现，保留BLOCKED。macOS14+ arm64/Intel实际支持矩阵逐项验证。开发迭代可以使用开发签名和明确的开发矩阵，不能据此签发正式通行证。
+
+用户本机体验可按SOP-017的预览诊断分支，从已验证的UITesting App生成带明显标识的本机DMG。`scripts/package_preview_dmg.py`只接受该隔离bundle及loopback测试服务，验证签名、镜像与App内容，输出摘要。quality工作流在Intel原生运行后将预览DMG上传为短期Actions工件，允许用户在GitHub下载；该上传即使完整产品门禁BLOCKED也不能被解释为发布。此包依赖本机隔离服务，不带生产更新源，既不是上述最终候选，也不进入GitHub正式Release或通行证。
 
 首版最终候选先独立完成干净安装与四例E2E，再经隔离HTTPS源从候选更新到受控高版本包。登记受控包源码、构建版本、摘要、签名；升级后包的结果不替代原候选验收。拒绝坏签名/中断，保留原版与账号状态。
 

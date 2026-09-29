@@ -137,3 +137,15 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 [run36551758767](https://github.com/lzhe72/TokenMeter/actions/runs/36551758767)为0a9c39e分支的PR合成合并提交624d360执行了两平台原生门禁。macOS15.7.9/Xcode16.4的Apple Silicon与Intel分别运行真实App、FastAPI、SQLite和XCUITest，001登录/改密/退出、002权限、003管理员操作及审计全部PASS；每平台各执行3/4、通过3/4，原始xcresult、候选App摘要和实际窗口PNG在GitHub Actions产物。004环境探针在任何证书系统写入前判为BLOCKED，完整门禁两个平台都BLOCKED，CI作业以退出2失败。治理、34项服务和9项升级工具自测通过。不能将前三例复用为下一候选的四例通过，也无正式安装包或通行证。
 
 按用户授权在本机使用CI产物构建的同一开发App归档，先核对候选App ZIP摘要、限制解压路径与符号链接、执行`codesign --verify --deep --strict`，然后在本机Intel/macOS15.7.4启动`.app`与隔离FastAPI/SQLite测试服务。实测App进程仍在、服务`/v1/health`返回schema0001；本机自动UI用例执行数0。机器证据`.local/process/v0.1.0-20260929T074814Z/local-preview-36551758767.json`，隔离预览资源位于`.local/preview/36551758767-intel/`且目前仍供用户体验，后续停用时按本轮所有权标记清理。Apple下载页正在等待用户登录/安装完整Xcode16.4；下载、系统授权和004清理程序均未伪造为完成。
+
+### 本机预览 DMG 与发布资格复核
+
+用户要求提供可安装DMG、管理员账号并完成正式Git发布。按000/017补充明确标记的本机预览诊断分支，原017正式发布前提不变。新增`python3 scripts/package_preview_dmg.py`：只接受签名有效、无更新源的UITesting App和loopback测试服务，保留原App不修改；核对源/暂存/镜像中的App内容一致，校验DMG并输出SHA256。发布预案和Changelog同步更新。
+
+开发App来自[run36551758767](https://github.com/lzhe72/TokenMeter/actions/runs/36551758767)的Intel CI产物，`.local/preview/36551758767-intel/TokenMeter.app`；从其构建的可复现预览包为`.local/preview/36551758767-intel/TokenMeter-v0.1.0-20260929T074814Z-local-preview-verified.dmg`，SHA256 `19ab21c41e7e943d4ebae1d7587efbb0262a91de2f995fc223502841a89463c1`，App树摘要`af706179862d709e8bdace9d25142712117db53336badb79bc082c5c1dc33b03`。程序实际运行退出0，镜像校验通过；从该镜像解包到`verified-install/TokenMeter.app`后`codesign --verify --deep --strict`通过，`open -g -n -a <绝对路径>`启动进程9314。另从同来源预览包安装同一App到`/Applications/TokenMeter.app`并验证签名与可执行文件摘要；没有覆盖此前存在的App。隔离服务`http://127.0.0.1:60470/v1/health`返回200/schema0001，`test-admin`合成初始密码登录返回200/admin且要求首次改密。服务仅当前本机运行，DMG内说明要求把默认CI地址改为此loopback地址；预览包为临时签名、未公证且无更新源。
+
+当前分支提交`6d964d2b55846ba31ebc74c928455ad502cd3963`的[run36553523311](https://github.com/lzhe72/TokenMeter/actions/runs/36553523311)两架构各运行001–003并PASS，004升级环境缺少可验证证书信任清理路径而BLOCKED，完整E2E为3/4、发布资格false。本机只有CommandLineTools，安装包原生UI回归执行数0；正式017还缺Developer ID、公证、正式DMG程序和全支持矩阵，018缺受保护候选与通行证。PR #2保持草稿，不创建正式tag、GitHub Release或通行证。本次预览包及本机账号只用于诊断，不计入正式发布证据。
+
+预览包机器诊断为`.local/process/v0.1.0-20260929T074814Z/preview-dmg.json`：两份解包/安装App的`codesign --verify --deep --strict`均退出0，安装后进程在运行，隔离服务健康200，安装包原生UI E2E执行0例。新增打包程序的远程URL、含凭据URL和路径URL负测均拒绝；`py_compile`退出0。文档structure/baseline和`quality_gate.py check`退出0，治理152项、服务端34项、更新helper9项通过。这些基础检查不能提升产品门禁状态。预览服务现由本轮保留的隔离进程提供；停止服务、重启本机或迁移机器后需按009/010重建测试环境。
+
+为便于GitHub下载，quality工作流在Intel原生门禁结束后从该运行的001候选App制作同样受限的预览DMG，并上传为`local-preview-dmg-<SHA>-<attempt>` Actions工件；上传与产品门禁分别判定，现有本机DMG的摘要不冒充未来CI工件。正式GitHub Release资产仍必须等017/018完整通过。该新增工作流步骤待当前分支CI真实验证，不能凭本机打包成功声称远端工件已经存在。

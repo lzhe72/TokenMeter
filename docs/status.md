@@ -31,7 +31,7 @@
 - 真实账号生成/初始化/重置已落地；原始Codex/Claude Code日志fixture按后续采集功能建立。更新fixture程序需专用Mac CI实际造包与签名验证。
 - 本机缺完整Xcode；远端开发矩阵已确认macOS15.7.9、Xcode16.4、arm64/Intel。候选dcd8360两平台前三个原生用例全部通过，第四例在临时签名信任配置中中断。之后的候选在环境探针清理阶段失败，未执行产品用例；不能复用旧候选结果宣称新候选通过。完整发布支持矩阵仍未验证。
 - Developer ID、公证、生产部署、GitHub required checks和受保护发布凭据缺失；临时测试签名不能替代正式签名。
-- 尚无DMG打包/公证/分发程序或可下载的正式DMG；现有更新helper仅构建隔离E2E用的App与ZIP，不能当作面向用户的安装包交付。
+- 现有`package_preview_dmg.py`可将隔离UITesting App打成本机预览DMG并校验镜像，但正式DMG构建/公证/分发程序和可下载的正式DMG仍缺失；现有更新helper仅构建隔离E2E用的App与ZIP。
 - 本机只读工具链检查：`xcode-select -p` 退出 2，未配置开发目录；没有发现完整 Xcode，本机未执行原生产品 E2E。远端实际执行结果见下方CI记录。
 
 上述缺项按依赖阻断实际运行和发布；SOP-009 的工程骨架准备，以及有独立验证条件的源码、数据、测试编写可继续。生产签名/公证凭据只作为最终包与发布验证前提。
@@ -59,3 +59,9 @@ Apple源码审查否定了临时改authorizationdb方案，未提交的helper已
 [CI run36551758767](https://github.com/lzhe72/TokenMeter/actions/runs/36551758767)已完成：Apple Silicon与Intel的E2E-TM001-001/002/003各实际执行并PASS，均保存原始xcresult和按摘要绑定的候选App；关键界面由原生测试导出PNG。004在环境探针中因缺少受支持的证书授权/完整清理路径返回BLOCKED，两个平台都是执行3、通过3、完整迭代BLOCKED。PR #2保持草稿，不签发通行证。CI对应PR合成合并提交624d360，分支提交0a9c39e；各自提交标识分别保留。
 
 用户授权的本机已从上述Intel产物按SHA256取出开发`TokenMeter.app`并实际启动；本地隔离SQLite/服务的健康检查通过，进程仍供用户预览。证据`.local/process/v0.1.0-20260929T074814Z/local-preview-36551758767.json`。此为开发预览，本机XCUITest执行数0，当前`xcode-select -p`仍指向CommandLineTools。完整Xcode安装和首次启动需用户在Apple下载/系统界面完成；之后按009/014接续。004仍需实现本机按系统正常授权并可完整清理的fixture程序，不能以本机预览代替产品E2E。
+
+当前分支提交`6d964d2b55846ba31ebc74c928455ad502cd3963`的[CI run36553523311](https://github.com/lzhe72/TokenMeter/actions/runs/36553523311)在Apple Silicon与Intel两平台各有001–003真实原生用例PASS，004在升级环境探针处BLOCKED；完整回归均为3/4、发布资格false。治理检查通过，PR #2仍为草稿。
+
+按SOP-017的预览诊断分支，本机制作`.local/preview/36551758767-intel/TokenMeter-v0.1.0-20260929T074814Z-local-preview-verified.dmg`，SHA256为`19ab21c41e7e943d4ebae1d7587efbb0262a91de2f995fc223502841a89463c1`。程序验证镜像与源App内容一致，随后从该镜像解包到隔离目录并启动实际App进程；另将同一来源App安装到`/Applications/TokenMeter.app`供体验。隔离SQLite服务`http://127.0.0.1:60470`健康与合成管理员登录接口成功。此包未签Developer ID、未公证，不含正式更新源；本机没有执行安装包原生UI E2E。正式017/018保持BLOCKED，不能创建Tag、GitHub Release或通行证。
+
+quality工作流已加入Intel原生执行后生成并上传`local-preview-dmg-*` Actions临时工件的步骤，远端实际上传结果待新分支CI验证。该工件与正式Release资产分开，CI完整产品门禁BLOCKED时仍不能发布。

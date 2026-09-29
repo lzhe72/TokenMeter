@@ -56,6 +56,29 @@ jobs:
       - name: Execute product gate
         # All four TM-001 cases are required; missing native evidence blocks this job.
         run: python3 scripts/quality_gate.py iteration
+      - name: Package local-only preview DMG from tested App
+        if: ${{ always() && matrix.runner == 'macos-15-intel' }}
+        run: |
+          set -euo pipefail
+          candidate_zip="$(find .local/e2e -path '*/E2E-TM001-001/candidate-app.zip' -print -quit)"
+          test -n "$candidate_zip"
+          mkdir -p .local/preview/package-source
+          ditto -x -k "$candidate_zip" .local/preview/package-source
+          python3 scripts/package_preview_dmg.py \
+            --app "$PWD/.local/preview/package-source/TokenMeter.app" \
+            --output "$PWD/.local/preview/TokenMeter-${{ github.sha }}-local-preview.dmg" \
+            --service-url http://127.0.0.1:60470 | tee .local/preview/manifest.json
+      - name: Retain local-only preview DMG
+        if: ${{ always() && matrix.runner == 'macos-15-intel' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-preview-dmg-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            .local/preview/*.dmg
+            .local/preview/manifest.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 90
       - name: Retain actual gate evidence
         if: always()
         uses: actions/upload-artifact@v4
