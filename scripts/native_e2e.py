@@ -312,6 +312,12 @@ def test_configuration(derived: Path, values: dict[str, str]) -> Path:
     return output
 
 
+def build_command(project: Path, derived: Path) -> list[str]:
+    return ["xcodebuild", "-project", str(project), "-scheme", "TokenMeter", "-configuration", "UITesting",
+            "-derivedDataPath", str(derived), "-destination", "platform=macOS",
+            "-parallel-testing-enabled", "NO"]
+
+
 def execute(root: Path, output: Path, report: dict) -> None:
     """Populate a report from actual commands; the caller writes it even on failure."""
     report["platform"] = preflight(root)
@@ -406,9 +412,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                                       "TM_TEST_UPDATE_VALID_FEED": update.url + "/valid.xml",
                                       "TM_TEST_UPDATE_INVALID_FEED": update.url + "/invalid.xml",
                                       "TM_TEST_EXPECTED_BUILD": "101"}
-                    base = ["xcodebuild", "-project", str(project), "-scheme", "TokenMeter", "-configuration", "UITesting",
-                            "-derivedDataPath", str(derived), "-destination", "platform=macOS",
-                            "-parallel-testing-enabled", "NO", "-maximum-concurrent-test-macos-destinations", "1"]
+                    base = build_command(project, derived)
                     command(base + ["build-for-testing"] + build_settings, root=root, log=case_output / "build.log")
                     app = derived / "Build/Products/UITesting/TokenMeter.app"
                     if not app.is_dir():

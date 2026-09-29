@@ -49,3 +49,14 @@
 首个产品候选8235906触发[run36541834950](https://github.com/lzhe72/TokenMeter/actions/runs/36541834950)，工作流解析失败，未创建job。原因是未引用的YAML单行命令中`--only-binary=:all:`含冒号加空格；已改为块文本。修复前本机YAML解析明确复现第22行错误，修复后两个workflow均通过语法解析。此运行不算产品构建或E2E执行。
 
 同候选本机iteration退出2，原始报告`.local/e2e/gate-dadc896eb2134f18a9e224649cb47d1b/result.json`记录完整Xcode缺失与0原生用例；不是业务断言失败。
+
+
+### BUG-TM001-CI-001：工作流命令格式
+
+上文run36541834950对应的YAML缺陷归档为BUG-TM001-CI-001，属于执行配置问题；2ee93ec修复后远端成功创建三个job，未改变产品验收条件。
+
+### BUG-TM001-RUNNER-001：Xcode不支持的参数
+
+[run36541990316](https://github.com/lzhe72/TokenMeter/actions/runs/36541990316)在macOS15.7.9 arm64/x86_64、Xcode16.4/16F6上真实执行。两平台SQLite迁移、四账号导入与/v1/health均通过；`xcodebuild`因不存在的`-maximum-concurrent-test-macos-destinations`选项退出64，未执行原生用例。原始工件保存到`.local/ci/36541990316/`，远端归档可回溯。删除该无效选项，继续保持逐例串行与禁用测试并行；修复后须新运行完整四例，两平台均不能复用旧结果。
+
+流程复核补齐候选workflow与日常CI的前置条件：显式Python3.10/Xcode16.4、锁定依赖及服务端/更新工具回归。修复其直接调用缺依赖native runner的路径；最终包/全矩阵/MySQL/受保护签发仍未实现，018修订3明确候选诊断与发布资格。

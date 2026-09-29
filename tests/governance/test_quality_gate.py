@@ -446,6 +446,19 @@ class GateTests(unittest.TestCase):
         self.assertNotEqual(reports[0], reports[1])
         self.assertTrue(all(path.is_file() for path in reports))
 
+    def test_native_failure_does_not_retain_initial_not_started_blocker(self):
+        def fail_after_start(_root, _output, report):
+            report["runner_implemented"] = True
+            raise e2e.native_e2e.EvidenceError("Command exited 64; evidence: build.log")
+
+        with mock.patch.object(e2e.native_e2e, "execute", side_effect=fail_after_start), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(e2e.main(["--phase", "iteration"], root=self.root), 1)
+        reports = list((self.root / ".local/e2e").glob("*/result.json"))
+        report = json.loads(reports[0].read_text())
+        self.assertEqual(report["state"], "FAIL")
+        self.assertEqual(report["blockers"], [])
+        self.assertEqual(report["errors"], ["Command exited 64; evidence: build.log"])
+
     def test_e2e_corrupt_deep_release_json_still_records_blocked(self):
         self.write("releases/current.json", "[" * 2000 + "]" * 2000)
         output = io.StringIO()

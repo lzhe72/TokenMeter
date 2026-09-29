@@ -91,6 +91,7 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
             raise native_e2e.Blocked("Final signed package, supported platform/MySQL matrix, protected CI and passport issuer are not ready")
     except native_e2e.EvidenceError as exc:
         report["state"], report["errors"] = "FAIL", [str(exc)]
+        report["blockers"] = []
     except (native_e2e.Blocked, OSError, ValueError, RuntimeError, KeyError, subprocess.SubprocessError) as exc:
         report["state"], report["blockers"] = "BLOCKED", [str(exc)]
     finally:

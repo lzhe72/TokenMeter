@@ -115,6 +115,15 @@ class NativeContractTests(unittest.TestCase):
         with self.assertRaises(native.Blocked):
             native.test_configuration(self.root / "derived", {})
 
+    def test_build_options_are_supported_by_actual_xcode_16_4_help(self):
+        # Independent option set from both failed platform jobs in CI run
+        # 36541990316. That native usage output has no macOS concurrency option.
+        supported = {"-project", "-scheme", "-configuration", "-derivedDataPath",
+                     "-destination", "-parallel-testing-enabled"}
+        arguments = native.build_command(Path("TokenMeter.xcodeproj"), Path("derived"))
+        self.assertEqual({argument for argument in arguments if argument.startswith("-")}, supported)
+        self.assertEqual(arguments[arguments.index("-parallel-testing-enabled") + 1], "NO")
+
 
 class EvidenceVerificationTests(unittest.TestCase):
     def setUp(self):

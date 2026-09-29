@@ -13,7 +13,8 @@ permissions:
 
 jobs:
   candidate:
-    runs-on: macos-latest
+    # Diagnostic candidate run; final supported matrix remains a release requirement.
+    runs-on: macos-15
     timeout-minutes: 60
     # The environment's remote protection must be configured and verified separately.
     environment: release-validation
@@ -32,6 +33,9 @@ jobs:
           ref: ${{ inputs.candidate_sha }}
           fetch-depth: 0
           persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
       - name: Validate candidate identity before running checks
         run: >-
           python3 scripts/candidate_gate.py
@@ -39,13 +43,20 @@ jobs:
           --event "$GITHUB_EVENT_NAME"
           --workflow-ref "$GITHUB_REF"
           --default-branch "$TM_DEFAULT_BRANCH"
+      - name: Select the documented native toolchain
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app/Contents/Developer
+      - name: Install locked service and test dependencies
+        run: |
+          python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
       - name: Validate baseline and test governance tooling
         run: |
           python3 scripts/check_docs.py --mode baseline
           python3 scripts/quality_gate.py check
           python3 -m unittest discover -s tests/governance -p 'test_*.py' -v
+          python3 -m pytest tests/server -q
+          python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
       - name: Execute release gate before Tag creation
-        # Remains BLOCKED until the native runner and trusted verifier are implemented.
+        # Final signing/notarization, full matrix, MySQL and protected issuance remain BLOCKED.
         run: python3 scripts/quality_gate.py release
       - name: Retain actual candidate evidence
         if: always()

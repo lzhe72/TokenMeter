@@ -26,7 +26,7 @@
 | 报告缺陷或测试发现失败 | [015 缺陷修复](SOP-015-bugfix.md) | 缺陷、原版本/场景、复现线索 | 失败复现、根因、永久回归、修复 | 013→014 | baselined | 1 |
 | schema/数据库引擎或数据纠错变化 | [016 数据迁移](SOP-016-database-migration.md) | 004、006；备份和隔离数据库 | 迁移、聚合核对、恢复证据 | 013/014 或 020 | baselined | 1 |
 | 验证最终安装包与升级 | [017 安装包验证](SOP-017-package-validation.md) | 007、013/014；签名和 Mac 矩阵 | 签名、公证、原生安装升级证据 | 018 | baselined | 2 |
-| 正式 Tag 前判断确定候选是否可发布 | [018 发布门禁](SOP-018-release-gate.md) | 014、017；固定 SHA、最终产物与受保护候选 CI | PASS 通行证或 FAIL/BLOCKED 记录 | 019；未通过回修复 | baselined | 2 |
+| 正式 Tag 前判断确定候选是否可发布 | [018 发布门禁](SOP-018-release-gate.md) | 014、017；固定 SHA、最终产物与受保护候选 CI | PASS 通行证或 FAIL/BLOCKED 记录 | 019；未通过回修复 | baselined | 3 |
 | 推送、创建与合并 PR 或正式 tag/Release | [019 Git 发布](SOP-019-git-release.md) | 已授权；源码/PR 适用检查通过；正式发布另需 018 通行证 | 远端提交/PR 合并核对；正式发布时同名 tag/Release/资产 | 源码转 022；正式发布转 020 | baselined | 4 |
 | 部署服务或更新分发清单 | [020 部署分发](SOP-020-deployment.md) | 019；部署目标、权限与恢复预案 | 实际部署、健康/版本核对 | 022；故障转 021 | baselined | 1 |
 | 发布/部署异常需要恢复 | [021 回退恢复](SOP-021-rollback.md) | 故障证据及已验证恢复预案 | 恢复验证、事件记录、新缺陷 | 015/022/023 | baselined | 1 |
