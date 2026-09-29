@@ -1,0 +1,425 @@
+{
+  "schema_version": 1,
+  "features": [
+    {
+      "id": "TM-001",
+      "title": "账号与登录",
+      "version": "0.1.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM001-001",
+          "scenario": "预置管理员和两名成员经真实 App 登录、首次改密、退出后重登",
+          "expected": "有效账号可登录；首次改密生效；退出后的凭据不能继续访问",
+          "data_program": "scripts/test_data.py",
+          "dataset": "identity",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM001-001"
+        },
+        {
+          "id": "E2E-TM001-002",
+          "scenario": "成员访问他人统计、停用账号尝试登录和上传",
+          "expected": "服务端拒绝越权与停用账号，UI 显示对应错误，原数据不泄露",
+          "data_program": "scripts/test_data.py",
+          "dataset": "identity",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM001-002"
+        },
+        {
+          "id": "E2E-TM001-003",
+          "scenario": "管理员重置密码并撤销已有会话",
+          "expected": "新密码生效、旧会话失效，管理动作产生审计记录",
+          "data_program": "scripts/test_data.py",
+          "dataset": "identity",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM001-003"
+        }
+      ],
+      "source_requirement": "REQ-TM001"
+    },
+    {
+      "id": "TM-002",
+      "title": "首次授权",
+      "version": "0.2.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM002-001",
+          "scenario": "干净安装下选择工具目录、查看预览并确认采集",
+          "expected": "真实系统授权完成，只有选定目录被读取；未确认前不上传",
+          "data_program": null,
+          "dataset": "system_permissions",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM002-001"
+        },
+        {
+          "id": "E2E-TM002-002",
+          "scenario": "拒绝授权、撤销授权，然后重新授权",
+          "expected": "App 不崩溃、不继续读取失效目录；重新授权后恢复并不重复计数",
+          "data_program": null,
+          "dataset": "system_permissions",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM002-002"
+        }
+      ],
+      "source_requirement": "REQ-TM002"
+    },
+    {
+      "id": "TM-003",
+      "title": "Codex 采集",
+      "version": "0.3.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM003-001",
+          "scenario": "追加已验证版本日志，重扫、重启、移动文件",
+          "expected": "用量与独立预期一致，同一源事件只计一次",
+          "data_program": null,
+          "dataset": "codex_raw",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM003-001"
+        },
+        {
+          "id": "E2E-TM003-002",
+          "scenario": "累计值重置、重复 token_count、分支恢复、未知格式",
+          "expected": "不直接逐行累加最近用量；继承历史不重复；不可核实数据有诊断且不污染可信总量",
+          "data_program": null,
+          "dataset": "codex_raw",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM003-002"
+        },
+        {
+          "id": "E2E-TM003-003",
+          "scenario": "追加半行后完成写入，并清理旧源日志",
+          "expected": "不吞掉随后完整事件；已采集统计保留；缺失历史有提示",
+          "data_program": null,
+          "dataset": "codex_raw",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM003-003"
+        }
+      ],
+      "source_requirement": "REQ-TM003"
+    },
+    {
+      "id": "TM-004",
+      "title": "Claude Code 采集",
+      "version": "0.4.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM004-001",
+          "scenario": "主会话及子代理日志增量读取、重扫",
+          "expected": "每次实际调用计一次，子代理包含在正确归属",
+          "data_program": null,
+          "dataset": "claude_raw",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM004-001"
+        },
+        {
+          "id": "E2E-TM004-002",
+          "scenario": "fork 复制历史、消息 ID 改写、重复片段和部分写入",
+          "expected": "继承历史不重复入账，未完整事件等待后续读取",
+          "data_program": null,
+          "dataset": "claude_raw",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM004-002"
+        },
+        {
+          "id": "E2E-TM004-003",
+          "scenario": "旧版/新版/未知日志结构及缺少 usage",
+          "expected": "支持版本结果准确；未知版本或缺字段明确降级，不能伪造零用量",
+          "data_program": null,
+          "dataset": "claude_raw",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM004-003"
+        }
+      ],
+      "source_requirement": "REQ-TM004"
+    },
+    {
+      "id": "TM-005",
+      "title": "用量统计",
+      "version": "0.5.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM005-001",
+          "scenario": "固定时钟切换今天、昨天、近 7/15/30 天与自定义范围",
+          "expected": "每个 UI 指标、趋势和明细与独立 expected 对应范围一致",
+          "data_program": "scripts/test_data.py",
+          "dataset": "date_ranges",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM005-001"
+        },
+        {
+          "id": "E2E-TM005-002",
+          "scenario": "调整团队时区，验证跨日/月、缺失历史和未知字段",
+          "expected": "自然日边界正确；无覆盖/未知数据与真实零值区别显示",
+          "data_program": "scripts/test_data.py",
+          "dataset": "date_ranges",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM005-002"
+        }
+      ],
+      "source_requirement": "REQ-TM005"
+    },
+    {
+      "id": "TM-006",
+      "title": "费用估算",
+      "version": "0.6.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM006-001",
+          "scenario": "输入输出、缓存子项和推理子项按价格表统计",
+          "expected": "计费子项不重复，金额与独立预期一致",
+          "data_program": "scripts/test_data.py",
+          "dataset": "pricing",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM006-001"
+        },
+        {
+          "id": "E2E-TM006-002",
+          "scenario": "未知价格、修改生效价格、混合币种和订阅模型",
+          "expected": "未知费用不填零，历史保留价格版本，分币种汇总且标明估算",
+          "data_program": "scripts/test_data.py",
+          "dataset": "pricing",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM006-002"
+        }
+      ],
+      "source_requirement": "REQ-TM006"
+    },
+    {
+      "id": "TM-007",
+      "title": "团队同步",
+      "version": "0.7.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM007-001",
+          "scenario": "真实 App 离线生成数据、重启、恢复服务、重复批量上传",
+          "expected": "队列持久化，最终个人/团队总量一致且无重复",
+          "data_program": null,
+          "dataset": "sync_faults",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM007-001"
+        },
+        {
+          "id": "E2E-TM007-002",
+          "scenario": "部分确认、服务端中断、账号解绑和成员切换",
+          "expected": "已确认数据不丢失、不重复；数据归属不能由客户端越权改变",
+          "data_program": null,
+          "dataset": "sync_faults",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM007-002"
+        },
+        {
+          "id": "E2E-TM007-003",
+          "scenario": "检查上传 payload 和项目映射",
+          "expected": "仅允许用量白名单字段；无正文/密钥/完整路径；未归属项目可明确分配",
+          "data_program": null,
+          "dataset": "sync_faults",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM007-003"
+        }
+      ],
+      "source_requirement": "REQ-TM007"
+    },
+    {
+      "id": "TM-008",
+      "title": "CSV 导出",
+      "version": "0.8.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM008-001",
+          "scenario": "从 UI 筛选时间、成员、模型并导出",
+          "expected": "CSV 行/统计与授权可见筛选结果一致",
+          "data_program": null,
+          "dataset": "export_rows",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM008-001"
+        },
+        {
+          "id": "E2E-TM008-002",
+          "scenario": "含逗号、换行、引号、未知费用的数据导出并重读",
+          "expected": "格式可解析，未知值保留，成员不能通过导出读取他人记录",
+          "data_program": null,
+          "dataset": "export_rows",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM008-002"
+        }
+      ],
+      "source_requirement": "REQ-TM008"
+    },
+    {
+      "id": "TM-009",
+      "title": "预算提醒",
+      "version": "0.9.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM009-001",
+          "scenario": "逐步跨过 80% 和 100%，重扫和重启",
+          "expected": "每个预算每周期每阈值只发一次，模型调用不受影响",
+          "data_program": null,
+          "dataset": "budget_periods",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM009-001"
+        },
+        {
+          "id": "E2E-TM009-002",
+          "scenario": "进入新周期、不同币种、拒绝/恢复系统通知",
+          "expected": "周期重置正确；币种不混算；通知拒绝不导致重复或丢失应用内状态",
+          "data_program": null,
+          "dataset": "budget_periods",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM009-002"
+        }
+      ],
+      "source_requirement": "REQ-TM009"
+    },
+    {
+      "id": "TM-010",
+      "title": "软件更新",
+      "version": "0.10.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM010-001",
+          "scenario": "从上一稳定签名版发现候选版并点击更新",
+          "expected": "真实安装替换/重启成功，账号设置和统计保留，版本与包摘要一致",
+          "data_program": null,
+          "dataset": "update_packages",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM010-001"
+        },
+        {
+          "id": "E2E-TM010-002",
+          "scenario": "损坏签名包、断网、磁盘不足及迁移失败",
+          "expected": "拒绝无效包，不进入半更新状态，恢复流程可自动验证",
+          "data_program": null,
+          "dataset": "update_packages",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM010-002"
+        }
+      ],
+      "source_requirement": "REQ-TM010"
+    },
+    {
+      "id": "TM-011",
+      "title": "数据与迁移",
+      "version": "0.11.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM011-001",
+          "scenario": "旧版 SQLite 升级及中断恢复",
+          "expected": "迁移成功保持数据；失败可恢复且不会写入半迁移状态",
+          "data_program": null,
+          "dataset": "migration_snapshots",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM011-001"
+        },
+        {
+          "id": "E2E-TM011-002",
+          "scenario": "服务器 SQLite 导入 MySQL 并回放客户端查询/同步",
+          "expected": "记录数、金额、Token 聚合和权限结果一致",
+          "data_program": null,
+          "dataset": "migration_snapshots",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM011-002"
+        },
+        {
+          "id": "E2E-TM011-003",
+          "scenario": "备份恢复后旧客户端重新同步",
+          "expected": "备份可用，旧客户端兼容，历史不重复",
+          "data_program": null,
+          "dataset": "migration_snapshots",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM011-003"
+        },
+        {
+          "id": "E2E-TM011-004",
+          "scenario": "固定时钟推进到本地90天/服务端365天清理边界，保留超龄未同步数据，修改保留天数后重启并补传",
+          "expected": "已同步且超龄数据按配置清理；保留首日 00:00 的事件仍保留，早于该边界的已同步事件被清理；未同步数据保留并只补传一次，缺失历史可见",
+          "data_program": null,
+          "dataset": "migration_snapshots",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM011-004"
+        }
+      ],
+      "source_requirement": "REQ-TM011"
+    },
+    {
+      "id": "TM-012",
+      "title": "菜单栏与诊断",
+      "version": "0.12.0",
+      "status": "planned",
+      "spec": "docs/product/README.md",
+      "cases": [
+        {
+          "id": "E2E-TM012-001",
+          "scenario": "菜单栏显示今日摘要，暂停/恢复、手动刷新",
+          "expected": "摘要与主窗口相同；暂停期间不读取，恢复后补采不重复",
+          "data_program": null,
+          "dataset": "diagnostic_states",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM012-001"
+        },
+        {
+          "id": "E2E-TM012-002",
+          "scenario": "目录失效、同步失败、重试、开机启动设置",
+          "expected": "状态与真实故障一致；恢复后状态更新；启动设置可自动验证",
+          "data_program": null,
+          "dataset": "diagnostic_states",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM012-002"
+        }
+      ],
+      "source_requirement": "REQ-TM012"
+    }
+  ]
+}

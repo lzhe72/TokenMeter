@@ -1,0 +1,10 @@
+.DS_Store
+.local/
+__pycache__/
+*.py[cod]
+.venv/
+DerivedData/
+*.xcresult
+.env
+.env.*
+!.env.example

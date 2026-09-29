@@ -1,0 +1,44 @@
+name: TokenMeter quality
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  governance:
+    name: governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate SOP and document baseline
+        run: python3 scripts/check_docs.py
+      - name: Validate feature traceability
+        run: python3 scripts/quality_gate.py check
+      - name: Test governance tooling
+        run: python3 -m unittest discover -s tests/governance -p 'test_*.py' -v
+
+  product-e2e:
+    name: product-e2e
+    needs: governance
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute product gate
+        # No skip/continue-on-error: bootstrap BLOCKED deliberately fails this job.
+        run: python3 scripts/quality_gate.py "${{ startsWith(github.ref, 'refs/tags/') && 'release' || 'iteration' }}"
+      - name: Retain actual gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-e2e-${{ github.sha }}-${{ github.run_attempt }}
+          path: .local/e2e/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90

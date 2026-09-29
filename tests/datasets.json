@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "datasets": [
+    {
+      "id": "identity",
+      "description": "四个合成账号及设备归属；仅文件生成，服务端种子程序待登录功能实现",
+      "status": "available",
+      "generator": "scripts/test_data.py"
+    },
+    {
+      "id": "usage_normalized",
+      "description": "标准化用量规范样例；不代表任一工具的原生日志兼容性",
+      "status": "available",
+      "generator": "scripts/test_data.py"
+    },
+    {
+      "id": "pricing",
+      "description": "价格样例与独立费用预期，含无价格模型",
+      "status": "available",
+      "generator": "scripts/test_data.py"
+    },
+    {
+      "id": "date_ranges",
+      "description": "固定时钟、自然日与 7/15/30 天边界的标准化样例",
+      "status": "available",
+      "generator": "scripts/test_data.py"
+    },
+    {
+      "id": "duplicates",
+      "description": "重复 event_id 的标准化重放样例",
+      "status": "available",
+      "generator": "scripts/test_data.py"
+    },
+    {
+      "id": "system_permissions",
+      "description": "系统文件/通知授权与撤销的隔离环境",
+      "status": "planned",
+      "generator": null
+    },
+    {
+      "id": "codex_raw",
+      "description": "已验证发布版本的 Codex 原生 JSONL、分支与累计值",
+      "status": "planned",
+      "generator": null
+    },
+    {
+      "id": "claude_raw",
+      "description": "已验证发布版本的 Claude Code 原生 JSONL、子代理与分支",
+      "status": "planned",
+      "generator": null
+    },
+    {
+      "id": "sync_faults",
+      "description": "真实服务、离线/重启/重放及部分确认故障场景",
+      "status": "planned",
+      "generator": null
+    },
+    {
+      "id": "export_rows",
+      "description": "带引号、逗号、换行、未知值的导出数据",
+      "status": "planned",
+      "generator": null
+    },
+    {
+      "id": "budget_periods",
+      "description": "多级预算阈值、周期重置和通知状态",
+      "status": "planned",
+      "generator": null
+    },
+    {
+      "id": "update_packages",
+      "description": "签名上一版/候选包、损坏包、下载中断服务器",
+      "status": "planned",
+      "generator": null
+    },
+    {
+      "id": "migration_snapshots",
+      "description": "SQLite/MySQL 旧版数据库及备份/迁移失败快照",
+      "status": "planned",
+      "generator": null
+    },
+    {
+      "id": "diagnostic_states",
+      "description": "暂停、恢复、读取错误、同步失败与菜单栏状态",
+      "status": "planned",
+      "generator": null
+    }
+  ]
+}
