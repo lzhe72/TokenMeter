@@ -73,5 +73,6 @@ python3 scripts/quality_gate.py release
 - 长任务在 docs/status.md 保留已完成项、未完成项、实际测试命令、结果和阻塞项，便于新会话接续。
 - 完成汇报写清：改了什么、实际执行了什么、结果/证据在哪里、产品 E2E 是否通过、是否具备发布资格。
 - 对测试和质量门禁的改动同样需要回归，不能仅通过修改期望值消除失败。
+- 用户已授权后续工作由 Codex 自行提交、推送、创建 PR，并在适用检查通过后合并；按 SOP-019 核对候选 SHA、检查和远端结果，不再重复索取授权。授权不等于允许跳过产品 E2E 或发布门禁。
 
 文件名使用 `AGENTS.md`。Codex 的目录级指令读取行为见 [官方说明](https://learn.chatgpt.com/docs/agent-configuration/agents-md)。

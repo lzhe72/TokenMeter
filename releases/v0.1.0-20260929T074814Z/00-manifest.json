@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.1.0-20260929T074814Z",
+  "version": "0.1.0",
+  "created_at": "2026-09-29T07:48:14Z",
+  "kind": "product_feature",
+  "feature_ids": [
+    "TM-001"
+  ],
+  "product_feature_matrix": "tests/feature_matrix.json",
+  "documents": {
+    "requirements": "releases/v0.1.0-20260929T074814Z/01-requirements.md",
+    "breakdown": "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
+    "development_plan": "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
+    "test_plan": "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
+    "release_plan": "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+    "iteration_record": "releases/v0.1.0-20260929T074814Z/06-iteration-record.md"
+  },
+  "global_design": "docs/design-plan.md",
+  "lifecycle": "docs/lifecycle.md",
+  "documentation_standard": "docs/standards/documentation.md",
+  "changelog": "CHANGELOG.md",
+  "changelog_heading": "v0.1.0-20260929T074814Z",
+  "traceability": [
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-PLAN",
+      "test": "TEST-TM001-GOVERNANCE",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "E2E-TM001-001",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "E2E-TM001-002",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "E2E-TM001-003",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "TEST-TM001-SERVER",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-DATA",
+      "test": "TEST-TM001-SERVER",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-DATA",
+      "test": "E2E-TM001-001",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-001",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-002",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-003",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE",
+      "test": "E2E-TM001-004",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-001",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-002",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-003",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-004",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-REVIEW",
+      "test": "TEST-TM001-GOVERNANCE",
+      "description": "TM-001完整开发与验收追踪"
+    }
+  ],
+  "test_programs": [],
+  "test_data_program": null,
+  "test_sop": "sop/SOP-014-e2e.md",
+  "gate_commands": {
+    "metadata": "python3 scripts/quality_gate.py check",
+    "iteration": "python3 scripts/quality_gate.py iteration",
+    "release": "python3 scripts/quality_gate.py release",
+    "documentation": "python3 scripts/check_docs.py --mode baseline",
+    "documentation_structure": "python3 scripts/check_docs.py --mode structure"
+  },
+  "publication": {
+    "planned_git_tag": "v0.1.0-20260929T074814Z",
+    "expected_passport_asset": "v0.1.0-20260929T074814Z.passport.json",
+    "passport_policy": "issued_only_by_protected_ci_after_verified_product_e2e",
+    "state": "not_published"
+  },
+  "lookup_command": "python3 scripts/release_registry.py show --release-id v0.1.0-20260929T074814Z",
+  "sop_index": "sop/README.md",
+  "document_catalog": "docs/catalog.json",
+  "program_bindings_status": "planned"
+}
