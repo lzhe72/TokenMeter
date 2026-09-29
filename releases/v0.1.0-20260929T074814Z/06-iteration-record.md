@@ -169,3 +169,5 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 提交前只读审查发现三处当前规则与程序不一致：双库 `verify` 在只有一个库时仍返回成功、本机预览服务可被指定为非回环 HTTP 地址、候选工作流注释仍将 MySQL 写为本版阻断。按 SOP-000/009/024 修订：`verify` 对缺任一库返回失败，服务入口拒绝非回环地址，发布注释与 SQLite 预案一致；SOP-009 修订7并更新索引。第005例的独立服务测试还在改密并加入成员后新建服务实例，断言旧密码失效、新密码有效且成员保留。固定测试库定位为 Codex 本机回归材料，原生自动化逐例用临时 SQLite 隔离；用户真实生产库不参与造数或 E2E。
 
 上述修订后的本机完整检查：文档 baseline 69/69、追踪 12 功能/35 场景/5 目标绑定均退出0（仅规范）；governance 170、server 43、升级 helper 9 项通过，Swift 用例语法解析及双库 `verify` 退出0，`git diff --check`退出0。完整 Xcode 本机尚缺，当前候选五例原生 E2E 和正式发布继续 BLOCKED；源码提交及远端 CI 结果在后续记录，不提前声称通过。
+
+源码候选 `3323c7dddcc44cd17c5f7b9431faf82defc7e098` 已推送分支，远端 [run36589629575](https://github.com/lzhe72/TokenMeter/actions/runs/36589629575)开始检查。推送后本机针对该干净提交执行 `quality_gate.py iteration` 退出2，`.local/e2e/gate-fd2bc7d1c2fb457394d7ea403103d9b6/result.json` 记录 `BLOCKED`、原生0/5，原因是只选中Command Line Tools；此结果不替代远端Mac运行。复核 CI 预览 DMG 时发现它原先内置端口60470，与本机生产服务及已安装预览 App 使用的49176不一致；将后续临时预览工件端口统一为49176，再由新候选完整检查。该修订不改变正式发布包或生产 HTTPS 设计。

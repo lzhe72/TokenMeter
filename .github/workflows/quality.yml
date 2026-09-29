@@ -67,7 +67,7 @@ jobs:
           python3 scripts/package_preview_dmg.py \
             --app "$PWD/.local/preview/package-source/TokenMeter.app" \
             --output "$PWD/.local/preview/TokenMeter-${{ github.sha }}-local-preview.dmg" \
-            --service-url http://127.0.0.1:60470 | tee .local/preview/manifest.json
+            --service-url http://127.0.0.1:49176 | tee .local/preview/manifest.json
       - name: Retain local-only preview DMG
         if: ${{ always() && matrix.runner == 'macos-15-intel' }}
         uses: actions/upload-artifact@v4
