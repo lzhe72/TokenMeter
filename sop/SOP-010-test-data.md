@@ -1,6 +1,6 @@
 # SOP-010 测试数据
 
-**修订：** 5　**状态：** baselined　**适用：** all
+**修订：** 6　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -28,7 +28,9 @@ SOP-006 已定义角色、数据、独立预期与来源版本；SOP-009 指定�
 6. 归档需要的证据后，对基础 demo 执行 `python3 scripts/test_data.py reset --run-id demo`；TM-001 对应执行 `python3 tests/server/fixtures.py reset --run-id <同一ID>`。这两个入口仅删除各自精确匹配的生成文件。产品库、进程、测试 Keychain 及升级临时资源由原生 runner 单独清理并记录；清理失败不能隐去。
 7. 仅在专用 CI Mac 中由更新 fixture 程序准备测试 CA、HTTPS appcast 和签名有效/无效包。遵循009的hosted Mac检查，通过`sudo -n /usr/bin/security`在admin域设置信任；结束时按本次证书或摘要撤销对应信任及导入的证书，不删除其他信任项。命令失败和超时保留安全操作名，清理失败不能覆盖原始异常；未创建成功的资源先核对确实不存在，再记录清理完成。账号文件、密码、数据库、私钥不放入上传证据目录；只保存摘要和不含凭据的执行结果。缺少实际入口或环境时保持 BLOCKED。未来采集场景仍需各工具已支持版本的原始日志，规范化样例不能替代。
 
-8. macOS可能要求管理员正常授权以撤销最后一项admin信任。不得修改授权数据库、跳过撤销、保留信任或仅删除证书来声称清理通过。当前托管Mac未具备已验证的自动清理路径，程序在创建系统资源前阻断；不重复产生已知无法完整清理的资源。恢复时先更新009/010与设计，取得真实初始化、正常授权、精确撤销和完整清理证据，再运行四例完整回归。
+8. macOS可能要求管理员正常授权以撤销最后一项admin信任。不得修改授权数据库、跳过撤销、保留信任或仅删除证书来声称清理通过。当前托管Mac未具备已验证的自动清理路径，程序在创建系统资源前阻断；不重复产生已知无法完整清理的资源。恢复时先更新009/010与设计，取得真实初始化、正常授权、精确撤销和完整清理证据，再运行五例完整回归。
+
+9. 本机固定回归库运行 `python scripts/bootstrap_sqlite.py init-test --run-id <唯一测试ID>`，程序生成并执行 `database/test/seed.sql`，其中含四个回归账号的随机盐 Argon2 散列和固定参考时钟，不含明文口令。先读 `database/test/.tokenmeter-test-database.json` 与数据库内环境标记，再执行 `python scripts/bootstrap_sqlite.py verify`；SQL 只允许匹配的已迁移空测试库，错误环境或已有账号必须拒绝。需要重造时，确认测试服务已停，运行 `python scripts/bootstrap_sqlite.py rebuild-test --current-run-id <原ID> --run-id <新ID>`；先归档旧材料，异常中断按 `repair-test-material` 恢复，禁止删除或重建生产库。原生 runner 的逐例临时 SQLite 仍是产品回归隔离目标，第005例仅在临时根验证生产初始化流程；实际用户库从不作为测试造数目标。
 
 ## 输出
 

@@ -73,7 +73,8 @@ python3 scripts/quality_gate.py release
 - 累计计数、缓存子项、会话分支、子代理及重复同步必须有专门用例；未知值不能用零掩盖。
 - 测试只使用隔离目录与合成账号。不能扫描开发者真实 `~/.codex`、`~/.claude` 生成测试数据。
 - 时间统一存 UTC，团队默认 Asia/Shanghai；费用以价格版本计算，并标注估算。
-- 先保持客户端/服务端的简单单体结构。客户端 SQLite；服务端开发 SQLite，生产 MySQL。
+- 先保持客户端/服务端的简单单体结构。客户端 SQLite；v0.1.0 服务端测试与生产均使用隔离的 SQLite 文件，MySQL 迁移在后续独立版本设计和验证。
+- v0.1.0 测试库为 `database/test/test.db`，只供 Codex 回归；用户生产库为 `database/production/production.db`，首次建库预置 `admin / 123456` 并强制改密。初始化、SQL 造数、只读检查和生产服务启动必须按 [数据库说明](database/README.md) 与 SOP-009/010 执行，不得用生产库重置测试数据。
 
 ## 文档、Git 与交接
 

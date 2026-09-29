@@ -23,7 +23,7 @@
 
 ## 尚未完成
 
-本轮App、服务、测试数据和原生执行器正在联调，原生产品验收已在CI执行但未通过，当前结果见文末。正式支持矩阵、证书、生产MySQL和受保护发布环境缺失，产品发布BLOCKED。后续实际结果继续追加，不能用文档基线或Python测试代替原生E2E。
+本轮App、服务、测试数据和原生执行器正在联调，原生产品验收已在CI执行但未通过，当前结果见文末。此段为先前规划状态；当时的正式支持矩阵、证书、生产MySQL和受保护发布环境缺失，产品发布BLOCKED。后来用户将本版目标改为 SQLite，MySQL 不再是 v0.1.0 门禁。后续实际结果继续追加，不能用文档基线或Python测试代替原生E2E。
 
 
 ## 开发中发现的流程与实现问题
@@ -149,3 +149,23 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 预览包机器诊断为`.local/process/v0.1.0-20260929T074814Z/preview-dmg.json`：两份解包/安装App的`codesign --verify --deep --strict`均退出0，安装后进程在运行，隔离服务健康200，安装包原生UI E2E执行0例。新增打包程序的远程URL、含凭据URL和路径URL负测均拒绝；`py_compile`退出0。文档structure/baseline和`quality_gate.py check`退出0，治理152项、服务端34项、更新helper9项通过。这些基础检查不能提升产品门禁状态。预览服务现由本轮保留的隔离进程提供；停止服务、重启本机或迁移机器后需按009/010重建测试环境。
 
 为便于GitHub下载，quality工作流在Intel原生门禁结束后从该运行的001候选App制作同样受限的预览DMG，并上传为`local-preview-dmg-<SHA>-<attempt>` Actions工件；上传与产品门禁分别判定，现有本机DMG的摘要不冒充未来CI工件。正式GitHub Release资产仍必须等017/018完整通过。该新增工作流步骤待当前分支CI真实验证，不能凭本机打包成功声称远端工件已经存在。
+
+## SQLite 双库、生产管理员与第五项原生回归（2026-09-29T15:05:46Z）
+
+用户先将本版服务端目标由 MySQL 改为 SQLite，要求可查找的测试/生产 DB 文件和可执行造数 SQL；随后明确生产库预置 `admin / 123456` 供本人使用，测试库只供 Codex 回归。按 SOP-000/002–008/009/010/014/017/018/024 更新当前基线：`database/test/test.db` 与 `database/production/production.db` 分离，生产管理员首次登录强制改密，初始化不得覆盖后续密码和成员。MySQL 迁移留给后续版本；本版发布验证使用隔离同构 SQLite 副本，不把真实生产库作为测试造数目标。
+
+`scripts/bootstrap_sqlite.py` 在独立私有暂存目录完成 Alembic、SQL 与账号校验后才发布目标文件；生成的 `database/test/seed.sql` 和 `database/production/seed.sql` 是可执行 SQL，含每次生成的 Argon2 盐散列，不含明文密码。测试 SQL 仅匹配带内部环境标记的空测试库；重建前保存旧库，异常中断可按 `repair-test-material` 根据数据库所有权恢复 SQL/标记。生产无重建入口，服务启动只读核对，不重复造数。两份 DB、SQL 与测试所有权标记被 Git 忽略，本机文件权限均为0600；源码提交仅包含生成程序、文档与空目录占位。
+
+本机实际执行 `init-test --run-id codex-local-20260929`、`init-production` 与 `verify` 均退出0；只读查询显示生产库仅 `admin`（admin/active/首次改密），测试库仅四个 `test-*` 账号。真实生产库的临时副本通过 FastAPI 登录 `admin / 123456` 返回200和 `must_change_password=true`，真实生产库 `sessions=0`。生产服务在`127.0.0.1:49176`运行，健康接口返回200；已安装 `/Applications/TokenMeter.app` 内置同一预览地址并实际启动进程。此为本机 `.UITesting` App 和回环服务使用，不是正式生产签名/HTTPS App 的安装验收。数据库造数/只读验证原始证据在 `.local/sqlite-bootstrap-evidence/`，生产进程保留供用户体验。
+
+需求新增 AC-TM001-005、E2E-TM001-005 与 `production_bootstrap` 数据集。原生 runner 在专用临时根调用相同生产初始化程序，真实 UI 登录、强制改密、管理权限及重登，服务/API和库只读断言无测试账号；原生产库不参与该用例。执行顺序为001→002→003→005→004，保留004的真实签名更新路径和全体五例门禁。第五例的程序和独立治理合同已编写，**尚未取得真实原生 XCUITest 结果**；本机 `quality_gate.py iteration` 退出2，报告 `.local/e2e/gate-2817370fb06d420eb196608571f34d94/result.json` 为 `BLOCKED`，原因是只选中 Command Line Tools，0/5执行。本轮新候选须提交后在双平台重新完整执行，旧提交3/4证据不能复用。
+
+`scripts/package_release_dmg.py` 增加正式 App 预检、Developer ID DMG 签署、Apple 公证状态确认、装订、Gatekeeper及包内摘要校验。对已安装预览 App 运行 `preflight` 退出1，按预期拒绝 UITesting bundle；打包程序的14项隔离测试通过，未执行真实 Developer ID 签署或公证。更新源治理测试先稳定复现响应已发出但`served_bytes`尚未登记的竞态，再修复事件等待；失败原件及修后日志在`.local/process/v0.1.0-20260929T074814Z/governance-update-race/`。正式 DMG、最终安装/升级原生测试、全发布平台矩阵和受保护通行证仍缺，因此不创建 Tag/Release。
+
+本轮源码/计划整合后的本机检查：`check_docs.py --mode baseline` 退出0（69文档）、`quality_gate.py check`退出0（12功能、35场景、5个目标测试绑定，仅traceability）、governance 170项通过、server 41项通过、更新helper9项通过、`bootstrap_sqlite.py verify`退出0、`git diff --check`退出0。这些是文档、工具和服务端结果，不能提升产品迭代或发布状态。上一候选`23bbc83`的[CI run36579356475](https://github.com/lzhe72/TokenMeter/actions/runs/36579356475)上传了明确标识的预览DMG Actions工件；两架构旧四例各001–003真实PASS、004 BLOCKED，完整门禁3/4未通过。当前变更提交后的新 CI 结果另以远端不可覆盖记录为准，不能在此预填。
+
+### 双库核验与回归隔离复核（2026-09-29T15:20:02Z）
+
+提交前只读审查发现三处当前规则与程序不一致：双库 `verify` 在只有一个库时仍返回成功、本机预览服务可被指定为非回环 HTTP 地址、候选工作流注释仍将 MySQL 写为本版阻断。按 SOP-000/009/024 修订：`verify` 对缺任一库返回失败，服务入口拒绝非回环地址，发布注释与 SQLite 预案一致；SOP-009 修订7并更新索引。第005例的独立服务测试还在改密并加入成员后新建服务实例，断言旧密码失效、新密码有效且成员保留。固定测试库定位为 Codex 本机回归材料，原生自动化逐例用临时 SQLite 隔离；用户真实生产库不参与造数或 E2E。
+
+上述修订后的本机完整检查：文档 baseline 69/69、追踪 12 功能/35 场景/5 目标绑定均退出0（仅规范）；governance 170、server 43、升级 helper 9 项通过，Swift 用例语法解析及双库 `verify` 退出0，`git diff --check`退出0。完整 Xcode 本机尚缺，当前候选五例原生 E2E 和正式发布继续 BLOCKED；源码提交及远端 CI 结果在后续记录，不提前声称通过。

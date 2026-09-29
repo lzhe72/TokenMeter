@@ -6,17 +6,17 @@ TM-001：预置账号与登录、权限管理和最小更新器。版本0.1.0，
 
 ## 候选、平台和资产
 
-源文档/代码/数据/测试先形成干净候选，release门禁在Tag之前运行。最终分发包使用DMG，需Developer ID、公证、Sparkle EdDSA签名；分别登记DMG与内部.app摘要，从DMG安装后执行完整验收，再以GitHub Release资产提供下载。当前正式DMG构建/公证/分发入口尚未实现，保留BLOCKED。macOS14+ arm64/Intel实际支持矩阵逐项验证。开发迭代可以使用开发签名和明确的开发矩阵，不能据此签发正式通行证。
+源文档/代码/数据/测试先形成干净候选，release门禁在Tag之前运行。最终分发包使用DMG，需Developer ID、公证、Sparkle EdDSA签名；分别登记DMG与内部.app摘要，从DMG安装后执行完整验收，再以GitHub Release资产提供下载。`scripts/package_release_dmg.py` 已建立正式预检、签署、公证、装订和包内校验入口；当前没有真实 Developer ID 候选、Keychain 公证 profile 或完整执行证据，保留BLOCKED。macOS14+ arm64/Intel实际支持矩阵逐项验证。开发迭代可以使用开发签名和明确的开发矩阵，不能据此签发正式通行证。
 
-用户本机体验可按SOP-017的预览诊断分支，从已验证的UITesting App生成带明显标识的本机DMG。`scripts/package_preview_dmg.py`只接受该隔离bundle及loopback测试服务，验证签名、镜像与App内容，输出摘要。quality工作流在Intel原生运行后将预览DMG上传为短期Actions工件，允许用户在GitHub下载；该上传即使完整产品门禁BLOCKED也不能被解释为发布。此包依赖本机隔离服务，不带生产更新源，既不是上述最终候选，也不进入GitHub正式Release或通行证。
+用户本机体验可按SOP-017的预览诊断分支，从已验证的UITesting App生成带明显标识的本机DMG。`scripts/package_preview_dmg.py`只接受该隔离bundle及loopback服务，验证签名、镜像与App内容，输出摘要。用户已要求本机生产库预置账号，可由预览 App 连只绑定回环地址的生产 SQLite 服务；诊断不得重置该库，正式 App 仍需 HTTPS。quality工作流在Intel原生运行后将预览DMG上传为短期Actions工件，允许用户在GitHub下载；该上传即使完整产品门禁BLOCKED也不能被解释为发布。此包不带生产更新源，既不是上述最终候选，也不进入GitHub正式Release或通行证。
 
-首版最终候选先独立完成干净安装与四例E2E，再经隔离HTTPS源从候选更新到受控高版本包。登记受控包源码、构建版本、摘要、签名；升级后包的结果不替代原候选验收。拒绝坏签名/中断，保留原版与账号状态。
+首版最终候选先独立完成干净安装与五例E2E，再经隔离HTTPS源从候选更新到受控高版本包。登记受控包源码、构建版本、摘要、签名；升级后包的结果不替代原候选验收。拒绝坏签名/中断，保留原版与账号状态。
 
 预期Tag和Release名称同本release_id；预期通行证为 `<release_id>.passport.json`，程序校验可信证据通过后才签发。正式发布继续经017→018→019→020。
 
 ## 数据与恢复
 
-Alembic初始库迁移和真实账号导入；无历史产品schema需要升级。生产升级前备份账号库、校验hash和restore；服务健康检查和认证自检通过才分发客户端。失败停止发布，保护旧包和数据库；无有效恢复证据不能上线。MySQL尚未验证时生产发布BLOCKED。
+v0.1.0 服务端生产库为 `database/production/production.db`，Codex 回归库为 `database/test/test.db`；两库不得复用账号或数据。首次生产初始化运行 Alembic 并预置 `admin / 123456`，要求首次登录改密；后续启动和检查不得覆盖已改密码与真实成员。测试 SQL 由程序生成并只导入回归库。无历史产品schema需要升级。生产升级前备份账号库、校验hash和restore；服务健康检查和认证自检通过才分发客户端。失败停止发布，保护旧包和数据库；无有效恢复证据不能上线。MySQL迁移留待后续版本，不作为本版门禁。
 
 ## 当前条件与PR
 

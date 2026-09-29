@@ -1,6 +1,6 @@
 # SOP-009 环境准备
 
-**修订：** 5　**状态：** baselined　**适用：** all
+**修订：** 7　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -27,9 +27,11 @@ SOP-008 文档基线完整；SOP-004/005 已定义骨架范围、接口、任务
 5. 分别记录“源码/配置准备”和“真实运行验证”。缺 Xcode、GUI 或执行器时，对依赖它们的构建、运行与验收记录 BLOCKED；仍可完成计划中具有独立验证条件的源码、数据程序、测试编写与文档任务，不得声称骨架运行通过。
 6. 开发和业务 E2E 可使用隔离开发签名包。生产签名、公证和分发凭据在 SOP-017/018 检查，部署权限在 SOP-020 检查；其缺失不阻止开始工程准备或业务编码，最终签名包仍须单独验证。
 
-7. TM-001更新fixture只允许`GITHUB_ACTIONS=true`、`RUNNER_ENVIRONMENT=github-hosted`、`RUNNER_OS=macOS`且具有`RUNNER_TEMP`的专用临时runner。先以`sudo -n /usr/bin/true`核对非交互管理员权限；证书信任限定admin域、本次证书及所需codeSign/ssl策略。缺权限、命令超时或信任未验证即阻断，不弹窗等待用户，也不在开发者机器尝试信任导入。不得修改authorizationdb或其他系统规则来规避证书授权。现有托管Mac撤销最后一项临时信任会等待系统授权，当前缺少经过验证的自动清理路径；在任何证书写入前记录BLOCKED。恢复需先具备能正常授权并验证完整清理的测试环境及对应程序，不能仅设置一个环境变量放行。使用`python3 scripts/native_environment.py`记录有界fixture探针结果，014在第004例前调用该探针。前三个账号场景可按自身前提执行和归档；004缺项仍使整个门禁BLOCKED，不能因此缩小四例集合。该新增入口需与实现同次提交；探针成功仅证明环境可用，不能算产品PASS。实际Mac执行结果才证明该环境可用。
+7. TM-001更新fixture只允许`GITHUB_ACTIONS=true`、`RUNNER_ENVIRONMENT=github-hosted`、`RUNNER_OS=macOS`且具有`RUNNER_TEMP`的专用临时runner。先以`sudo -n /usr/bin/true`核对非交互管理员权限；证书信任限定admin域、本次证书及所需codeSign/ssl策略。缺权限、命令超时或信任未验证即阻断，不弹窗等待用户，也不在开发者机器尝试信任导入。不得修改authorizationdb或其他系统规则来规避证书授权。现有托管Mac撤销最后一项临时信任会等待系统授权，当前缺少经过验证的自动清理路径；在任何证书写入前记录BLOCKED。恢复需先具备能正常授权并验证完整清理的测试环境及对应程序，不能仅设置一个环境变量放行。使用`python3 scripts/native_environment.py`记录有界fixture探针结果，014在第004例前调用该探针。001–003及005账号场景可按自身前提执行和归档；004缺项仍使整个五例门禁BLOCKED，不能缩小集合。探针成功仅证明环境可用，不能算产品PASS。实际Mac执行结果才证明该环境可用。
 
 8. 用户明确授权本机作为测试机时，可以在本机执行014的App构建及账号原生场景；记录此授权和环境事实，不把本机伪装为GitHub runner。TM-001采用Xcode16.4，先确认完整Xcode.app已安装并首次启动完成组件与许可。当前只有Command Line Tools时保持BLOCKED，不能把/usr/bin/xcodebuild占位入口当作完整工具链。Apple账号登录、许可和管理员初始授权由用户通过系统正常界面完成，密码不进入聊天或脚本日志。本机升级证书配置与清理须另有真实程序、SOP和授权证据；当前CI专用fixture不可直接套用本机。
+
+9. v0.1.0 首次缺库时，用本轮 Python 环境执行 `python scripts/bootstrap_sqlite.py init-test --run-id <唯一测试ID>` 和 `python scripts/bootstrap_sqlite.py init-production` 建立 `database/test/test.db` 与 `database/production/production.db`；实际命令中的 `python` 指向步骤3的隔离解释器。两份初始化各仅允许空目标，已有生产库不得再执行初始化，生产首建 `admin / 123456` 后强制改密，服务启动不再次造数。执行 `python scripts/bootstrap_sqlite.py verify` 检查两库的 schema、环境标记及账号隔离，缺任一库必须失败；本机预览服务使用 `python scripts/bootstrap_sqlite.py serve-production --host 127.0.0.1 --port <本机端口>`，入口仅接受回环地址且只绑定生产库，不提供公网 HTTP。`database/README.md` 给出可执行命令、SQL 位置与本机路径。原生 E2E 不接触用户生产库，逐例仍用临时测试数据库；第005例在独立临时根下调用同一生产初始化程序。
 
 ## 输出
 

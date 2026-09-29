@@ -54,7 +54,7 @@ jobs:
         run: |
           python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
       - name: Execute product gate
-        # All four TM-001 cases are required; missing native evidence blocks this job.
+        # All TM-001 cases in the versioned feature matrix are required; missing native evidence blocks this job.
         run: python3 scripts/quality_gate.py iteration
       - name: Package local-only preview DMG from tested App
         if: ${{ always() && matrix.runner == 'macos-15-intel' }}

@@ -16,6 +16,7 @@ import plistlib
 import re
 import shlex
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -30,6 +31,26 @@ class Blocked(RuntimeError):
 
 class EvidenceError(RuntimeError):
     """An execution failed or evidence does not match the requested test."""
+
+
+FIXTURE_PROFILES = {f"E2E-TM001-{number:03d}": "synthetic_accounts" for number in range(1, 5)} | {
+    "E2E-TM001-005": "production_bootstrap"
+}
+PRODUCTION_BOOTSTRAP_USER_ID = "00000000-0000-4000-8000-000000000005"
+
+
+def fixture_profile(case_id: str) -> str:
+    try:
+        return FIXTURE_PROFILES[case_id]
+    except KeyError as exc:
+        raise Blocked(f"No native fixture profile for {case_id}") from exc
+
+
+def expected_bootstrap_state(*, after_ui: bool) -> dict:
+    return {"fixture_kind": "production_bootstrap", "schema_version": "0001",
+            "owner": "production-init", "account_count": 1, "username": "admin", "role": "admin",
+            "must_change_password": not after_ui, "credential_version": 2 if after_ui else 1,
+            "phase": "after_ui" if after_ui else "initial"}
 
 
 def json_file(path: Path) -> dict:
@@ -261,8 +282,10 @@ def verify_report(root: Path, path: Path, *, run_id: str, phase: str,
     if report.get("manifest_sha256") != snapshot(root):
         raise EvidenceError("Native input manifests changed")
     expected = required_cases(root)
-    if set(expected) - {f"E2E-TM001-{index:03d}" for index in range(1, 5)}:
-        raise Blocked("A required feature needs a native fixture profile that has not been implemented")
+    for case_id in expected:
+        fixture_profile(case_id)
+    if report.get("expected_cases") != list(expected):
+        raise EvidenceError("Recorded required native cases differ from the current matrix")
     suites = report.get("suites")
     if not isinstance(suites, list) or len(suites) != len(expected):
         raise EvidenceError("Incomplete native suites")
@@ -298,6 +321,20 @@ def verify_report(root: Path, path: Path, *, run_id: str, phase: str,
                     or not artifact.is_file() or not artifact.stat().st_size
                     or sha256(artifact) != suite.get(digest_key)):
                 raise EvidenceError("Missing or changed fixture/build artifact")
+        if fixture_profile(case_id) == "production_bootstrap":
+            manifest = json_file(path.parent / suite["fixture_manifest"])
+            if (manifest.get("fixture_kind") != "production_bootstrap"
+                    or manifest.get("database") != "database/production/production.db"
+                    or manifest.get("initial_state") != expected_bootstrap_state(after_ui=False)
+                    or not all(isinstance(manifest.get(key), str) and re.fullmatch(r"[a-f0-9]{64}", manifest[key])
+                               for key in ("database_sha256", "seed_sql_sha256"))):
+                raise EvidenceError("Production bootstrap manifest does not describe the isolated initial database")
+            state_path = path.parent / suite.get("bootstrap_state_artifact", "")
+            if (state_path.is_symlink() or not state_path.resolve().is_relative_to((path.parent / case_id).resolve())
+                    or not state_path.is_file() or sha256(state_path) != suite.get("bootstrap_state_sha256")
+                    or json_file(state_path) != {"post_ui_state": expected_bootstrap_state(after_ui=True),
+                                                 "reinitialization_refused": True}):
+                raise EvidenceError("Production bootstrap post-UI database state is missing or changed")
         observed.add(case_id)
     if observed != set(expected) or report.get("executed_cases") != len(expected):
         raise EvidenceError("Native execution differs from required coverage")
@@ -322,7 +359,8 @@ def preflight(root: Path) -> dict:
     if console_user.returncode or console_user.stdout.strip() in ("", "root", "loginwindow"):
         raise Blocked("No logged-in macOS GUI session")
     for relative in ("apps/macos/TokenMeter.xcodeproj/project.pbxproj", "tests/server/fixtures.py",
-                     "server/tokenmeter_server/main.py", "apps/macos/build_update_fixture.py"):
+                     "server/tokenmeter_server/main.py", "apps/macos/build_update_fixture.py",
+                     "scripts/bootstrap_sqlite.py"):
         if not (root / relative).is_file():
             raise Blocked(f"Required native input is absent: {relative}")
     return {"xcode": version.stdout.strip(), "macos": platform.mac_ver()[0], "architecture": platform.machine()}
@@ -335,6 +373,59 @@ def load_module(path: Path, name: str):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def inspect_production_bootstrap(database: Path, *, after_ui: bool) -> dict:
+    """Read only the owned, isolated production fixture; never export its DB or hashes."""
+    if database.is_symlink() or not database.is_file() or database.name != "production.db":
+        raise EvidenceError("Isolated production fixture database is missing or unsafe")
+    try:
+        with sqlite3.connect(database.as_uri() + "?mode=ro", uri=True) as connection:
+            schema = connection.execute("SELECT version_num FROM alembic_version").fetchall()
+            owner = connection.execute("SELECT environment, run_id FROM tokenmeter_seed_owner").fetchall()
+            users = connection.execute(
+                "SELECT id, username, role, is_active, must_change_password, credential_version "
+                "FROM users ORDER BY username"
+            ).fetchall()
+    except sqlite3.Error as exc:
+        raise EvidenceError(f"Cannot inspect isolated production fixture: {type(exc).__name__}") from exc
+    expected_user = (PRODUCTION_BOOTSTRAP_USER_ID, "admin", "admin", 1, 0 if after_ui else 1,
+                     2 if after_ui else 1)
+    if schema != [("0001",)] or owner != [("production", "production-init")] or users != [expected_user]:
+        raise EvidenceError("Isolated production fixture ownership or admin state differs from the case contract")
+    return expected_bootstrap_state(after_ui=after_ui)
+
+
+def prepare_production_bootstrap(case_private: Path, case_output: Path, bootstrap_data) -> tuple[Path, Path]:
+    """Initialize a fresh production layout strictly beneath this runner's temp root."""
+    bootstrap_root = case_private / "production-bootstrap"
+    bootstrap_root.mkdir(mode=0o700)
+    database = bootstrap_root / "database/production/production.db"
+    seed = database.with_name("seed.sql")
+    try:
+        generated = bootstrap_data.initialize_production(bootstrap_root)
+    except Exception as exc:
+        raise EvidenceError(f"Isolated production bootstrap failed: {type(exc).__name__}") from exc
+    if (not isinstance(generated, dict) or generated.get("database") != str(database)
+            or generated.get("environment") != "production" or generated.get("accounts") != 1
+            or generated.get("schema_version") != "0001" or seed.is_symlink() or not seed.is_file()):
+        raise EvidenceError("Production initializer returned an unexpected isolated layout")
+    initial = inspect_production_bootstrap(database, after_ui=False)
+    manifest = {"fixture_kind": "production_bootstrap", "database": "database/production/production.db",
+                "database_sha256": sha256(database), "seed_sql_sha256": sha256(seed), "initial_state": initial}
+    public_manifest = case_output / "fixture-manifest.json"
+    public_manifest.write_text(json.dumps(manifest, indent=2) + "\n")
+    return database, public_manifest
+
+
+def assert_production_reinitialization_refused(case_private: Path, bootstrap_data) -> None:
+    try:
+        bootstrap_data.initialize_production(case_private / "production-bootstrap")
+    except ValueError:
+        return
+    except Exception as exc:
+        raise EvidenceError(f"Production reinitialization failed unexpectedly: {type(exc).__name__}") from exc
+    raise EvidenceError("Production initializer overwrote an existing database")
 
 
 def wait_for_service(process: subprocess.Popen, address: str) -> None:
@@ -412,15 +503,17 @@ def execute(root: Path, output: Path, report: dict) -> None:
     if report["working_tree_dirty"]:
         raise Blocked("Native candidate must be committed and clean before execution")
     expected = required_cases(root)
-    if set(expected) - {f"E2E-TM001-{index:03d}" for index in range(1, 5)}:
-        raise Blocked("A required feature needs a native fixture profile that has not been implemented")
+    for case_id in expected:
+        fixture_profile(case_id)
     report["expected_cases"] = list(expected)
     report["manifest_sha256"] = snapshot(root)
     report["fixture_program_sha256"] = {
         name: sha256(root / name) for name in ("tests/server/fixtures.py", "tests/e2e/update_source.py",
-                                              "tests/e2e/code_signing.py", "apps/macos/build_update_fixture.py")
+                                              "tests/e2e/code_signing.py", "apps/macos/build_update_fixture.py",
+                                              "scripts/bootstrap_sqlite.py")
     }
     account_data = load_module(root / "tests/server/fixtures.py", "native_account_fixture")
+    bootstrap_data = load_module(root / "scripts/bootstrap_sqlite.py", "native_production_bootstrap")
     update_data = load_module(root / "tests/e2e/update_source.py", "native_update_fixture")
     signing_data = load_module(root / "tests/e2e/code_signing.py", "native_signing_fixture")
     project = root / "apps/macos/TokenMeter.xcodeproj"
@@ -437,19 +530,24 @@ def execute(root: Path, output: Path, report: dict) -> None:
             case_private = private / case_id
             case_private.mkdir(mode=0o700)
             isolation_id = (report["run_id"][:40] + f"-c{index:03d}").lower()
-            fixture = account_data.generate(isolation_id, 42, workspace=case_private)
-            fixture_manifest = json_file(fixture / "manifest.json")
-            public_manifest = case_output / "fixture-manifest.json"
-            public_manifest.write_text(json.dumps(fixture_manifest, indent=2) + "\n")
-            database = case_private / "accounts.sqlite"
+            profile = fixture_profile(case_id)
+            if profile == "production_bootstrap":
+                database, public_manifest = prepare_production_bootstrap(case_private, case_output, bootstrap_data)
+            else:
+                fixture = account_data.generate(isolation_id, 42, workspace=case_private)
+                fixture_manifest = json_file(fixture / "manifest.json")
+                public_manifest = case_output / "fixture-manifest.json"
+                public_manifest.write_text(json.dumps(fixture_manifest, indent=2) + "\n")
+                database = case_private / "accounts.sqlite"
+                (case_private / ".tokenmeter-test-database.json").write_text(json.dumps({
+                    "owner": "tokenmeter-test-database", "run_id": isolation_id, "database": database.name}) + "\n")
             database_url = "sqlite:///" + str(database)
-            (case_private / ".tokenmeter-test-database.json").write_text(json.dumps({
-                "owner": "tokenmeter-test-database", "run_id": isolation_id, "database": database.name}) + "\n")
-            command([sys.executable, "-m", "server.tokenmeter_server.cli", "migrate", "--database-url", database_url],
-                    root=root, log=case_output / "migrate.log", timeout=60)
-            command([sys.executable, "-m", "server.tokenmeter_server.cli", "provision", "--database-url", database_url,
-                     "--accounts", str(fixture / "users.json"), "--test-run-id", isolation_id],
-                    root=root, log=case_output / "provision.log", timeout=60)
+            if profile == "synthetic_accounts":
+                command([sys.executable, "-m", "server.tokenmeter_server.cli", "migrate", "--database-url", database_url],
+                        root=root, log=case_output / "migrate.log", timeout=60)
+                command([sys.executable, "-m", "server.tokenmeter_server.cli", "provision", "--database-url", database_url,
+                         "--accounts", str(fixture / "users.json"), "--test-run-id", isolation_id],
+                        root=root, log=case_output / "provision.log", timeout=60)
             port = unused_port()
             address = f"http://127.0.0.1:{port}"
             environment = dict(os.environ, TOKENMETER_DATABASE_URL=database_url)
@@ -577,6 +675,14 @@ def execute(root: Path, output: Path, report: dict) -> None:
                                     update.verify_exchange()
                                 except RuntimeError as exc:
                                     raise EvidenceError(str(exc)) from exc
+                            if profile == "production_bootstrap":
+                                assert_production_reinitialization_refused(case_private, bootstrap_data)
+                                state = inspect_production_bootstrap(database, after_ui=True)
+                                state_file = case_output / "database-state.json"
+                                state_file.write_text(json.dumps({"post_ui_state": state,
+                                                                  "reinitialization_refused": True}, indent=2) + "\n")
+                                suite["bootstrap_state_artifact"] = state_file.relative_to(output).as_posix()
+                                suite["bootstrap_state_sha256"] = sha256(state_file)
                             suite["state"] = "PASS"
                             report["passed_cases"] += 1
                         except EvidenceError as exc:
@@ -615,10 +721,11 @@ def execute(root: Path, output: Path, report: dict) -> None:
                             cleanup_errors.append(f"Scoped test Keychain cleanup failed: {keychain.returncode}")
                     except (OSError, subprocess.SubprocessError) as exc:
                         cleanup_errors.append(f"test Keychain cleanup: {exc}")
-                    try:
-                        account_data.reset(isolation_id, workspace=case_private)
-                    except (OSError, ValueError) as exc:
-                        cleanup_errors.append(f"account fixture cleanup: {exc}")
+                    if profile == "synthetic_accounts":
+                        try:
+                            account_data.reset(isolation_id, workspace=case_private)
+                        except (OSError, ValueError) as exc:
+                            cleanup_errors.append(f"account fixture cleanup: {exc}")
                     record_cleanup_errors(report, cleanup_errors, primary_error)
             # XCTest logs out/removes only its own run's session; database and
             # credentials are removed with the owned temporary directory.

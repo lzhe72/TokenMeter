@@ -6,13 +6,13 @@
 
 ### 服务端与数据
 
-Python 3.10+ / FastAPI、SQLAlchemy 2.0、Alembic；本轮实际验证 SQLite，保持 ORM 可迁移。生产 MySQL 未运行则不声称兼容通过。users 保存 UUID、username、Argon2 hash、role、is_active、must_change_password、credential_version；sessions 保存 token SHA256、user_id、credential_version、UTC expires_at；audit 保存动作、操作者/目标、时间及非敏感结果；持久化登录节流桶按账号和来源区分，5次失败/5分钟。秘密不进入 audit 或返回的验证错误。
+Python 3.10+ / FastAPI、SQLAlchemy 2.0、Alembic；v0.1.0 服务端测试与生产都验证 SQLite，文件和账号相互隔离，ORM 保持后续迁移空间但本版不声称 MySQL 兼容通过。users 保存 UUID、username、Argon2 hash、role、is_active、must_change_password、credential_version；sessions 保存 token SHA256、user_id、credential_version、UTC expires_at；audit 保存动作、操作者/目标、时间及非敏感结果；持久化登录节流桶按账号和来源区分，5次失败/5分钟。秘密不进入 audit 或返回的验证错误。
 
 256-bit opaque bearer，24h 有效期；每次请求查用户活动状态/凭据版本/会话有效期。换密原子递增版本并撤销全部旧会话，返回新 token；reset/disable 同样撤销。SQLite 启用外键、写入事务，管理员保护在事务内检查。数据库初始 schema 由 Alembic 建立，可重复执行且不覆盖账号。
 
 ### 接口合同
 
-用户名按小写规范化；CLI 约定为 `python -m server.tokenmeter_server.cli migrate --database-url <隔离SQLite>` 和 `provision --database-url <隔离SQLite> --accounts <显式JSON>`，服务由 `TOKENMETER_DATABASE_URL` 配置，使用 uvicorn 启动 main:app，不在启动时创建默认管理员。账号 fixture 定义位于 tests/server/fixtures.py，native runner 可复用相同输入及独立 expected。上述入口在工程步骤创建后才执行。
+用户名按小写规范化；CLI 约定为 `python -m server.tokenmeter_server.cli migrate --database-url <隔离SQLite>` 和 `provision --database-url <隔离SQLite> --accounts <显式JSON>`。服务由 `TOKENMETER_DATABASE_URL` 配置，使用 uvicorn 启动 main:app；启动服务不重建数据库或重置凭据。生产库通过独立的首次初始化步骤预置 `admin / 123456` 并要求首次改密，测试库由回归造数程序初始化；两者都不绕过正常认证 API。账号 fixture 定义位于 tests/server/fixtures.py，native runner 可复用相同输入及独立 expected。上述入口在工程步骤创建后才执行。
 
 统一错误：`{"error":{"code":"...","message":"..."}}`；422 不回显密码 input。user 为 `{id,username,role,is_active,must_change_password}`。
 
@@ -29,7 +29,7 @@ Python 3.10+ / FastAPI、SQLAlchemy 2.0、Alembic；本轮实际验证 SQLite，
 | POST /v1/admin/users/{id}/reset-password | temporary_password → user（不返回口令） |
 | GET /v1/admin/audit | admin → 脱敏事件列表 |
 
-401 invalid_credentials/invalid_session、403 account_disabled/forbidden/password_change_required、409 admin_protected/password_unchanged、429 rate_limited。CLI provision 使用显式账号文件，不提供生产默认管理员。真实 HTTP 网络 smoke 补充 TestClient 集成回归。
+401 invalid_credentials/invalid_session、403 account_disabled/forbidden/password_change_required、409 admin_protected/password_unchanged、429 rate_limited。CLI provision 使用显式账号文件，生产首建管理员由独立数据库初始化程序写入；真实 HTTP 网络 smoke 补充 TestClient 集成回归。
 
 ### macOS 与更新
 
@@ -41,7 +41,7 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 
 ### 开发升级包的签名连续性
 
-原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离Mac CI生成短期自签测试证书和专用临时keychain，两个包显式指定同一identity和keychain；结束时独立清理临时信任、专用keychain和私钥。仅允许GitHub托管的临时Mac runner，并先验证非交互sudo权限。信任使用admin域：代码签名公钥证书限codeSign策略、HTTPS CA限ssl/localhost策略，两者的公钥证书导入System.keychain后按该证书撤销admin信任并按摘要精确删除；代码签名私钥始终只在专用临时keychain。所有命令有超时，不绕过App验证。当前托管Mac撤销最后admin信任会等待系统授权，且Apple对此权限采用固定规则；不修改authorizationdb。先在写入系统资源前返回明确BLOCKED，恢复依赖正常授权且可完整清理的测试环境与对应程序。独立环境探针在014第004例前执行，前三个不依赖升级信任的账号场景正常执行并保留截图和App摘要。探针失败仍阻断整个四例门禁，不算跳过004后的通过；恢复后必须新候选完整重跑，不复用旧通过记录。该测试签名不满足Developer ID、公证或正式发布条件。开发过程不改变用户本机的信任设置。
+原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离Mac CI生成短期自签测试证书和专用临时keychain，两个包显式指定同一identity和keychain；结束时独立清理临时信任、专用keychain和私钥。仅允许GitHub托管的临时Mac runner，并先验证非交互sudo权限。信任使用admin域：代码签名公钥证书限codeSign策略、HTTPS CA限ssl/localhost策略，两者的公钥证书导入System.keychain后按该证书撤销admin信任并按摘要精确删除；代码签名私钥始终只在专用临时keychain。所有命令有超时，不绕过App验证。当前托管Mac撤销最后admin信任会等待系统授权，且Apple对此权限采用固定规则；不修改authorizationdb。先在写入系统资源前返回明确BLOCKED，恢复依赖正常授权且可完整清理的测试环境与对应程序。独立环境探针在014第004例前执行，001–003与005不依赖升级信任的账号场景正常执行并保留截图和App摘要。探针失败仍阻断整个五例门禁，不算跳过004后的通过；恢复后必须新候选完整重跑，不复用旧通过记录。该测试签名不满足Developer ID、公证或正式发布条件。开发过程不改变用户本机的信任设置。
 
 依据：[Apple TN2206](https://developer.apple.com/library/archive/technotes/tn2206/)、[Code Signing Requirement Language](https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/RequirementLang/RequirementLang.html)。不同ad-hoc包的摘要变化，不能作为跨版本Keychain身份连续性的设计依据。
 
@@ -51,7 +51,7 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 2. 009 创建隔离 venv、服务/数据库和 Mac/native target 骨架。读取工具链状态，本机未配置 Xcode 不触发安装；远端验证 native 探针。
 3. 010/011 创建账号/更新数据、独立 oracle 与真实 API/native 测试，在实现前保存确定性失败；无法运行的 native 红测写 BLOCKED。可先推进有实际单元/接口验证的子任务。
 4. 012 实现服务/界面/更新；数据与测试绑定完整后设 ready/in_progress，产品通过以前不设 implemented。
-5. 013 基础回归，014 完整目标四例 native E2E；失败按015修复并完整重跑。017/018发布前再验最终包与全支持矩阵。
+5. 013 基础回归，014 完整目标五例 native E2E；失败按015修复并完整重跑。017/018发布前再验最终包与全支持矩阵。
 6. 保存实际证据与流程障碍，创建 PR；适用必需检查通过才合并。不能因用户已授权自动合并而跳过产品测试。
 
 ## 并行边界与恢复入口
@@ -59,7 +59,7 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 - backend agent：`server/`、`tests/server/`，先测试后业务。CLI与 fixtures 的调用合同向 root/native 交接。
 - macOS agent：`apps/macos/`，项目、App 与 XCUITest。只使用统一 API 合同。
 - runner agent：root 确认后负责 `scripts/e2e.py`、原生执行/证据校验与其测试；不得放宽发布。
-- 原生四例各使用独立数据库、服务和 Keychain service，runner 逐例调用 `-only-testing` 并分别保存 xcresult；不能让用例顺序承担数据初始化。
+- 原生五例各使用独立数据库、服务和 Keychain service，runner 逐例调用 `-only-testing` 并分别保存 xcresult；005 调用生产首建程序但仅指向 runner 临时根，不能让用例顺序承担数据初始化。
 - root：版本文档、SOP、catalog、矩阵/数据清单、CI、集成与 PR。
 
 候选代码、测试、文档和数据一同提交；测试后代码或依赖变化重新验证。完整命令在入口真实建立后补入，未建立时明确待实现，不写伪造成功记录。

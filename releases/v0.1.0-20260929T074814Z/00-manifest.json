@@ -54,6 +54,13 @@
       "requirement": "REQ-TM001",
       "feature": "TM-001",
       "task": "TASK-TM001-SERVER",
+      "test": "E2E-TM001-005",
+      "description": "生产库预置管理员经真实服务和 App 验证"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
       "test": "TEST-TM001-SERVER",
       "description": "TM-001完整开发与验收追踪"
     },
@@ -70,6 +77,13 @@
       "task": "TASK-TM001-DATA",
       "test": "E2E-TM001-001",
       "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-DATA",
+      "test": "E2E-TM001-005",
+      "description": "隔离生产库副本与测试库数据边界"
     },
     {
       "requirement": "REQ-TM001",
@@ -91,6 +105,13 @@
       "task": "TASK-TM001-MAC",
       "test": "E2E-TM001-003",
       "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-005",
+      "description": "预置管理员首次登录和改密原生界面"
     },
     {
       "requirement": "REQ-TM001",
@@ -130,6 +151,13 @@
     {
       "requirement": "REQ-TM001",
       "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-005",
+      "description": "隔离生产首建账号原生证据与清理"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
       "task": "TASK-TM001-REVIEW",
       "test": "TEST-TM001-GOVERNANCE",
       "description": "TM-001完整开发与验收追踪"
@@ -138,6 +166,7 @@
   "test_programs": [
     "tests/server/test_auth.py",
     "tests/server/test_database.py",
+    "tests/server/test_bootstrap_sqlite.py",
     "tests/server/test_network.py",
     "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
     "scripts/e2e.py",
@@ -148,6 +177,7 @@
     "tests/e2e/code_signing.py",
     "tests/governance/test_native_e2e.py",
     "tests/governance/test_update_source.py",
+    "tests/governance/test_package_release_dmg.py",
     "tests/governance/test_code_signing.py",
     "tests/governance/test_quality_gate.py"
   ],

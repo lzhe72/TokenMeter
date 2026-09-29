@@ -31,6 +31,21 @@
       "sop": "sop/SOP-007-release-plan.md"
     },
     {
+      "doc_id": "DOC-DATABASE-SQLITE",
+      "path": "database/README.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "scripts/bootstrap_sqlite.py",
+        "sop/SOP-010-test-data.md",
+        "releases/v0.1.0-20260929T074814Z/05-release-plan.md"
+      ],
+      "updated_at": "2026-09-29",
+      "sop": "sop/SOP-010-test-data.md"
+    },
+    {
       "doc_id": "DOC-DOCS-README",
       "path": "docs/README.md",
       "type": "index",

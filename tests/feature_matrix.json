@@ -42,6 +42,17 @@
           "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_003"
         },
         {
+          "id": "E2E-TM001-005",
+          "scenario": "生产 SQLite 首建管理员：隔离生产库副本中仅有 admin，真实 App 以初始密码登录、强制改密并验证管理界面；测试账号未进入该库",
+          "expected": "生产 SQLite 首次建库只预置 admin / 123456，真实 App 登录后强制改密；测试账号不进入生产库，后续启动不重置已改密码",
+          "data_program": "scripts/bootstrap_sqlite.py",
+          "dataset": "production_bootstrap",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "acceptance_id": "AC-TM001-005",
+          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_005"
+        },
+        {
           "id": "E2E-TM001-004",
           "scenario": "最小更新器：首次候选干净安装后经 HTTPS 获取受控高版本签名测试包并点击更新；后续版本从上一稳定版升级，另尝试无效签名包",
           "expected": "最小更新器随首个产品版本交付；有效包替换与重启成功且保留账号状态，无效签名被拒绝并保留原版",

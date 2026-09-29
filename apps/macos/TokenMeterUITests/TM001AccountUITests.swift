@@ -52,10 +52,14 @@ final class TM001AccountUITests: XCTestCase {
         add(attachment)
     }
 
-    private func login(_ name: String, password: String? = nil) {
-        text("auth.username", "test-\(name)")
-        text("auth.password", password ?? "TEST-ONLY-\(name)-42!", secure: true)
+    private func loginUsername(_ username: String, password: String) {
+        text("auth.username", username)
+        text("auth.password", password, secure: true)
         click("auth.login")
+    }
+
+    private func login(_ name: String, password: String? = nil) {
+        loginUsername("test-\(name)", password: password ?? "TEST-ONLY-\(name)-42!")
     }
 
     private func changePassword(current: String, new: String) {
@@ -277,5 +281,69 @@ final class TM001AccountUITests: XCTestCase {
         assertIdentity("test-alice")
         try refreshIdentity("test-alice")
         captureWindow("TM001-004-01-updated-account")
+    }
+
+    func testE2E_TM001_005() throws {
+        let initialLogin = try request("POST", "/v1/auth/login", body: [
+            "username": "admin", "password": "123456"
+        ])
+        XCTAssertEqual(initialLogin.0, 200)
+        let initialUser = try XCTUnwrap(initialLogin.1["user"] as? [String: Any])
+        XCTAssertEqual(initialUser["username"] as? String, "admin")
+        XCTAssertEqual(initialUser["role"] as? String, "admin")
+        XCTAssertEqual(initialUser["must_change_password"] as? Bool, true)
+        let initialToken = try XCTUnwrap(initialLogin.1["access_token"] as? String)
+        let denied = try request("GET", "/v1/admin/users", token: initialToken)
+        XCTAssertEqual(denied.0, 403)
+        XCTAssertEqual((denied.1["error"] as? [String: Any])?["code"] as? String,
+                       "password_change_required")
+
+        app.launch()
+        XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        loginUsername("admin", password: "123456")
+        assertIdentity("admin")
+        XCTAssertEqual(app.staticTexts["session.role"].value as? String, "admin")
+        XCTAssertTrue(app.secureTextFields["password.new"].waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["admin.accounts"].exists)
+        captureWindow("TM001-005-01-initial-password-change")
+
+        changePassword(current: "123456", new: changedPassword)
+        XCTAssertTrue(app.buttons["admin.accounts"].waitForExistence(timeout: 15))
+        assertIdentity("admin")
+        XCTAssertEqual(try request("GET", "/v1/me", token: initialToken).0, 401)
+        XCTAssertEqual(try request("POST", "/v1/auth/login", body: [
+            "username": "admin", "password": "123456"
+        ]).0, 401)
+
+        click("admin.accounts")
+        XCTAssertTrue(app.staticTexts["admin.state.admin"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["admin.reset.admin"].exists)
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "admin.reset.test-")).count, 0)
+        let changedLogin = try request("POST", "/v1/auth/login", body: [
+            "username": "admin", "password": changedPassword
+        ])
+        XCTAssertEqual(changedLogin.0, 200)
+        let changedToken = try XCTUnwrap(changedLogin.1["access_token"] as? String)
+        let accounts = try request("GET", "/v1/admin/users", token: changedToken)
+        XCTAssertEqual(accounts.0, 200)
+        let users = try XCTUnwrap(accounts.1["users"] as? [[String: Any]])
+        XCTAssertEqual(users.count, 1)
+        XCTAssertEqual(users.first?["id"] as? String, "00000000-0000-4000-8000-000000000005")
+        XCTAssertEqual(users.first?["username"] as? String, "admin")
+        XCTAssertEqual(users.first?["role"] as? String, "admin")
+        XCTAssertEqual(users.first?["must_change_password"] as? Bool, false)
+        captureWindow("TM001-005-02-production-admin-only")
+
+        app.terminate()
+        app.launch()
+        assertIdentity("admin")
+        XCTAssertTrue(app.buttons["admin.accounts"].waitForExistence(timeout: 15))
+        click("session.logout")
+        XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        loginUsername("admin", password: changedPassword)
+        assertIdentity("admin")
+        XCTAssertTrue(app.buttons["admin.accounts"].waitForExistence(timeout: 15))
+        try refreshIdentity("admin")
+        captureWindow("TM001-005-03-admin-relogin")
     }
 }

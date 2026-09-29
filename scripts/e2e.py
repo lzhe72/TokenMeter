@@ -119,7 +119,7 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
         native_e2e.execute(root, path.parent, report)
         report["blockers"] = []
         if args.phase == "release":
-            raise native_e2e.Blocked("Final signed package, supported platform/MySQL matrix, protected CI and passport issuer are not ready")
+            raise native_e2e.Blocked("Final signed package, supported platform/production SQLite matrix, protected CI and passport issuer are not ready")
     except native_e2e.EvidenceError as exc:
         report["state"], report["errors"] = "FAIL", [exception_message(exc)]
         report["blockers"] = []

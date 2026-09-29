@@ -1,4 +1,4 @@
-"""Explicit operator provisioning; there are no built-in production accounts."""
+"""Operator provisioning for 12+ character passwords; local first-run admin is seeded separately."""
 import time
 from uuid import UUID, uuid4
 

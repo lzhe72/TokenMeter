@@ -51,6 +51,18 @@
       ]
     },
     {
+      "id": "AC-TM001-005",
+      "feature_id": "TM-001",
+      "requirement_id": "REQ-TM001",
+      "spec": "docs/product/README.md",
+      "criterion": "生产 SQLite 首次建库只预置 admin / 123456，真实 App 登录后强制改密；测试账号不进入生产库，后续启动不重置已改密码",
+      "data_requirements": [
+        "production_seed",
+        "database_isolation",
+        "forced_password_change"
+      ]
+    },
+    {
       "id": "AC-TM002-001",
       "feature_id": "TM-002",
       "requirement_id": "REQ-TM002",

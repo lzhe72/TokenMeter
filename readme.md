@@ -13,6 +13,7 @@ macOS 团队模型用量监控工具。首版读取 Codex、Claude Code 本地�
 - [文档索引](docs/README.md)：产品、架构、版本、测试、发布说明。
 - [当前状态](docs/status.md)：已实现能力和真实阻塞项。
 - [功能与 E2E 矩阵](tests/feature_matrix.json)：每个功能的用例、数据程序和 SOP。
+- [SQLite 数据库](database/README.md)：测试/生产 DB 的位置、可执行造数 SQL、初始化和生产服务启动。
 
 ## 本地检查
 
@@ -34,6 +35,7 @@ python3 scripts/test_data.py reset --run-id demo
 python3 -m venv .local/venv
 .local/venv/bin/python -m pip install --only-binary=:all: -r server/requirements-dev.txt
 .local/venv/bin/python -m pytest tests/server -q
+.local/venv/bin/python scripts/bootstrap_sqlite.py verify
 ```
 
 在同一已安装依赖的环境执行自动产品门禁；原生测试还需完整 Xcode、Mac 桌面与隔离 CI 更新签名环境：
@@ -43,6 +45,6 @@ python3 -m venv .local/venv
 .local/venv/bin/python scripts/quality_gate.py release
 ```
 
-门禁自动初始化真实测试库、构建 App、逐例执行原生 UI，并复核原始 `xcresult`。缺环境输出 `BLOCKED`，断言失败输出 `FAIL`，均返回非零。完整开发矩阵通过才可验收；正式发布还需最终签名、公证、完整支持矩阵、MySQL 和受保护流程。测试数据或服务端测试通过不能替代原生验收。
+门禁自动初始化真实测试库、构建 App、逐例执行原生 UI，并复核原始 `xcresult`。缺环境输出 `BLOCKED`，断言失败输出 `FAIL`，均返回非零。完整开发矩阵通过才可验收；v0.1.0 正式发布还需最终签名、公证、完整支持矩阵、隔离的生产 SQLite 验证和受保护流程。测试数据或服务端测试通过不能替代原生验收。
 
 structure 支持逐步编写草稿；baseline 验收完整计划。验收规格、独立清单和用例双向校验。常规 CI 执行 iteration，候选 CI 按完整 SHA 在创建 Tag 前执行 release；远端保护与可信签发仍待接通，详见[发布门禁](docs/standards/release.md)。

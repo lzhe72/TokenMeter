@@ -3,6 +3,7 @@ import base64
 import importlib.util
 from pathlib import Path
 import tempfile
+import threading
 import unittest
 from unittest import mock
 from urllib.error import HTTPError
@@ -60,6 +61,83 @@ class UpdateSourceTests(unittest.TestCase):
             finally:
                 source.close()
             self.assertNotIn(source.token, (root / "update-requests.json").read_text())
+
+    def test_verify_waits_until_the_response_write_is_recorded(self):
+        """A client can read bytes before the handler finishes recording them."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = fixture.UpdateSource(root / "secrets", root)
+            payload = b"isolated update transport payload"
+            package = root / "update.zip"
+            package.write_bytes(payload)
+            source.publish(package, base64.b64encode(bytes(range(64))).decode())
+            entered = threading.Event()
+            release = threading.Event()
+            verification_started = threading.Event()
+            verification_done = threading.Event()
+            errors = []
+            handler_type = source.server.RequestHandlerClass
+            original_get = handler_type.do_GET
+
+            class DelayedWriter:
+                def __init__(self, wrapped):
+                    self.wrapped = wrapped
+
+                def write(self, data):
+                    result = self.wrapped.write(data)
+                    if data == payload:
+                        entered.set()
+                        if not release.wait(5):
+                            raise TimeoutError("Controlled response write was not released")
+                    return result
+
+                def __getattr__(self, name):
+                    return getattr(self.wrapped, name)
+
+            def delayed_get(handler):
+                if handler.path == "/update.zip" and source.valid:
+                    handler.wfile = DelayedWriter(handler.wfile)
+                return original_get(handler)
+
+            def verify():
+                verification_started.set()
+                try:
+                    source.verify_exchange()
+                except Exception as error:
+                    errors.append(error)
+                finally:
+                    verification_done.set()
+
+            try:
+                url = f"http://127.0.0.1:{source.server.server_port}"
+                with urlopen(url + "/appcast.xml") as response:
+                    response.read()
+                with urlopen(url + "/update.zip") as response:
+                    response.read()
+                with urlopen(Request(url + "/control/valid", method="POST",
+                                     headers={"Authorization": "Bearer " + source.token})) as response:
+                    self.assertEqual(response.status, 200)
+                with urlopen(url + "/appcast.xml") as response:
+                    response.read()
+                with mock.patch.object(handler_type, "do_GET", delayed_get):
+                    with urlopen(url + "/update.zip") as response:
+                        self.assertEqual(response.read(), payload)
+                    self.assertTrue(entered.wait(2))
+                    verifier = threading.Thread(target=verify, daemon=True)
+                    verifier.start()
+                    self.assertTrue(verification_started.wait(2))
+                    try:
+                        self.assertFalse(verification_done.wait(0.3),
+                                         "Verification must await in-flight response accounting")
+                    finally:
+                        release.set()
+                    self.assertTrue(verification_done.wait(5))
+                    verifier.join(timeout=1)
+                    if errors:
+                        raise errors[0]
+            finally:
+                release.set()
+                source.close()
 
     def test_ca_trust_refuses_regular_developer_machine(self):
         from unittest import mock

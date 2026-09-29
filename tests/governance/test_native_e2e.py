@@ -5,6 +5,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 import plistlib
+import sqlite3
 import tempfile
 import time
 import unittest
@@ -44,6 +45,61 @@ class NativeContractTests(unittest.TestCase):
 
     def test_target_planned_is_not_excluded_and_delivered_is_regressed(self):
         self.assertEqual(set(native.required_cases(self.root)), {"E2E-TM001-001", "E2E-TM002-001"})
+
+    def test_fixture_profiles_keep_upgrade_case_and_add_production_bootstrap(self):
+        for index in range(1, 5):
+            self.assertEqual(native.fixture_profile(f"E2E-TM001-{index:03d}"), "synthetic_accounts")
+        self.assertEqual(native.fixture_profile("E2E-TM001-005"), "production_bootstrap")
+        with self.assertRaises(native.Blocked):
+            native.fixture_profile("E2E-TM001-006")
+
+    def test_production_bootstrap_runner_confines_and_checks_database_evidence(self):
+        # This stdlib fixture tests the runner contract. The real initializer is
+        # exercised separately by server tests with its locked dependencies.
+        def initialize(root):
+            database = root / "database/production/production.db"
+            database.parent.mkdir(parents=True, exist_ok=True)
+            if database.exists():
+                raise ValueError("Existing production database")
+            with sqlite3.connect(database) as connection:
+                connection.executescript("""
+                    CREATE TABLE alembic_version (version_num TEXT);
+                    INSERT INTO alembic_version VALUES ('0001');
+                    CREATE TABLE tokenmeter_seed_owner (environment TEXT, run_id TEXT);
+                    INSERT INTO tokenmeter_seed_owner VALUES ('production', 'production-init');
+                    CREATE TABLE users (id TEXT, username TEXT, password_hash TEXT, role TEXT, is_active INTEGER,
+                                        must_change_password INTEGER, credential_version INTEGER);
+                    INSERT INTO users VALUES ('00000000-0000-4000-8000-000000000005', 'admin', 'synthetic', 'admin', 1, 1, 1);
+                """)
+            database.with_name("seed.sql").write_text("-- Synthetic governance fixture only\n")
+            return {"environment": "production", "database": str(database), "schema_version": "0001", "accounts": 1}
+
+        bootstrap = mock.Mock(initialize_production=initialize)
+        case_private = self.root.resolve() / "case-private"
+        case_output = self.root / "case-output"
+        case_private.mkdir()
+        case_output.mkdir()
+        database, manifest_path = native.prepare_production_bootstrap(case_private, case_output, bootstrap)
+        self.assertEqual(database, case_private / "production-bootstrap/database/production/production.db")
+        self.assertEqual(native.inspect_production_bootstrap(database, after_ui=False),
+                         native.expected_bootstrap_state(after_ui=False))
+        manifest = json.loads(manifest_path.read_text())
+        self.assertEqual(manifest["fixture_kind"], "production_bootstrap")
+        self.assertEqual(manifest["initial_state"]["account_count"], 1)
+        self.assertNotIn("123456", manifest_path.read_text())
+        self.assertNotIn("$argon2", manifest_path.read_text())
+        self.assertNotIn(str(case_private), manifest_path.read_text())
+        native.assert_production_reinitialization_refused(case_private, bootstrap)
+        with sqlite3.connect(database) as connection:
+            connection.execute("UPDATE users SET must_change_password=0, credential_version=2")
+        self.assertEqual(native.inspect_production_bootstrap(database, after_ui=True),
+                         native.expected_bootstrap_state(after_ui=True))
+        with sqlite3.connect(database) as connection:
+            connection.execute("INSERT INTO users (id, username, password_hash, role, is_active, must_change_password, credential_version) "
+                               "SELECT '00000000-0000-4000-8000-000000000099', 'test-leak', password_hash, 'member', 1, 1, 1 "
+                               "FROM users WHERE username='admin'")
+        with self.assertRaises(native.EvidenceError):
+            native.inspect_production_bootstrap(database, after_ui=True)
 
     def test_unknown_target_empty_or_duplicate_native_binding_fails(self):
         for mutation in ("unknown", "empty", "duplicate"):
@@ -236,7 +292,8 @@ class EvidenceVerificationTests(unittest.TestCase):
             "finished_at": datetime.now(timezone.utc).isoformat(),
             "source_commit": "a" * 40, "working_tree_dirty": False,
             "platform": {"architecture": "arm64", "macos": "15.7.9"},
-            "manifest_sha256": {"fixture": "digest"}, "executed_cases": 1, "cleanup_completed": True,
+            "manifest_sha256": {"fixture": "digest"}, "expected_cases": ["E2E-TM001-001"],
+            "executed_cases": 1, "cleanup_completed": True,
             "suites": [{"case_id": "E2E-TM001-001", "exit_code": 0, "xcresult": "case/native.xcresult",
                         "xcresult_sha256": native.tree_digest(self.bundle), "fixture_manifest": "case/manifest.json",
                         "fixture_sha256": native.sha256(self.output / "case/manifest.json"), "app_artifact": "case/app.zip",
@@ -269,7 +326,8 @@ class EvidenceVerificationTests(unittest.TestCase):
     def test_forged_run_stale_commit_dirty_source_and_incomplete_coverage_rejected(self):
         for field, bad in (("run_id", "other"), ("source_commit", "b" * 40), ("working_tree_dirty", True),
                            ("executed_cases", 0), ("cleanup_completed", False), ("manifest_sha256", {}),
-                           ("started_at", "2000-01-01T00:00:00+00:00"), ("suites", [])):
+                           ("started_at", "2000-01-01T00:00:00+00:00"), ("expected_cases", []),
+                           ("suites", [])):
             with self.subTest(field=field):
                 original = self.report[field]
                 self.report[field] = bad
@@ -296,6 +354,50 @@ class EvidenceVerificationTests(unittest.TestCase):
         self.path.write_text(json.dumps(self.report))
         with self.assertRaises(native.Blocked):
             native.verify_report(self.root, self.path, run_id="nonce", phase="release", not_before=self.now)
+
+    def test_production_case_requires_initial_and_post_ui_database_evidence(self):
+        case = "E2E-TM001-005"
+        case_output = self.output / case
+        case_output.mkdir()
+        manifest = {
+            "fixture_kind": "production_bootstrap", "database": "database/production/production.db",
+            "database_sha256": "a" * 64, "seed_sql_sha256": "b" * 64,
+            "initial_state": native.expected_bootstrap_state(after_ui=False),
+        }
+        manifest_path = case_output / "fixture-manifest.json"
+        manifest_path.write_text(json.dumps(manifest))
+        state_path = case_output / "database-state.json"
+        state_path.write_text(json.dumps({"post_ui_state": native.expected_bootstrap_state(after_ui=True),
+                                          "reinitialization_refused": True}))
+        old_suite = self.report["suites"][0]
+        self.report["expected_cases"] = [case]
+        self.report["suites"] = [dict(old_suite, case_id=case,
+                                      fixture_manifest=f"{case}/fixture-manifest.json",
+                                      fixture_sha256=native.sha256(manifest_path),
+                                      bootstrap_state_artifact=f"{case}/database-state.json",
+                                      bootstrap_state_sha256=native.sha256(state_path),
+                                      screenshots=[{"path": "screen.png", "sha256": native.sha256(self.output / "E2E-TM001-001/screen.png")}])]
+        (case_output / "screen.png").write_bytes((self.output / "E2E-TM001-001/screen.png").read_bytes())
+        self.report["suites"][0]["screenshots"][0]["sha256"] = native.sha256(case_output / "screen.png")
+        native.required_cases.return_value = {case: "target/suite/testCase"}
+        self.verify()
+        for field, bad in (("initial_state", native.expected_bootstrap_state(after_ui=True)),
+                           ("fixture_kind", "synthetic_accounts")):
+            with self.subTest(field=field):
+                original = manifest[field]
+                manifest[field] = bad
+                manifest_path.write_text(json.dumps(manifest))
+                self.report["suites"][0]["fixture_sha256"] = native.sha256(manifest_path)
+                with self.assertRaises(native.EvidenceError):
+                    self.verify()
+                manifest[field] = original
+        manifest_path.write_text(json.dumps(manifest))
+        self.report["suites"][0]["fixture_sha256"] = native.sha256(manifest_path)
+        state_path.write_text(json.dumps({"post_ui_state": native.expected_bootstrap_state(after_ui=False),
+                                          "reinitialization_refused": True}))
+        self.report["suites"][0]["bootstrap_state_sha256"] = native.sha256(state_path)
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
 
 
 if __name__ == "__main__":

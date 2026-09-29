@@ -36,6 +36,8 @@ class UpdateSource:
         self.valid = False
         self.payloads: dict[str, bytes] = {}
         self.events: list[dict] = []
+        self._events_condition = threading.Condition()
+        self._active_gets = 0
         self.trusted = False
         self.certificate_added = False
         source = self
@@ -45,32 +47,44 @@ class UpdateSource:
                 pass  # Never log Authorization or test fixture secrets.
 
             def do_GET(self):
-                route = self.path.split("?", 1)[0]
-                key = ("/valid.xml" if source.valid else "/invalid.xml") if route == "/appcast.xml" else route
-                payload = source.payloads.get(key)
-                status = 200 if payload is not None else 404
-                event = {"at": datetime.now(timezone.utc).isoformat(), "path": route,
-                         "status": status, "mode": "valid" if source.valid else "invalid", "served_bytes": 0}
-                source.events.append(event)
-                self.send_response(status)
-                self.send_header("Cache-Control", "no-store")
-                self.send_header("Content-Length", str(len(payload or b"")))
-                self.send_header("Content-Type", "application/xml" if route.endswith(".xml") else "application/octet-stream")
-                self.end_headers()
-                if payload is not None:
-                    try:
-                        self.wfile.write(payload)
-                        event["served_bytes"] = len(payload)
-                    except OSError as exc:
-                        event["transport_error"] = type(exc).__name__
+                with source._events_condition:
+                    source._active_gets += 1
+                    valid = source.valid
+                try:
+                    route = self.path.split("?", 1)[0]
+                    key = ("/valid.xml" if valid else "/invalid.xml") if route == "/appcast.xml" else route
+                    payload = source.payloads.get(key)
+                    status = 200 if payload is not None else 404
+                    event = {"at": datetime.now(timezone.utc).isoformat(), "path": route,
+                             "status": status, "mode": "valid" if valid else "invalid", "served_bytes": 0}
+                    with source._events_condition:
+                        source.events.append(event)
+                    self.send_response(status)
+                    self.send_header("Cache-Control", "no-store")
+                    self.send_header("Content-Length", str(len(payload or b"")))
+                    self.send_header("Content-Type", "application/xml" if route.endswith(".xml") else "application/octet-stream")
+                    self.end_headers()
+                    if payload is not None:
+                        try:
+                            self.wfile.write(payload)
+                            with source._events_condition:
+                                event["served_bytes"] = len(payload)
+                        except OSError as exc:
+                            with source._events_condition:
+                                event["transport_error"] = type(exc).__name__
+                finally:
+                    with source._events_condition:
+                        source._active_gets -= 1
+                        source._events_condition.notify_all()
 
             def do_POST(self):
                 authorized = secrets.compare_digest(self.headers.get("Authorization", ""), "Bearer " + source.token)
                 if self.path != "/control/valid" or not authorized:
                     self.send_response(403)
                 else:
-                    source.valid = True
-                    source.events.append({"at": datetime.now(timezone.utc).isoformat(), "path": "/control/valid", "status": 200})
+                    with source._events_condition:
+                        source.valid = True
+                        source.events.append({"at": datetime.now(timezone.utc).isoformat(), "path": "/control/valid", "status": 200})
                     self.send_response(200)
                 self.send_header("Content-Length", "0")
                 self.end_headers()
@@ -167,15 +181,19 @@ class UpdateSource:
 
     def verify_exchange(self) -> None:
         """Both UI update attempts must reach the real fixture and download bytes."""
-        switches = [index for index, event in enumerate(self.events) if event["path"] == "/control/valid" and event["status"] == 200]
+        with self._events_condition:
+            if not self._events_condition.wait_for(lambda: self._active_gets == 0, timeout=30):
+                raise RuntimeError("Update fixture response accounting did not finish")
+            events = [dict(event) for event in self.events]
+        switches = [index for index, event in enumerate(events) if event["path"] == "/control/valid" and event["status"] == 200]
         if len(switches) != 1:
             raise RuntimeError("Expected one authenticated invalid-to-valid fixture switch")
         boundary = switches[0]
-        for mode, events in (("invalid", self.events[:boundary]), ("valid", self.events[boundary + 1:])):
-            feed_positions = [index for index, event in enumerate(events)
+        for mode, phase_events in (("invalid", events[:boundary]), ("valid", events[boundary + 1:])):
+            feed_positions = [index for index, event in enumerate(phase_events)
                               if event["path"] == "/appcast.xml" and event["status"] == 200
                               and event.get("mode") == mode and event.get("served_bytes", 0) > 0]
-            downloaded = [index for index, event in enumerate(events)
+            downloaded = [index for index, event in enumerate(phase_events)
                           if event["path"] == "/update.zip" and event["status"] == 200
                           and event.get("mode") == mode
                           and event.get("served_bytes", 0) == len(self.payloads["/update.zip"])]

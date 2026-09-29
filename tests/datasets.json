@@ -127,6 +127,17 @@
       ]
     },
     {
+      "id": "production_bootstrap",
+      "description": "TM-001 隔离的生产 SQLite 首建副本，仅预置 admin、强制首次改密并验证与测试库隔离；不读取或修改用户实际 production.db",
+      "status": "available",
+      "generator": "scripts/bootstrap_sqlite.py",
+      "capabilities": [
+        "production_seed",
+        "database_isolation",
+        "forced_password_change"
+      ]
+    },
+    {
       "id": "tm001_update_packages",
       "description": "TM-001候选到受控高版本升级；生成临时EdDSA密钥、HTTPS源与有效/无效签名包。需专用Mac CI；不覆盖未来版本的磁盘不足、迁移失败或下载中断",
       "status": "available",
