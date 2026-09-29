@@ -131,3 +131,9 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 用户随后明确表示“本机可以作为测试机”，据此扩展009本机测试入口。只读结果：macOS15.7.4、Intel x86_64、已登录用户桌面；xcode-select现为CommandLineTools，/Applications及Spotlight未找到完整Xcode.app或Xcode.xip，磁盘可用约35GiB。未触发安装、改系统配置或导入证书。Apple兼容表确认Xcode16.4支持当前系统；已告知用户安装与首次启动所需操作。该授权允许推进本机测试准备，不证明原生执行或升级fixture已经可用。
 
 本轮152项治理/门禁工具回归通过，68份文档基线与追踪检查通过。新负测证明清理路径不可用时不调用系统写入、004探针的BLOCKED与FAIL分别传播且非零不能放行；本机probe实际退出2，原因仍为缺完整Xcode。证据位于`.local/governance/tm001-native/blocked-environment-{red,green}.log`及`local-machine-preflight.log`。这些结果不等同于产品验收。
+
+### 0a9c39e真实原生回归与本机预览
+
+[run36551758767](https://github.com/lzhe72/TokenMeter/actions/runs/36551758767)为0a9c39e分支的PR合成合并提交624d360执行了两平台原生门禁。macOS15.7.9/Xcode16.4的Apple Silicon与Intel分别运行真实App、FastAPI、SQLite和XCUITest，001登录/改密/退出、002权限、003管理员操作及审计全部PASS；每平台各执行3/4、通过3/4，原始xcresult、候选App摘要和实际窗口PNG在GitHub Actions产物。004环境探针在任何证书系统写入前判为BLOCKED，完整门禁两个平台都BLOCKED，CI作业以退出2失败。治理、34项服务和9项升级工具自测通过。不能将前三例复用为下一候选的四例通过，也无正式安装包或通行证。
+
+按用户授权在本机使用CI产物构建的同一开发App归档，先核对候选App ZIP摘要、限制解压路径与符号链接、执行`codesign --verify --deep --strict`，然后在本机Intel/macOS15.7.4启动`.app`与隔离FastAPI/SQLite测试服务。实测App进程仍在、服务`/v1/health`返回schema0001；本机自动UI用例执行数0。机器证据`.local/process/v0.1.0-20260929T074814Z/local-preview-36551758767.json`，隔离预览资源位于`.local/preview/36551758767-intel/`且目前仍供用户体验，后续停用时按本轮所有权标记清理。Apple下载页正在等待用户登录/安装完整Xcode16.4；下载、系统授权和004清理程序均未伪造为完成。

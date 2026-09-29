@@ -53,3 +53,9 @@
 用户已授权本机作为测试机。2026-09-29最新只读检查确认本机为Intel x86_64、macOS15.7.4、已登录桌面；xcode-select现在指向/Library/Developer/CommandLineTools，仍未发现完整Xcode.app，未运行本机原生E2E。下一步安装并首次启动Xcode16.4，按009补齐本机环境；本机升级fixture的正常授权与清理路径仍待实现验证，不能仅授权使用机器就记为环境READY。
 
 Apple源码审查否定了临时改authorizationdb方案，未提交的helper已撤回且从未实际运行。新版环境入口在已知缺少完整清理路径时先返回BLOCKED；探针按004依赖调用，001–003可留下真实App与窗口截图，但整个候选仍需全部四例通过。
+
+## 候选0a9c39e与本机预览的实际结果
+
+[CI run36551758767](https://github.com/lzhe72/TokenMeter/actions/runs/36551758767)已完成：Apple Silicon与Intel的E2E-TM001-001/002/003各实际执行并PASS，均保存原始xcresult和按摘要绑定的候选App；关键界面由原生测试导出PNG。004在环境探针中因缺少受支持的证书授权/完整清理路径返回BLOCKED，两个平台都是执行3、通过3、完整迭代BLOCKED。PR #2保持草稿，不签发通行证。CI对应PR合成合并提交624d360，分支提交0a9c39e；各自提交标识分别保留。
+
+用户授权的本机已从上述Intel产物按SHA256取出开发`TokenMeter.app`并实际启动；本地隔离SQLite/服务的健康检查通过，进程仍供用户预览。证据`.local/process/v0.1.0-20260929T074814Z/local-preview-36551758767.json`。此为开发预览，本机XCUITest执行数0，当前`xcode-select -p`仍指向CommandLineTools。完整Xcode安装和首次启动需用户在Apple下载/系统界面完成；之后按009/014接续。004仍需实现本机按系统正常授权并可完整清理的fixture程序，不能以本机预览代替产品E2E。
