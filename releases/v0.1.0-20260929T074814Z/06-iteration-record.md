@@ -60,3 +60,12 @@
 [run36541990316](https://github.com/lzhe72/TokenMeter/actions/runs/36541990316)在macOS15.7.9 arm64/x86_64、Xcode16.4/16F6上真实执行。两平台SQLite迁移、四账号导入与/v1/health均通过；`xcodebuild`因不存在的`-maximum-concurrent-test-macos-destinations`选项退出64，未执行原生用例。原始工件保存到`.local/ci/36541990316/`，远端归档可回溯。删除该无效选项，继续保持逐例串行与禁用测试并行；修复后须新运行完整四例，两平台均不能复用旧结果。
 
 流程复核补齐候选workflow与日常CI的前置条件：显式Python3.10/Xcode16.4、锁定依赖及服务端/更新工具回归。修复其直接调用缺依赖native runner的路径；最终包/全矩阵/MySQL/受保护签发仍未实现，018修订3明确候选诊断与发布资格。
+
+
+### BUG-TM001-MAC-001：Sparkle框架嵌入路径
+
+[run36542491053](https://github.com/lzhe72/TokenMeter/actions/runs/36542491053)的arm64任务已越过参数检查，`build-for-testing`在复制框架时因`Build/Products/UITesting/Sparkle`不存在退出65。原生用例执行数0；原始构建日志保存在`.local/ci/36542491053/arm64/`。按实际Swift Package产物检查并修复项目嵌入配置，重新构建和执行全部场景，不能将构建日志中没有测试失败当成E2E通过。
+
+入口复核同步AGENTS：删除过期的“产品未接通/原生命令无需依赖”断言，分别指向标准库治理检查、隔离Python服务环境及专用Mac原生执行前提；当前结果统一从status读取。
+
+Intel任务随后确认同一Sparkle复制错误，证据在`.local/ci/36542491053/intel/`。日志证明Xcode已自动复制并签名Sparkle.framework，额外手工Copy才查找错误路径；修复仅删除重复Copy阶段，保留SPM依赖与链接。该轮远端治理131项、服务34项、升级工具7项通过，仍无原生产品通过。

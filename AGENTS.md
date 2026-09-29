@@ -37,11 +37,11 @@
 6. 修复问题先增加稳定复现用例，再修实现，再执行回归。使用 [修复模板](docs/templates/bugfix.md)。
 7. 不手写通过报告，不伪造厂商日志兼容性，不将合成数据工具的自测宣称为 App E2E。
 8. 文档基线后先按 SOP-009 建立真实 App、服务、数据库初始化和原生测试 target/runner 的工程骨架，不要求预先存在业务红测或产品 PASS。缺 Xcode、GUI 或执行器只阻断依赖它们的构建、运行和验收；可继续有独立验证条件的源码、fixture、测试编写和文档任务。分别记录完成与 BLOCKED，禁止认证旁路或伪造业务结果。生产签名/公证与发布凭据属于 SOP-017/018 前提，不能作为开始开发的前提。
-9. 只有自动门禁为 `PASS` 才能发布安装包、部署服务端或更新 appcast。当前仓库处于基础规范阶段，产品 E2E 尚未接通。
+9. 只有正式发布门禁为 `PASS` 才能发布安装包、部署服务端或更新 appcast。TM-001 已接入真实原生执行器，当前实现与运行结果以 [docs/status.md](docs/status.md) 为准；迭代通过不替代最终签名/公证、全平台和受保护发布条件。
 
 ## 当前可执行命令
 
-在仓库根目录执行，Python 3.10+，无需第三方依赖：
+在仓库根目录执行以下治理检查，Python 3.10+ 无需第三方包；HTTPS fixture 工具自测还需要 `openssl` 命令：
 
 ```sh
 python3 scripts/check_docs.py --mode structure
@@ -50,11 +50,21 @@ python3 scripts/quality_gate.py check
 python3 -m unittest discover -s tests/governance -p 'test_*.py'
 python3 scripts/test_data.py generate --run-id demo --seed 42
 python3 scripts/test_data.py reset --run-id demo
+```
+
+服务端和原生门禁需先按 [SOP-009](sop/SOP-009-environment.md) 在隔离环境安装锁定依赖，再执行 [SOP-013](sop/SOP-013-build-and-check.md) 的基础回归和 [SOP-014](sop/SOP-014-e2e.md) 的原生流程：
+
+```sh
+python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
+python3 -m pytest tests/server -q
+python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
 python3 scripts/quality_gate.py iteration
 python3 scripts/quality_gate.py release
 ```
 
-编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。最后两条在真实产品 E2E 接通前必须返回非零 `BLOCKED`；不要为使 CI 变绿删掉阻断。
+原生用例还要求完整 Xcode、已登录 Mac 桌面；TM-001 升级 fixture 的临时信任/签名仅允许专用 GitHub Mac CI。缺条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
+
+编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。
 
 ## 数据与实现约束
 

@@ -27,7 +27,7 @@
 
 ## 本轮实现与待验证能力
 
-- 服务API已取得真实失败基线19失败/9通过，再实现后首轮29项通过；包含uvicorn TCP、SQLite迁移/备份、账号CLI与权限/会话验证。SwiftUI/App原生行为仍需CI结果。
+- 服务API已取得真实失败基线19失败/9通过，实现并补充边界后34项通过；包含uvicorn TCP、SQLite迁移/备份、账号CLI与权限/会话验证。SwiftUI/App原生行为仍需CI结果。
 - 真实账号生成/初始化/重置已落地；原始Codex/Claude Code日志fixture按后续采集功能建立。更新fixture程序需专用Mac CI实际造包与签名验证。
 - 本机缺完整Xcode；已配置macOS15 arm64/Intel远端开发矩阵，实际原生执行待确认。完整发布支持矩阵仍未验证。
 - Developer ID、公证、生产部署、GitHub required checks和受保护发布凭据缺失；临时测试签名不能替代正式签名。
@@ -44,3 +44,5 @@
 原生runner和证据复核已同时实现并通过工具负测，但实际产品E2E仍需运行证明。缺环境的 `iteration` 为BLOCKED；正式 `release` 继续受最终签名/全矩阵/生产数据库与保护条件阻断。恢复条件见[发布门禁](standards/release.md)。
 
 本轮过程证据：`.local/process/v0.1.0-20260929T074814Z/`；服务首轮红绿位于其`server/`，runner工具负测位于`.local/governance/tm001-native/`。这些本机结果不构成发布通行证。
+
+远端实际运行已通过131项治理、34项服务和7项升级工具检查（run36542491053）；两Mac平台已确认Xcode16.4、真实服务/数据可启动，原生构建因Sparkle重复复制配置失败，修复后继续完整回归。原始结果见本轮06执行记录。

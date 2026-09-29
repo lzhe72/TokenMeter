@@ -4,7 +4,7 @@
  classes = {};
  objectVersion = 56;
  objects = {
- 100000000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = 100000000000000000000011; buildPhases = (100000000000000000000021,100000000000000000000022,100000000000000000000023); buildRules = (); dependencies = (); name = TokenMeter; packageProductDependencies = (100000000000000000000041); productName = TokenMeter; productReference = 100000000000000000000031; productType = "com.apple.product-type.application"; };
+ 100000000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = 100000000000000000000011; buildPhases = (100000000000000000000021,100000000000000000000022); buildRules = (); dependencies = (); name = TokenMeter; packageProductDependencies = (100000000000000000000041); productName = TokenMeter; productReference = 100000000000000000000031; productType = "com.apple.product-type.application"; };
  100000000000000000000002 = {isa = PBXNativeTarget; buildConfigurationList = 100000000000000000000012; buildPhases = (100000000000000000000024,100000000000000000000025); buildRules = (); dependencies = (100000000000000000000061); name = TokenMeterUITests; productName = TokenMeterUITests; productReference = 100000000000000000000032; productType = "com.apple.product-type.bundle.ui-testing"; };
  100000000000000000000003 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastUpgradeCheck = 1640; TargetAttributes = {100000000000000000000001 = {CreatedOnToolsVersion = 16.4; };100000000000000000000002 = {CreatedOnToolsVersion = 16.4; TestTargetID = 100000000000000000000001; }; }; }; buildConfigurationList = 100000000000000000000010; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en,Base); mainGroup = 100000000000000000000050; packageReferences = (100000000000000000000040); productRefGroup = 100000000000000000000051; projectDirPath = ""; projectRoot = ""; targets = (100000000000000000000001,100000000000000000000002); };
  100000000000000000000010 = {isa = XCConfigurationList; buildConfigurations = (100000000000000000000070,100000000000000000000071,100000000000000000000072); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
@@ -12,7 +12,6 @@
  100000000000000000000012 = {isa = XCConfigurationList; buildConfigurations = (100000000000000000000076,100000000000000000000077,100000000000000000000078); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
  100000000000000000000021 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000081,100000000000000000000082,100000000000000000000083,100000000000000000000084); runOnlyForDeploymentPostprocessing = 0; };
  100000000000000000000022 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000085); runOnlyForDeploymentPostprocessing = 0; };
- 100000000000000000000023 = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 10; files = (100000000000000000000086); name = "Embed Frameworks"; runOnlyForDeploymentPostprocessing = 0; };
  100000000000000000000024 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000087); runOnlyForDeploymentPostprocessing = 0; };
  100000000000000000000025 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
  100000000000000000000031 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TokenMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -39,7 +38,6 @@
  100000000000000000000083 = {isa = PBXBuildFile; fileRef = 100000000000000000000093; };
  100000000000000000000084 = {isa = PBXBuildFile; fileRef = 100000000000000000000094; };
  100000000000000000000085 = {isa = PBXBuildFile; productRef = 100000000000000000000041; };
- 100000000000000000000086 = {isa = PBXBuildFile; productRef = 100000000000000000000041; settings = {ATTRIBUTES = (CodeSignOnCopy,RemoveHeadersOnCopy); }; };
  100000000000000000000087 = {isa = PBXBuildFile; fileRef = 100000000000000000000097; };
  100000000000000000000091 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth.swift; sourceTree = "<group>"; };
  100000000000000000000092 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStore.swift; sourceTree = "<group>"; };
