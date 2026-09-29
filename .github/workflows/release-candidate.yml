@@ -55,8 +55,6 @@ jobs:
           python3 -m unittest discover -s tests/governance -p 'test_*.py' -v
           python3 -m pytest tests/server -q
           python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
-      - name: Verify isolated native fixture environment
-        run: python3 scripts/native_environment.py
       - name: Execute release gate before Tag creation
         # Final signing/notarization, full matrix, MySQL and protected issuance remain BLOCKED.
         run: python3 scripts/quality_gate.py release

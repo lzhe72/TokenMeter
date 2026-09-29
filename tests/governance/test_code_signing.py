@@ -35,6 +35,17 @@ class SigningFixtureTests(unittest.TestCase):
                                          capture_output=True, text=True, check=True).stdout
             self.assertIn("sha256WithRSAEncryption", certificate)
 
+    def test_unavailable_trust_cleanup_blocks_before_system_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            identity = fixture.SigningIdentity(Path(directory) / "signing")
+            with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                               "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}), \
+                 mock.patch.object(identity, "_run") as run:
+                with self.assertRaisesRegex(RuntimeError, "authorized certificate cleanup"):
+                    identity.prepare()
+                identity.close()
+            run.assert_not_called()
+
     def test_import_uses_same_private_bundle_password_without_logging_it(self):
         with tempfile.TemporaryDirectory() as directory:
             identity = fixture.SigningIdentity(Path(directory) / "signing")
@@ -50,6 +61,7 @@ class SigningFixtureTests(unittest.TestCase):
                 return ""
             with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
                                                "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}), \
+                 mock.patch.object(fixture, "require_automated_trust_cleanup"), \
                  mock.patch.object(identity, "create_private_bundle", return_value=Path(directory) / "bundle.p12"), \
                  mock.patch.object(identity, "_run", side_effect=run):
                 identity.prepare()

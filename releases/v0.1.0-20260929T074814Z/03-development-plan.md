@@ -41,7 +41,7 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 
 ### 开发升级包的签名连续性
 
-原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离Mac CI生成短期自签测试证书和专用临时keychain，两个包显式指定同一identity和keychain；结束时独立清理临时信任、专用keychain和私钥。仅允许GitHub托管的临时Mac runner，并先验证非交互sudo权限。信任使用admin域：代码签名公钥证书限codeSign策略、HTTPS CA限ssl/localhost策略，两者的公钥证书导入System.keychain后按该证书撤销admin信任并按摘要精确删除；代码签名私钥始终只在专用临时keychain。所有命令有超时，禁止修改authorizationdb或绕过App验证；sudo与admin域方案仍须真实CI确认。新增独立环境探针复用签名和HTTPS fixture的初始化/清理；CI先运行探针，环境可用后仍须完整四例，不复用探针产物作为产品证据。该测试签名不满足Developer ID、公证或正式发布条件。开发过程不改变用户本机的信任设置。
+原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离Mac CI生成短期自签测试证书和专用临时keychain，两个包显式指定同一identity和keychain；结束时独立清理临时信任、专用keychain和私钥。仅允许GitHub托管的临时Mac runner，并先验证非交互sudo权限。信任使用admin域：代码签名公钥证书限codeSign策略、HTTPS CA限ssl/localhost策略，两者的公钥证书导入System.keychain后按该证书撤销admin信任并按摘要精确删除；代码签名私钥始终只在专用临时keychain。所有命令有超时，不绕过App验证。当前托管Mac撤销最后admin信任会等待系统授权，且Apple对此权限采用固定规则；不修改authorizationdb。先在写入系统资源前返回明确BLOCKED，恢复依赖正常授权且可完整清理的测试环境与对应程序。独立环境探针在014第004例前执行，前三个不依赖升级信任的账号场景正常执行并保留截图和App摘要。探针失败仍阻断整个四例门禁，不算跳过004后的通过；恢复后必须新候选完整重跑，不复用旧通过记录。该测试签名不满足Developer ID、公证或正式发布条件。开发过程不改变用户本机的信任设置。
 
 依据：[Apple TN2206](https://developer.apple.com/library/archive/technotes/tn2206/)、[Code Signing Requirement Language](https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/RequirementLang/RequirementLang.html)。不同ad-hoc包的摘要变化，不能作为跨版本Keychain身份连续性的设计依据。
 
@@ -65,3 +65,7 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 候选代码、测试、文档和数据一同提交；测试后代码或依赖变化重新验证。完整命令在入口真实建立后补入，未建立时明确待实现，不写伪造成功记录。
 
 服务启动使用 `python3 -m uvicorn server.tokenmeter_server.main:app --host 127.0.0.1 --port <隔离端口> --no-proxy-headers`，并显式设置 `TOKENMETER_DATABASE_URL`。当前限流按真实连接来源计数，不信任转发头；生产代理来源识别需另行设计验证。
+
+## 本机测试环境接入
+
+用户已明确授权本机作为测试机，覆盖本轮App构建和原生测试。实际环境为Intel/macOS15.7.4/已登录桌面，当前只有Command Line Tools。先安装与CI一致的完整Xcode16.4并完成首次启动组件、许可及UI自动化授权；Apple登录和系统管理员确认通过系统界面完成。001–003复用现有真实runner和隔离数据；004的本机证书环境需要独立正常授权与清理设计和程序，目前未接通，不伪造GitHub环境变量或静默改本机信任。完整矩阵与正式发布要求继续保留。

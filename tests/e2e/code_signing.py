@@ -14,6 +14,15 @@ import subprocess
 import time
 
 
+def require_automated_trust_cleanup() -> None:
+    # Real hosted-Mac probes failed to revoke the final admin trust entry.
+    # Apple hardcodes this authorization right; do not change authorizationdb.
+    # Add a supported, normally authorized setup/cleanup profile with its SOP
+    # and real evidence before enabling this fixture on any machine.
+    raise RuntimeError("Upgrade fixture is BLOCKED: authorized certificate cleanup has no supported automation profile; "
+                       "configure and validate normal macOS authorization before creating system resources")
+
+
 class SigningIdentity:
     def __init__(self, private: Path):
         self.private = private
@@ -78,6 +87,7 @@ class SigningIdentity:
         if (os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP")
                 or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted" or os.environ.get("RUNNER_OS") != "macOS"):
             raise RuntimeError("Temporary signing identity requires an isolated GitHub runner")
+        require_automated_trust_cleanup()
         self._run(["sudo", "-n", "/usr/bin/true"], "check noninteractive administrator access")
         self.previous_keychains = shlex.split(self._run(["security", "list-keychains", "-d", "user"], "read keychain list"))
         p12 = self.create_private_bundle()

@@ -184,6 +184,15 @@ def command(args: list[str], *, root: Path, log: Path, env: dict | None = None,
     return result
 
 
+def require_upgrade_environment(root: Path, case_output: Path) -> None:
+    result = command([sys.executable, str(root / "scripts/native_environment.py")], root=root,
+                     log=case_output / "environment-probe.log", timeout=300, required=False)
+    if result.returncode == 2:
+        raise Blocked("E2E-TM001-004 environment is unavailable; see environment-probe.log and environment.json")
+    if result.returncode:
+        raise EvidenceError("E2E-TM001-004 environment probe failed; see environment-probe.log and environment.json")
+
+
 def parse_bundle(root: Path, bundle: Path) -> tuple[dict, dict]:
     values = []
     for kind in ("tests", "summary"):
@@ -457,6 +466,8 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     build_settings = ["CURRENT_PROJECT_VERSION=100", "CODE_SIGN_IDENTITY=-", "CODE_SIGNING_ALLOWED=YES",
                                       "TM_TEST_API_URL=" + address, "TM_TEST_RUN_ID=" + isolation_id]
                     if case_id == "E2E-TM001-004":
+                        progress(case_id, "verify-upgrade-environment")
+                        require_upgrade_environment(root, case_output)
                         progress(case_id, "prepare-signing")
                         signing = signing_data.SigningIdentity(case_private / "code-signing")
                         identity = signing.prepare()

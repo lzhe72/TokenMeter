@@ -75,6 +75,14 @@ class NativeContractTests(unittest.TestCase):
         with self.assertRaises(native.EvidenceError):
             native.record_cleanup_errors({}, ["cleanup failed without prior error"], None)
 
+    def test_upgrade_probe_distinguishes_blocked_from_failed_and_never_accepts_nonzero(self):
+        for exit_code, error in ((2, native.Blocked), (1, native.EvidenceError), (7, native.EvidenceError)):
+            with mock.patch.object(native, "command", return_value=mock.Mock(returncode=exit_code)), \
+                 self.assertRaises(error):
+                native.require_upgrade_environment(self.root, self.root)
+        with mock.patch.object(native, "command", return_value=mock.Mock(returncode=0)):
+            native.require_upgrade_environment(self.root, self.root)
+
     def test_attachment_export_requires_native_help_and_real_png_files(self):
         bundle = self.root / "native.xcresult"
         bundle.mkdir()

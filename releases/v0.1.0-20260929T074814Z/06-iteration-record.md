@@ -117,3 +117,17 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 按000将017修订至3，明确正式交付为DMG、需要从DMG安装后的.app执行完整回归，并分别绑定摘要；开发阶段直接测试.app仍按014执行。索引、执行规范和05同步，缺实际DMG程序仍BLOCKED，没有新增通过声明。
 
 本轮工具回归150项通过，升级helper9项通过；baseline与追踪检查通过。原生附件导出先核对CI实际xcresulttool help，再导出PNG并登记摘要，父门禁核对文件一致性。新截图和System证书清理仍待新候选CI实际执行；未用工具自测代替原生结果。
+
+候选69c717d的[run36548537959](https://github.com/lzhe72/TokenMeter/actions/runs/36548537959)基础检查通过（150项治理、34项服务、9项helper），但两平台环境探针仍在最后codeSign信任撤销超时。逐操作日志证明TLS信任撤销、TLS证书删除与codeSign公钥证书删除都成功；System副本假设未解决根因，保留失败，不将其写成修复完成。四例产品测试及新增截图未执行。Apple开源TrustSettings代码显示删除最后admin条目存在额外授权路径，继续只读核实受限CI环境配置方案，不保留残余证书或跳过清理换取通过。
+
+依据[Apple内置授权规则](https://github.com/apple-oss-distributions/Security/blob/db15acbe6a7f257a859ad9a3bb86097bfe0679d9/OSX/authd/authorization.plist)和[security官方CLI实现](https://github.com/apple-oss-distributions/Security/blob/db15acbe6a7f257a859ad9a3bb86097bfe0679d9/SecurityTool/macOS/authz.c)，按000将009/010修订至5：替换本轮新增的笼统“不修改authorizationdb”实现限制，为仅限一次性托管CI、单一right、is-root短窗口、普通用户拒绝与完整恢复的可验证流程。现有root来自GitHub原生管理员授权；不改产品认证、TLS校验、原生用例和发布要求。缺任何验证条件仍阻断，不在用户本机执行。03/04先更新并基线后再实现。
+
+### 受限授权方案审查撤回与环境阻塞
+
+独立审查进一步核实[Apple授权引擎](https://github.com/apple-oss-distributions/Security/blob/db15acbe6a7f257a859ad9a3bb86097bfe0679d9/OSX/authd/engine.m#L1235)对该right使用固定规则，数据库写回不能使root-only方案成立。因此撤回上一段的实施决定和未提交helper，保留本机草稿与159项工具自测日志作审查记录；这些测试只模拟OS，不证明真实Mac兼容。未在本机或CI执行该授权数据库修改。009/010修订5改为遵守系统授权并在已知清理前提缺失时先阻断，不部署无效方案。
+
+升级探针改到014第004例的依赖位置，001–003按自身前提正常执行；四例集合、完整门禁和清理标准不变。这样可以保留真实App、截图及业务证据，同时如实标明004尚未运行。恢复需专用测试环境提供正常系统授权及自动清理程序，不能用sudo可用、环境标志或工具mock通过替代。
+
+用户随后明确表示“本机可以作为测试机”，据此扩展009本机测试入口。只读结果：macOS15.7.4、Intel x86_64、已登录用户桌面；xcode-select现为CommandLineTools，/Applications及Spotlight未找到完整Xcode.app或Xcode.xip，磁盘可用约35GiB。未触发安装、改系统配置或导入证书。Apple兼容表确认Xcode16.4支持当前系统；已告知用户安装与首次启动所需操作。该授权允许推进本机测试准备，不证明原生执行或升级fixture已经可用。
+
+本轮152项治理/门禁工具回归通过，68份文档基线与追踪检查通过。新负测证明清理路径不可用时不调用系统写入、004探针的BLOCKED与FAIL分别传播且非零不能放行；本机probe实际退出2，原因仍为缺完整Xcode。证据位于`.local/governance/tm001-native/blocked-environment-{red,green}.log`及`local-machine-preflight.log`。这些结果不等同于产品验收。

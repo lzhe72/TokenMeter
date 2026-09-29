@@ -19,6 +19,7 @@ import native_e2e as native
 def execute_probe(root: Path, output: Path, report: dict) -> None:
     report["platform"] = native.preflight(root)
     signing_data = native.load_module(root / "tests/e2e/code_signing.py", "probe_signing_fixture")
+    signing_data.require_automated_trust_cleanup()
     update_data = native.load_module(root / "tests/e2e/update_source.py", "probe_update_fixture")
     with tempfile.TemporaryDirectory(prefix="tokenmeter-environment-") as temporary:
         private = Path(temporary).resolve()
@@ -53,9 +54,12 @@ def main(root: Path = ROOT) -> int:
     output = native.new_run_directory(root, "environment-" + uuid.uuid4().hex)
     path = output / "environment.json"
     report = {"scope": "environment_only", "state": "BLOCKED", "release_eligible": False,
+              "sop_id": "SOP-009", "release_id": None, "source_commit": e2e.git_value(root, "rev-parse", "HEAD"),
+              "working_tree_dirty": e2e.git_value(root, "status", "--porcelain") != "",
               "executed_cases": 0, "cleanup_completed": False, "errors": [], "blockers": [], "cleanup_errors": [],
               "started_at": datetime.now(timezone.utc).isoformat()}
     try:
+        report["release_id"] = native.json_file(root / "releases/current.json")["release_id"]
         execute_probe(root, output, report)
         report["state"] = "READY"
     except native.EvidenceError as exc:
