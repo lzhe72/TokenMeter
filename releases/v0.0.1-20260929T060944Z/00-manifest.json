@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.0.1-20260929T060944Z",
+  "version": "0.0.1",
+  "created_at": "2026-09-29T06:09:44Z",
+  "kind": "design_baseline",
+  "feature_ids": [
+    "TM-000"
+  ],
+  "product_feature_matrix": "tests/feature_matrix.json",
+  "documents": {
+    "requirements": "releases/v0.0.1-20260929T060944Z/01-requirements.md",
+    "breakdown": "releases/v0.0.1-20260929T060944Z/02-breakdown.md",
+    "development_plan": "releases/v0.0.1-20260929T060944Z/03-development-plan.md",
+    "test_plan": "releases/v0.0.1-20260929T060944Z/04-test-plan.md",
+    "release_plan": "releases/v0.0.1-20260929T060944Z/05-release-plan.md",
+    "iteration_record": "releases/v0.0.1-20260929T060944Z/06-iteration-record.md"
+  },
+  "global_design": "docs/design-plan.md",
+  "lifecycle": "docs/lifecycle.md",
+  "documentation_standard": "docs/standards/documentation.md",
+  "changelog": "CHANGELOG.md",
+  "changelog_heading": "v0.0.1-20260929T060944Z",
+  "traceability": [
+    {
+      "requirement": "REQ-GOV-001",
+      "feature": "TM-000",
+      "task": "TASK-GOV-001",
+      "test": "GOV-001",
+      "description": "规范、全流程和设计文档一致，内部链接有效"
+    },
+    {
+      "requirement": "REQ-GOV-002",
+      "feature": "TM-000",
+      "task": "TASK-GOV-002",
+      "test": "GOV-002",
+      "description": "每项产品功能登记用例、数据和SOP；缺项自动拒绝"
+    },
+    {
+      "requirement": "REQ-GOV-003",
+      "feature": "TM-000",
+      "task": "TASK-GOV-003",
+      "test": "GOV-003",
+      "description": "测试账号与合成数据可复现生成并安全重置"
+    },
+    {
+      "requirement": "REQ-GOV-004",
+      "feature": "TM-000",
+      "task": "TASK-GOV-004",
+      "test": "GOV-004",
+      "description": "产品未执行时机器阻断，伪造PASS和零退出不能放行"
+    },
+    {
+      "requirement": "REQ-GOV-005",
+      "feature": "TM-000",
+      "task": "TASK-GOV-005",
+      "test": "GOV-005",
+      "description": "同一release ID贯穿文档、Changelog、提交与预期通行证"
+    }
+  ],
+  "test_programs": [
+    "tests/governance/test_check_docs.py",
+    "tests/governance/test_quality_gate.py",
+    "tests/governance/test_test_data.py",
+    "tests/governance/test_release_registry.py",
+    "tests/governance/test_candidate_gate.py"
+  ],
+  "test_data_program": "scripts/test_data.py",
+  "test_sop": "sop/SOP-013-build-and-check.md",
+  "gate_commands": {
+    "metadata": "python3 scripts/quality_gate.py check",
+    "iteration": "python3 scripts/quality_gate.py iteration",
+    "release": "python3 scripts/quality_gate.py release",
+    "documentation": "python3 scripts/check_docs.py --mode baseline",
+    "documentation_structure": "python3 scripts/check_docs.py --mode structure"
+  },
+  "publication": {
+    "planned_git_tag": "v0.0.1-20260929T060944Z",
+    "expected_passport_asset": "v0.0.1-20260929T060944Z.passport.json",
+    "passport_policy": "issued_only_by_protected_ci_after_verified_product_e2e",
+    "state": "not_published"
+  },
+  "lookup_command": "python3 scripts/release_registry.py show --release-id v0.0.1-20260929T060944Z",
+  "sop_index": "sop/README.md",
+  "document_catalog": "docs/catalog.json",
+  "program_bindings_status": "ready"
+}

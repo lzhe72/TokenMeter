@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "acceptance_criteria": [
+    {
+      "id": "AC-TM001-001",
+      "feature_id": "TM-001",
+      "requirement_id": "REQ-TM001",
+      "spec": "docs/product/README.md",
+      "criterion": "有效账号可登录；首次改密生效；退出后的凭据不能继续访问",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM001-002",
+      "feature_id": "TM-001",
+      "requirement_id": "REQ-TM001",
+      "spec": "docs/product/README.md",
+      "criterion": "成员只能查看本人身份且不能调用管理员账号管理；停用账号不能登录，UI 显示对应错误",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM001-003",
+      "feature_id": "TM-001",
+      "requirement_id": "REQ-TM001",
+      "spec": "docs/product/README.md",
+      "criterion": "新密码生效、旧会话失效，管理动作产生审计记录",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM001-004",
+      "feature_id": "TM-001",
+      "requirement_id": "REQ-TM001",
+      "spec": "docs/product/README.md",
+      "criterion": "最小更新器随首个产品版本交付；有效包替换与重启成功且保留账号状态，无效签名被拒绝并保留原版",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM002-001",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "spec": "docs/product/README.md",
+      "criterion": "真实系统授权完成，只读取选定目录；确认前不开始持续扫描；选择和同意状态可在重启后恢复",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM002-002",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "spec": "docs/product/README.md",
+      "criterion": "App 不崩溃、不继续读取失效目录；重新授权后可读取目录并恢复授权状态",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM003-001",
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "spec": "docs/product/README.md",
+      "criterion": "用量与独立预期一致，同一源事件只计一次",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM003-002",
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "spec": "docs/product/README.md",
+      "criterion": "不直接逐行累加最近用量；继承历史不重复；不可核实数据有诊断且不污染可信总量",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM003-003",
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "spec": "docs/product/README.md",
+      "criterion": "不吞掉随后完整事件；已采集统计保留；缺失历史有提示",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM003-004",
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "spec": "docs/product/README.md",
+      "criterion": "恢复后已有源事件不重复计数，新事件仅计一次，结果与独立预期一致",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM004-001",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "spec": "docs/product/README.md",
+      "criterion": "每次实际调用计一次，子代理包含在正确归属",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM004-002",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "spec": "docs/product/README.md",
+      "criterion": "继承历史不重复入账，未完整事件等待后续读取",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM004-003",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "spec": "docs/product/README.md",
+      "criterion": "支持版本结果准确；未知版本或缺字段明确降级，不能伪造零用量",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM004-004",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "spec": "docs/product/README.md",
+      "criterion": "恢复后主会话、子代理与继承历史不重复计数，新调用仅计一次",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM005-001",
+      "feature_id": "TM-005",
+      "requirement_id": "REQ-TM005",
+      "spec": "docs/product/README.md",
+      "criterion": "每个 UI 指标、趋势和明细与独立 expected 对应范围一致",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM005-002",
+      "feature_id": "TM-005",
+      "requirement_id": "REQ-TM005",
+      "spec": "docs/product/README.md",
+      "criterion": "自然日边界正确；无覆盖/未知数据与真实零值区别显示",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM006-001",
+      "feature_id": "TM-006",
+      "requirement_id": "REQ-TM006",
+      "spec": "docs/product/README.md",
+      "criterion": "计费子项不重复，金额与独立预期一致",
+      "data_requirements": [
+        "pricing_basic"
+      ]
+    },
+    {
+      "id": "AC-TM006-002",
+      "feature_id": "TM-006",
+      "requirement_id": "REQ-TM006",
+      "spec": "docs/product/README.md",
+      "criterion": "未知费用不填零，历史保留价格版本，分币种汇总且标明估算",
+      "data_requirements": [
+        "pricing_history",
+        "multiple_currencies",
+        "subscription_estimates",
+        "unknown_prices"
+      ]
+    },
+    {
+      "id": "AC-TM007-001",
+      "feature_id": "TM-007",
+      "requirement_id": "REQ-TM007",
+      "spec": "docs/product/README.md",
+      "criterion": "队列持久化，最终个人/团队总量一致且无重复",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM007-002",
+      "feature_id": "TM-007",
+      "requirement_id": "REQ-TM007",
+      "spec": "docs/product/README.md",
+      "criterion": "已确认数据不丢失、不重复；数据归属不能由客户端越权改变",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM007-003",
+      "feature_id": "TM-007",
+      "requirement_id": "REQ-TM007",
+      "spec": "docs/product/README.md",
+      "criterion": "仅允许用量白名单字段；无正文/密钥/完整路径；未归属项目可明确分配",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM007-004",
+      "feature_id": "TM-007",
+      "requirement_id": "REQ-TM007",
+      "spec": "docs/product/README.md",
+      "criterion": "服务端拒绝越权统计与停用账号上传；UI 显示错误，他人数据不泄露，队列不误标为已确认",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM008-001",
+      "feature_id": "TM-008",
+      "requirement_id": "REQ-TM008",
+      "spec": "docs/product/README.md",
+      "criterion": "CSV 行/统计与授权可见筛选结果一致",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM008-002",
+      "feature_id": "TM-008",
+      "requirement_id": "REQ-TM008",
+      "spec": "docs/product/README.md",
+      "criterion": "格式可解析，未知值保留，成员不能通过导出读取他人记录",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM009-001",
+      "feature_id": "TM-009",
+      "requirement_id": "REQ-TM009",
+      "spec": "docs/product/README.md",
+      "criterion": "每个预算每周期每阈值只发一次，模型调用不受影响",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM009-002",
+      "feature_id": "TM-009",
+      "requirement_id": "REQ-TM009",
+      "spec": "docs/product/README.md",
+      "criterion": "周期重置正确；币种不混算；通知拒绝不导致重复或丢失应用内状态",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM010-001",
+      "feature_id": "TM-010",
+      "requirement_id": "REQ-TM010",
+      "spec": "docs/product/README.md",
+      "criterion": "更新设置和说明可用；真实安装替换/重启成功，账号设置和统计保留，版本与包摘要一致",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM010-002",
+      "feature_id": "TM-010",
+      "requirement_id": "REQ-TM010",
+      "spec": "docs/product/README.md",
+      "criterion": "拒绝无效包，不进入半更新状态，恢复流程可自动验证",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM011-001",
+      "feature_id": "TM-011",
+      "requirement_id": "REQ-TM011",
+      "spec": "docs/product/README.md",
+      "criterion": "迁移成功保持数据；失败可恢复且不会写入半迁移状态",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM011-002",
+      "feature_id": "TM-011",
+      "requirement_id": "REQ-TM011",
+      "spec": "docs/product/README.md",
+      "criterion": "记录数、金额、Token 聚合和权限结果一致",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM011-003",
+      "feature_id": "TM-011",
+      "requirement_id": "REQ-TM011",
+      "spec": "docs/product/README.md",
+      "criterion": "备份可用，旧客户端兼容，历史不重复",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM011-004",
+      "feature_id": "TM-011",
+      "requirement_id": "REQ-TM011",
+      "spec": "docs/product/README.md",
+      "criterion": "已同步且超龄数据按配置清理；保留首日 00:00 的事件仍保留，早于该边界的已同步事件被清理；未同步数据保留并只补传一次，缺失历史可见",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM012-001",
+      "feature_id": "TM-012",
+      "requirement_id": "REQ-TM012",
+      "spec": "docs/product/README.md",
+      "criterion": "摘要与主窗口相同；暂停期间不读取，恢复后补采不重复",
+      "data_requirements": []
+    },
+    {
+      "id": "AC-TM012-002",
+      "feature_id": "TM-012",
+      "requirement_id": "REQ-TM012",
+      "spec": "docs/product/README.md",
+      "criterion": "状态与真实故障一致；恢复后状态更新；启动设置可自动验证",
+      "data_requirements": []
+    }
+  ]
+}

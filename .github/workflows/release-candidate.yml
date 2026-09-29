@@ -1,0 +1,59 @@
+name: TokenMeter release candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Full 40-character candidate commit SHA to validate before creating a Tag
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    # The environment's remote protection must be configured and verified separately.
+    environment: release-validation
+    env:
+      TM_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+      TM_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - name: Require default-branch dispatch and full SHA
+        shell: bash
+        run: |
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_REF" = "refs/heads/$TM_DEFAULT_BRANCH"
+          [[ "$TM_CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate candidate identity before running checks
+        run: >-
+          python3 scripts/candidate_gate.py
+          --candidate-sha "$TM_CANDIDATE_SHA"
+          --event "$GITHUB_EVENT_NAME"
+          --workflow-ref "$GITHUB_REF"
+          --default-branch "$TM_DEFAULT_BRANCH"
+      - name: Validate baseline and test governance tooling
+        run: |
+          python3 scripts/check_docs.py --mode baseline
+          python3 scripts/quality_gate.py check
+          python3 -m unittest discover -s tests/governance -p 'test_*.py' -v
+      - name: Execute release gate before Tag creation
+        # Remains BLOCKED until the native runner and trusted verifier are implemented.
+        run: python3 scripts/quality_gate.py release
+      - name: Retain actual candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidate-${{ inputs.candidate_sha }}-${{ github.run_attempt }}
+          path: .local/e2e/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+    # No Tag, Release, passport issuance, upload credentials, or deployment in this workflow.
