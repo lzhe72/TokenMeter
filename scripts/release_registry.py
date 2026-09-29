@@ -8,16 +8,12 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from release_contract import validate_release
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_DOCS = {
-    "requirements": "01-requirements.md",
-    "breakdown": "02-breakdown.md",
-    "development_plan": "03-development-plan.md",
-    "test_plan": "04-test-plan.md",
-    "release_plan": "05-release-plan.md",
-    "iteration_record": "06-iteration-record.md",
-}
 RELEASE = re.compile(r"v(\d+\.\d+\.\d+)-(\d{8}T\d{6}Z)\Z")
 
 
@@ -36,6 +32,9 @@ def show(root: Path, release_id: str | None = None) -> dict:
         if not isinstance(path, str) or not path or PurePosixPath(path).is_absolute() or ".." in PurePosixPath(path).parts:
             raise ValueError("Release reference must be relative and confined to repository")
         if tag:
+            entry = git(root, "ls-tree", tag, "--", path)
+            if not entry or len(entry.splitlines()) != 1 or entry.split(" ", 1)[0] not in {"100644", "100755"}:
+                raise ValueError(f"Release reference at tag must be a regular file: {path}")
             value = git(root, "show", f"{tag}:{path}")
             if value is None:
                 raise ValueError(f"Missing release reference at tag: {path}")
@@ -43,6 +42,8 @@ def show(root: Path, release_id: str | None = None) -> dict:
         candidate = (root / path).resolve()
         if not candidate.is_relative_to(root):
             raise ValueError("Release reference must remain inside repository")
+        if candidate != root / path:
+            raise ValueError("Release reference must be a regular file without symlink components")
         return candidate.read_text(encoding="utf-8")
 
     def obj(path: str, tag: str | None = None) -> dict:
@@ -56,25 +57,16 @@ def show(root: Path, release_id: str | None = None) -> dict:
     match = RELEASE.fullmatch(release_id) if isinstance(release_id, str) else None
     if not match:
         raise ValueError("Invalid release ID; expected vMAJOR.MINOR.PATCH-YYYYMMDDTHHMMSSZ")
-    created_at = datetime.strptime(match[2], "%Y%m%dT%H%M%SZ").strftime("%Y-%m-%dT%H:%M:%SZ")
+    datetime.strptime(match[2], "%Y%m%dT%H%M%SZ")
     ref = f"refs/tags/{release_id}"
     tag_commit = git(root, "rev-parse", "--verify", f"{ref}^{{commit}}")
     tag = tag_commit  # Every archived read uses one resolved immutable snapshot.
     manifest_path = f"releases/{release_id}/00-manifest.json"
     manifest = obj(manifest_path, tag)
-    if manifest.get("release_id") != release_id or manifest.get("version") != match[1] or manifest.get("created_at") != created_at:
-        raise ValueError("Manifest release_id, version or created_at does not match requested ID")
-    documents = manifest.get("documents")
-    if not isinstance(documents, dict) or not RELEASE_DOCS.keys() <= documents.keys():
-        raise ValueError("Incomplete lifecycle documents")
-    for key, filename in RELEASE_DOCS.items():
-        if documents[key] != f"releases/{release_id}/{filename}":
-            raise ValueError(f"Lifecycle document {key} must use ordered filename {filename}")
-    for path in documents.values():
-        if not isinstance(path, str) or not path.startswith(f"releases/{release_id}/"):
-            raise ValueError("Lifecycle documents must belong to this release")
-        if release_id not in read(path, tag):
-            raise ValueError(f"Lifecycle document missing release ID: {path}")
+    contract_errors = validate_release(manifest, release_id, lambda path: read(path, tag))
+    if contract_errors:
+        raise ValueError("Release contract invalid: " + "; ".join(contract_errors))
+    documents = manifest["documents"]
     changelog_path = manifest.get("changelog")
     changelog = read(changelog_path, tag)
     heading = f"## {release_id}"
@@ -104,6 +96,8 @@ def show(root: Path, release_id: str | None = None) -> dict:
         "traceability": manifest.get("traceability", []),
         "product_features": [f for f in features if f.get("id") in feature_ids],
         "planned_product_features": [f.get("id") for f in features],
+        "program_bindings_status": manifest.get("program_bindings_status", "ready"),
+        "program_bindings_ready": manifest.get("program_bindings_status", "ready") == "ready",
         "test_programs": manifest.get("test_programs", []),
         "test_data_program": manifest.get("test_data_program"), "test_sop": manifest.get("test_sop"),
         "gate_commands": manifest.get("gate_commands", {}),
@@ -112,7 +106,7 @@ def show(root: Path, release_id: str | None = None) -> dict:
         "passport": {"expected_asset": publication.get("expected_passport_asset"),
                      "location": "同名 Git Release 的发布资产", "verified": False},
         "release_eligible": None,
-        "notice": "查询只展示索引；Git Tag 或规划的通行证名称均不能证明已通过发布门禁。",
+        "notice": "查询只展示索引；planned 程序绑定尚未就绪，ready 也不代表测试已执行。Git Tag 或规划的通行证名称均不能证明已通过发布门禁。",
     }
 
 

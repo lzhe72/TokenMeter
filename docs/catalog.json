@@ -78,7 +78,9 @@
       "inputs": [
         "docs/decision-inputs.md",
         "docs/lifecycle.md",
-        "sop/README.md"
+        "sop/README.md",
+        "tests/acceptance.json",
+        "docs/reviews/2026-09-29-plan-consistency.md"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-004-technical-design.md"
@@ -105,7 +107,8 @@
       "applicable_release": "all",
       "base_release": null,
       "inputs": [
-        "docs/decision-inputs.md"
+        "docs/decision-inputs.md",
+        "tests/acceptance.json"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-002-requirements.md"
@@ -121,7 +124,9 @@
         "docs/design-plan.md",
         "docs/standards/documentation.md",
         "sop/README.md",
-        "releases/v0.0.1-20260929T060944Z/00-manifest.json"
+        "releases/v0.0.1-20260929T060944Z/00-manifest.json",
+        "tests/governance/test_candidate_gate.py",
+        "tests/acceptance.json"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-008-baseline-check.md"
@@ -176,7 +181,9 @@
       "base_release": null,
       "inputs": [
         "docs/testing/strategy.md",
-        "docs/standards/versioning.md"
+        "docs/standards/versioning.md",
+        ".github/workflows/release-candidate.yml",
+        "scripts/candidate_gate.py"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-018-release-gate.md"
@@ -190,7 +197,8 @@
       "base_release": null,
       "inputs": [
         "docs/decision-inputs.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "scripts/release_contract.py"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-001-version-start.md"
@@ -386,7 +394,9 @@
       "base_release": null,
       "inputs": [
         "docs/product/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "tests/acceptance.json",
+        "tests/datasets.json"
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-006-test-plan.md"

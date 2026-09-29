@@ -62,7 +62,8 @@
     "tests/governance/test_check_docs.py",
     "tests/governance/test_quality_gate.py",
     "tests/governance/test_test_data.py",
-    "tests/governance/test_release_registry.py"
+    "tests/governance/test_release_registry.py",
+    "tests/governance/test_candidate_gate.py"
   ],
   "test_data_program": "scripts/test_data.py",
   "test_sop": "sop/SOP-013-build-and-check.md",
@@ -70,7 +71,8 @@
     "metadata": "python3 scripts/quality_gate.py check",
     "iteration": "python3 scripts/quality_gate.py iteration",
     "release": "python3 scripts/quality_gate.py release",
-    "documentation": "python3 scripts/check_docs.py"
+    "documentation": "python3 scripts/check_docs.py --mode baseline",
+    "documentation_structure": "python3 scripts/check_docs.py --mode structure"
   },
   "publication": {
     "planned_git_tag": "v0.0.1-20260929T060944Z",
@@ -80,5 +82,6 @@
   },
   "lookup_command": "python3 scripts/release_registry.py show --release-id v0.0.1-20260929T060944Z",
   "sop_index": "sop/README.md",
-  "document_catalog": "docs/catalog.json"
+  "document_catalog": "docs/catalog.json",
+  "program_bindings_status": "ready"
 }

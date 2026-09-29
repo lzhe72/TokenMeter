@@ -4,6 +4,8 @@
 
 **适用 SOP：** [SOP-004 技术设计](../../sop/SOP-004-technical-design.md)；涉及数据库变化调用 [SOP-016](../../sop/SOP-016-database-migration.md)，文档维护执行 [SOP-024](../../sop/SOP-024-document-change.md)。
 
+本模板的内容可放在 `03-development-plan.md` 的独立技术设计章节，或保存为登记过的单独设计附件。无论采用哪种载体，先按 SOP-004 完成设计，再按 SOP-005 编写实施顺序。
+
 ## 输入引用
 
 - 本轮需求、拆解、manifest 及比较基线：`<实际引用>`。
@@ -37,7 +39,7 @@
 
 ## 输出、验收与证据
 
-- 输出：独立 `technical-design.md`、必要的全局架构/接口更新及 manifest 中对应索引。
+- 输出：`03-development-plan.md` 的设计章节或单独设计附件、必要的全局架构/接口更新；附件登记机器目录并从开发计划引用，版本索引可定位相应设计。
 - 文档验收：模块、数据流、权限、异常、兼容和恢复均有确定行为；关键设计无需实现者猜测；与需求/任务一致。
 - 证据：本轮 `06-iteration-record.md` 链接调研、设计决定和实际检查结果；验证未运行时如实记录。
 - 下一步：[SOP-005 开发计划](../../sop/SOP-005-development-plan.md)，采用[开发计划模板](development-plan.md)。

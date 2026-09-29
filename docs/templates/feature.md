@@ -8,10 +8,10 @@
 
 ## 输入引用与工作路线
 
-- 本轮 manifest、requirements、breakdown、technical-design、development-plan、test-plan、release-plan 及当前实现：`<真实引用>`。
+- 本轮 manifest、requirements、breakdown、development-plan（含独立设计章节或设计附件链接）、test-plan、release-plan 及当前实现：`<真实引用>`。
 - 规范输入：[产品设计](../../docs/product/README.md)、[架构](../../docs/architecture/README.md)、[测试策略](../../docs/testing/strategy.md)、[自动测试执行](../../docs/testing/execution.md)。
-- 按[SOP 索引](../../sop/README.md)的新功能路线执行 001→002→003→004→005→006→007→008，再准备环境、数据和真实测试，进入开发、构建与完整 E2E。
-- 本模板补充单项功能的细节，独立版本文档采用[模板索引](lifecycle-bundle.md)；不把技术设计并入开发计划。
+- 按[SOP 索引](../../sop/README.md)的新功能路线执行 001→002→003→004→005→006→007→008，再由 SOP-009 建立真实工程骨架，准备数据和真实业务失败基线，进入业务实现、构建与完整 E2E。
+- 本模板补充单项功能的细节，版本文档采用[模板索引](lifecycle-bundle.md)。技术设计先按 SOP-004 完成，可放在 `03-development-plan.md` 的独立章节或登记为单独设计附件；SOP-005 再完成实施计划。
 
 ## 1. 用户目标与行为
 

@@ -1,6 +1,6 @@
 # SOP-022 归档交接
 
-**修订：** 2　**状态：** baselined　**适用：** all
+**修订：** 3　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -21,7 +21,7 @@
 ## 执行步骤
 
 1. 核对需求、任务、用例、数据、提交与报告的链接，明确哪些完成、哪些 FAIL/BLOCKED，不能把子 agent 完成消息当集成验证。
-2. 执行 python3 scripts/release_registry.py show 检查当前档案可查询；其他版本使用 --release-id 指定真实编号，核对缺失项不伪造。
+2. 完整档案执行 `python3 scripts/release_registry.py show` 检查当前版本可查询；其他版本使用 `--release-id` 指定编号。交接尚未完成基线的草稿时，读取该版 `00-manifest.json` 并运行 `python3 scripts/check_docs.py --mode structure`，记录剩余字段/文档任务，不要求严格查询先通过，不伪造缺项。
 3. 更新版本 06-iteration-record.md 和当前状态，写清关键决定、实际命令/退出码、证据路径、阻塞、可执行下一步与文件所有权。
 4. 归档不可覆盖的机器结果；已发布文档以 tag 为准，后续复盘追加记录，不能回写旧通行证。
 5. 对本任务拥有且不再使用的测试资源按对应重置程序清理；保留待查证据与仍在运行的工作，不擅自删除工作树或用户文件。

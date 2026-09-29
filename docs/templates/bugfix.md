@@ -9,7 +9,7 @@
 ## 输入引用与工作路线
 
 - 原版本、缺陷报告、相关需求/验收条件、原生失败结果和已交付场景：`<真实引用>`。
-- 本轮 manifest、requirements、breakdown、technical-design、development-plan、test-plan、release-plan：`<真实引用>`。
+- 本轮 manifest、requirements、breakdown、development-plan（设计章节或附件链接）、test-plan、release-plan：`<真实引用>`。
 - 执行标准：[测试策略](../../docs/testing/strategy.md)、[自动测试执行](../../docs/testing/execution.md)、[发布门禁](../../docs/standards/release.md)。
 - 先按 SOP-015 收集复现线索；本轮修复经 [SOP-001](../../sop/SOP-001-version-start.md)至 [SOP-008](../../sop/SOP-008-baseline-check.md)建立文档基线，再完成数据/失败回归、修复、构建和完整 E2E。独立文档使用[模板索引](lifecycle-bundle.md)。
 
@@ -41,7 +41,7 @@
 - 实现变化、影响的数据流和兼容风险：
 - 历史错误数据的修复/迁移/恢复方式：
 - 新增或修订的功能文档、测试数据程序、SOP：
-- 同一 release_id 的修复需求、功能拆分、独立技术设计、开发计划、测试计划、发布预案及 Changelog：
+- 同一 release_id 的修复需求、功能拆分、技术设计（开发计划的独立章节或单独附件）、开发计划、测试计划、发布预案及 Changelog；技术设计按 SOP-004 先于 SOP-005 实施计划完成：
 
 ## 4. 验证与证据
 

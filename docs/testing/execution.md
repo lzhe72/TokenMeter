@@ -15,6 +15,8 @@
 在仓库根目录分别执行以下命令，Codex 必须读取退出码和输出：
 
 ```sh
+python3 scripts/check_docs.py --mode structure
+python3 scripts/check_docs.py --mode baseline
 python3 -m unittest discover -s tests/governance -p 'test_*.py'
 python3 scripts/quality_gate.py check
 python3 scripts/test_data.py generate --run-id demo --seed 42
@@ -35,6 +37,8 @@ python3 scripts/test_data.py reset --run-id demo
 `quality_gate.py` 和 `e2e.py` 的退出码为 `0=PASS`、`1=FAIL`、`2=BLOCKED`；`check` 的 PASS 仅代表基础规范检查通过。E2E 每次生成独立的 `.local/e2e/<run-id>/result.json`，命令输出其绝对路径。`quality_gate.py iteration` 和 `release` 在检查元数据后会自动调用 E2E；单独调用 `e2e.py` 用于诊断，不需要为正式门禁重复执行。
 
 机器清单中 `planned` 功能允许 `automated_test` 为 `null`；其数据集仍为 `planned` 时，`data_program` 也可为 `null`。数据集一旦为 `available`，对应场景必须绑定真实生成程序。进入 `in_progress` 或 `implemented` 前，全部场景必须绑定真实数据程序、测试入口和可用数据集。清单通过校验不代表用例已执行，发布证据要求见[发布规范](../standards/release.md)。
+
+编制中的文档使用 structure；全部计划完成后由 SOP-008 检查 baseline。版本计划可将程序绑定显式标为 planned；SOP-009 先准备工程骨架，010/011 再实现数据与测试，绑定就绪后改为 ready。每个已填写路径必须存在，规划项用空绑定表达，不写虚构文件。独立验收清单与规格/用例双向检查；数据集的能力必须覆盖场景要求。当前 pricing 仅覆盖基础 USD，历史价格/多币种/订阅依赖 planned 的 pricing_extended。
 
 ### 自动执行环境前提
 
@@ -69,13 +73,15 @@ python3 scripts/test_data.py reset --run-id demo
 1. 固定 `release_id`、候选提交、版本、同标识的 Changelog 标题、App/服务端产物摘要及 fixture 摘要。
 2. 完成签名、公证、更新包签名，保存校验结果。产品 E2E 与安装升级必须针对此候选产物建立证据链。
 3. 在所有已声明支持的 Mac 系统/架构组合执行全新安装，以及本次应执行集合的全部原生产品 E2E。
-4. 安装上一公开稳定版并用程序生成旧版本数据；自动执行安装包升级，验证版本、数据迁移、配置和授权保留。App 内更新交付后，还必须从 App UI 执行真实更新链路。更多受支持直升路径逐一验证。
+4. 自 0.2.0 起安装上一公开稳定版并用程序生成旧版本数据；从 App UI 自动执行真实更新，验证版本、数据迁移、配置和授权保留。更多受支持直升路径逐一验证。最小更新器已列入 0.1.0 的交付基础。
 5. 自动验证下载中断、签名异常、迁移失败及备份恢复；UI 自动化处理操作系统弹窗并断言授权、安装和更新结果。尚无法自动验证的必需路径保持 BLOCKED。
 6. 生产发布在目标 MySQL 执行应执行集合的完整业务 E2E，以及已支持迁移/备份恢复路径；开发兼容回归使用 SQLite。
 7. 检查全部证据与候选一致，确认远端必需检查和受保护发布任务已配置。
 8. 在候选提交验证之后，由程序在源码版本控制之外生成 passport，绑定实际执行和产物来源；通过门禁后，发布任务才以同一 `release_id` 创建 Git 发布并分发已验证的安装包。保留 tag、passport、测试报告和更新清单的关联。任何阶段失败不得生成产品 PASS 或更新正式清单。
 
-首个没有上一稳定版的发布，升级基线明确记录为不存在，升级项只验证干净安装；从第二个发布开始必须自动获取上一稳定包并验证升级。首版已有数据库迁移需求时，迁移测试仍按对应需求执行。
+首个没有上一稳定版的发布，记录历史基线不存在，并验证候选干净安装及候选→受控高版本签名测试包的 App 内更新。测试包只进入隔离源，登记来源、版本和摘要；不能冒充上一公开稳定版。首版已有数据库迁移需求时仍执行迁移测试。开发阶段可用开发签名包，最终发布必须重新验证最终签名、公证包。
+
+release-candidate.yml 在正式 Tag 之前按完整候选 SHA 执行上述门禁；只有取得有效通行证，发布任务才创建 Tag。当前仅有候选入口，远端保护配置、原生执行器、通行证签发和分发仍未实现/核实。
 
 ## 5. 失败、复现与清理
 

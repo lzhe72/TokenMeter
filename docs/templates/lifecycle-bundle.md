@@ -4,7 +4,7 @@
 
 **适用 SOP：** [SOP-001 版本立项](../../sop/SOP-001-version-start.md)；模板维护先执行 [SOP-000](../../sop/SOP-000-maintenance.md)和 [SOP-024](../../sop/SOP-024-document-change.md)。
 
-这里仅导航独立模板；详细要求以各模板和对应 SOP 为准。先按[SOP 工作索引](../../sop/README.md)选择工作，再准备本轮文档。技术设计可采用独立模板；范围较小时可在开发计划中单列设计章节并引用全局架构，遵循文档规范。
+这里仅导航独立模板；详细要求以各模板和对应 SOP 为准。先按[SOP 工作索引](../../sop/README.md)选择工作，再准备本轮文档。技术设计可使用开发计划的独立章节或单独附件，两种方式均有效；按 SOP-004 先完成设计，再按 SOP-005 编写实施顺序，并引用全局架构。
 
 ## 输入与采用方式
 
@@ -12,7 +12,7 @@
 - 先按 SOP-001 确定不可变 `release_id` 和版本档案；首次没有比较基线时使用 `null`。
 - 模板源文件保留现名；复制到本轮档案时使用下表的 01–06 编号目标文件名，填入真实输入、需求/任务 ID、决定、输出和验收条件；按目标位置检查链接。
 - 每份文档正文保留 `release_id`，元数据登记到 `docs/catalog.json`，文档关系登记到本轮 `00-manifest.json`。
-- 未存在的程序、测试、报告和产物绑定使用 `null` 并关联具体补齐任务。计划不能填写虚构路径或预填成功。
+- manifest 的程序尚待实施时写 `program_bindings_status=planned`，允许 `test_programs=[]` 和 `test_data_program=null`；保留完整追踪、真实 `test_sop` 和程序补齐任务，任何已填路径须存在。SOP-009–011 补齐实际程序后改为 ready；省略该字段按 ready 严格检查。ready 不代表测试通过。未生成报告和产物使用 `null`，不能填写虚构路径或预填成功。
 
 ## 独立版本模板
 
@@ -20,7 +20,7 @@
 | --- | --- | --- | --- |
 | 需求定义 | [01-requirements.md](requirements.md) | [002](../../sop/SOP-002-requirements.md) | 范围、稳定需求 ID、可观察验收条件 |
 | 功能拆解 | [02-breakdown.md](breakdown.md) | [003](../../sop/SOP-003-feature-breakdown.md) | 需求→功能→任务、依赖与完成标准 |
-| 技术设计 | [technical-design.md](technical-design.md) | [004](../../sop/SOP-004-technical-design.md) | 模块、接口/数据、隐私、兼容与恢复决定 |
+| 技术设计 | [technical-design.md](technical-design.md) 的内容用于 03 的独立章节或单独设计附件 | [004](../../sop/SOP-004-technical-design.md) | 模块、接口/数据、隐私、兼容与恢复决定 |
 | 开发计划 | [03-development-plan.md](development-plan.md) | [005](../../sop/SOP-005-development-plan.md) | 实施顺序、数据/测试准备、集成和验证 |
 | 测试计划 | [04-test-plan.md](test-plan.md) | [006](../../sop/SOP-006-test-plan.md) | 需求→用例→数据/重置→SOP→原生测试→预期→报告 |
 | 发布预案 | [05-release-plan.md](release-plan.md) | [007](../../sop/SOP-007-release-plan.md) | 构建、门禁、分发、升级和恢复方案 |
@@ -40,6 +40,6 @@
 
 - 输出：同一 `release_id` 的独立版本文档、manifest/文档目录关联、所需专题记录和 SOP。
 - 文档验收：每个阶段有确定输入、输出、验收条件及具体 SOP；关键决定已完成；文件、引用、版本和追踪链一致。
-- 执行 [SOP-008 基线检查](../../sop/SOP-008-baseline-check.md)，实际结构/引用检查结果及语义核对写入本轮 `06-iteration-record.md`。基线检查通过后再按 SOP 进入开发。
+- 编制中按 SOP-024 执行 `python3 scripts/check_docs.py --mode structure` 并返回原步骤，未完成文档保持 draft。001–007 全部完成后执行 [SOP-008 基线检查](../../sop/SOP-008-baseline-check.md)的严格 baseline 与质量检查，将实际结果及语义核对写入本轮 `06-iteration-record.md`。基线通过后先按 SOP-009 准备工程骨架。
 - 实际测试与发布证据来自执行器；候选 SHA、原生结果、产物摘要和 passport 保存于对应机器运行/资产。没有执行时明确未执行或 `BLOCKED`。
 - 完整追踪：`release_id → 文档 → 需求/验收条件 → 任务 → 用例 → 数据/重置程序 → 具体 SOP → 原生测试 → run_id/报告 → passport → 发布 → 下一轮需求`。

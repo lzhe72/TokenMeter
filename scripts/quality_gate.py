@@ -21,6 +21,23 @@ REQUIRED_FEATURES = {f"TM-{n:03d}" for n in range(1, 13)}
 FEATURE_STATES = {"planned", "in_progress", "implemented"}
 
 
+def visible_specification(body: str) -> str:
+    """Only rendered prose/table content can define an acceptance contract."""
+    body = re.sub(r"<!--.*?(?:-->|$)", "", body, flags=re.DOTALL)
+    lines, fence = [], None
+    for line in body.splitlines():
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if fence is not None:
+            if marker and marker[1][0] == fence[0] and len(marker[1]) >= len(fence) and not marker[2].strip():
+                fence = None
+            continue
+        if marker:
+            fence = marker[1]
+        elif not line.startswith(("    ", "\t")):
+            lines.append(line)
+    return "\n".join(lines)
+
+
 def validate_baseline(root: Path) -> tuple[list[str], dict[str, int]]:
     """Load the fixed sibling checker without depending on caller sys.path."""
     try:
@@ -46,7 +63,7 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
             if not path.is_relative_to(root):
                 raise ValueError("manifest must remain inside repository")
             value = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError) as exc:
+        except (OSError, ValueError, RuntimeError, RecursionError) as exc:
             errors.append(f"{relative}: {exc}")
             return {}
         if not isinstance(value, dict) or type(value.get("schema_version")) is not int or value["schema_version"] != 1:
@@ -75,6 +92,57 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
             return False
         return True
 
+    def text_list(value: Any, label: str) -> list[str]:
+        if not isinstance(value, list) or any(not isinstance(item, str) or not item.strip() for item in value):
+            errors.append(f"{label}: list of nonempty strings required")
+            return []
+        if len(value) != len(set(value)):
+            errors.append(f"{label}: duplicate entries")
+        return value
+
+    specs: dict[str, str] = {}
+
+    def read_spec(reference: Any, label: str) -> str:
+        if not file_ref(reference, label):
+            return ""
+        if reference not in specs:
+            try:
+                specs[reference] = visible_specification((root / reference).read_text(encoding="utf-8"))
+            except (OSError, UnicodeError) as exc:
+                errors.append(f"{label}: cannot read specification: {exc}")
+                return ""
+        return specs[reference]
+
+    # This list is maintained from approved requirements, independently of the
+    # test matrix. Never derive the required coverage set from existing cases.
+    acceptance_doc = read("tests/acceptance.json")
+    acceptance_rows = acceptance_doc.get("acceptance_criteria")
+    if not isinstance(acceptance_rows, list) or not acceptance_rows:
+        errors.append("acceptance_criteria: a nonempty independent list is required")
+        acceptance_rows = []
+    acceptances: dict[str, dict[str, Any]] = {}
+    for row in acceptance_rows:
+        if not isinstance(row, dict):
+            errors.append("acceptance: object required")
+            continue
+        acceptance_id = row.get("id")
+        if not nonempty(acceptance_id, "acceptance.id"):
+            continue
+        match = re.fullmatch(r"AC-TM(\d{3,})-\d{3,}", acceptance_id)
+        if not match:
+            errors.append(f"{acceptance_id}: invalid acceptance ID")
+            continue
+        if acceptance_id in acceptances:
+            errors.append(f"duplicate acceptance: {acceptance_id}")
+        acceptances[acceptance_id] = row
+        if row.get("feature_id") != "TM-" + match[1]:
+            errors.append(f"{acceptance_id}: feature_id must match acceptance ID")
+        if row.get("requirement_id") != "REQ-TM" + match[1]:
+            errors.append(f"{acceptance_id}: requirement_id must match acceptance ID")
+        nonempty(row.get("criterion"), f"{acceptance_id}.criterion")
+        text_list(row.get("data_requirements"), f"{acceptance_id}.data_requirements")
+        read_spec(row.get("spec"), f"{acceptance_id}.spec")
+
     dataset_doc = read("tests/datasets.json")
     dataset_rows = dataset_doc.get("datasets")
     datasets: dict[str, dict[str, Any]] = {}
@@ -92,6 +160,7 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
             errors.append(f"duplicate dataset: {identifier}")
         datasets[identifier] = dataset
         nonempty(dataset.get("description"), f"{identifier}.description")
+        text_list(dataset.get("capabilities", []), f"{identifier}.capabilities")
         if not isinstance(dataset.get("status"), str) or dataset.get("status") not in {"planned", "available"}:
             errors.append(f"{identifier}: invalid dataset status")
         if dataset.get("status") == "available" or dataset.get("generator") is not None:
@@ -104,6 +173,8 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
         features = []
     seen_features: set[str] = set()
     seen_cases: set[str] = set()
+    covered_acceptances: set[str] = set()
+    feature_rows: dict[str, dict[str, Any]] = {}
     for feature in features:
         if not isinstance(feature, dict):
             errors.append("feature: object required")
@@ -116,6 +187,7 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
         if identifier in seen_features:
             errors.append(f"duplicate feature: {identifier}")
         seen_features.add(identifier)
+        feature_rows[identifier] = feature
         counts["features"] += 1
         nonempty(feature.get("title"), f"{identifier}.title")
         if not isinstance(feature.get("version"), str) or not re.fullmatch(r"\d+\.\d+\.\d+", feature["version"]):
@@ -126,12 +198,7 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
             status = ""
         active = status in {"in_progress", "implemented"}
         counts["implemented"] += int(status == "implemented")
-        spec_text = ""
-        if file_ref(feature.get("spec"), f"{identifier}.spec"):
-            try:
-                spec_text = (root / feature["spec"]).read_text(encoding="utf-8")
-            except (OSError, UnicodeError) as exc:
-                errors.append(f"{identifier}.spec: cannot read specification: {exc}")
+        spec_text = read_spec(feature.get("spec"), f"{identifier}.spec")
         requirement = "REQ-" + identifier.replace("-", "")
         if feature.get("source_requirement") != requirement:
             errors.append(f"{identifier}.source_requirement: must equal {requirement}")
@@ -161,6 +228,15 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
                 errors.append(f"{case_id}.acceptance_id: must equal {acceptance}")
             elif not re.search(r"(?<![A-Za-z0-9_-])" + re.escape(acceptance) + r"(?![A-Za-z0-9_-])", spec_text):
                 errors.append(f"{case_id}.acceptance_id: {acceptance} not found in spec")
+            contract = acceptances.get(acceptance)
+            if contract is None:
+                errors.append(f"{acceptance}: not registered in independent acceptance list")
+            else:
+                covered_acceptances.add(acceptance)
+                for field, expected in (("feature_id", identifier), ("requirement_id", requirement),
+                                        ("spec", feature.get("spec"))):
+                    if contract.get(field) != expected:
+                        errors.append(f"{acceptance}: {field} differs from feature contract")
             sop = case.get("sop")
             if not isinstance(sop, str) or not re.fullmatch(r"sop/SOP-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*\.md", sop):
                 errors.append(f"{case_id}.sop: must reference a root sop/SOP-XXX-slug.md workflow")
@@ -171,6 +247,12 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
                 errors.append(f"{case_id}: unknown dataset {dataset_id!r}")
             elif active and dataset.get("status") != "available":
                 errors.append(f"{case_id}: active feature needs available dataset")
+            if dataset is not None and contract is not None:
+                required = text_list(contract.get("data_requirements"), f"{acceptance}.data_requirements")
+                available = text_list(dataset.get("capabilities", []), f"{dataset_id}.capabilities")
+                missing_capabilities = sorted(set(required) - set(available))
+                if missing_capabilities:
+                    errors.append(f"{case_id}: dataset {dataset_id} does not cover " + ", ".join(missing_capabilities))
             program = case.get("data_program")
             if active or program is not None or (dataset and dataset.get("status") == "available"):
                 file_ref(program, f"{case_id}.data_program")
@@ -185,6 +267,60 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
     missing = sorted(REQUIRED_FEATURES - seen_features)
     if missing:
         errors.append("required v1 features removed: " + ", ".join(missing))
+    for acceptance in sorted(set(acceptances) - covered_acceptances):
+        errors.append(f"{acceptance}: no E2E case covers required acceptance")
+
+    # The Markdown definition remains independently enumerable if a case and its
+    # registry entry are both removed. A mention alone is not a definition.
+    defined_acceptances: dict[str, tuple[str, str, str, str]] = {}
+    for reference, content in specs.items():
+        for acceptance in re.findall(r"(?<![A-Za-z0-9_-])AC-TM\d{3,}-\d{3,}(?![A-Za-z0-9_-])", content):
+            if acceptance not in acceptances:
+                errors.append(f"{acceptance}: specification acceptance not registered in independent list")
+        for line in content.splitlines():
+            match = re.fullmatch(r"\|\s*(REQ-TM\d{3,})\s*\|\s*(TM-\d{3,})\s*\|\s*(AC-TM\d{3,}-\d{3,})\s*\|\s*(.*?)\s*\|", line)
+            if match:
+                requirement, feature, acceptance, criterion = match.groups()
+                if acceptance in defined_acceptances:
+                    errors.append(f"{acceptance}: duplicate specification definition")
+                defined_acceptances[acceptance] = (reference, requirement, feature, criterion)
+    for acceptance, row in acceptances.items():
+        definition = defined_acceptances.get(acceptance)
+        if definition is None:
+            errors.append(f"{acceptance}: acceptance definition not found in spec")
+        elif definition[:3] != (row.get("spec"), row.get("requirement_id"), row.get("feature_id")):
+            errors.append(f"{acceptance}: specification definition ownership differs from registry")
+        elif definition[3] != row.get("criterion"):
+            errors.append(f"{acceptance}: criterion differs from independent specification definition")
+
+    dependencies: dict[str, list[str]] = {}
+    for identifier, feature in feature_rows.items():
+        dependencies[identifier] = text_list(feature.get("depends_on", []), f"{identifier}.depends_on")
+        for dependency in dependencies[identifier]:
+            predecessor = feature_rows.get(dependency)
+            if predecessor is None:
+                errors.append(f"{identifier}: unknown feature dependency {dependency}")
+                continue
+            versions = (feature.get("version"), predecessor.get("version"))
+            if all(isinstance(version, str) and re.fullmatch(r"\d+\.\d+\.\d+", version) for version in versions):
+                if tuple(map(int, versions[1].split("."))) > tuple(map(int, versions[0].split("."))):
+                    errors.append(f"{identifier}: dependency {dependency} requires a future version")
+            if feature.get("status") in ("in_progress", "implemented") and predecessor.get("status") != "implemented":
+                errors.append(f"{identifier}: active feature dependency {dependency} is not implemented")
+    visited: set[str] = set()
+
+    def visit(identifier: str, ancestors: set[str]) -> None:
+        if identifier in ancestors:
+            errors.append(f"{identifier}: feature dependency cycle")
+            return
+        if identifier in visited:
+            return
+        for dependency in dependencies.get(identifier, []):
+            visit(dependency, ancestors | {identifier})
+        visited.add(identifier)
+
+    for identifier in dependencies:
+        visit(identifier, set())
     return errors, counts
 
 

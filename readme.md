@@ -20,7 +20,8 @@ Python 3.10+，无需安装依赖：
 
 ```sh
 python3 scripts/release_registry.py show
-python3 scripts/check_docs.py
+python3 scripts/check_docs.py --mode structure
+python3 scripts/check_docs.py --mode baseline
 python3 scripts/quality_gate.py check
 python3 -m unittest discover -s tests/governance -p 'test_*.py'
 python3 scripts/test_data.py generate --run-id demo --seed 42
@@ -35,3 +36,5 @@ python3 scripts/quality_gate.py release
 ```
 
 当前两条产品门禁会写出 `BLOCKED` 结果并返回非零；这说明实际 E2E 尚未具备，不是一个可以忽略的失败。测试数据自测通过不代表产品通过验收。
+
+structure 支持逐步编写草稿；baseline 验收完整计划。验收规格、独立清单和用例双向校验。常规 CI 执行 iteration，候选 CI 按完整 SHA 在创建 Tag 前执行 release；远端保护与可信签发仍待接通，详见[发布门禁](docs/standards/release.md)。

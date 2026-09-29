@@ -48,6 +48,10 @@ releases/<release_id>/
 
 文件名使用两位顺序前缀：`00` 为机器总索引，`01`–`06` 依次为需求、拆解、开发计划、测试计划、发布预案、迭代记录。编号体现主文档顺序，迭代记录从立项起持续追加。技术设计仍在开发计划中记录或链接独立设计附件，按 SOP-004 在开发计划前完成。模板复制到版本目录时使用这些目标文件名；机器索引的语义键和文档 ID 保持稳定。
 
+`program_bindings_status` 记录计划中的程序是否已建立：planned 允许 `test_programs=[]`、`test_data_program=null`；ready 要求真实的非空程序绑定。两者均需完整需求→任务→用例追踪和实际 SOP 文件，已填写的引用必须有效。此字段不表示测试已通过：本基础版本的治理程序为 ready，产品 E2E 仍 BLOCKED。
+
+检查器与查询器共用 [release_contract.py](../../scripts/release_contract.py)，拒绝空追踪、孤立需求/任务/用例、错功能归属、程序或 SOP 断链，以及把版本目录文档错误登记为 all。编制中的草稿使用 structure，并直接读取 00-manifest.json；严格 baseline 和完整版本查询要求文档基线齐全，不能为了查询草稿而伪标完成。
+
 `releases/current.json` 指向当前迭代；切换只影响默认查询，历史档案保留。每个档案都记录相同编号并引用相关功能矩阵。产品阶段每个目标功能/验收条件必须落到具体用例 ID，实际测试绑定和数据程序不得为空。
 
 当前已实现只读查询程序：
@@ -74,6 +78,8 @@ git show <release_id>:CHANGELOG.md
 先提交全部源码、计划、测试、数据和 Changelog，形成干净候选提交；再构建、执行 E2E 和生成通行证。通行证引用被测提交，不回写到该提交中，避免“提交内的文件必须包含自己的 commit SHA”的循环依赖。
 
 通行证作为受保护 CI 的不可变产物和 GitHub Release 附件保存，记录：release ID、源码提交、构建物摘要、需求/用例/fixture 摘要、平台矩阵、原生报告摘要、CI 运行身份、签名/公证结果、通过时间和最终判定。发布任务验证证据与候选一致后，才创建指向该提交的 annotated tag 并分发同一批构建物。
+
+发布前先通过默认分支上的 release-candidate.yml，指定完整候选 SHA，校验真实 HEAD 和同名 Tag 尚不存在，再执行 release 门禁。常规 quality.yml 只运行 iteration，不能将“推送 Tag 后才测试”作为首次发布验证。当前候选工作流无写入或发布权限；远端保护、可信签发与发布任务待实现，不能因候选上下文检查 PASS 就创建 Tag。
 
 失败或缺环境只产生 FAIL/BLOCKED 执行记录，不签发通行证。不得手写、复制旧版本或接受任意外部 PASS JSON；验证规则见 [发布门禁](release.md)。
 

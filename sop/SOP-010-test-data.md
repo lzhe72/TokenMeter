@@ -1,6 +1,6 @@
 # SOP-010 测试数据
 
-**修订：** 1　**状态：** baselined　**适用：** all
+**修订：** 2　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -24,7 +24,7 @@ SOP-006 已定义角色、数据、独立预期与来源版本；SOP-009 指定�
 2. 核对 .local/test-runs/demo/ 的 users、usage、prices、expected、manifest 和所有权标记，检查固定时钟及文件摘要。
 3. 识别 fixture_kind=normalized-test-spec：当前只产生合成账号资料和规范化用量，不创建真实数据库用户、不证明供应商原始日志解析。
 4. 产品场景必须另行实现并绑定隔离测试库初始化、真实密码散列/角色导入，以及已支持工具版本的原始日志生成；缺这些入口时对应场景 BLOCKED。
-5. 根据独立 expected 核对生成结果；将新增边界/故障数据加入程序，禁止仅靠手工改数据。
+5. 根据独立 expected 核对生成结果；将新增边界/故障数据加入程序，禁止仅靠手工改数据。同步 manifest 的真实数据程序绑定；测试程序未全部建立时 `program_bindings_status` 保持 planned，待 SOP-011 核对全部真实绑定后改 ready。
 6. 归档需要的证据后，对本次 demo 执行 python3 scripts/test_data.py reset --run-id demo；当前 reset 只删除精确匹配的生成文件，不清理产品库或 Keychain。
 
 ## 输出

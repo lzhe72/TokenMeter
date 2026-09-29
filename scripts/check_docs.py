@@ -8,22 +8,18 @@ from datetime import date, datetime
 import json
 from pathlib import Path
 import re
+import sys
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from release_contract import RELEASE_DOCS, validate_release
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCUMENT_TYPES = {"standard", "design", "plan", "sop", "template", "record", "index", "instructions", "changelog"}
 STATUSES = {"draft", "baselined", "superseded"}
 RELEASE_PATTERN = re.compile(r"v(\d+\.\d+\.\d+)-(\d{8}T\d{6}Z)\Z")
-RELEASE_DOCS = {
-    "requirements": "01-requirements.md",
-    "breakdown": "02-breakdown.md",
-    "development_plan": "03-development-plan.md",
-    "test_plan": "04-test-plan.md",
-    "release_plan": "05-release-plan.md",
-    "iteration_record": "06-iteration-record.md",
-}
 SOP_SECTIONS = ("目的与范围", "触发条件", "前置条件", "输入", "执行步骤", "输出", "成功与失败判据", "异常恢复", "证据位置", "下一步")
 SOP_ROUTES = ("新增功能", "修复问题", "准备发布", "维护文档")
 SOP_SLUGS = ("maintenance", "version-start", "requirements", "feature-breakdown", "technical-design",
@@ -73,7 +69,9 @@ def _markdown_targets(body: str) -> list[str]:
     return [angle or plain for angle, plain in inline + references]
 
 
-def validate_docs(root: Path) -> tuple[list[str], dict[str, int]]:
+def validate_docs(root: Path, mode: str = "baseline") -> tuple[list[str], dict[str, int]]:
+    if mode not in {"structure", "baseline"}:
+        raise ValueError("Unknown documentation validation mode")
     root = root.resolve()
     errors: list[str] = []
     counts = {"documents": 0, "baselined": 0, "superseded": 0, "links": 0}
@@ -132,29 +130,6 @@ def validate_docs(root: Path) -> tuple[list[str], dict[str, int]]:
         manifest = {}
     else:
         manifest = document(f"releases/{release_id}/00-manifest.json")
-        for key, expected in (("release_id", release_id), ("version", parts[0]), ("created_at", parts[1])):
-            if manifest.get(key) != expected:
-                errors.append(f"release manifest: {key} must match current release ID")
-        release_documents = manifest.get("documents")
-        if not isinstance(release_documents, dict):
-            errors.append("release manifest: documents object required")
-            release_documents = {}
-        for key, filename in RELEASE_DOCS.items():
-            path = reference(release_documents.get(key), f"release.documents.{key}")
-            expected_relative = f"releases/{release_id}/{filename}"
-            if release_documents.get(key) != expected_relative or (path is not None and path != root / expected_relative):
-                errors.append(f"release.documents.{key}: expected {filename} at {expected_relative}")
-            if path is not None and release_id not in text(path, f"release.documents.{key}"):
-                errors.append(f"release.documents.{key}: body must contain {release_id}")
-        publication = manifest.get("publication")
-        if not isinstance(publication, dict) or publication.get("planned_git_tag") != release_id:
-            errors.append("release publication: planned_git_tag must match release_id")
-        changelog = reference(manifest.get("changelog", "CHANGELOG.md"), "release.changelog")
-        if not re.search(r"^## " + re.escape(release_id) + r"\s*$", _markdown_content(text(changelog, "release.changelog")), re.MULTILINE):
-            errors.append(f"CHANGELOG: missing exact heading '## {release_id}'")
-        if "changelog_heading" in manifest and manifest["changelog_heading"] != release_id:
-            errors.append("release.changelog_heading must match release_id")
-
     referenced_releases = {release_id: manifest} if parts is not None else {}
 
     def release_reference(value: str, label: str) -> None:
@@ -238,6 +213,13 @@ def validate_docs(root: Path) -> tuple[list[str], dict[str, int]]:
         errors.append("AGENTS.md: must link to root sop/README.md as execution entrypoint")
 
     catalog = document("docs/catalog.json")
+    if parts is not None:
+        def release_read(relative: str) -> str:
+            path = reference(relative, "release reference")
+            if path is not None and path != root / relative:
+                raise ValueError("release reference must be a regular file without symlink components")
+            return text(path, "release reference")
+        errors.extend(validate_release(manifest, release_id, release_read, mode=mode, catalog=catalog))
     rows = catalog.get("documents")
     if not isinstance(rows, list) or not rows:
         errors.append("docs/catalog.json: nonempty documents list required")
@@ -282,11 +264,16 @@ def validate_docs(root: Path) -> tuple[list[str], dict[str, int]]:
         if status in ("baselined", "superseded"):
             counts[status] += 1
         applicable = row.get("applicable_release")
+        declared_path = row.get("path")
+        if isinstance(declared_path, str):
+            release_path = re.match(r"^releases/([^/]+)/", declared_path)
+            if release_path and applicable != release_path[1]:
+                errors.append(f"{label}: applicable_release must equal release directory ID {release_path[1]}")
         if applicable != "all" and _release_parts(applicable) is None:
             errors.append(f"{label}: invalid applicable_release")
         elif applicable != "all":
             release_reference(applicable, f"{label}.applicable_release")
-        if status == "draft" and applicable in ("all", release_id):
+        if mode == "baseline" and status == "draft" and applicable in ("all", release_id):
             errors.append(f"{label}: active document is draft, baseline required")
         if row.get("base_release") is not None and _release_parts(row.get("base_release")) is None:
             errors.append(f"{label}: invalid base_release")
@@ -341,9 +328,11 @@ def validate_docs(root: Path) -> tuple[list[str], dict[str, int]]:
 
 
 def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
-    argparse.ArgumentParser(description=__doc__).parse_args(argv)
-    errors, counts = validate_docs(root)
-    print(json.dumps({"state": "FAIL" if errors else "PASS", "scope": "documentation_baseline_only",
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--mode", choices=("structure", "baseline"), default="baseline")
+    args = parser.parse_args(argv)
+    errors, counts = validate_docs(root, mode=args.mode)
+    print(json.dumps({"state": "FAIL" if errors else "PASS", "scope": f"documentation_{args.mode}_only", "mode": args.mode,
                       "release_eligible": False, "counts": counts, "errors": errors}, ensure_ascii=False, indent=2))
     return 1 if errors else 0
 

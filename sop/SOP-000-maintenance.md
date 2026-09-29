@@ -1,6 +1,6 @@
 # SOP-000 规范维护
 
-**修订：** 2　**状态：** baselined　**适用：** all
+**修订：** 3　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -24,7 +24,7 @@
 2. 确认需要新增步骤还是修订现有步骤，保持已建立的编号/名称稳定；必要迁移记录旧→新映射与原因。
 3. 先更新索引，再逐份写十个固定章节；执行命令必须存在，未来能力注明前置缺失，不伪造命令。
 4. 同步受影响规范、模板、文档目录、版本记录和 Changelog；删除当前入口中的过期路由，保留历史提交可查。
-5. 运行 `python3 scripts/check_docs.py` 和 `python3 scripts/quality_gate.py check`，核对引用、步骤顺序、循环依赖和是否误把计划写成通过。
+5. 编制过程中执行 `python3 scripts/check_docs.py --mode structure`，核对引用、步骤顺序、循环依赖和是否误把计划写成通过。全部受影响计划形成后，按 SOP-008 执行严格基线检查及 `python3 scripts/quality_gate.py check`；不要求未编写的后序计划提前通过基线。
 
 ## 输出
 
@@ -44,4 +44,4 @@
 
 ## 下一步
 
-普通文档同步走 [SOP-024](SOP-024-document-change.md)，整合后走 [SOP-008](SOP-008-baseline-check.md)，再返回受影响的工作步骤。
+普通文档同步走 [SOP-024](SOP-024-document-change.md)，编制中返回受影响的工作步骤；SOP-001–007 全部完成或已建基线修订整合后走 [SOP-008](SOP-008-baseline-check.md)。

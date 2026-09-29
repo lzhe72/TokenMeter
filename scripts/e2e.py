@@ -60,6 +60,7 @@ def record_blocked(root: Path, phase: str) -> Path:
             "documents": digest(root / "docs/catalog.json"),
             "current_release": digest(root / "releases/current.json"),
             "features": digest(root / "tests/feature_matrix.json"),
+            "acceptance": digest(root / "tests/acceptance.json"),
             "datasets": digest(root / "tests/datasets.json"),
         },
         "runner_implemented": False,

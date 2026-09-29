@@ -1,6 +1,6 @@
 # SOP-024 文档变更
 
-**修订：** 2　**状态：** baselined　**适用：** all
+**修订：** 3　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -24,7 +24,7 @@
 2. 写清新增行为/决定及理由，区分需求、计划、实现状态和实际运行结果；纯状态更新只记录已观察事实。
 3. 同步受影响需求、设计、开发/测试计划、SOP、矩阵、Changelog及版本档案；关键变化先记录再据此改实现。
 4. 在 docs/catalog.json 登记稳定 doc_id、path、type、status、适用/基线、inputs、updated_at 和实际 SOP 文件；同步导航和入站链接。
-5. 执行 python3 scripts/check_docs.py 与 python3 scripts/quality_gate.py check；除结构检查外核对新旧规则和阶段依赖是否一致。
+5. 编制中执行 `python3 scripts/check_docs.py --mode structure`，检查已登记骨架、文件、引用和版本合同；允许未完成文档保留 draft。结合语义核对修正文档，保存结果后返回原步骤继续编制，不触发完整基线或质量门禁。SOP-001–007 全部完成或已有基线的修订整合完毕后，再由 SOP-008 执行 `--mode baseline` 与 `python3 scripts/quality_gate.py check`。
 6. 已发布历史以旧 tag 留存，纠错记录到新版本；源文档在候选提交前完成，运行证据/通行证在其后生成，不预填通过。
 
 ## 输出
@@ -33,7 +33,7 @@
 
 ## 成功与失败判据
 
-所有引用可解析、元数据一致、内容不冲突且检查通过；文档 baselined 不替代产品 E2E。仍有未决关键行为时不继续依赖实现。
+编制中的成功是结构检查通过、当前步骤内容明确且能继续后续文档；structure 不证明基线完成。完整基线另由 SOP-008 判定；文档 baselined 不替代产品 E2E。仍有未决关键行为时不继续依赖该行为的实现。
 
 ## 异常恢复
 
@@ -45,4 +45,4 @@
 
 ## 下一步
 
-重新执行 [SOP-008 基线检查](SOP-008-baseline-check.md)并返回原任务；仅文档阶段完成后走 [SOP-022](SOP-022-archive-handoff.md)。
+编制中直接返回原 SOP，按 001→002→003→004→005→006→007 顺序补齐计划；整套计划就绪或已建基线修订完成后进入 [SOP-008 基线检查](SOP-008-baseline-check.md)。阶段交接走 [SOP-022](SOP-022-archive-handoff.md)。

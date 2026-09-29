@@ -9,7 +9,7 @@
 | 理解全流程顺序 | [全流程框架](lifecycle.md) |
 | 阅读完整设计 | [总设计计划](design-plan.md) |
 | 接续上次任务 | [当前状态](status.md) |
-| 确认产品需求 | [产品约定](product/README.md)、[功能矩阵](../tests/feature_matrix.json) |
+| 确认产品需求 | [产品约定](product/README.md)、[独立验收登记](../tests/acceptance.json)、[功能矩阵](../tests/feature_matrix.json) |
 | 修改模块/数据/接口 | [架构](architecture/README.md) |
 | 开发或修复功能 | [开发流程](standards/development.md)、[功能模板](templates/feature.md)、[修复模板](templates/bugfix.md) |
 | 编写/运行 E2E | [测试策略](testing/strategy.md)、[原生 E2E SOP](../sop/SOP-014-e2e.md)、[数据集登记](../tests/datasets.json) |

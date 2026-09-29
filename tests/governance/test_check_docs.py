@@ -31,7 +31,12 @@ class DocumentationTests(unittest.TestCase):
             ("release_plan", "05-release-plan.md"), ("iteration_record", "06-iteration-record.md"))}
         self.manifest = {"schema_version": 1, "release_id": RELEASE_ID, "version": "0.0.1",
                          "created_at": "2026-09-29T06:09:44Z", "documents": release_docs,
-                         "publication": {"planned_git_tag": RELEASE_ID}, "changelog": "CHANGELOG.md"}
+                         "publication": {"planned_git_tag": RELEASE_ID}, "changelog": "CHANGELOG.md",
+                         "feature_ids": ["TM-000"],
+                         "traceability": [{"requirement": "REQ-GOV-001", "feature": "TM-000",
+                                           "task": "TASK-GOV-001", "test": "GOV-001"}],
+                         "test_programs": ["tests/test_fixture.py"], "test_data_program": "scripts/data.py",
+                         "test_sop": "sop/SOP-013-build-and-check.md"}
         document_paths = ["AGENTS.md", "readme.md", "CHANGELOG.md", "docs/standard.md", "sop/README.md",
                           *("sop/" + name for name in checker.SOP_FILES.values()), *sorted(release_docs.values())]
         self.catalog = {"schema_version": 1, "documents": []}
@@ -39,7 +44,7 @@ class DocumentationTests(unittest.TestCase):
             self.write(path, f"# Synthetic governance document\n\n{RELEASE_ID}\n")
             self.catalog["documents"].append({
                 "doc_id": f"DOC-{number:03d}", "path": path, "type": "standard", "status": "baselined",
-                "applicable_release": "all", "base_release": None, "inputs": ["docs/standard.md"],
+                "applicable_release": RELEASE_ID if path.startswith("releases/") else "all", "base_release": None, "inputs": ["docs/standard.md"],
                 "updated_at": "2026-09-29", "sop": "sop/SOP-000-maintenance.md"})
         for identifier, filename in checker.SOP_FILES.items():
             body = f"# {identifier} Synthetic workflow\n\n"
@@ -52,6 +57,11 @@ class DocumentationTests(unittest.TestCase):
         self.write("sop/README.md", self.index_body)
         self.write("AGENTS.md", "# Agent instructions\n\nRead the [SOP index](sop/README.md) first.\n")
         self.write("CHANGELOG.md", f"# Changelog\n\n## {RELEASE_ID}\n\nSynthetic release.\n")
+        for key, identifiers in (("requirements", "REQ-GOV-001"),
+                                 ("breakdown", "TM-000 TASK-GOV-001"), ("test_plan", "GOV-001")):
+            self.write(release_docs[key], f"# {RELEASE_ID}\n\n{identifiers}\n")
+        self.write("tests/test_fixture.py", "# Synthetic test program\n")
+        self.write("scripts/data.py", "# Synthetic data program\n")
         self.persist()
 
     def write(self, relative, body):
@@ -319,6 +329,121 @@ class DocumentationTests(unittest.TestCase):
         registered.update(doc_id="DOC-ALIAS", path="docs/undeclared-alias.md")
         self.catalog["documents"].append(registered)
         self.assertTrue(any("duplicate document path: docs/undeclared-alias.md" in error for error in self.errors()))
+
+    def test_missing_traceability_and_broken_program_references_fail(self):
+        original = copy.deepcopy(self.manifest)
+        for field, value in (("traceability", []), ("test_programs", ["tests/missing.py"]),
+                             ("test_data_program", "scripts/missing.py"), ("test_sop", "sop/missing.md")):
+            with self.subTest(field=field):
+                self.manifest = copy.deepcopy(original)
+                self.manifest[field] = value
+                self.assertTrue(self.errors(), field)
+        self.manifest = copy.deepcopy(original)
+        del self.manifest["traceability"]
+        self.assertTrue(self.errors())
+
+    def test_release_catalog_cannot_use_all_or_another_release(self):
+        row = next(row for row in self.catalog["documents"] if row["path"].endswith("01-requirements.md"))
+        row["applicable_release"] = "all"
+        self.assertTrue(self.errors())
+
+    def test_traceability_ids_must_exist_in_matching_documents(self):
+        original = copy.deepcopy(self.manifest["traceability"][0])
+        for field, value in (("requirement", "REQ-GOV-999"), ("feature", "TM-099"),
+                             ("task", "TASK-GOV-999"), ("test", "GOV-999")):
+            with self.subTest(field=field):
+                self.manifest["traceability"][0] = {**original, field: value}
+                self.assertTrue(self.errors(), field)
+
+    def test_structure_accepts_valid_draft_but_baseline_refuses(self):
+        row = next(row for row in self.catalog["documents"] if row["path"].endswith("05-release-plan.md"))
+        row["status"] = "draft"
+        self.manifest["traceability"] = []
+        self.manifest["test_programs"] = []
+        self.manifest["test_data_program"] = None
+        self.manifest["test_sop"] = None
+        self.persist()
+        self.assertEqual(checker.validate_docs(self.root, mode="structure")[0], [])
+        self.assertTrue(checker.validate_docs(self.root, mode="baseline")[0])
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(checker.main(["--mode", "structure"], root=self.root), 0)
+        self.assertEqual(json.loads(output.getvalue())["scope"], "documentation_structure_only")
+        self.assertFalse(json.loads(output.getvalue())["release_eligible"])
+
+    def test_structure_still_rejects_bad_paths_and_wrong_types(self):
+        for mode in ("structure", "baseline"):
+            with self.subTest(mode=mode):
+                self.manifest["test_data_program"] = "../absent.py"
+                self.persist()
+                self.assertTrue(checker.validate_docs(self.root, mode=mode)[0])
+                self.manifest["test_data_program"] = {"program": "scripts/data.py"}
+                self.persist()
+                self.assertTrue(checker.validate_docs(self.root, mode=mode)[0])
+
+    def test_removing_one_trace_row_cannot_leave_uncovered_requirement_task_or_test(self):
+        additions = {"requirements": "REQ-GOV-002", "breakdown": "TASK-GOV-002", "test_plan": "GOV-002"}
+        for key, identifier in additions.items():
+            path = self.root / self.manifest["documents"][key]
+            path.write_text(path.read_text() + identifier + "\n")
+        errors = self.errors()
+        for kind in ("requirement", "task", "test"):
+            self.assertTrue(any(f"missing {kind} coverage" in error for error in errors))
+        self.manifest["traceability"].append({"requirement": "REQ-GOV-002", "feature": "TM-000",
+                                               "task": "TASK-GOV-002", "test": "GOV-002"})
+        self.assertEqual(self.errors(), [])
+
+    def test_structure_keeps_six_ordered_documents_and_checks_partial_trace_references(self):
+        self.manifest["traceability"] = [{"requirement": "REQ-GOV-001", "feature": "TM-000"}]
+        self.persist()
+        self.assertEqual(checker.validate_docs(self.root, mode="structure")[0], [])
+        self.manifest["traceability"][0]["task"] = "TASK-GOV-999"
+        self.persist()
+        self.assertTrue(checker.validate_docs(self.root, mode="structure")[0])
+        self.manifest["traceability"] = []
+        self.manifest["documents"].pop("release_plan")
+        self.persist()
+        self.assertTrue(checker.validate_docs(self.root, mode="structure")[0])
+
+    def test_traceability_ids_in_comments_or_code_examples_are_not_declarations(self):
+        path = self.root / self.manifest["documents"]["requirements"]
+        for hidden in ("<!-- REQ-GOV-001 -->", "```markdown\nREQ-GOV-001\n```", "REQ-GOV-0010"):
+            with self.subTest(hidden=hidden):
+                path.write_text(f"# {RELEASE_ID}\n\n{hidden}\n")
+                self.assertTrue(any("REQ-GOV-001 missing from requirements" in error for error in self.errors()))
+
+    def test_program_symlinks_and_invalid_contract_types_are_rejected(self):
+        program = self.root / "tests/test_fixture.py"
+        program.unlink()
+        program.symlink_to(self.root / "scripts/data.py")
+        self.assertTrue(any("symlink" in error for error in self.errors()))
+        program.unlink()
+        program.write_text("# Fixture test\n")
+        original = copy.deepcopy(self.manifest)
+        for field, value in (("feature_ids", [[]]), ("traceability", [{}]), ("test_programs", {}),
+                             ("test_sop", []), ("test_data_program", False)):
+            with self.subTest(field=field):
+                self.manifest = {**original, field: value}
+                self.assertTrue(self.errors())
+
+    def test_planned_program_bindings_allow_complete_product_plan_before_program_creation(self):
+        self.manifest.update(program_bindings_status="planned", test_programs=[], test_data_program=None)
+        self.assertEqual(self.errors(), [])
+        self.manifest["traceability"] = []
+        self.assertTrue(self.errors())
+
+    def test_ready_program_bindings_and_planned_filled_references_remain_strict(self):
+        original = copy.deepcopy(self.manifest)
+        alterations = ({"program_bindings_status": "ready", "test_programs": []},
+                       {"program_bindings_status": "ready", "test_data_program": None},
+                       {"program_bindings_status": "planned", "test_programs": ["tests/missing.py"]},
+                       {"program_bindings_status": "planned", "test_data_program": "scripts/missing.py"},
+                       {"program_bindings_status": "planned", "test_sop": None},
+                       {"program_bindings_status": "unknown"}, {"program_bindings_status": []})
+        for fields in alterations:
+            with self.subTest(fields=fields):
+                self.manifest = {**original, **fields}
+                self.assertTrue(self.errors())
 
     def test_failed_cli_returns_one_and_false_release_eligibility(self):
         self.catalog["documents"][0]["status"] = "draft"

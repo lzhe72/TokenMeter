@@ -36,7 +36,7 @@
 5. 测试失败、跳过、零用例、缺少环境/数据/报告、证据与提交或安装包不匹配，全部阻断。不得使用 `continue-on-error`、`|| true`、排除失败用例或反复重试取绿放行。
 6. 修复问题先增加稳定复现用例，再修实现，再执行回归。使用 [修复模板](docs/templates/bugfix.md)。
 7. 不手写通过报告，不伪造厂商日志兼容性，不将合成数据工具的自测宣称为 App E2E。
-8. 缺少可执行 App、完整 Xcode、Mac GUI runner、签名或部署凭据时记录 `BLOCKED`，准确报告缺失项；继续完成不依赖它们的工作。
+8. 文档基线后先按 SOP-009 建立真实 App、服务、数据库初始化和原生测试 target/runner 的工程骨架，不要求预先存在业务红测或产品 PASS。缺 Xcode、GUI 或执行器只阻断依赖它们的构建、运行和验收；可继续有独立验证条件的源码、fixture、测试编写和文档任务。分别记录完成与 BLOCKED，禁止认证旁路或伪造业务结果。生产签名/公证与发布凭据属于 SOP-017/018 前提，不能作为开始开发的前提。
 9. 只有自动门禁为 `PASS` 才能发布安装包、部署服务端或更新 appcast。当前仓库处于基础规范阶段，产品 E2E 尚未接通。
 
 ## 当前可执行命令
@@ -44,7 +44,8 @@
 在仓库根目录执行，Python 3.10+，无需第三方依赖：
 
 ```sh
-python3 scripts/check_docs.py
+python3 scripts/check_docs.py --mode structure
+python3 scripts/check_docs.py --mode baseline
 python3 scripts/quality_gate.py check
 python3 -m unittest discover -s tests/governance -p 'test_*.py'
 python3 scripts/test_data.py generate --run-id demo --seed 42
@@ -53,7 +54,7 @@ python3 scripts/quality_gate.py iteration
 python3 scripts/quality_gate.py release
 ```
 
-文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。最后两条在真实产品 E2E 接通前必须返回非零 `BLOCKED`；不要为使 CI 变绿删掉阻断。
+编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。最后两条在真实产品 E2E 接通前必须返回非零 `BLOCKED`；不要为使 CI 变绿删掉阻断。
 
 ## 数据与实现约束
 

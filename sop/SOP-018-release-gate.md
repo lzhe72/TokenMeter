@@ -1,6 +1,6 @@
 # SOP-018 发布门禁
 
-**修订：** 1　**状态：** baselined　**适用：** all
+**修订：** 2　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -12,7 +12,7 @@
 
 ## 前置条件
 
-SOP-014/017 完整证据、干净候选提交、最终签名产物、受保护 CI、远端 required checks 和发布凭据隔离已真实配置。
+确定且干净的完整候选 SHA、SOP-014/017 所需运行环境、最终签名产物与完整证据，以及受保护 CI、远端 required checks 和凭据隔离已真实配置。正式 Tag 不得作为启动本步骤的前置条件。
 
 ## 输入
 
@@ -21,10 +21,10 @@ release_id、commit、客户端/服务端摘要、场景/fixture/平台清单、
 ## 执行步骤
 
 1. 核对版本范围、目标及所有此前已交付功能、平台矩阵、Changelog、文档/数据/测试与同一候选一致。
-2. 执行 python3 scripts/quality_gate.py release，读取完整过程、最终状态和退出码；前置 traceability_only 的 PASS 不能代替最终结论。
+2. 正式 Tag 创建前，从受信主分支手动触发 `.github/workflows/release-candidate.yml`，必填完整 `candidate_sha`；受保护 `release-validation` 环境的任务检出并核对该 SHA，执行 `python3 scripts/quality_gate.py release`，绑定同一最终签名产物。常规 quality 工作流执行 iteration，不能以 Tag 触发代替候选门禁。读取完整过程、状态与退出码；前置 traceability_only 的 PASS 不能代替最终结论。
 3. 真实执行器必须核对本次运行身份、原生报告来源与摘要、场景集合相等、零失败/跳过、产物签名及有效时限。
 4. 仅受保护 CI 完整 PASS 后生成 <release_id>.passport.json，绑定提交、构建物和执行证据，保存在候选源码之外。
-5. 当前适配层/证据校验器未接通时返回 BLOCKED；即使替换为空成功脚本也不得放行，不接受任意外部通过 JSON。
+5. 当前候选工作流仅提供固定 SHA 的发布验证入口，原生执行器、证据校验器和通行证签发尚未接通时保持 BLOCKED；FAIL/BLOCKED 不创建 Tag 或通行证。即使替换为空成功脚本也不得放行，不接受任意外部通过 JSON。受保护环境须在远端实际配置后才成立。
 6. 保存失败与阻塞记录；任何代码、测试、数据、构建或发布配置变化均使旧候选证据失效，重新验证。
 
 ## 输出

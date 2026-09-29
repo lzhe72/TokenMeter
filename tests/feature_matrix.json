@@ -20,8 +20,8 @@
         },
         {
           "id": "E2E-TM001-002",
-          "scenario": "成员访问他人统计、停用账号尝试登录和上传",
-          "expected": "服务端拒绝越权与停用账号，UI 显示对应错误，原数据不泄露",
+          "scenario": "成员经真实 App 查看本人身份并尝试管理员账号管理操作；管理员停用账号后重新登录",
+          "expected": "成员只能查看本人身份且不能调用管理员账号管理；停用账号不能登录，UI 显示对应错误",
           "data_program": "scripts/test_data.py",
           "dataset": "identity",
           "sop": "sop/SOP-014-e2e.md",
@@ -37,9 +37,20 @@
           "sop": "sop/SOP-014-e2e.md",
           "automated_test": null,
           "acceptance_id": "AC-TM001-003"
+        },
+        {
+          "id": "E2E-TM001-004",
+          "scenario": "最小更新器：首次候选干净安装后经 HTTPS 获取受控高版本签名测试包并点击更新；后续版本从上一稳定版升级，另尝试无效签名包",
+          "expected": "最小更新器随首个产品版本交付；有效包替换与重启成功且保留账号状态，无效签名被拒绝并保留原版",
+          "data_program": null,
+          "dataset": "update_packages",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM001-004"
         }
       ],
-      "source_requirement": "REQ-TM001"
+      "source_requirement": "REQ-TM001",
+      "depends_on": []
     },
     {
       "id": "TM-002",
@@ -50,8 +61,8 @@
       "cases": [
         {
           "id": "E2E-TM002-001",
-          "scenario": "干净安装下选择工具目录、查看预览并确认采集",
-          "expected": "真实系统授权完成，只有选定目录被读取；未确认前不上传",
+          "scenario": "干净安装下选择工具目录、预览候选文件并确认授权与采集/同步意愿",
+          "expected": "真实系统授权完成，只读取选定目录；确认前不开始持续扫描；选择和同意状态可在重启后恢复",
           "data_program": null,
           "dataset": "system_permissions",
           "sop": "sop/SOP-014-e2e.md",
@@ -60,8 +71,8 @@
         },
         {
           "id": "E2E-TM002-002",
-          "scenario": "拒绝授权、撤销授权，然后重新授权",
-          "expected": "App 不崩溃、不继续读取失效目录；重新授权后恢复并不重复计数",
+          "scenario": "拒绝目录授权、撤销已保存授权，然后重新授权并重启 App",
+          "expected": "App 不崩溃、不继续读取失效目录；重新授权后可读取目录并恢复授权状态",
           "data_program": null,
           "dataset": "system_permissions",
           "sop": "sop/SOP-014-e2e.md",
@@ -69,7 +80,10 @@
           "acceptance_id": "AC-TM002-002"
         }
       ],
-      "source_requirement": "REQ-TM002"
+      "source_requirement": "REQ-TM002",
+      "depends_on": [
+        "TM-001"
+      ]
     },
     {
       "id": "TM-003",
@@ -107,9 +121,23 @@
           "sop": "sop/SOP-014-e2e.md",
           "automated_test": null,
           "acceptance_id": "AC-TM003-003"
+        },
+        {
+          "id": "E2E-TM003-004",
+          "scenario": "Codex 目录撤销授权后重新授权，重复扫描已有日志并追加新事件",
+          "expected": "恢复后已有源事件不重复计数，新事件仅计一次，结果与独立预期一致",
+          "data_program": null,
+          "dataset": "codex_raw",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM003-004"
         }
       ],
-      "source_requirement": "REQ-TM003"
+      "source_requirement": "REQ-TM003",
+      "depends_on": [
+        "TM-001",
+        "TM-002"
+      ]
     },
     {
       "id": "TM-004",
@@ -147,9 +175,23 @@
           "sop": "sop/SOP-014-e2e.md",
           "automated_test": null,
           "acceptance_id": "AC-TM004-003"
+        },
+        {
+          "id": "E2E-TM004-004",
+          "scenario": "Claude Code 主会话与子代理目录撤销授权后重新授权并重扫",
+          "expected": "恢复后主会话、子代理与继承历史不重复计数，新调用仅计一次",
+          "data_program": null,
+          "dataset": "claude_raw",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM004-004"
         }
       ],
-      "source_requirement": "REQ-TM004"
+      "source_requirement": "REQ-TM004",
+      "depends_on": [
+        "TM-002",
+        "TM-003"
+      ]
     },
     {
       "id": "TM-005",
@@ -179,7 +221,11 @@
           "acceptance_id": "AC-TM005-002"
         }
       ],
-      "source_requirement": "REQ-TM005"
+      "source_requirement": "REQ-TM005",
+      "depends_on": [
+        "TM-003",
+        "TM-004"
+      ]
     },
     {
       "id": "TM-006",
@@ -202,14 +248,17 @@
           "id": "E2E-TM006-002",
           "scenario": "未知价格、修改生效价格、混合币种和订阅模型",
           "expected": "未知费用不填零，历史保留价格版本，分币种汇总且标明估算",
-          "data_program": "scripts/test_data.py",
-          "dataset": "pricing",
+          "data_program": null,
+          "dataset": "pricing_extended",
           "sop": "sop/SOP-014-e2e.md",
           "automated_test": null,
           "acceptance_id": "AC-TM006-002"
         }
       ],
-      "source_requirement": "REQ-TM006"
+      "source_requirement": "REQ-TM006",
+      "depends_on": [
+        "TM-005"
+      ]
     },
     {
       "id": "TM-007",
@@ -247,9 +296,25 @@
           "sop": "sop/SOP-014-e2e.md",
           "automated_test": null,
           "acceptance_id": "AC-TM007-003"
+        },
+        {
+          "id": "E2E-TM007-004",
+          "scenario": "成员尝试查看他人个人/项目/团队统计，停用账号尝试上传未同步用量",
+          "expected": "服务端拒绝越权统计与停用账号上传；UI 显示错误，他人数据不泄露，队列不误标为已确认",
+          "data_program": null,
+          "dataset": "sync_faults",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM007-004"
         }
       ],
-      "source_requirement": "REQ-TM007"
+      "source_requirement": "REQ-TM007",
+      "depends_on": [
+        "TM-001",
+        "TM-003",
+        "TM-004",
+        "TM-005"
+      ]
     },
     {
       "id": "TM-008",
@@ -279,7 +344,11 @@
           "acceptance_id": "AC-TM008-002"
         }
       ],
-      "source_requirement": "REQ-TM008"
+      "source_requirement": "REQ-TM008",
+      "depends_on": [
+        "TM-005",
+        "TM-007"
+      ]
     },
     {
       "id": "TM-009",
@@ -309,7 +378,11 @@
           "acceptance_id": "AC-TM009-002"
         }
       ],
-      "source_requirement": "REQ-TM009"
+      "source_requirement": "REQ-TM009",
+      "depends_on": [
+        "TM-006",
+        "TM-007"
+      ]
     },
     {
       "id": "TM-010",
@@ -320,8 +393,8 @@
       "cases": [
         {
           "id": "E2E-TM010-001",
-          "scenario": "从上一稳定签名版发现候选版并点击更新",
-          "expected": "真实安装替换/重启成功，账号设置和统计保留，版本与包摘要一致",
+          "scenario": "上一稳定版使用已交付最小更新器发现候选；查看版本说明、配置检查频率并点击更新",
+          "expected": "更新设置和说明可用；真实安装替换/重启成功，账号设置和统计保留，版本与包摘要一致",
           "data_program": null,
           "dataset": "update_packages",
           "sop": "sop/SOP-014-e2e.md",
@@ -339,7 +412,11 @@
           "acceptance_id": "AC-TM010-002"
         }
       ],
-      "source_requirement": "REQ-TM010"
+      "source_requirement": "REQ-TM010",
+      "depends_on": [
+        "TM-001",
+        "TM-007"
+      ]
     },
     {
       "id": "TM-011",
@@ -389,7 +466,11 @@
           "acceptance_id": "AC-TM011-004"
         }
       ],
-      "source_requirement": "REQ-TM011"
+      "source_requirement": "REQ-TM011",
+      "depends_on": [
+        "TM-001",
+        "TM-007"
+      ]
     },
     {
       "id": "TM-012",
@@ -419,7 +500,13 @@
           "acceptance_id": "AC-TM012-002"
         }
       ],
-      "source_requirement": "REQ-TM012"
+      "source_requirement": "REQ-TM012",
+      "depends_on": [
+        "TM-003",
+        "TM-004",
+        "TM-005",
+        "TM-007"
+      ]
     }
   ]
 }

@@ -39,7 +39,7 @@ class GateTests(unittest.TestCase):
         self.baseline_check = self.baseline_patcher.start()
         self.addCleanup(self.baseline_patcher.stop)
         spec_text = "Synthetic specification for governance tests.\n"
-        spec_text += "".join(f"REQ-TM{number:03d}\nAC-TM{number:03d}-001\n" for number in range(1, 13))
+        spec_text += "".join(f"| REQ-TM{number:03d} | TM-{number:03d} | AC-TM{number:03d}-001 | Required behavior {number} |\n" for number in range(1, 13))
         self.write("docs/spec.md", spec_text)
         self.write("sop/SOP-014-e2e.md", "Synthetic SOP for governance tests.\n")
         self.write("scripts/fixtures.py", "# Synthetic fixture generator binding.\n")
@@ -58,6 +58,12 @@ class GateTests(unittest.TestCase):
                   "dataset": "planned-data", "data_program": None, "automated_test": None}
              ]} for number in range(1, 13)
         ]}
+        self.acceptance = {"schema_version": 1, "acceptance_criteria": [
+            {"id": f"AC-TM{number:03d}-001", "feature_id": f"TM-{number:03d}",
+             "requirement_id": f"REQ-TM{number:03d}", "spec": "docs/spec.md",
+             "criterion": f"Required behavior {number}", "data_requirements": []}
+            for number in range(1, 13)
+        ]}
         self.persist()
 
     def write(self, relative, content):
@@ -69,6 +75,7 @@ class GateTests(unittest.TestCase):
     def persist(self):
         self.write("tests/datasets.json", json.dumps(self.datasets))
         self.write("tests/feature_matrix.json", json.dumps(self.matrix))
+        self.write("tests/acceptance.json", json.dumps(self.acceptance))
 
     def errors(self):
         self.persist()
@@ -98,6 +105,113 @@ class GateTests(unittest.TestCase):
         errors = self.errors()
         self.assertTrue(any("TM-012" in error and "removed" in error for error in errors))
         self.assertTrue(any("TM-001" in error and "case required" in error for error in errors))
+
+    def add_second_acceptance(self):
+        criterion = {"id": "AC-TM001-002", "feature_id": "TM-001", "requirement_id": "REQ-TM001",
+                     "spec": "docs/spec.md", "criterion": "A distinct required behavior", "data_requirements": []}
+        self.acceptance["acceptance_criteria"].append(criterion)
+        path = self.root / "docs/spec.md"
+        path.write_text(path.read_text() + "| REQ-TM001 | TM-001 | AC-TM001-002 | A distinct required behavior |\n")
+        case = copy.deepcopy(self.matrix["features"][0]["cases"][0])
+        case.update(id="E2E-TM001-002", acceptance_id="AC-TM001-002")
+        self.matrix["features"][0]["cases"].append(case)
+
+    def test_removing_one_required_case_leaves_uncovered_acceptance(self):
+        self.add_second_acceptance()
+        self.assertEqual(self.errors(), [])
+        self.matrix["features"][0]["cases"].pop()
+        self.assertTrue(any("AC-TM001-002" in e and "no E2E case" in e for e in self.errors()))
+
+    def test_removing_case_and_registry_entry_still_leaves_spec_contract(self):
+        self.add_second_acceptance()
+        self.matrix["features"][0]["cases"].pop()
+        self.acceptance["acceptance_criteria"].pop()
+        self.assertTrue(any("AC-TM001-002" in e and "not registered" in e for e in self.errors()))
+
+    def test_matrix_cannot_invent_acceptance_or_reassign_requirement(self):
+        self.acceptance["acceptance_criteria"].pop(0)
+        self.assertTrue(any("AC-TM001-001" in e and "not registered" in e for e in self.errors()))
+
+    def test_acceptance_ownership_and_definition_cannot_be_reassigned(self):
+        row = self.acceptance["acceptance_criteria"][0]
+        for field, bad_value in (("feature_id", "TM-002"), ("requirement_id", "REQ-TM002")):
+            original = row[field]
+            with self.subTest(field=field):
+                row[field] = bad_value
+                self.assertTrue(any("AC-TM001-001" in e and field in e for e in self.errors()))
+            row[field] = original
+        spec = self.root / "docs/spec.md"
+        spec.write_text(spec.read_text() + "| REQ-TM001 | TM-001 | AC-TM001-001 | Required behavior 1 |\n")
+        self.assertTrue(any("duplicate specification definition" in e for e in self.errors()))
+
+    def test_acceptance_spec_row_and_criterion_are_independent_of_case_text(self):
+        self.matrix["features"][0]["cases"][0]["expected"] = "An independently worded observation"
+        self.assertEqual(self.errors(), [])
+        self.acceptance["acceptance_criteria"][0]["criterion"] = "Incorrectly changed requirement"
+        self.assertTrue(any("AC-TM001-001" in e and "criterion differs" in e for e in self.errors()))
+
+    def test_hidden_acceptance_definition_cannot_satisfy_required_coverage(self):
+        spec = self.root / "docs/spec.md"
+        original = spec.read_text()
+        row = "| REQ-TM001 | TM-001 | AC-TM001-001 | Required behavior 1 |"
+        for hidden in ("<!--\n" + row + "\n-->", "```markdown\n" + row + "\n```",
+                       "~~~\n" + row + "\n~~~", "    " + row):
+            with self.subTest(hidden=hidden):
+                spec.write_text(original.replace(row, hidden))
+                errors = self.errors()
+                self.assertTrue(any("AC-TM001-001" in e and "not found in spec" in e for e in errors), errors)
+
+    def test_examples_and_comments_do_not_create_acceptance_definitions(self):
+        spec = self.root / "docs/spec.md"
+        original = spec.read_text()
+        example = "| REQ-TM001 | TM-001 | AC-TM001-999 | Illustrative example only |"
+        for hidden in ("<!--\n" + example + "\n-->", "```markdown\n" + example + "\n```",
+                       "~~~\n" + example + "\n~~~", "    " + example):
+            with self.subTest(hidden=hidden):
+                spec.write_text(original + hidden + "\n")
+                self.assertEqual(self.errors(), [])
+
+    def test_acceptance_registry_cannot_be_missing_empty_or_duplicate(self):
+        path = self.root / "tests/acceptance.json"
+        path.unlink()
+        self.assertTrue(gate.validate_manifest(self.root)[0])
+        self.acceptance["acceptance_criteria"].append(copy.deepcopy(self.acceptance["acceptance_criteria"][0]))
+        self.assertTrue(any("duplicate acceptance" in e for e in self.errors()))
+        self.acceptance["acceptance_criteria"] = []
+        self.assertTrue(any("acceptance_criteria" in e for e in self.errors()))
+
+    def test_dataset_scope_must_cover_independent_acceptance_requirements(self):
+        self.acceptance["acceptance_criteria"][0]["data_requirements"] = ["pricing_history", "multiple_currencies"]
+        self.datasets["datasets"][0]["capabilities"] = ["basic_usd"]
+        self.assertTrue(any("does not cover" in e and "pricing_history" in e for e in self.errors()))
+        self.datasets["datasets"][0]["capabilities"] = ["pricing_history", "multiple_currencies"]
+        self.assertEqual(self.errors(), [])
+        self.matrix["features"][0]["status"] = "in_progress"
+        self.assertTrue(any("active feature needs available dataset" in e for e in self.errors()))
+
+    def test_feature_dependency_cannot_require_a_future_version_or_form_a_cycle(self):
+        first, second = self.matrix["features"][:2]
+        first["depends_on"] = ["TM-002"]
+        second["version"] = "0.2.0"
+        self.assertTrue(any("future version" in e for e in self.errors()))
+        second["version"] = "0.1.0"
+        second["depends_on"] = ["TM-001"]
+        self.assertTrue(any("dependency cycle" in e for e in self.errors()))
+
+    def test_active_feature_dependencies_must_be_registered_and_implemented(self):
+        feature, _ = self.activate_first()
+        feature["depends_on"] = ["TM-999"]
+        self.assertTrue(any("unknown feature dependency" in e for e in self.errors()))
+        feature["depends_on"] = ["TM-002"]
+        self.assertTrue(any("dependency TM-002 is not implemented" in e for e in self.errors()))
+
+    def test_malformed_acceptance_and_capability_lists_fail_without_exceptions(self):
+        for invalid in (None, {}, "pricing_history", [None], ["basic", "basic"]):
+            with self.subTest(invalid=invalid):
+                self.acceptance["acceptance_criteria"][0]["data_requirements"] = invalid
+                self.datasets["datasets"][0]["capabilities"] = invalid
+                self.matrix["features"][0]["depends_on"] = invalid
+                self.assertTrue(self.errors())
 
     def test_documentation_failure_blocks_every_phase_before_traceability_or_e2e(self):
         self.baseline_check.return_value = (["required SOP is missing"], {"documents": 1})
@@ -223,7 +337,7 @@ class GateTests(unittest.TestCase):
                 self.assertTrue(any("TM-001.spec" in error for error in self.errors()))
 
     def test_manifest_documents_cannot_be_symlinks_to_external_files(self):
-        for relative in ("tests/feature_matrix.json", "tests/datasets.json"):
+        for relative in ("tests/feature_matrix.json", "tests/datasets.json", "tests/acceptance.json"):
             with self.subTest(manifest=relative):
                 path = self.root / relative
                 original = path.read_text()
@@ -236,16 +350,18 @@ class GateTests(unittest.TestCase):
                 path.write_text(original, encoding="utf-8")
 
     def test_wrong_schema_and_container_types_fail_without_exceptions(self):
-        originals = copy.deepcopy((self.matrix, self.datasets))
-        for document in ("matrix", "datasets"):
+        originals = copy.deepcopy((self.matrix, self.datasets, self.acceptance))
+        for document in ("matrix", "datasets", "acceptance"):
             for invalid in (None, [], {"schema_version": True}, {"schema_version": 2},
                             {"schema_version": "1"}, {"schema_version": 1, "features": {}, "datasets": {}}):
                 with self.subTest(document=document, invalid=invalid):
-                    self.matrix, self.datasets = copy.deepcopy(originals)
+                    self.matrix, self.datasets, self.acceptance = copy.deepcopy(originals)
                     if document == "matrix":
                         self.matrix = invalid
-                    else:
+                    elif document == "datasets":
                         self.datasets = invalid
+                    else:
+                        self.acceptance = invalid
                     self.assertTrue(self.errors())
 
     def test_malformed_status_types_are_validation_errors(self):
@@ -314,6 +430,8 @@ class GateTests(unittest.TestCase):
             self.assertTrue(report["blockers"])
             self.assertEqual(report["manifest_sha256"]["features"],
                              hashlib.sha256((self.root / "tests/feature_matrix.json").read_bytes()).hexdigest())
+            self.assertEqual(report["manifest_sha256"]["acceptance"],
+                             hashlib.sha256((self.root / "tests/acceptance.json").read_bytes()).hexdigest())
             reports.append(path)
         self.assertNotEqual(reports[0], reports[1])
         self.assertTrue(all(path.is_file() for path in reports))

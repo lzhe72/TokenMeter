@@ -1,6 +1,6 @@
 # SOP-001 版本立项
 
-**修订：** 2　**状态：** baselined　**适用：** all
+**修订：** 3　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -20,11 +20,11 @@
 
 ## 执行步骤
 
-1. 执行 python3 scripts/release_registry.py show 核对当前档案和发布状态；已发布版本不可继续覆盖，修复分配新版本。
+1. 先读取 `releases/current.json` 与对应 `00-manifest.json` 判断是继续草稿还是启动下一版。未完成文档基线的档案直接读取 manifest，并执行 `python3 scripts/check_docs.py --mode structure` 定位缺项，不要求严格查询先通过。完整档案再执行 `python3 scripts/release_registry.py show` 核对追踪与发布状态；已发布版本不可继续覆盖，修复分配新版本。
 2. 按变更性质选择 MAJOR/MINOR/PATCH，在立项时以 UTC 秒时间分配 vMAJOR.MINOR.PATCH-YYYYMMDDTHHMMSSZ；此后固定不变。
-3. 按版本规范建立 releases/<release_id>/00-manifest.json 及 01–06 编号文档；技术设计在开发计划中记录或链接附件，记录基线及本轮目标。
+3. 按版本规范建立 releases/<release_id>/00-manifest.json 及 01–06 编号文档；未完成文档登记为 draft，保留明确待补内容。技术设计先按 SOP-004 在开发计划的独立设计章节或附件中形成，再编写 SOP-005 的实施计划。
 4. 更新 releases/current.json、文档目录、Changelog 的精确版本标题；使用版本规范中的分支和提交命名，先保留现有未提交工作。
-5. 明确档案为未发布；本轮基础建设继续使用 v0.0.1-20260929T060944Z，不创建产品 tag。
+5. 明确档案为未发布，按 SOP-024 执行 `python3 scripts/check_docs.py --mode structure` 后进入需求编制；全套计划完成后才进入 SOP-008。本轮基础建设继续使用 v0.0.1-20260929T060944Z，不创建产品 tag。
 
 ## 输出
 
