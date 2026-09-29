@@ -19,7 +19,8 @@ jobs:
         with:
           python-version: '3.10'
       - name: Install locked service and test dependencies
-        run: python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
+        run: |
+          python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
       - name: Validate SOP and document baseline
         run: python3 scripts/check_docs.py
       - name: Validate feature traceability
@@ -50,7 +51,8 @@ jobs:
       - name: Select the documented native toolchain
         run: sudo xcode-select --switch /Applications/Xcode_16.4.app/Contents/Developer
       - name: Install locked service and test dependencies
-        run: python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
+        run: |
+          python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
       - name: Execute product gate
         # All four TM-001 cases are required; missing native evidence blocks this job.
         run: python3 scripts/quality_gate.py iteration

@@ -42,3 +42,10 @@
 - 原生工具与证据负测129项通过（`governance-integrated-green.log`）；升级helper输入负测7项通过。一次整合检查遇到正在补充的native identity红测，保留原失败并在规则实现后完整回归，未覆盖原日志。
 - 审查修正ad-hoc无法作为跨版本Keychain身份连续性的依据：先更新03设计并baseline通过，再给004两个包使用相同临时CI自签identity。该身份不授予正式发布资格。
 - 跨模块审查继续核对审计UI、Keychain错误和无效签名的精确失败原因，实际远端结果随后追加。
+
+
+## 远端候选运行
+
+首个产品候选8235906触发[run36541834950](https://github.com/lzhe72/TokenMeter/actions/runs/36541834950)，工作流解析失败，未创建job。原因是未引用的YAML单行命令中`--only-binary=:all:`含冒号加空格；已改为块文本。修复前本机YAML解析明确复现第22行错误，修复后两个workflow均通过语法解析。此运行不算产品构建或E2E执行。
+
+同候选本机iteration退出2，原始报告`.local/e2e/gate-dadc896eb2134f18a9e224649cb47d1b/result.json`记录完整Xcode缺失与0原生用例；不是业务断言失败。
