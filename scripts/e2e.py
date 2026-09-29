@@ -127,6 +127,7 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
         # A later missing environment must not erase already observed failures.
         failures = [f"{suite['case_id']}: {suite['error']}" for suite in report.get("suites", [])
                     if suite.get("state") == "FAIL" and suite.get("error")]
+        failures.extend(report.get("cleanup_errors", []))
         report["state"] = "FAIL" if failures else "BLOCKED"
         report["blockers"] = [exception_message(exc)]
         if failures:

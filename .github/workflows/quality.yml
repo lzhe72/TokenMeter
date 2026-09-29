@@ -53,6 +53,8 @@ jobs:
       - name: Install locked service and test dependencies
         run: |
           python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
+      - name: Verify isolated native fixture environment
+        run: python3 scripts/native_environment.py
       - name: Execute product gate
         # All four TM-001 cases are required; missing native evidence blocks this job.
         run: python3 scripts/quality_gate.py iteration

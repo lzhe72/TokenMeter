@@ -27,7 +27,10 @@ class SigningIdentity:
         self.identity: str | None = None
 
     def _run(self, arguments: list[str], operation: str) -> str:
-        result = subprocess.run(arguments, capture_output=True, text=True, check=False, timeout=60)
+        try:
+            result = subprocess.run(arguments, capture_output=True, text=True, check=False, timeout=60)
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(f"Isolated code-signing {operation} timed out after 60 seconds") from exc
         if result.returncode:
             # Never print arguments or security/openssl output: some commands
             # accept the temporary password as a process argument.
@@ -58,8 +61,10 @@ class SigningIdentity:
         return p12
 
     def prepare(self) -> str:
-        if os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP"):
+        if (os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP")
+                or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted" or os.environ.get("RUNNER_OS") != "macOS"):
             raise RuntimeError("Temporary signing identity requires an isolated GitHub runner")
+        self._run(["sudo", "-n", "/usr/bin/true"], "check noninteractive administrator access")
         self.previous_keychains = shlex.split(self._run(["security", "list-keychains", "-d", "user"], "read keychain list"))
         p12 = self.create_private_bundle()
         self.keychain_created = True  # Also clean up partially successful creation.
@@ -71,7 +76,7 @@ class SigningIdentity:
         self._run(["security", "set-key-partition-list", "-S", "apple-tool:,apple:,codesign:", "-s", "-k", self.password,
                    str(self.keychain)], "grant codesign access")
         self.trust_attempted = True
-        self._run(["security", "add-trusted-cert", "-r", "trustRoot", "-p", "codeSign", "-k", str(self.keychain),
+        self._run(["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d", "-r", "trustRoot", "-p", "codeSign",
                    str(self.certificate)], "trust ephemeral code-signing certificate")
         self._run(["security", "list-keychains", "-d", "user", "-s", *self.previous_keychains, str(self.keychain)], "register keychain")
         fingerprint = self._run(["openssl", "x509", "-in", str(self.certificate), "-noout", "-fingerprint", "-sha1"], "certificate fingerprint")
@@ -87,7 +92,7 @@ class SigningIdentity:
         errors = []
         actions = []
         if self.trust_attempted:
-            actions.append((["security", "remove-trusted-cert", str(self.certificate)], "remove signing trust"))
+            actions.append((["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(self.certificate)], "remove signing trust"))
         if self.previous_keychains is not None:
             actions.append((["security", "list-keychains", "-d", "user", "-s", *self.previous_keychains], "restore keychain list"))
         if self.keychain_created:

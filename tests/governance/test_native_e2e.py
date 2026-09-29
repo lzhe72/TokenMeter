@@ -62,6 +62,19 @@ class NativeContractTests(unittest.TestCase):
     def test_native_tree_and_summary_require_exact_one_pass(self):
         self.assertEqual(native.check_native_result(self.tree, self.summary, self.identity), [self.identity])
 
+    def test_cleanup_error_cannot_replace_primary_failure(self):
+        report = {}
+        original = native.Blocked("trust ephemeral code-signing certificate timed out")
+        with self.assertRaises(native.Blocked) as caught:
+            try:
+                raise original
+            finally:
+                native.record_cleanup_errors(report, ["remove signing trust failed"], original)
+        self.assertIs(caught.exception, original)
+        self.assertEqual(report["cleanup_errors"], ["remove signing trust failed"])
+        with self.assertRaises(native.EvidenceError):
+            native.record_cleanup_errors({}, ["cleanup failed without prior error"], None)
+
     def test_xcode_16_4_ui_bundle_name_is_preserved_and_original_failure_stays_failed(self):
         tree = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-tests.json").read_text())
         summary = json.loads((ROOT / "tests/e2e/fixtures/xcresult-16.4-native-summary.json").read_text())

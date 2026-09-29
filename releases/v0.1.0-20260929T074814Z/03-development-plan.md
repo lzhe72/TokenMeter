@@ -41,7 +41,7 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 
 ### 开发升级包的签名连续性
 
-原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离Mac CI生成短期自签测试证书和专用临时keychain，两个包显式指定同一identity和keychain；结束时独立清理临时信任、专用keychain和私钥。该测试签名不满足Developer ID、公证或正式发布条件。开发过程不改变用户本机的信任设置。
+原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离Mac CI生成短期自签测试证书和专用临时keychain，两个包显式指定同一identity和keychain；结束时独立清理临时信任、专用keychain和私钥。仅允许GitHub托管的临时Mac runner，并先验证非交互sudo权限。信任使用admin域：代码签名证书限codeSign策略及专用keychain；HTTPS CA限ssl策略，导入System.keychain后按该证书摘要精准撤销。所有命令有超时，禁止修改authorizationdb或绕过App验证；sudo与admin域方案仍须真实CI确认。新增独立环境探针复用签名和HTTPS fixture的初始化/清理；CI先运行探针，环境可用后仍须完整四例，不复用探针产物作为产品证据。该测试签名不满足Developer ID、公证或正式发布条件。开发过程不改变用户本机的信任设置。
 
 依据：[Apple TN2206](https://developer.apple.com/library/archive/technotes/tn2206/)、[Code Signing Requirement Language](https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/RequirementLang/RequirementLang.html)。不同ad-hoc包的摘要变化，不能作为跨版本Keychain身份连续性的设计依据。
 

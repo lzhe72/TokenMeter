@@ -89,3 +89,17 @@ Intel任务随后确认同一Sparkle复制错误，证据在`.local/ci/365424910
 代码审查发现App所有配置均`ENABLE_APP_SANDBOX=NO`，Info却启用`SUEnableInstallerLauncherService`。按[Sparkle官方配置说明](https://sparkle-project.org/documentation/customization/)，该服务仅供沙盒App使用；移除沙盒专用服务键，沿用非沙盒默认配置。此项来自实现与官方契约比对，004此前未运行，不能声称已观察或修复了原生升级失败。HTTPS、EdDSA及解压前签名验证保持启用，仍执行完整004。
 
 上述修复的本机回归：139项治理检查通过（`.local/governance/tm001-native/ci-repair-green.log`），9项升级helper检查通过；基线与追踪检查通过。签名容器实际生成并验证非空口令、封装算法及SHA256证书，但没有在本机导入Keychain，实际原生升级继续由新候选CI验证。原失败和永久回归的红绿日志均保留，未通过修改业务预期放行。
+
+### 候选dcd8360：前三例双平台通过
+
+[run36545478638](https://github.com/lzhe72/TokenMeter/actions/runs/36545478638)通过139项治理、34项服务和9项升级工具检查；macOS15.7.9 arm64/Intel均实际执行001–003，各3例PASS。修复后的真实界面值、账号权限、管理审计和用例解析均取得原生证据，仍不构成完整四例验收。
+
+### BUG-TM001-FIXTURE-002：信任配置与主异常保留
+
+同轮004在prepare-signing约60秒后中断，两平台最终只报告`remove signing trust failed (1)`。清理进入trust_attempted路径，证明此前P12导入和codesign权限配置已完成；结合原程序的60秒超时，用户域信任操作等待授权是当前调查方向。清理抛错遮住原异常，需同时保存主操作和清理失败。仅在专用CI核实并使用非交互临时信任，精确撤销本次证书，缺权限阻断；不绕过App的TLS或签名校验。原始日志副本为`.local/process/v0.1.0-20260929T074814Z/ci-36545478638-failed.log`，完整原生结果保存在该CI工件。
+
+按000先修订009/010至4，索引与03/04同步上述hosted Mac非交互admin域策略；依据Apple信任API及GitHub托管runner管理员权限说明。该方案作为待真实验证的环境实现，不将sudo可执行等同于证书信任或004通过。
+
+Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身份不保证信任操作免交互。因此先在两个CI工作流增加009环境探针，保存独立environment_only记录；探针失败保持job失败，014仍要求真实四例完整执行。探针不能签发通行证，也不修改系统授权规则。
+
+该修复本机完整治理147项通过，原生环境探针实际返回BLOCKED（缺完整Xcode），未修改本机证书信任。`security help verify-cert/add-trusted-cert`已只读核对实际参数；远端必须另行验证信任与完整产品用例。证据`.local/governance/tm001-native/ci-trust-green.log`及`environment-probe-{red,green,local-blocked}.log`。

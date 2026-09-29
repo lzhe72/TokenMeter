@@ -48,13 +48,38 @@ class SigningFixtureTests(unittest.TestCase):
                 if operation == "verify identity":
                     return "AB" * 20
                 return ""
-            with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory}), \
+            with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                               "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}), \
                  mock.patch.object(identity, "create_private_bundle", return_value=Path(directory) / "bundle.p12"), \
                  mock.patch.object(identity, "_run", side_effect=run):
                 identity.prepare()
+                identity.close()
             arguments = next(args for args, operation in calls if operation == "import identity")
             self.assertEqual(arguments[arguments.index("-P") + 1], identity.bundle_password)
             self.assertTrue(identity.bundle_password)
+            trust = next(args for args, operation in calls if operation == "trust ephemeral code-signing certificate")
+            self.assertEqual(trust[:5], ["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d"])
+            self.assertIn("codeSign", trust)
+            self.assertIn((["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(identity.certificate)], "remove signing trust"), calls)
+
+    def test_self_hosted_runner_cannot_mutate_trust(self):
+        with tempfile.TemporaryDirectory() as directory:
+            identity = fixture.SigningIdentity(Path(directory) / "signing")
+            with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                               "RUNNER_ENVIRONMENT": "self-hosted", "RUNNER_OS": "macOS"}, clear=True), \
+                 mock.patch.object(identity, "_run") as run:
+                with self.assertRaises(RuntimeError):
+                    identity.prepare()
+            run.assert_not_called()
+
+    def test_timeout_has_safe_operation_name_without_secret_argv(self):
+        with tempfile.TemporaryDirectory() as directory:
+            identity = fixture.SigningIdentity(Path(directory) / "signing")
+            arguments = ["security", "import", "-P", identity.password]
+            with mock.patch.object(fixture.subprocess, "run", side_effect=subprocess.TimeoutExpired(arguments, 60)), \
+                 self.assertRaisesRegex(RuntimeError, "import identity timed out") as caught:
+                identity._run(arguments, "import identity")
+            self.assertNotIn(identity.password, str(caught.exception))
 
     def test_regular_developer_machine_cannot_modify_keychain(self):
         with tempfile.TemporaryDirectory() as directory:

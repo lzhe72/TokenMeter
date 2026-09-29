@@ -352,6 +352,15 @@ def progress(case_id: str, stage: str) -> None:
     print(json.dumps({"event": "e2e_progress", "case_id": case_id, "stage": stage}), flush=True)
 
 
+def record_cleanup_errors(report: dict, errors: list[str], primary_error: BaseException | None) -> None:
+    if errors:
+        report.setdefault("cleanup_errors", []).extend(errors)
+        # Preserve the pending exception, including its safe operation name.
+        # The entry point reports cleanup errors separately and still fails.
+        if primary_error is None:
+            raise EvidenceError("; ".join(errors))
+
+
 def execute(root: Path, output: Path, report: dict) -> None:
     """Populate a report from actual commands; the caller writes it even on failure."""
     report["platform"] = preflight(root)
@@ -522,6 +531,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     else:
                         raise Blocked(f"No native result bundle for {case_id}; xcodebuild exit {result.returncode}")
                 finally:
+                    primary_error = sys.exc_info()[1]
                     progress(case_id, "cleanup")
                     cleanup_errors = []
                     try:
@@ -555,9 +565,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                         account_data.reset(isolation_id, workspace=case_private)
                     except (OSError, ValueError) as exc:
                         cleanup_errors.append(f"account fixture cleanup: {exc}")
-                    if cleanup_errors:
-                        report.setdefault("cleanup_errors", []).extend(cleanup_errors)
-                        raise EvidenceError("; ".join(cleanup_errors))
+                    record_cleanup_errors(report, cleanup_errors, primary_error)
             # XCTest logs out/removes only its own run's session; database and
             # credentials are removed with the owned temporary directory.
         report["cleanup_completed"] = True

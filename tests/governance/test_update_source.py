@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
@@ -69,6 +70,42 @@ class UpdateSourceTests(unittest.TestCase):
                     source.trust_on_ephemeral_ci()
             finally:
                 source.close()
+
+    def test_ca_trust_and_cleanup_use_noninteractive_admin_domain_and_exact_certificate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = fixture.UpdateSource(Path(directory) / "secrets", Path(directory))
+            calls = []
+            def run(arguments, operation):
+                calls.append(arguments)
+                return "sha1 Fingerprint=" + ":".join(["AB"] * 20) if operation == "CA identity" else ""
+            with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                               "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}, clear=True), \
+                 mock.patch.object(source, "_run", side_effect=run):
+                source.trust_on_ephemeral_ci()
+                source.close()
+            self.assertIn(["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d", "-r", "trustRoot", "-p", "ssl",
+                           "-s", "localhost", "-k", "/Library/Keychains/System.keychain", str(source.private / "ca.pem")], calls)
+            self.assertIn(["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(source.private / "ca.pem")], calls)
+            self.assertIn(["sudo", "-n", "/usr/bin/security", "delete-certificate", "-Z", "AB" * 20,
+                           "/Library/Keychains/System.keychain"], calls)
+
+    def test_ca_trust_refuses_self_hosted_runner_and_timeout_names_operation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = fixture.UpdateSource(Path(directory) / "secrets", Path(directory))
+            try:
+                with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                                   "RUNNER_ENVIRONMENT": "self-hosted", "RUNNER_OS": "macOS"}, clear=True), \
+                     mock.patch.object(source, "_run") as run:
+                    with self.assertRaises(RuntimeError):
+                        source.trust_on_ephemeral_ci()
+                    run.assert_not_called()
+                with mock.patch.object(fixture.subprocess, "run", side_effect=fixture.subprocess.TimeoutExpired(["tool", "secret"], 60)), \
+                     self.assertRaisesRegex(RuntimeError, "temporary CA trust timed out") as caught:
+                    source._run(["tool", "secret"], "temporary CA trust")
+                self.assertNotIn("secret", str(caught.exception))
+            finally:
+                with mock.patch.object(source, "_run"):
+                    source.close()
 
     def test_failed_trust_removal_still_attempts_certificate_removal(self):
         from unittest import mock

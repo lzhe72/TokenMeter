@@ -80,7 +80,10 @@ class UpdateSource:
         self.thread: threading.Thread | None = None
 
     def _run(self, args: list[str], name: str) -> str:
-        result = subprocess.run(args, capture_output=True, text=True, check=False, timeout=60)
+        try:
+            result = subprocess.run(args, capture_output=True, text=True, check=False, timeout=60)
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(f"Isolated update fixture {name} timed out after 60 seconds") from exc
         # Tool output contains certificates' metadata, never private key file contents.
         if result.returncode:
             raise RuntimeError(f"Isolated update fixture {name} failed ({result.returncode})")
@@ -121,13 +124,15 @@ class UpdateSource:
         return public
 
     def trust_on_ephemeral_ci(self) -> None:
-        if os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP"):
+        if (os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP")
+                or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted" or os.environ.get("RUNNER_OS") != "macOS"):
             raise RuntimeError("Update fixture CA trust is permitted only on an isolated GitHub runner")
-        self.keychain = str(Path.home() / "Library/Keychains/login.keychain-db")
+        self._run(["sudo", "-n", "/usr/bin/true"], "check noninteractive administrator access")
+        self.keychain = "/Library/Keychains/System.keychain"
         # A tool can fail after a partial import. Mark cleanup as required before
         # the mutation so the caller always attempts both trust and cert removal.
         self.trusted = self.certificate_added = True
-        self._run(["security", "add-trusted-cert", "-r", "trustRoot", "-k", self.keychain,
+        self._run(["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d", "-r", "trustRoot", "-p", "ssl", "-s", "localhost", "-k", self.keychain,
                    str(self.private / "ca.pem")], "temporary CA trust")
 
     def publish(self, package: Path, signature: str) -> None:
@@ -181,14 +186,14 @@ class UpdateSource:
             errors.append(f"HTTPS fixture socket cleanup: {exc}")
         if self.trusted:
             try:
-                self._run(["security", "remove-trusted-cert", str(self.private / "ca.pem")], "remove test CA trust")
+                self._run(["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(self.private / "ca.pem")], "remove test CA trust")
                 self.trusted = False
             except (RuntimeError, OSError, subprocess.SubprocessError) as exc:
                 errors.append(str(exc))
         if self.certificate_added:
             try:
                 fingerprint = self._run(["openssl", "x509", "-in", str(self.private / "ca.pem"), "-noout", "-fingerprint", "-sha1"], "CA identity").split("=", 1)[1].replace(":", "")
-                self._run(["security", "delete-certificate", "-Z", fingerprint, self.keychain], "remove test CA certificate")
+                self._run(["sudo", "-n", "/usr/bin/security", "delete-certificate", "-Z", fingerprint, self.keychain], "remove test CA certificate")
                 self.certificate_added = False
             except (RuntimeError, OSError, subprocess.SubprocessError, IndexError) as exc:
                 errors.append(str(exc))

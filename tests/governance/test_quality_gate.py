@@ -515,6 +515,18 @@ class GateTests(unittest.TestCase):
         self.assertIsNone(report["release_id"])
         self.assertFalse(report["release_eligible"])
 
+    def test_original_environment_error_and_cleanup_failure_are_both_reported(self):
+        def failure(_root, _output, report):
+            report["cleanup_errors"] = ["remove signing trust failed"]
+            raise e2e.native_e2e.Blocked("trust ephemeral code-signing certificate timed out")
+        output = io.StringIO()
+        with mock.patch.object(e2e.native_e2e, "execute", side_effect=failure), contextlib.redirect_stdout(output):
+            self.assertEqual(e2e.main(["--phase", "iteration"], root=self.root), 1)
+        result = json.loads(output.getvalue().splitlines()[-1])
+        self.assertEqual(result["blockers"], ["trust ephemeral code-signing certificate timed out"])
+        self.assertEqual(result["errors"], ["remove signing trust failed"])
+        self.assertEqual(result["cleanup_errors"], ["remove signing trust failed"])
+
     def test_e2e_refuses_local_or_artifact_root_symlinks(self):
         for parent in (".local", ".local/e2e"):
             with self.subTest(parent=parent):
