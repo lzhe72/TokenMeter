@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Probe isolated CI signing/TLS preparation; this is not a product test gate."""
+"""Probe isolated signing and same-Mac update source; not a product gate."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -27,15 +27,13 @@ def execute_probe(root: Path, output: Path, report: dict) -> None:
         try:
             native.progress("environment", "prepare-signing")
             signing.prepare()
-            native.progress("environment", "prepare-https")
+            native.progress("environment", "prepare-loopback-update")
             update = update_data.UpdateSource(private / "update", output)
             update.prepare()
-            update.start_tunnel()
-            # cloudflared validates the localhost leaf against this run's CA;
-            # the public endpoint was probed using normal system TLS trust.
-            # The local verification below proves the origin certificate chain.
-            update._run(["/usr/bin/security", "verify-cert", "-c", str(update.private / "server.pem"),
-                         "-p", "ssl", "-n", "localhost", "-r", str(update.private / "ca.pem"), "-L"], "verify isolated TLS origin")
+            update.start()
+            report["origin_url"] = update.url
+            report["transport"] = "loopback_http"
+            report["source_nonce_sha256"] = update.source_nonce_sha256
         finally:
             primary_error = sys.exc_info()[1]
             native.progress("environment", "cleanup")

@@ -59,7 +59,7 @@ class EnvironmentProbeTests(unittest.TestCase):
 
     def test_primary_failure_still_records_successful_cleanup(self):
         signing, update = mock.Mock(), mock.Mock()
-        update.UpdateSource.return_value.start_tunnel.side_effect = RuntimeError("system DNS unavailable")
+        update.UpdateSource.return_value.start.side_effect = RuntimeError("loopback port 49177 unavailable")
         output = io.StringIO()
         with tempfile.TemporaryDirectory() as directory, \
              mock.patch.object(probe.native, "preflight", return_value={"architecture": "x86_64"}), \
@@ -68,15 +68,38 @@ class EnvironmentProbeTests(unittest.TestCase):
             self.assertEqual(probe.main(root=self.root(directory)), 2)
         result = json.loads(output.getvalue().splitlines()[-1])
         self.assertEqual(result["state"], "BLOCKED")
-        self.assertEqual(result["blockers"], ["system DNS unavailable"])
+        self.assertEqual(result["blockers"], ["loopback port 49177 unavailable"])
         self.assertTrue(result["cleanup_completed"])
         self.assertEqual(result["cleanup_errors"], [])
         signing.SigningIdentity.return_value.close.assert_called_once()
         update.UpdateSource.return_value.close.assert_called_once()
 
+    def test_same_source_start_and_metadata_are_reported_without_product_cases(self):
+        signing, update = mock.Mock(), mock.Mock()
+        update.UpdateSource.return_value.url = "http://127.0.0.1:49177"
+        update.UpdateSource.return_value.source_nonce_sha256 = "b" * 64
+        output = io.StringIO()
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(probe.native, "preflight", return_value={"architecture": "arm64"}), \
+             mock.patch.object(probe.native, "load_module", side_effect=[signing, update]), \
+             contextlib.redirect_stdout(output):
+            self.assertEqual(probe.main(root=self.root(directory)), 0)
+        result = json.loads(output.getvalue().splitlines()[-1])
+        self.assertEqual(result["origin_url"], "http://127.0.0.1:49177")
+        self.assertEqual(result["transport"], "loopback_http")
+        self.assertEqual(result["source_nonce_sha256"], "b" * 64)
+        self.assertEqual(result["executed_cases"], 0)
+        self.assertFalse(result["release_eligible"])
+        update.UpdateSource.assert_called_once()
+        update.UpdateSource.return_value.prepare.assert_called_once()
+        update.UpdateSource.return_value.start.assert_called_once()
+        update.UpdateSource.return_value._run.assert_not_called()
+
     def test_cleanup_failure_after_successful_probe_blocks_report(self):
         signing, update = mock.Mock(), mock.Mock()
         update.UpdateSource.return_value.close.side_effect = RuntimeError("close failed")
+        update.UpdateSource.return_value.url = "http://127.0.0.1:49177"
+        update.UpdateSource.return_value.source_nonce_sha256 = "c" * 64
         output = io.StringIO()
         with tempfile.TemporaryDirectory() as directory, \
              mock.patch.object(probe.native, "preflight", return_value={"architecture": "arm64"}), \

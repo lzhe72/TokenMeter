@@ -16,6 +16,20 @@ import subprocess
 import sys
 from urllib.parse import urlsplit
 
+DEFAULT_FEED = "http://127.0.0.1:49177/appcast.xml"
+
+
+def validate_feed(value: str):
+    feed = urlsplit(value)
+    if (not feed.hostname or feed.username is not None or feed.password is not None
+            or feed.query or feed.fragment or "?" in value or "#" in value
+            or feed.netloc.endswith(":")
+            or (feed.port is not None and not 1 <= feed.port <= 65535)
+            or not (feed.scheme == "https" or
+                    (feed.scheme == "http" and feed.hostname in ("localhost", "127.0.0.1", "::1")))):
+        raise ValueError("The fixture feed must use HTTPS or loopback HTTP without credentials, query, or fragment")
+    return feed
+
 
 def real_path(value: str) -> Path:
     path = Path(value).absolute()
@@ -28,6 +42,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     for flag in ("derived-data", "output", "feed-url", "public-key", "private-key-file", "api-url", "run-id", "build-version", "code-sign-identity", "signing-keychain", "credentials-dir"):
         parser.add_argument("--" + flag, required=True)
+    parser.add_argument("--use-default-feed", action="store_true",
+                        help="Use the App's built-in feed only when the prepared URL is exactly its default")
     args = parser.parse_args()
     try:
         if platform.system() != "Darwin":
@@ -45,9 +61,9 @@ def main() -> int:
         signing_keychain = real_path(args.signing_keychain)
         if not signing_keychain.is_file():
             raise ValueError("The isolated signing keychain is missing")
-        feed = urlsplit(args.feed_url)
-        if feed.scheme != "https" or not feed.hostname or feed.username or feed.password:
-            raise ValueError("The fixture feed must use HTTPS without embedded credentials")
+        validate_feed(args.feed_url)
+        if args.use_default_feed and args.feed_url != DEFAULT_FEED:
+            raise ValueError("The default-feed build requires the exact prepared default URL")
         api = urlsplit(args.api_url)
         if api.scheme != "https" and not (api.scheme == "http" and api.hostname in ("localhost", "127.0.0.1", "::1")):
             raise ValueError("The test API must use HTTPS or isolated loopback HTTP")
@@ -81,7 +97,7 @@ def main() -> int:
                    "CODE_SIGN_IDENTITY=" + args.code_sign_identity,
                    "OTHER_CODE_SIGN_FLAGS=--keychain " + shlex.quote(str(signing_keychain)),
                    "CURRENT_PROJECT_VERSION=" + args.build_version,
-                   "TM_UPDATE_FEED_URL=" + args.feed_url, "TM_UPDATE_PUBLIC_KEY=" + args.public_key,
+                   "TM_UPDATE_FEED_URL=" + ("" if args.use_default_feed else args.feed_url), "TM_UPDATE_PUBLIC_KEY=" + args.public_key,
                    "TM_TEST_API_URL=" + args.api_url, "TM_TEST_RUN_ID=" + args.run_id,
                    "TM_TEST_CREDENTIALS_DIR=" + str(credentials_dir)]
         with (output / "build.log").open("w") as log:
@@ -98,6 +114,11 @@ def main() -> int:
         if (info.get("TMTestRunID") != args.run_id
                 or info.get("TMTestCredentialsDirectory") != str(credentials_dir)):
             raise ValueError("Built update App has a wrong credential directory")
+        expected_feed = "" if args.use_default_feed else args.feed_url
+        if (info.get("SUFeedURL") != expected_feed
+                or info.get("SUPublicEDKey") != args.public_key
+                or info.get("SUVerifyUpdateBeforeExtraction") is not True):
+            raise ValueError("Built update App has a wrong feed or signature verification configuration")
         subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         displayed = subprocess.run(["codesign", "-d", "-r-", str(app)], capture_output=True, text=True, check=True)

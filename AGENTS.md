@@ -41,7 +41,7 @@
 
 ## 当前可执行命令
 
-在仓库根目录执行以下治理检查，Python 3.10+ 无需第三方包；HTTPS fixture 工具自测还需要 `openssl` 命令：
+在仓库根目录执行以下治理检查，Python 3.10+ 无需第三方包；代码签名工具自测还需要 `openssl` 命令：
 
 ```sh
 python3 scripts/check_docs.py --mode structure
@@ -58,12 +58,13 @@ python3 scripts/test_data.py reset --run-id demo
 python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
 python3 -m pytest tests/server -q
 python3 scripts/test_device_credentials.py
+python3 scripts/test_endpoint_configuration.py
 python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
 python3 scripts/quality_gate.py iteration
 python3 scripts/quality_gate.py release
 ```
 
-Swift 凭据边界检查可在有 Command Line Tools 的本机 macOS 执行，但不能替代原生用例。原生用例还要求完整 Xcode、已登录 Mac 桌面；TM-001 升级 fixture 的隔离临时自签名与公开 HTTPS 测试源仅允许专用 GitHub Mac CI，不修改系统证书信任。缺条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
+Swift 凭据和地址配置边界检查可在有 Command Line Tools 的本机 macOS 执行，但不能替代原生用例。现有六例原生门禁要求两台 GitHub Mac 各自有完整 Xcode 与已登录桌面；TM-001 第004例的隔离临时签名和更新源在执行 App 的同一台 Mac 上运行，默认回环地址 `http://127.0.0.1:49177/appcast.xml`，无需公网隧道。`127.0.0.1` 始终指正在运行 App 的那台 Mac，远端 runner 不是用户本机。用户本机仅有 Command Line Tools 且 AX 权限未授时不声称本机原生 E2E 通过，也不改系统证书信任/TCC；该状态不替代或阻断远端六例有效结果。缺实际运行条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
 
 编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。
 

@@ -39,6 +39,7 @@ FIXTURE_PROFILES = {f"E2E-TM001-{number:03d}": "synthetic_accounts" for number i
 }
 PRODUCTION_BOOTSTRAP_USER_ID = "00000000-0000-4000-8000-000000000005"
 DEFAULT_TEST_PORT = 49176
+DEFAULT_UPDATE_ORIGIN = "http://127.0.0.1:49177"
 
 
 def fixture_profile(case_id: str) -> str:
@@ -250,7 +251,7 @@ def command(args: list[str], *, root: Path, log: Path, env: dict | None = None,
 
 
 def require_upgrade_environment(root: Path, case_output: Path, signing: Any, update: Any) -> tuple[str, str]:
-    """Check the live resources that E2E004 will use, without creating a second tunnel."""
+    """Check the same loopback source and signing identity used by E2E004."""
     evidence = case_output / "environment.json"
     report = {"scope": "environment_only", "case_id": "E2E-TM001-004", "state": "BLOCKED",
               "run_id": case_output.parent.name, "snapshot_stage": "preparation",
@@ -264,16 +265,15 @@ def require_upgrade_environment(root: Path, case_output: Path, signing: Any, upd
         identity = signing.prepare()
         public_key = update.prepare()
         report["certificate_sha1"] = identity
-        report["origin_ca_sha256"] = sha256(update.private / "ca.pem")
-        report["origin_certificate_sha256"] = sha256(update.private / "server.pem")
-        update.start_tunnel()
-        report["tunnel_url"] = update.url
-        # Keep the origin certificate check from the standalone diagnostic. The
-        # public endpoint has already passed normal system DNS and TLS in
-        # start_tunnel(); this check binds its origin to this live fixture CA.
-        update._run(["/usr/bin/security", "verify-cert", "-c", str(update.private / "server.pem"),
-                     "-p", "ssl", "-n", "localhost", "-r", str(update.private / "ca.pem"), "-L"],
-                    "verify isolated TLS origin")
+        update.start()
+        if update.url != DEFAULT_UPDATE_ORIGIN:
+            raise Blocked("The update fixture must own the App's default loopback endpoint")
+        nonce_digest = update.source_nonce_sha256
+        if not isinstance(nonce_digest, str) or not re.fullmatch(r"[a-f0-9]{64}", nonce_digest):
+            raise Blocked("The loopback source did not provide valid readiness evidence")
+        report["origin_url"] = update.url
+        report["transport"] = "loopback_http"
+        report["source_nonce_sha256"] = nonce_digest
         report["state"] = "READY"
         return identity, public_key
     except (RuntimeError, OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
@@ -322,6 +322,16 @@ def export_attachments(root: Path, bundle: Path, output: Path) -> list[dict]:
     if not screenshots:
         raise EvidenceError("Native result exported no required window screenshots")
     return screenshots
+
+
+def capture_native_artifacts(root: Path, bundle: Path, output: Path, suite: dict) -> None:
+    """Record the whole bundle only after native readers/exporters have finished."""
+    try:
+        suite["screenshots"] = export_attachments(root, bundle, output)
+    finally:
+        # xcresult's SQLite database can settle during parsing/export. Retain all
+        # of it, then require the parent to verify these final bytes unchanged.
+        suite["xcresult_sha256"] = tree_digest(bundle)
 
 
 def snapshot(root: Path) -> dict[str, str]:
@@ -381,10 +391,10 @@ def verify_report(root: Path, path: Path, *, run_id: str, phase: str,
                 or type(environment.get("executed_cases")) is not int or environment["executed_cases"] != 0
                 or environment.get("release_eligible") is not False
                 or environment.get("cleanup_completed") is not False
-                or not isinstance(environment.get("tunnel_url"), str)
-                or not re.fullmatch(r"https://[a-z0-9-]+\.trycloudflare\.com", environment["tunnel_url"])
-                or not isinstance(environment.get("origin_ca_sha256"), str)
-                or not re.fullmatch(r"[a-f0-9]{64}", environment["origin_ca_sha256"])):
+                or environment.get("origin_url") != DEFAULT_UPDATE_ORIGIN
+                or environment.get("transport") != "loopback_http"
+                or not isinstance(environment.get("source_nonce_sha256"), str)
+                or not re.fullmatch(r"[a-f0-9]{64}", environment["source_nonce_sha256"])):
             raise EvidenceError("E2E004 active environment snapshot does not match this candidate")
     observed: set[str] = set()
     for suite in suites:
@@ -450,6 +460,10 @@ def verify_report(root: Path, path: Path, *, run_id: str, phase: str,
                                for item in (first, second))):
                 raise EvidenceError("Dual-service fixture evidence does not identify two isolated account sources")
         observed.add(case_id)
+    # Recheck after all xcresulttool reads; a parser may flush SQLite changes.
+    for suite in suites:
+        if tree_digest(path.parent / suite["xcresult"]) != suite["xcresult_sha256"]:
+            raise EvidenceError("Native bundle was changed during verification")
     if observed != set(expected) or report.get("executed_cases") != len(expected):
         raise EvidenceError("Native execution differs from required coverage")
     if report.get("cleanup_completed") is not True:
@@ -696,6 +710,16 @@ def verify_test_credentials_bundle(app: Path, directory: Path, run_id: str) -> N
         raise EvidenceError("UITesting App has a wrong or missing credential directory")
 
 
+def verify_default_update_bundle(app: Path, public_key: str) -> None:
+    info_path = app / "Contents/Info.plist"
+    if info_path.is_symlink() or not info_path.is_file():
+        raise EvidenceError("Default update candidate has no regular Info.plist")
+    info = plistlib.loads(info_path.read_bytes())
+    if (info.get("SUFeedURL") != "" or info.get("SUPublicEDKey") != public_key
+            or info.get("SUVerifyUpdateBeforeExtraction") is not True):
+        raise EvidenceError("Default update candidate must use the built-in feed and fixed signing key")
+
+
 def build_command(project: Path, derived: Path) -> list[str]:
     return ["xcodebuild", "-project", str(project), "-scheme", "TokenMeter", "-configuration", "UITesting",
             "-derivedDataPath", str(derived), "-destination", "platform=macOS,arch=" + architecture_family(platform.machine()),
@@ -816,13 +840,13 @@ def execute(root: Path, output: Path, report: dict) -> None:
                         build_settings += ["CODE_SIGN_IDENTITY=" + identity,
                                            "OTHER_CODE_SIGN_FLAGS=--keychain " + shlex.quote(str(signing.keychain))]
                         feed = update.url + "/appcast.xml"
-                        build_settings += ["TM_UPDATE_FEED_URL=" + feed, "TM_UPDATE_PUBLIC_KEY=" + public_key]
+                        build_settings += ["TM_UPDATE_FEED_URL=", "TM_UPDATE_PUBLIC_KEY=" + public_key]
                         package_output = case_private / "update-package"
                         progress(case_id, "build-update-package")
                         try:
                             command([sys.executable, str(root / "apps/macos/build_update_fixture.py"),
                                      "--derived-data", str(case_private / "derived-update"), "--output", str(package_output),
-                                     "--feed-url", feed, "--public-key", public_key,
+                                     "--feed-url", feed, "--use-default-feed", "--public-key", public_key,
                                      "--private-key-file", str(update.private / "sparkle-seed.txt"),
                                      "--code-sign-identity", identity, "--signing-keychain", str(signing.keychain),
                                      "--api-url", address, "--run-id", isolation_id, "--build-version", "101",
@@ -839,6 +863,9 @@ def execute(root: Path, output: Path, report: dict) -> None:
                                                          "certificate_sha1": identity, "developer_id": False,
                                                          "notarized": False, "system_trust_modified": False}
                         update_env = {"TM_TEST_UPDATE_CONTROL_URL": update.url + "/control/valid",
+                                      "TM_TEST_UPDATE_FORBIDDEN_CONTROL_URL": update.url + "/control/forbidden",
+                                      "TM_TEST_UPDATE_REDIRECT_CONTROL_URL": update.url + "/control/redirect",
+                                      "TM_TEST_UPDATE_INVALID_CONTROL_URL": update.url + "/control/invalid",
                                       "TM_TEST_UPDATE_CONTROL_TOKEN": update.token,
                                       "TM_TEST_UPDATE_VALID_FEED": update.url + "/valid.xml",
                                       "TM_TEST_UPDATE_INVALID_FEED": update.url + "/invalid.xml",
@@ -853,6 +880,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     if profile == "dual_service_routes":
                         verify_default_route_bundle(app, isolation_id)
                     if signing is not None:
+                        verify_default_update_bundle(app, public_key)
                         displayed = subprocess.run(["codesign", "-d", "-r-", str(app)], capture_output=True, text=True, check=False)
                         requirements = [line for line in (displayed.stdout + displayed.stderr).splitlines() if line.startswith("designated =>")]
                         if (displayed.returncode or len(requirements) != 1 or "cdhash" in requirements[0]
@@ -896,7 +924,6 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     report["suites"].append(suite)
                     if bundle.is_dir():
                         progress(case_id, "parse-native-results")
-                        suite["xcresult_sha256"] = tree_digest(bundle)
                         tree, summary = parse_bundle(root, bundle)
                         (case_output / "native-tests.json").write_text(json.dumps(tree, indent=2) + "\n")
                         (case_output / "native-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
@@ -915,7 +942,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                                 primary_error = sys.exc_info()[1]
                                 progress(case_id, "export-native-attachments")
                                 try:
-                                    suite["screenshots"] = export_attachments(root, bundle, case_output)
+                                    capture_native_artifacts(root, bundle, case_output, suite)
                                 except (EvidenceError, Blocked, OSError, subprocess.SubprocessError) as exc:
                                     suite["attachment_error"] = str(exc)
                                     if primary_error is None:

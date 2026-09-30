@@ -36,11 +36,13 @@ class UpdateFixtureInputTests(unittest.TestCase):
             "credentials-dir": str(self.credentials),
         }
 
-    def run_invalid(self, **changes):
+    def run_invalid(self, use_default_feed=False, **changes):
         args = dict(self.args, **changes)
         argv = ["build_update_fixture.py"]
         for name, value in args.items():
             argv.extend(["--" + name, value])
+        if use_default_feed:
+            argv.append("--use-default-feed")
         output = io.StringIO()
         selected = subprocess.CompletedProcess(["xcode-select", "-p"], 0, "/Applications/Xcode.app/Contents/Developer\n", "")
         with patch.object(MODULE.platform, "system", return_value="Darwin"), \
@@ -56,8 +58,54 @@ class UpdateFixtureInputTests(unittest.TestCase):
         self.assertFalse((self.root / "derived").exists())
         return output.getvalue()
 
-    def test_plain_http_update_feed_is_rejected(self):
-        self.run_invalid(**{"feed-url": "http://localhost:8443/appcast.xml"})
+    def test_nonloopback_http_update_feed_is_rejected(self):
+        self.run_invalid(**{"feed-url": "http://updates.example.com/appcast.xml"})
+
+    def test_loopback_http_feed_reaches_real_build_boundary(self):
+        variants = [
+            ("http://127.0.0.1:49177/appcast.xml", False),
+            ("http://127.0.0.1:49177/appcast.xml", True),
+            ("http://localhost:8443/appcast.xml", False),
+            ("http://[::1]:8443/appcast.xml", False),
+            ("https://updates.example.com/appcast.xml", False),
+        ]
+        for index, (feed, use_default) in enumerate(variants):
+            with self.subTest(feed=feed, default=use_default):
+                args = dict(self.args, **{"feed-url": feed, "output": str(self.root / str(index))})
+                argv = ["build_update_fixture.py"]
+                for name, value in args.items():
+                    argv.extend(["--" + name, value])
+                if use_default:
+                    argv.append("--use-default-feed")
+                selected = subprocess.CompletedProcess(["xcode-select", "-p"], 0,
+                                                       "/Applications/Xcode.app/Contents/Developer\n", "")
+                failed_build = subprocess.CompletedProcess(["xcodebuild"], 65)
+                with patch.object(MODULE.platform, "system", return_value="Darwin"), \
+                     patch.object(MODULE.sys, "argv", argv), \
+                     patch.object(MODULE.subprocess, "run", side_effect=[selected, failed_build]) as run, \
+                     contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(MODULE.main(), 1)
+                self.assertEqual(run.call_count, 2, "Valid input must reach the build, never skip signature checks")
+                command = run.call_args_list[1].args[0]
+                self.assertEqual(command[0], "xcodebuild")
+                self.assertIn("TM_UPDATE_FEED_URL=" + ("" if use_default else feed), command)
+                self.assertIn("TM_UPDATE_PUBLIC_KEY=" + self.args["public-key"], command)
+
+    def test_unsafe_feed_inputs_are_rejected_before_build(self):
+        for feed in ["https://", "https://:443", "https://@localhost/appcast.xml",
+                     "http://localhost:/appcast.xml", "http://127.0.0.1:0/appcast.xml",
+                     "http://127.0.0.1:65536/appcast.xml", "http://localhost.evil.example/appcast.xml",
+                     "file:///tmp/appcast.xml", "http://127.1/appcast.xml",
+                     "https://example.com/appcast.xml?", "https://example.com/appcast.xml#",
+                     "https://user:secret@example.com/appcast.xml"]:
+            with self.subTest(feed=feed):
+                self.run_invalid(**{"feed-url": feed})
+
+    def test_default_feed_flag_rejects_every_other_prepared_source(self):
+        for feed in ["http://localhost:49177/appcast.xml", "http://127.0.0.1:49178/appcast.xml",
+                     "https://updates.example.com/appcast.xml", "http://127.0.0.1:49177/other.xml"]:
+            with self.subTest(feed=feed):
+                self.run_invalid(use_default_feed=True, **{"feed-url": feed})
 
     def test_ad_hoc_identity_is_rejected(self):
         self.run_invalid(**{"code-sign-identity": "-"})
@@ -168,6 +216,45 @@ class UpdateFixtureInputTests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertIn("wrong credential directory", output.getvalue())
         self.assertFalse((self.root / "output/signature.json").exists())
+
+    def test_update_build_verifies_embedded_feed_key_and_validation_before_signing(self):
+        variants = [
+            ({"SUFeedURL": "https://wrong.example.com/appcast.xml"}, False),
+            ({"SUFeedURL": "http://127.0.0.1:49177/appcast.xml"}, True),
+            ({"SUPublicEDKey": base64.b64encode(bytes(range(32))).decode()}, True),
+            ({"SUVerifyUpdateBeforeExtraction": False}, True),
+        ]
+        for index, (wrong, use_default) in enumerate(variants):
+            with self.subTest(wrong=next(iter(wrong)), default=use_default):
+                args = dict(self.args, **{"output": str(self.root / ("info-output-" + str(index))),
+                                         "derived-data": str(self.root / ("info-derived-" + str(index))),
+                                         "feed-url": "http://127.0.0.1:49177/appcast.xml"})
+                argv = ["build_update_fixture.py"]
+                for name, value in args.items():
+                    argv.extend(["--" + name, value])
+                if use_default:
+                    argv.append("--use-default-feed")
+                calls = []
+                def run(arguments, **_kwargs):
+                    calls.append(arguments)
+                    if arguments[0] == "xcode-select":
+                        return subprocess.CompletedProcess(arguments, 0, "/Applications/Xcode.app/Contents/Developer\n", "")
+                    if arguments[0] == "xcodebuild":
+                        contents = Path(args["derived-data"]) / "Build/Products/UITesting/TokenMeter.app/Contents"
+                        contents.mkdir(parents=True)
+                        info = {"TMTestRunID": args["run-id"], "TMTestCredentialsDirectory": str(self.credentials),
+                                "SUFeedURL": "" if use_default else args["feed-url"],
+                                "SUPublicEDKey": args["public-key"], "SUVerifyUpdateBeforeExtraction": True}
+                        info.update(wrong)
+                        (contents / "Info.plist").write_bytes(plistlib.dumps(info))
+                        return subprocess.CompletedProcess(arguments, 0)
+                    raise AssertionError("Invalid embedded update configuration must stop before signing")
+                with patch.object(MODULE.platform, "system", return_value="Darwin"), \
+                     patch.object(MODULE.sys, "argv", argv), \
+                     patch.object(MODULE.subprocess, "run", side_effect=run), \
+                     contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(MODULE.main(), 1)
+                self.assertEqual(len(calls), 2)
 
 
 if __name__ == "__main__":

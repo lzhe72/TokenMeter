@@ -47,19 +47,17 @@ python3 scripts/test_data.py reset --run-id demo
 
 用户已授权本机用于开发、运行回环服务和安装预览 App。本机现只有 Command Line Tools，不能运行 XCUITest；无需为了继续开发而在本机安装 Xcode。当前原生迭代验收由 `.github/workflows/quality.yml` 在 GitHub 托管的 `macos-15` 与 `macos-15-intel` 上选择 Xcode 16.4，对同一候选自动调用 `python3 scripts/quality_gate.py iteration`。每个平台各自在其 Mac 上构建真实 App，初始化逐例隔离的 FastAPI/SQLite，执行完整原生用例，并上传 `xcresult`、日志、fixture 摘要及候选 SHA。CI 中的 `127.0.0.1:49176` 指该 runner 自身，不是用户本机服务或 `database/production/production.db`。
 
-第006例在每台 runner 上先独占默认端口49176，再使用第二套临时端口/SQLite；端口已占用时不得连接已有服务，须 BLOCKED。第004例的 Quick Tunnel、临时自签身份和更新 fixture 只允许专用 GitHub Mac CI。runner 为每例创建唯一0700临时凭据目录，两个构建的 Info.plist 与 XCTest 首次环境使用同一路径，Sparkle 自主重启后须读取同一目录；不得访问生产凭据或旧 Keychain。远端完整六例通过可作为该候选的开发迭代原生证据，但不能填作本机已执行；内部发行还需最终 DMG 包级安装升级、完整原生回归、支持矩阵与专用自动门禁；公开发行另需 Developer ID 签名公证。本机只有 Command Line Tools 时，本机原生运行仍为 BLOCKED，服务端测试和预览安装分别按实际结果记录。
+第006例在每台 runner 上先独占默认端口49176，再使用第二套临时端口/SQLite；端口已占用时不得连接已有服务，须 BLOCKED。第004例在执行App的同一台GitHub Mac固定49177启动一个隔离回环更新源；临时自签身份与更新fixture仍只用于开发迭代。runner 为每例创建唯一0700临时凭据目录，两个构建的 Info.plist 与 XCTest 首次环境使用同一路径，Sparkle 自主重启后须读取同一目录；不得访问生产凭据或旧 Keychain。远端完整六例通过可作为该候选的开发迭代原生证据，但不能填作本机已执行；内部发行还需最终 DMG 包级安装升级、完整原生回归、支持矩阵与专用自动门禁；公开发行另需 Developer ID 签名公证。本机只有 Command Line Tools 时，本机原生运行仍为 BLOCKED，服务端测试和预览安装分别按实际结果记录。
 
-若将来需要本机原生重跑，先在本机安装并首次启动完整 Xcode 16.4，由用户通过系统界面完成必要组件、许可和 Apple 登录；用 `xcode-select -p` 确认选择完整 Xcode 后才运行 `xcodebuild -version`。第004例 CI 专用 fixture 不能仅靠设置 GitHub 环境变量搬到本机；本机没有独立程序和证据时仍不执行该例。
+若将来需要本机XCUITest重跑，先在本机安装并首次启动完整Xcode，由用户通过正常系统界面完成必要组件和许可；用`xcode-select -p`确认后才运行`xcodebuild -version`。本机仅有Command Line Tools时可另计划CLT构建与原生AX驱动，但当前`AXIsProcessTrusted=false`且执行器未实现，不声称本机E2E通过。用户此Mac可用同机49177服务和新App做体验诊断，须隔离数据库、凭据、安装位置且不能拿旧`/Applications/TokenMeter.app`构建100冒充新候选。
 
 ### 自动执行环境前提
 
-专用 Mac 或 Mac 虚拟机必须有已登录桌面、受支持的 macOS/架构、Xcode 和 UI 自动化权限；发布环境还需真实签名、公证、更新服务和隔离的本版目标数据库。v0.1.0 使用 SQLite。管理员提供凭据和机器初始授权后，Codex 通过程序执行场景、断言结果和判定门禁。缺环境时记录具体原因；用户口头确认、人工截图或手工通过报告不能解除阻断。
+现有两平台XCUITest需要已登录桌面、受支持的macOS/架构、Xcode和UI自动化权限；内部正式发布需最终包签名/Gatekeeper、同机更新服务与隔离目标数据库，公开profile另需Developer ID及公证。v0.1.0 使用 SQLite。管理员提供凭据和机器初始授权后，Codex 通过程序执行场景、断言结果和判定门禁。缺环境时记录具体原因；用户口头确认、人工截图或手工通过报告不能解除阻断。
 
-TM-001第004例的CI专用源使用临时公开`https://<随机>.trycloudflare.com`访问本机签名更新fixture，`cloudflared`以本次CA池验证本机HTTPS，App以系统TLS验证公开HTTPS并由Sparkle验证EdDSA包。按SOP-009在本例隔离目录创建一组活跃的临时自签代码身份、专用Keychain和更新源，候选/高版本包同身份签名并使用同一UITESTING临时凭据目录；真实升级重启后必须经`/v1/me`无交互恢复，关闭自动登录则回登录页。不得修改旧会话Keychain ACL、预授权摘要或自动输入系统密码取绿。固定版本的`cloudflared`须校验SHA256；同一活跃随机域名在共享的最多180秒窗口内先经Cloudflare和Google的HTTPS DNS查询核对公开A记录，再由Mac正常系统DNS和TLS请求核对状态与来源，并对本次回环origin证书执行`security verify-cert`。DNS答复仅决定何时开始系统探测，不将返回IP注入App或curl。READY仅绑定本例当前域名、CA和活跃实例；保持这些资源到无效包拒绝、有效包真实升级、重启及请求校验结束，在同一`finally`清理。独立`native_environment.py`诊断会销毁自己的域名和资源，其READY不得转给004新建的域名。任一准备阶段到期仍不可用记BLOCKED，不重建隧道、关闭TLS或重试产品用例。Quick Tunnel是开发测试服务且不保证可用；不得以跳过004解除阻断。证据只保存隔离签名摘要、凭据目录权限、脱敏请求及产物摘要，不保存token、口令、私钥或账号数据。详见SOP-009/010/014。
+TM-001第004例不再依赖公网Quick Tunnel。两台GitHub Mac分别在自身固定端口49177启动只绑定回环的更新fixture，候选和高版本App均从内置默认 `http://127.0.0.1:49177/appcast.xml` 更新，不注入 `TM_UPDATE_FEED_URL`；API仍默认该机49176。固定EdDSA公钥、`SUVerifyUpdateBeforeExtraction`、坏签名拒绝、有效包真实安装重启和`/v1/me`自动登录断言保持必测。当前helper的`--use-default-feed`、配置页及fixture改造尚待实现，不能将旧公网探针READY当成新回环证据。004仅使用一组活跃更新源，先通过 `/healthz` 的一次性 source nonce 核对进程/端口、HTTP状态与来源，发布fixture后再由真实App和请求核验程序检查appcast及包响应，贯穿请求及安装后统一清理；端口被占时BLOCKED，不能连接未知服务或用户真实生产库。更新源URL允许appcast路径但拒绝userinfo、query、fragment、空host与非法端口；HTTP只允许精确回环主机，非回环必须正常HTTPS/TLS，Appcast选中下载URL与重定向也须负测。配置页的合法合成更新URL由006保存、跨重启核对并恢复内置默认，不请求该合成地址，也不另开第二更新服务器。
 
-若只诊断签名和HTTPS环境，可手动触发`quality.yml`并将`environment_probe_only`设为`true`；两架构只执行`native_environment.py`，检查与工件名称为`environment-diagnostic`，报告中产品用例数为0且无合并、发布资格。不生成预览DMG。默认值`false`、PR和push始终走完整六例产品门禁；诊断READY后仍须以同一待合并候选取得两架构真实E2E原始证据。
-
-若公共DNS均已发布但首次Mac系统请求仍因解析失败退出6，fixture在原180秒准备窗口内仅采集一次只读DNS诊断：`scutil --dns`的系统resolver摘要、`dscacheutil`的该合成域名查询、`dig`对默认解析器及`@1.1.1.1`/`@8.8.8.8`的A/AAAA查询、系统curl版本与同一HTTPS健康地址的`--ipv4`诊断请求，另读取`/etc/resolv.conf`中nameserver/options行。最多10条子命令各限5秒、整组限60秒；仅保留合成域名相关信息，把无关 search/domain 值替换为 `<unrelated>` 并截断输出，保存到本次`update-dns-diagnostic.json`。这些查询只用于定位系统配置或递归路径差异，既不能改DNS/hosts/信任，也不能用`dig`或`curl --ipv4`结果替代App正常系统解析、延长窗口或重试产品用例。主操作BLOCKED时，若临时资源确已全部清理，环境报告仍可独立标记`cleanup_completed=true`；该字段不改变主操作结果。
+手动`environment_probe_only`如果仍存在，仅作零产品用例的环境诊断，旧`native_environment.py`的公网行为不能作为本轮验收。常规PR与push仍需两架构完整六例；独立准备报告不替代004或正式包级门禁。runner保留每例唯一0700测试凭据目录、两个构建同一Info.plist路径、隔离签名Keychain及精确清理，证据只存摘要、脱敏请求、端口与进程归属、原始`xcresult`，不保存token、口令或私钥。`native.xcresult`完整bundle摘要在本例所有`xcresulttool`解析与附件导出退出后计算；父复核在重读原始结果前后各逐文件核算一次，包括SQLite；父级解析期间或之后产生的变化同样FAIL，须有模拟父级解析写入的治理负测。历史Quick Tunnel DNS失败和证据保留在06记录，不作为当前规范或重试理由。
 
 ## 2. 准备与数据生成
 

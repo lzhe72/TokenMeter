@@ -42,6 +42,97 @@ private struct ErrorResponse: Decodable {
     let error: Details
 }
 
+/// The API and updater share a transport policy. Only literal loopback hosts
+/// and localhost may use HTTP; HTTPS always retains normal system TLS checks.
+enum EndpointPolicy {
+    static func url(_ input: String, serviceOrigin: Bool) throws -> URL {
+        let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        let code = serviceOrigin ? "invalid_server" : "invalid_update_source"
+        let message = serviceOrigin
+            ? "请输入本机回环 HTTP 或 HTTPS 服务地址；不能包含账号、路径或查询参数"
+            : "请输入本机回环 HTTP 或 HTTPS 更新地址；不能包含账号、查询参数或片段"
+        func invalid() -> APIError { APIError(code: code, message: message) }
+        guard var components = URLComponents(string: value),
+              let host = components.host, !host.isEmpty,
+              components.user == nil, components.password == nil,
+              components.query == nil, components.fragment == nil,
+              !serviceOrigin || components.path.isEmpty || components.path == "/",
+              components.scheme?.lowercased() == "https" ||
+                (components.scheme?.lowercased() == "http" &&
+                 ["localhost", "127.0.0.1", "::1", "[::1]"].contains(host.lowercased())) else { throw invalid() }
+        if let port = components.port, !(1...65535).contains(port) { throw invalid() }
+        // An explicit colon with no port is not an absent, default port.
+        if let authority = value.split(separator: "/", omittingEmptySubsequences: false).dropFirst(2).first,
+           authority.hasSuffix(":") {
+            throw invalid()
+        }
+        components.scheme = components.scheme?.lowercased()
+        components.host = host.lowercased()
+        if (components.scheme == "https" && components.port == 443) ||
+            (components.scheme == "http" && components.port == 80) { components.port = nil }
+        if serviceOrigin { components.path = "" }
+        guard let url = components.url else { throw invalid() }
+        return url
+    }
+}
+
+struct UpdateConfiguration {
+    static let localFeed = "http://127.0.0.1:49177/appcast.xml"
+    let defaults: UserDefaults
+    let bundledFeed: String
+    var initialFeed: String { defaults.string(forKey: "updateFeedURLOverride") ?? bundledFeed }
+
+    init(defaults: UserDefaults = AppConfiguration().defaults,
+         bundledFeed: String? = Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String) {
+        self.defaults = defaults
+        self.bundledFeed = bundledFeed.flatMap { $0.isEmpty ? nil : $0 } ?? Self.localFeed
+    }
+
+    func feedURL(_ input: String) throws -> URL { try EndpointPolicy.url(input, serviceOrigin: false) }
+    func rememberFeed(_ url: URL) {
+        if url == (try? feedURL(bundledFeed)) { defaults.removeObject(forKey: "updateFeedURLOverride") }
+        else { defaults.set(url.absoluteString, forKey: "updateFeedURLOverride") }
+    }
+    func resetFeed() { defaults.removeObject(forKey: "updateFeedURLOverride") }
+}
+
+enum UpdateFailureReason: Equatable {
+    static let policyDomain = "org.tokenmeter.UpdatePolicy"
+    case sourceRejected, transportRejected, signatureRejected([Int]), noUpdate, other(Int)
+
+    static func classify(_ error: Error, sparkleDomain: String) -> UpdateFailureReason {
+        var current: NSError? = error as NSError
+        var codes: [Int] = []
+        var sourceRejected = false
+        var transportRejected = false
+        for _ in 0..<8 {
+            guard let value = current else { break }
+            if value.domain == sparkleDomain { codes.append(value.code) }
+            if value.domain == policyDomain && value.code == 1 { sourceRejected = true }
+            if value.domain == NSURLErrorDomain && value.code == NSURLErrorAppTransportSecurityRequiresSecureConnection {
+                transportRejected = true
+            }
+            current = value.userInfo[NSUnderlyingErrorKey] as? NSError
+        }
+        if sourceRejected { return .sourceRejected }
+        if transportRejected { return .transportRejected }
+        if codes.contains(3001) || codes.contains(3002) { return .signatureRejected(codes) }
+        if codes.contains(1001) { return .noUpdate }
+        return .other((error as NSError).code)
+    }
+
+    var message: String {
+        switch self {
+        case .sourceRejected: return "更新包地址不符合安全要求 (update_source_rejected)"
+        case .transportRejected: return "更新连接被系统安全策略拒绝 (update_transport_rejected: -1022)"
+        case .signatureRejected(let codes):
+            return "更新包验证失败 (update_signature_rejected: \(codes.map(String.init).joined(separator: ",")))"
+        case .noUpdate: return "当前已是最新版本"
+        case .other(let code): return "更新失败 (update_failed: \(code))"
+        }
+    }
+}
+
 struct AppConfiguration {
     static let localServer = "http://127.0.0.1:49176"
     let defaults: UserDefaults
@@ -104,24 +195,7 @@ struct AppConfiguration {
     #endif
 
     func serverURL(_ input: String) throws -> URL {
-        let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard var components = URLComponents(string: value), let host = components.host,
-              components.user == nil, components.password == nil,
-              components.query == nil, components.fragment == nil,
-              components.path.isEmpty || components.path == "/",
-              components.scheme?.lowercased() == "https" || (components.scheme?.lowercased() == "http" && ["localhost", "127.0.0.1", "::1", "[::1]"].contains(host.lowercased())) else {
-            throw APIError(code: "invalid_server", message: "请输入本机回环 HTTP 或 HTTPS 服务地址；不能包含账号、路径或查询参数")
-        }
-        components.scheme = components.scheme?.lowercased()
-        components.host = host.lowercased()
-        if (components.scheme == "https" && components.port == 443) || (components.scheme == "http" && components.port == 80) {
-            components.port = nil
-        }
-        components.path = ""
-        guard let url = components.url else {
-            throw APIError(code: "invalid_server", message: "服务地址无效")
-        }
-        return url
+        try EndpointPolicy.url(input, serviceOrigin: true)
     }
 
     func rememberServer(_ url: URL) {
@@ -132,6 +206,11 @@ struct AppConfiguration {
         } else {
             defaults.set(url.absoluteString, forKey: "serviceURLOverride")
         }
+        defaults.removeObject(forKey: "serviceURL")
+    }
+
+    func resetServer() {
+        defaults.removeObject(forKey: "serviceURLOverride")
         defaults.removeObject(forKey: "serviceURL")
     }
 }

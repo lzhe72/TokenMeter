@@ -289,27 +289,22 @@ class NativeContractTests(unittest.TestCase):
         output.mkdir()
         private = self.root / "update"
         private.mkdir()
-        (private / "ca.pem").write_bytes(b"synthetic test CA")
-        (private / "server.pem").write_bytes(b"synthetic test leaf")
         signing = mock.Mock()
         signing.prepare.return_value = "A" * 40
         update = mock.Mock()
         update.private = private
-        update.url = "https://same-live-fixture.trycloudflare.com"
+        update.url = "http://127.0.0.1:49177"
+        update.source_nonce_sha256 = "c" * 64
         update.prepare.return_value = "synthetic public key"
         order = mock.Mock()
         order.attach_mock(signing.prepare, "signing")
         order.attach_mock(update.prepare, "prepare")
-        order.attach_mock(update.start_tunnel, "tunnel")
-        order.attach_mock(update._run, "origin")
+        order.attach_mock(update.start, "start")
         with mock.patch.object(native, "git", side_effect=lambda _root, *args: "A" * 40 if args == ("rev-parse", "HEAD") else ""):
             identity, public_key = native.require_upgrade_environment(self.root, output, signing, update)
         self.assertEqual((identity, public_key), ("A" * 40, "synthetic public key"))
-        self.assertEqual([call[0] for call in order.mock_calls], ["signing", "prepare", "tunnel", "origin"])
-        arguments, operation = update._run.call_args.args
-        self.assertEqual(operation, "verify isolated TLS origin")
-        self.assertEqual(arguments, ["/usr/bin/security", "verify-cert", "-c", str(private / "server.pem"),
-                                     "-p", "ssl", "-n", "localhost", "-r", str(private / "ca.pem"), "-L"])
+        self.assertEqual([call[0] for call in order.mock_calls], ["signing", "prepare", "start"])
+        update._run.assert_not_called()
         report = native.json_file(output / "environment.json")
         self.assertEqual(report["state"], "READY")
         self.assertEqual(report["scope"], "environment_only")
@@ -318,32 +313,32 @@ class NativeContractTests(unittest.TestCase):
         self.assertEqual(report["executed_cases"], 0)
         self.assertFalse(report["release_eligible"])
         self.assertFalse(report["cleanup_completed"])
-        self.assertEqual(report["tunnel_url"], update.url)
-        self.assertEqual(report["origin_ca_sha256"], native.sha256(private / "ca.pem"))
-        self.assertEqual(report["origin_certificate_sha256"], native.sha256(private / "server.pem"))
+        self.assertEqual(report["origin_url"], "http://127.0.0.1:49177")
+        self.assertEqual(report["transport"], "loopback_http")
+        self.assertEqual(report["source_nonce_sha256"], "c" * 64)
+        self.assertNotIn("tunnel_url", report)
 
-    def test_upgrade_environment_verify_failure_never_marks_ready_or_restarts_tunnel(self):
+    def test_upgrade_environment_health_failure_never_marks_ready_or_restarts_source(self):
         output = self.root / "evidence"
         output.mkdir()
         private = self.root / "update"
         private.mkdir()
-        (private / "ca.pem").write_bytes(b"synthetic test CA")
-        (private / "server.pem").write_bytes(b"synthetic test leaf")
         signing = mock.Mock()
         signing.prepare.return_value = "A" * 40
         update = mock.Mock()
         update.private = private
-        update.url = "https://same-live-fixture.trycloudflare.com"
+        update.url = "http://127.0.0.1:49177"
+        update.source_nonce_sha256 = "c" * 64
         update.prepare.return_value = "synthetic public key"
-        update._run.side_effect = RuntimeError("Isolated update fixture verify isolated TLS origin failed (1)")
+        update.start.side_effect = RuntimeError("Loopback update fixture source nonce mismatch")
         with mock.patch.object(native, "git", return_value="A" * 40), \
-             self.assertRaisesRegex(RuntimeError, "verify isolated TLS origin failed"):
+             self.assertRaisesRegex(RuntimeError, "source nonce mismatch"):
             native.require_upgrade_environment(self.root, output, signing, update)
-        self.assertEqual(update.start_tunnel.call_count, 1)
-        self.assertEqual(update._run.call_count, 1)
+        self.assertEqual(update.start.call_count, 1)
+        update._run.assert_not_called()
         report = native.json_file(output / "environment.json")
         self.assertEqual(report["state"], "BLOCKED")
-        self.assertIn("verify isolated TLS origin", report["blockers"][0])
+        self.assertIn("source nonce mismatch", report["blockers"][0])
 
     def test_upgrade_environment_failure_closes_the_same_resources_in_case_finally(self):
         output = self.root / "evidence"
@@ -355,7 +350,7 @@ class NativeContractTests(unittest.TestCase):
         update = mock.Mock()
         update.url = None
         update.prepare.return_value = "synthetic public key"
-        update.start_tunnel.side_effect = RuntimeError("Temporary HTTPS tunnel DNS unavailable")
+        update.start.side_effect = RuntimeError("Loopback update fixture source nonce mismatch")
         created = {"signing": 0, "update": 0}
         def make_signing(private):
             created["signing"] += 1
@@ -366,11 +361,6 @@ class NativeContractTests(unittest.TestCase):
             update.private = private
             private.mkdir()
             return update
-        def prepare_update():
-            (update.private / "ca.pem").write_bytes(b"synthetic test CA")
-            (update.private / "server.pem").write_bytes(b"synthetic test leaf")
-            return "synthetic public key"
-        update.prepare.side_effect = prepare_update
         modules = {
             "fixtures.py": account_data,
             "bootstrap_sqlite.py": mock.Mock(),
@@ -396,12 +386,12 @@ class NativeContractTests(unittest.TestCase):
              mock.patch.object(native, "start_isolated_service", return_value=(process, "http://127.0.0.1:12345", mock.Mock())), \
              mock.patch.object(native, "wait_for_service"), \
              mock.patch.object(native, "command") as command, \
-             self.assertRaisesRegex(RuntimeError, "tunnel DNS unavailable"):
+             self.assertRaisesRegex(RuntimeError, "source nonce mismatch"):
             native.execute(ROOT, output, report)
         self.assertEqual(created, {"signing": 1, "update": 1})
         signing.close.assert_called_once_with()
         update.close.assert_called_once_with()
-        update.start_tunnel.assert_called_once_with()
+        update.start.assert_called_once_with()
         update._run.assert_not_called()
         command.assert_not_called()  # No build, package, or App launch after blocked readiness.
         self.assertEqual(native.json_file(output / "E2E-TM001-004/environment.json")["state"], "BLOCKED")
@@ -427,6 +417,55 @@ class NativeContractTests(unittest.TestCase):
         with mock.patch.object(native.subprocess, "run", return_value=mock.Mock(returncode=0, stdout="unknown help", stderr="")), \
              self.assertRaises(native.Blocked):
             native.export_attachments(self.root, bundle, output)
+
+    def test_default_update_bundle_rejects_injected_feed_and_wrong_public_key(self):
+        app = self.root / "TokenMeter.app"
+        contents = app / "Contents"
+        contents.mkdir(parents=True)
+        info = contents / "Info.plist"
+        original = {"SUFeedURL": "", "SUPublicEDKey": "fixed-test-public-key",
+                    "SUVerifyUpdateBeforeExtraction": True}
+        info.write_bytes(plistlib.dumps(original))
+        native.verify_default_update_bundle(app, "fixed-test-public-key")
+        for field, value in (("SUFeedURL", "http://127.0.0.1:49177/appcast.xml"),
+                             ("SUFeedURL", "https://example.invalid/appcast.xml"),
+                             ("SUPublicEDKey", "other-key"), ("SUVerifyUpdateBeforeExtraction", False)):
+            with self.subTest(field=field, value=value):
+                info.write_bytes(plistlib.dumps(dict(original, **{field: value})))
+                with self.assertRaises(native.EvidenceError):
+                    native.verify_default_update_bundle(app, "fixed-test-public-key")
+
+    def test_native_bundle_digest_is_captured_after_export_finishes(self):
+        bundle = self.root / "native.xcresult"
+        bundle.mkdir()
+        database = bundle / "database.sqlite3"
+        database.write_bytes(b"initial completed test output")
+        before = native.tree_digest(bundle)
+        suite = {}
+        def export(*_args):
+            database.write_bytes(b"final database after parsing and export")
+            return [{"path": "screen.png", "sha256": "a" * 64}]
+        with mock.patch.object(native, "export_attachments", side_effect=export):
+            native.capture_native_artifacts(self.root, bundle, self.root, suite)
+        self.assertNotEqual(suite["xcresult_sha256"], before)
+        self.assertEqual(suite["xcresult_sha256"], native.tree_digest(bundle))
+        database.write_bytes(b"later tampering must not change the recorded digest")
+        self.assertNotEqual(suite["xcresult_sha256"], native.tree_digest(bundle))
+
+    def test_failed_export_keeps_final_bundle_digest_without_hiding_failure(self):
+        bundle = self.root / "native.xcresult"
+        bundle.mkdir()
+        database = bundle / "database.sqlite3"
+        database.write_bytes(b"initial")
+        suite = {}
+        def export(*_args):
+            database.write_bytes(b"final failure evidence")
+            raise native.EvidenceError("actual export failed")
+        with mock.patch.object(native, "export_attachments", side_effect=export), \
+             self.assertRaisesRegex(native.EvidenceError, "actual export failed"):
+            native.capture_native_artifacts(self.root, bundle, self.root, suite)
+        self.assertEqual(suite["xcresult_sha256"], native.tree_digest(bundle))
+        self.assertNotIn("screenshots", suite)
 
     def test_exported_attachment_missing_png_cannot_be_accepted(self):
         output = self.root / "evidence"
@@ -598,8 +637,8 @@ class EvidenceVerificationTests(unittest.TestCase):
             "source_commit": self.report["source_commit"], "working_tree_dirty": False,
             "release_id": self.report["release_id"], "executed_cases": 0,
             "release_eligible": False, "cleanup_completed": False,
-            "tunnel_url": "https://same-live-fixture.trycloudflare.com",
-            "origin_ca_sha256": "a" * 64,
+            "origin_url": "http://127.0.0.1:49177", "transport": "loopback_http",
+            "source_nonce_sha256": "a" * 64,
         }
         environment_path = case_output / "environment.json"
         environment_path.write_text(json.dumps(environment))
@@ -642,7 +681,7 @@ class EvidenceVerificationTests(unittest.TestCase):
             "state": "BLOCKED", "snapshot_stage": "cleanup", "cleanup_owner": "environment_probe",
             "source_commit": "b" * 40, "working_tree_dirty": True, "release_id": "old-release",
             "executed_cases": 1, "release_eligible": True, "cleanup_completed": True,
-            "tunnel_url": "http://127.0.0.1:12345", "origin_ca_sha256": "invalid",
+            "origin_url": "http://127.0.0.1:12345", "transport": "public_tunnel", "source_nonce_sha256": "invalid",
         }
         for field, value in changes.items():
             with self.subTest(field=field):
@@ -663,6 +702,14 @@ class EvidenceVerificationTests(unittest.TestCase):
         native.check_native_result.assert_called_once()
         native.parse_bundle.side_effect = native.Blocked("Not a real xcresult")
         with self.assertRaises(native.Blocked):
+            self.verify()
+
+    def test_parent_rejects_bundle_changed_during_original_result_parsing(self):
+        def parse_and_modify(_root, bundle):
+            (bundle / "database.sqlite3").write_bytes(b"late parser write")
+            return {"native": "tree"}, self.summary
+        native.parse_bundle.side_effect = parse_and_modify
+        with self.assertRaisesRegex(native.EvidenceError, "changed during verification"):
             self.verify()
 
     def test_forged_run_stale_commit_dirty_source_and_incomplete_coverage_rejected(self):

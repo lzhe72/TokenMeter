@@ -30,6 +30,7 @@ struct AccountView: View {
     @State private var confirmation = ""
     @State private var showAccounts = false
     @State private var showAudit = false
+    @State private var showConfiguration = false
     @State private var resetAccount: Account?
     @State private var temporaryPassword = ""
 
@@ -90,6 +91,8 @@ struct AccountView: View {
             Spacer(minLength: 8)
             Divider()
             HStack {
+                Button("配置管理") { showConfiguration = true }
+                    .accessibilityIdentifier("configuration.open")
                 Button("检查更新…") { updates.check() }
                     .disabled(!updates.canCheck).accessibilityIdentifier("updates.check")
                 Text(updates.status).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("updates.status")
@@ -97,6 +100,9 @@ struct AccountView: View {
         }
         .padding(28)
         .disabled(store.busy)
+        .sheet(isPresented: $showConfiguration) {
+            ConfigurationView(store: store, updates: updates)
+        }
         .sheet(item: $resetAccount) { account in
             VStack(alignment: .leading, spacing: 16) {
                 Text("重置 \(account.username) 的密码").font(.headline)
@@ -205,5 +211,90 @@ struct AccountView: View {
                 }
             }
         }
+    }
+}
+
+@MainActor
+private struct ConfigurationView: View {
+    @ObservedObject var store: AccountStore
+    @ObservedObject var updates: UpdateController
+    @Environment(\.dismiss) private var dismiss
+    @State private var apiURL = ""
+    @State private var updateURL = ""
+    @State private var errorMessage: String?
+    @State private var status: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("配置管理").font(.title2)
+            Text("服务地址")
+            TextField("本机回环 HTTP 或 HTTPS", text: $apiURL)
+                .accessibilityIdentifier("configuration.api-url")
+                .disabled(!store.canConfigureServer)
+            if !store.canConfigureServer {
+                Text("修改服务地址或恢复默认前，请先完成退出登录。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Text("更新地址")
+            TextField("appcast.xml 地址", text: $updateURL)
+                .accessibilityIdentifier("configuration.update-url")
+                .disabled(!updates.canConfigure)
+            Text("本机地址可以使用 HTTP，其他地址必须使用 HTTPS。更新包始终验证签名。")
+                .font(.caption).foregroundStyle(.secondary)
+            if !updates.canConfigure {
+                Text("本次更新检查或安装结束后可以修改更新地址。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if let errorMessage {
+                Text(errorMessage).foregroundStyle(.red).accessibilityIdentifier("configuration.error")
+            }
+            if let status {
+                Text(status).accessibilityIdentifier("configuration.status")
+            }
+            HStack {
+                Button("恢复默认") { restoreDefaults() }
+                    .disabled(!store.canConfigureServer || !updates.canConfigure)
+                    .accessibilityIdentifier("configuration.reset-defaults")
+                Spacer()
+                Button("关闭") { dismiss() }.accessibilityIdentifier("configuration.cancel")
+                Button("保存") { save() }
+                    .disabled(store.busy || !updates.canConfigure)
+                    .accessibilityIdentifier("configuration.save")
+            }
+        }
+        .textFieldStyle(.roundedBorder)
+        .padding(24)
+        .frame(width: 510)
+        .onAppear { apiURL = store.server; updateURL = updates.feed }
+    }
+
+    private func save() {
+        errorMessage = nil
+        status = nil
+        do {
+            // Both validations precede either write; this synchronous main-thread
+            // operation cannot partially save an invalid pair or change a session.
+            let api = try store.validateServerConfiguration(apiURL)
+            let feed = try updates.validateFeedConfiguration(updateURL)
+            store.saveServerConfiguration(api)
+            updates.saveFeedConfiguration(feed)
+            apiURL = store.server
+            updateURL = updates.feed
+            status = "配置已保存"
+        } catch { errorMessage = error.localizedDescription }
+    }
+
+    private func restoreDefaults() {
+        errorMessage = nil
+        status = nil
+        do {
+            _ = try store.validateServerConfiguration(store.defaultServer)
+            _ = try updates.validateFeedConfiguration(updates.defaultFeed)
+            try store.restoreDefaultServer()
+            try updates.restoreDefaultFeed()
+            apiURL = store.server
+            updateURL = updates.feed
+            status = "已恢复默认配置"
+        } catch { errorMessage = error.localizedDescription }
     }
 }

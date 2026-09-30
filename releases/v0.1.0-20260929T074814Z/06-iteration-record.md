@@ -276,3 +276,27 @@ BUG-TM001-FIXTURE-006 的只读诊断与清理字段修订现已在未提交工�
 独立审查确认单实例执行链和失败阻断保留，并发现新增环境SHA此前只记录、未由父验证器核验。按SOP-000/024先在SOP-014修订13及04测试计划明确不可变准备快照和父报告清理责任，补充父验证器对环境文件路径、摘要、候选和状态的独立校验；该证据合同待源码实现及负向回归，不代替产品原生结果。
 
 源码整合完成：004直接创建并保有一组签名/更新源资源，保留origin证书核验；父验证器重新核验准备快照及同候选/同run绑定，最终清理仍以父报告为准。`python3 -m unittest discover -s tests/governance -p 'test_*.py' -q` 最终197项通过，退出0，原始日志`.local/ci/live-update-fixture-governance-final.log`（上一版195项日志`.local/ci/live-update-fixture-governance.log`保留）。`check_docs.py --mode baseline`核对69份/435链接，`quality_gate.py check`核对12功能/37场景/6绑定，均PASS且不授予发布资格；日志`.local/ci/live-update-fixture-baseline.json`及`live-update-fixture-traceability.json`。已核对远端分支仍为528859c、master仍为548c582；当前提交只推送原版本分支并触发新的完整六例两平台回归，未预填通过或合并。
+
+### 用户指定同机回环更新源与配置管理页（2026-09-30）
+
+用户明确更新源就在运行App的同一台Mac：API默认`http://127.0.0.1:49176`，Sparkle更新feed默认`http://127.0.0.1:49177/appcast.xml`，管理页允许安全修改更新URL并恢复本版内置默认；不再用公网Quick Tunnel。两台GitHub Mac各自提供自己的回环API和更新服务并执行全六例，不能把远端runner的`127.0.0.1`说成用户此Mac。第004例固定49177只启动一组更新源，候选/高版均不注入feed URL，从内置默认地址测试坏EdDSA包拒绝、有效包真实安装重启、构建号变化和`/v1/me`无交互恢复。第006例在配置页测试合法合成更新URL的保存、重启和恢复默认及非法URL拒绝；不连接合成地址、不另开第二更新源。固定公钥、`SUVerifyUpdateBeforeExtraction`与下载地址/重定向安全校验继续保留；仅精确回环HTTP，非回环必须HTTPS。当前源码仍是旧公网fixture，配置页、`--use-default-feed`和同机更新runner属于待实现；本机已安装旧App构建100且`SUFeedURL`/`SUPublicEDKey`空，不能用它当新候选测试。
+
+保留[CI run36670563197](https://github.com/lzhe72/TokenMeter/actions/runs/36670563197)原始结果：分支头`7e33e39`、PR合成测试提交`aaf9594`。Apple Silicon五例原生PASS，004在旧公网随机域名正常系统DNS处BLOCKED；Intel六例原生断言PASS，但父验证器因`Native bundle was changed after execution`最终FAIL，故两平台完整迭代都未PASS。Intel原始日志`.local/ci/live-update-fixture-intel-job.log`的子报告列六例PASS，紧接父报告FAIL；Apple Silicon原始日志`.local/ci/live-update-fixture-arm-job.log`列五例PASS与004 BLOCKED。Intel初始bundle摘要`4048d992...`与最终工件摘要`5040453d...`不同，34个文件经逐项只读重算证实差异；目前不能断定具体写入者。当前证据合同改为所有`xcresulttool`解析和附件导出退出后计算完整bundle摘要，父仍重算全bundle且不排除SQLite，任何后续变化继续FAIL。旧候选不因此追认为PASS。
+
+按SOP-000先改索引和009/010/011/014/017，再经002–007及024同步验收定义、功能拆解、设计、测试、发布预案、产品/架构、数据库说明和状态。用户本机CLT+AX原生驱动可在后续独立计划中实施；当前`AXIsProcessTrusted=false`且执行器不存在，本机E2E不得声称PASS，也不阻断两台CI既有XCUITest门禁。新回环fixture、新设置页和证据摘要顺序须先实现、负测、同一候选两平台完整回归；本段仅是设计基线及旧运行归档，不签发通行证或分发DMG。
+
+本次同机回环文档修订后，实际执行`python3 scripts/check_docs.py --mode structure`和`--mode baseline`均退出0（69份文档、436条链接），`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6程序绑定，`release_eligible=false`），`git diff --check`退出0。新增CLT地址配置组件测试入口已登记到manifest和SOP-013，但文件存在与文档检查不证明该组件通过，更不证明新回环源六例E2E或内部DMG门禁通过。
+
+同机回环原生编排源码的阶段性本机工具证据由整合负责人提供：`tests/governance/test_native_e2e.py`聚焦39/39通过，日志`.local/ci/loopback-native-green-final.log`；此前真实红测7处异常见`.local/ci/loopback-native-red.log`，默认feed包入口红测1处异常见`.local/ci/loopback-default-bundle-red.log`。这些仅证明runner/工具负测，不是新候选两架构六例原生产品结果。旧公网DNS专项fixture测试可由同机source nonce、固定端口归属、URL边界与清理负测取代；必测产品集合仍完整保留001–006六例，不能通过删旧工具测试减少产品场景。
+
+### 第004例选中URL与重定向负测数据合同（2026-09-30）
+
+在既定同机49177单一更新源、固定公钥及一个E2E-TM001-004用例内，补明确四阶段数据顺序：鉴权`control/forbidden`发布enclosure=`http://example.invalid/update.zip`，App应在传输前以`update_source_rejected`拒绝且仍build100；鉴权`control/redirect`发布本机`/redirect.zip`并302到该非回环HTTP URL，必须以ATS `NSURLErrorDomain -1022`（`update_transport_rejected`）拒绝且仍build100，DNS失败不算；原鉴权`control/invalid`恢复完整坏签名包，EdDSA拒绝/build100；原`control/valid`发布有效包，Sparkle真实安装重启至101并经`/v1/me`恢复。三条负测控制URL由runner通过`TM_TEST_UPDATE_{FORBIDDEN,REDIRECT,INVALID}_CONTROL_URL`注入，保留原Bearer控制授权、签名key与fixture清理。`.invalid`保留域名仅用作非回环HTTP拒绝目标，App不主动请求真实公网服务；本轮产品必测集合仍六例，第004例600秒上限未放宽。此为SOP-010/014和03/04计划新增的执行合同，具体源码和原生证据须分别实测，不能预填PASS。
+
+上述四阶段合同同步后实际执行`check_docs.py --mode structure`与`--mode baseline`均退出0（69文档/436链接），`quality_gate.py check`退出0（12功能/37场景/6绑定，`release_eligible=false`），`git diff --check`退出0。只核对文档和追踪，不是四阶段原生结果。
+
+### BUG-TM001-RUNNER-003：父级解析期间原生结果可变化（2026-09-30）
+
+独立审查发现父门禁原先只在自己调用 `xcresulttool` 前核算 `native.xcresult` 完整摘要；若父级解析使 bundle（含 SQLite）变化，单次校验后仍可返回 PASS。先增加模拟父级解析写入 bundle 的治理负测，旧代码真实失败：`.local/ci/loopback-parent-verifier-red.log`，40项中1项失败，未抹除失败证据。随后父级在全部原始解析完成后再次逐文件核算并与子级记录摘要比较，任一次不符均拒绝；SOP-014、04测试计划及测试执行规范同步该判据。整合治理 `python3 -m unittest discover -s tests/governance -p 'test_*.py'` 实际198/198通过，退出0，原始日志`.local/ci/loopback-integrated-governance.log`。
+
+同机回环基础检查实际结果：更新fixture聚焦16/16通过（`.local/ci/loopback-fixture-focused.log`），更新包helper16/16通过（`.local/ci/loopback-integrated-helper.log`），本机Swift凭据组件13/13通过（`.local/ci/loopback-integrated-credentials.log`），本机Swift地址配置组件48项断言0失败（`.local/ci/loopback-integrated-endpoints.log`）。本次文档同步后实跑 `python3 scripts/check_docs.py --mode baseline`、`python3 scripts/quality_gate.py check` 和 `git diff --check` 均退出0：69份文档/436链接、12功能/37场景/6绑定，`release_eligible=false`。这些均为程序/规范基础验证，新候选尚未在两台Mac执行完整六例，PR合并和内部DMG发行仍不具资格。

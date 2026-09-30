@@ -195,7 +195,9 @@
     "tests/governance/test_update_source.py",
     "tests/governance/test_package_release_dmg.py",
     "tests/governance/test_code_signing.py",
-    "tests/governance/test_quality_gate.py"
+    "tests/governance/test_quality_gate.py",
+    "scripts/test_endpoint_configuration.py",
+    "tests/macos/EndpointConfigurationTests.swift"
   ],
   "test_data_program": "tests/server/fixtures.py",
   "test_sop": "sop/SOP-014-e2e.md",

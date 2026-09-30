@@ -28,6 +28,36 @@ final class AccountStore: ObservableObject {
         automaticLogin = configuration.defaults.object(forKey: "automaticLogin") as? Bool ?? true
     }
 
+    var canConfigureServer: Bool { !busy && account == nil && !hasPendingLogout }
+    var defaultServer: String { configuration.bundledServer }
+
+    func validateServerConfiguration(_ input: String) throws -> URL {
+        let url = try configuration.serverURL(input)
+        guard canConfigureServer || url == (try? configuration.serverURL(server)) else {
+            throw APIError(code: "server_configuration_locked", message: "切换服务前，请先完成退出登录")
+        }
+        return url
+    }
+
+    func saveServerConfiguration(_ url: URL) {
+        if url != (try? configuration.serverURL(server)) {
+            clearIdentity()
+            api = nil
+            credentials = nil
+        }
+        configuration.rememberServer(url)
+        server = url.absoluteString
+    }
+
+    func restoreDefaultServer() throws {
+        guard canConfigureServer else {
+            throw APIError(code: "server_configuration_locked", message: "恢复默认前，请先完成退出登录")
+        }
+        let url = try configuration.serverURL(defaultServer)
+        saveServerConfiguration(url)
+        configuration.resetServer()
+    }
+
     private func connect() throws {
         let url = try configuration.serverURL(server)
         guard let directory = configuration.credentialDirectory else {

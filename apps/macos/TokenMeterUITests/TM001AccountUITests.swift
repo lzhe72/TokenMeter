@@ -351,8 +351,51 @@ final class TM001AccountUITests: XCTestCase {
         let controlURL = try XCTUnwrap(environment["TM_TEST_UPDATE_CONTROL_URL"])
         let controlToken = try XCTUnwrap(environment["TM_TEST_UPDATE_CONTROL_TOKEN"])
         let expectedBuild = try XCTUnwrap(environment["TM_TEST_EXPECTED_BUILD"])
-        XCTAssertTrue(controlURL.hasPrefix("https://"))
+        let controlAddress = try XCTUnwrap(URLComponents(string: controlURL))
+        XCTAssertEqual(controlAddress.scheme, "http")
+        XCTAssertEqual(controlAddress.host, "127.0.0.1")
+        XCTAssertEqual(controlAddress.port, 49177)
+
+        func switchFeed(_ address: String) throws {
+            let components = try XCTUnwrap(URLComponents(string: address))
+            XCTAssertEqual(components.scheme, "http")
+            XCTAssertEqual(components.host, "127.0.0.1")
+            XCTAssertEqual(components.port, 49177)
+            var request = URLRequest(url: try XCTUnwrap(components.url))
+            request.httpMethod = "POST"
+            request.timeoutInterval = 10
+            request.setValue("Bearer \(controlToken)", forHTTPHeaderField: "Authorization")
+            let switched = expectation(description: "Switch the same isolated update fixture")
+            var status = 0
+            URLSession.shared.dataTask(with: request) { _, response, _ in
+                status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                switched.fulfill()
+            }.resume()
+            wait(for: [switched], timeout: 15)
+            XCTAssertEqual(status, 200)
+        }
+
+        func rejectUpdate(_ marker: String, download: Bool, originalBuild: String) {
+            click("updates.check")
+            if download {
+                let install = app.buttons["Install Update"].firstMatch
+                XCTAssertTrue(install.waitForExistence(timeout: 30))
+                install.click()
+            }
+            let cancel = app.buttons["Cancel Update"].firstMatch
+            XCTAssertTrue(cancel.waitForExistence(timeout: 45))
+            cancel.click()
+            expectation(for: NSPredicate(format: "value CONTAINS %@", marker),
+                        evaluatedWith: app.staticTexts["updates.status"])
+            waitForExpectations(timeout: 15)
+            XCTAssertEqual(app.staticTexts["app.build"].value as? String, originalBuild)
+        }
+
         app.launch()
+        click("configuration.open")
+        XCTAssertEqual(app.textFields["configuration.update-url"].value as? String,
+                       "http://127.0.0.1:49177/appcast.xml")
+        click("configuration.cancel")
         login("alice")
         changePassword(current: "TEST-ONLY-alice-42!", new: changedPassword)
         assertIdentity("test-alice")
@@ -360,6 +403,15 @@ final class TM001AccountUITests: XCTestCase {
         let originalBuild = try XCTUnwrap(app.staticTexts["app.build"].value as? String)
         XCTAssertFalse(originalBuild.isEmpty)
         XCTAssertNotEqual(originalBuild, expectedBuild)
+        try switchFeed(XCTUnwrap(environment["TM_TEST_UPDATE_FORBIDDEN_CONTROL_URL"]))
+        rejectUpdate("update_source_rejected", download: false, originalBuild: originalBuild)
+        captureWindow("TM001-004-01-forbidden-download-rejected")
+        try switchFeed(XCTUnwrap(environment["TM_TEST_UPDATE_REDIRECT_CONTROL_URL"]))
+        // This must be the actual Foundation ATS error. DNS or download errors
+        // cannot satisfy the assertion, and the fixture never contacts that host.
+        rejectUpdate("update_transport_rejected: -1022", download: true, originalBuild: originalBuild)
+        captureWindow("TM001-004-02-redirect-rejected")
+        try switchFeed(XCTUnwrap(environment["TM_TEST_UPDATE_INVALID_CONTROL_URL"]))
         click("updates.check")
         let installInvalid = app.buttons["Install Update"].firstMatch
         XCTAssertTrue(installInvalid.waitForExistence(timeout: 30))
@@ -373,17 +425,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["app.build"].value as? String, originalBuild)
         app.terminate()
         // Only the external fixture changes; the application keeps the exact same feed and trust policy.
-        var control = URLRequest(url: try XCTUnwrap(URL(string: controlURL)))
-        control.httpMethod = "POST"
-        control.setValue("Bearer \(controlToken)", forHTTPHeaderField: "Authorization")
-        let switched = expectation(description: "Switch isolated update feed to valid archive")
-        var controlStatus = 0
-        URLSession.shared.dataTask(with: control) { _, response, _ in
-            controlStatus = (response as? HTTPURLResponse)?.statusCode ?? 0
-            switched.fulfill()
-        }.resume()
-        wait(for: [switched], timeout: 15)
-        XCTAssertEqual(controlStatus, 200)
+        try switchFeed(controlURL)
         app.launch()
         assertIdentity("test-alice")
         click("updates.check")
@@ -401,7 +443,13 @@ final class TM001AccountUITests: XCTestCase {
         try refreshIdentity("test-alice")
         XCTAssertTrue(try savedCredential() == beforeUpgrade,
                       "The real upgraded application must restore the same persisted session")
-        captureWindow("TM001-004-01-updated-account")
+        click("configuration.open")
+        XCTAssertEqual(app.textFields["configuration.update-url"].value as? String,
+                       "http://127.0.0.1:49177/appcast.xml")
+        XCTAssertFalse(app.textFields["configuration.api-url"].isEnabled)
+        XCTAssertFalse(app.buttons["configuration.reset-defaults"].isEnabled)
+        click("configuration.cancel")
+        captureWindow("TM001-004-03-updated-account")
     }
 
     func testE2E_TM001_005() throws {
@@ -485,6 +533,20 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(serverField.value as? String, first)
         captureWindow("TM001-006-01-default-server")
 
+        click("configuration.open")
+        XCTAssertEqual(app.textFields["configuration.api-url"].value as? String, first)
+        XCTAssertEqual(app.textFields["configuration.update-url"].value as? String,
+                       "http://127.0.0.1:49177/appcast.xml")
+        // The pair must be validated before either value is persisted.
+        text("configuration.api-url", second)
+        text("configuration.update-url", "http://192.0.2.1/appcast.xml")
+        click("configuration.save")
+        expectation(for: NSPredicate(format: "value CONTAINS %@", "invalid_update_source"),
+                    evaluatedWith: app.staticTexts["configuration.error"])
+        waitForExpectations(timeout: 15)
+        click("configuration.cancel")
+        XCTAssertEqual(serverField.value as? String, first)
+
         let firstToken = try token("alice")
         XCTAssertEqual(try request("GET", "/v1/me", token: firstToken).0, 200)
         XCTAssertEqual(try request("GET", "/v1/me", token: firstToken, baseURL: second).0, 401)
@@ -524,6 +586,49 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
         XCTAssertEqual(app.textFields["auth.server"].value as? String, second)
         try assertNoSavedCredential(baseURL: second)
+
+        let customFeed = "https://updates.example.invalid/team/appcast.xml"
+        click("configuration.open")
+        XCTAssertEqual(app.textFields["configuration.api-url"].value as? String, second)
+        for invalid in ["http://192.0.2.1/appcast.xml", "https://user:secret@example.invalid/appcast.xml",
+                        "http://127.0.0.1:65536/appcast.xml"] {
+            text("configuration.update-url", invalid)
+            click("configuration.save")
+            expectation(for: NSPredicate(format: "value CONTAINS %@", "invalid_update_source"),
+                        evaluatedWith: app.staticTexts["configuration.error"])
+            waitForExpectations(timeout: 15)
+        }
+        text("configuration.update-url", customFeed)
+        click("configuration.save")
+        XCTAssertTrue(app.staticTexts["configuration.status"].waitForExistence(timeout: 15))
+        click("configuration.cancel")
+        // No public key is injected in case 006, so saving an address cannot
+        // enable an unsigned updater or contact this synthetic remote hostname.
+        XCTAssertFalse(app.buttons["updates.check"].isEnabled)
+        XCTAssertEqual(app.staticTexts["updates.status"].value as? String, "更新签名公钥尚未配置")
+        app.terminate()
+        app.launch()
+        click("configuration.open")
+        XCTAssertEqual(app.textFields["configuration.api-url"].value as? String, second)
+        XCTAssertEqual(app.textFields["configuration.update-url"].value as? String, customFeed)
+        text("configuration.update-url", "https://unsaved.example.invalid/appcast.xml")
+        click("configuration.cancel")
+        click("configuration.open")
+        XCTAssertEqual(app.textFields["configuration.update-url"].value as? String, customFeed)
+        click("configuration.reset-defaults")
+        XCTAssertEqual(app.textFields["configuration.api-url"].value as? String, first)
+        XCTAssertEqual(app.textFields["configuration.update-url"].value as? String,
+                       "http://127.0.0.1:49177/appcast.xml")
+        click("configuration.cancel")
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(serverField.waitForExistence(timeout: 15))
+        XCTAssertEqual(serverField.value as? String, first)
+        click("configuration.open")
+        XCTAssertEqual(app.textFields["configuration.update-url"].value as? String,
+                       "http://127.0.0.1:49177/appcast.xml")
+        captureWindow("TM001-006-03-configuration-restored")
+        click("configuration.cancel")
 
         text("auth.server", "http://192.0.2.1:49176")
         login("bob")
