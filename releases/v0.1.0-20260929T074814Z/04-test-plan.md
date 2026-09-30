@@ -29,7 +29,7 @@ REQ-TM001 / TM-001；应执行六个目标场景，当前没有此前已交付�
 
 测试实现前的接口失败记录由pytest产生；native测试以XCUITest驱动真实App→API→真实账号库。核心链路不得mock。每例重置数据、退出App并清理本次 UITESTING 专用凭据目录以免互相污染。native run保存原始xcresult、逐例状态/截图、App/service/fixture/source摘要、候选SHA、运行nonce/时刻；比较预期集合与原生标识，无失败、缺失、跳过才可通过。
 
-本机Python检查可执行；本机XCUITest受完整Xcode缺失阻塞；本机CLT+AX自动化暂无执行器且AX权限未授，只能另列体验/诊断，不替代远端迭代门禁。迭代在明确的macOS15 arm64与Intel托管runner执行完整六例；内部 DMG 仍须 macOS14 最低版本及声明架构、包级安装升级六例回归、生产 SQLite 初始化/备份/恢复和专用自动门禁；公开分发另需最终 Developer ID 签名与公证。不能把开发矩阵通过当作正式支持范围通过。
+本机Python检查可执行；本机XCUITest受完整Xcode缺失阻塞；本机CLT+AX自动化暂无执行器且AX权限未授，只能另列体验/诊断，不替代远端迭代门禁。迭代在明确的macOS15 arm64与Intel托管runner执行完整六例；内部 DMG 按用户最新确认须 macOS15 arm64/Intel两组合、包级安装升级六例回归、生产 SQLite 初始化/备份/恢复和专用自动门禁；公开分发另需最终 Developer ID 签名与公证。不能把开发矩阵通过当作正式支持范围通过。
 
 数据/测试程序初始未建立，因此manifest与矩阵保持空绑定并登记任务，入口真实建立后同步。程序就绪不等于已执行，测试不齐全时禁止将功能标implemented。适用SOP：009→010→011→012→013→014，更新验证017，发布判定018。
 
@@ -52,3 +52,5 @@ REQ-TM001 / TM-001；应执行六个目标场景，当前没有此前已交付�
 ## 更新包输入负测
 
 `python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v` 验证更新包程序拒绝非回环HTTP源、错误或不匹配的默认feed、非法URL、非本机明文API、错误权限/畸形私钥、符号链接和已有输出。这些隔离工具测试不替代真实Mac构建、签名校验和004更新用例。
+
+最终生产包的installed模式、同一DMG、标准用户目录所有权、SQLite恢复与父级原始证据合同见[内部发布设计](../../docs/releases/01-internal-v0.1.0.md)。用例docs总索引和逐功能步骤正在补齐；生产包不读取UITESTING注入参数。

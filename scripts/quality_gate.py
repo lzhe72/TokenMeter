@@ -211,6 +211,25 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
         if not isinstance(cases, list) or not cases:
             errors.append(f"{identifier}: at least one E2E case required")
             continue
+        case_document = read_spec(feature.get("test_case_document"), f"{identifier}.test_case_document")
+        sections = re.findall(r"^##\s+(E2E-TM\d{3,}-\d{3,})\b[^\n]*\n(.*?)(?=^##\s|\Z)",
+                              case_document, flags=re.MULTILINE | re.DOTALL)
+        documented_ids = [case_id for case_id, _ in sections]
+        expected_ids = [case.get("id") for case in cases if isinstance(case, dict)]
+        if (len(documented_ids) != len(set(documented_ids)) or
+                set(documented_ids) != set(expected_ids)):
+            errors.append(f"{identifier}: case document must contain each matrix case exactly once")
+        for documented_id, body in sections:
+            acceptance_id = "AC-" + documented_id.removeprefix("E2E-")
+            if not re.search(r"(?<![A-Za-z0-9_-])" + re.escape(acceptance_id) + r"(?![A-Za-z0-9_-])", body):
+                errors.append(f"{documented_id}: case document has no matching acceptance")
+            for label in ("验收", "前置/数据", "步骤", "独立预期", "绑定/证据/状态"):
+                field = re.search(r"\*\*" + re.escape(label) + r"：\*\*\s*(.*?)(?=\n\s*\*\*[^\n]+：\*\*|\Z)",
+                                  body, flags=re.DOTALL)
+                if not field or not field[1].strip():
+                    errors.append(f"{documented_id}: case document is missing {label}")
+                elif label == "步骤" and not re.search(r"^1\.\s+\S", field[1], flags=re.MULTILINE):
+                    errors.append(f"{documented_id}: case document needs ordered executable steps")
         for case in cases:
             if not isinstance(case, dict):
                 errors.append(f"{identifier}: case object required")

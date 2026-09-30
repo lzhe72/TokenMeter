@@ -1,6 +1,6 @@
 # SOP-017 安装包验证
 
-**修订：** 8　**状态：** baselined　**适用：** all
+**修订：** 10　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -29,8 +29,9 @@
 
 ### 内部候选验证（`distribution_profile=internal`）
 
-1. 从固定候选 SHA 构建最终内部 `TokenMeter.app` 和 DMG，记录打包程序、签名身份及 `.app`/DMG 摘要，拒绝 `.UITesting`、测试凭据路径、认证旁路和造数注入。当前仓库尚无独立可执行的内部最终包程序；在建立、测试并接入前，本步骤为 BLOCKED，不调用预览入口充数。
-2. 在声明支持的每个 macOS/架构组合从最终 DMG 安装到干净环境，自动核对签名、Gatekeeper 对本次内部包的实际行为、安装路径/摘要、启动、默认服务地址、权限及六例完整原生产品回归。对生产 SQLite 只做非破坏性就绪/备份检查，用隔离同构副本验证恢复。
+0. 先读取本版[内部发布设计](../docs/releases/01-internal-v0.1.0.md)及版本矩阵。用户已确定0.1.0首版仅支持macOS15 arm64/Intel，所有六例仍必须执行；macOS14留后续版本。生产App路径测试只允许一次性GitHub托管Mac账号，程序先确认目标不存在并取得所有权，绝不对用户此Mac生产目录执行。
+1. 从固定候选 SHA 构建最终内部 `TokenMeter.app` 和 DMG，记录打包程序、签名身份及 `.app`/DMG 摘要，拒绝 `.UITesting`、测试凭据路径、认证旁路和造数注入。内部构建、最终DMG执行器与通行证按上述设计建立并验证。构建入口为 `scripts/internal_package.py`，仅在受保护master的 `internal-release.yml` 中注入环境secrets执行；输出package-manifest与原始DMG/zip。独立测试job调用 `scripts/internal_package_e2e.py` 安装原包并执行完整六例。缺程序、凭据或真实证据时BLOCKED，不调用预览入口充数。
+2. 内部自签构建必须显式传入 `ENABLE_HARDENED_RUNTIME=NO`，验包拒绝runtime/library-validation标志；核对固定证书、非ad-hoc签名及稳定designated requirement，防止无Apple Team ID的内部包被框架加载校验拒绝，依据见内部设计。此要求仅适用于internal；public仍须hardened runtime。随后在声明支持的每个 macOS/架构组合从最终 DMG 安装到干净环境，自动核对签名、Gatekeeper 对本次内部包的实际行为、安装路径/摘要、启动、默认服务地址、权限及六例完整原生产品回归。对生产 SQLite 只做非破坏性就绪/备份检查，用隔离同构副本验证恢复。
 3. 首版候选在执行 App 的同一台 Mac 使用隔离回环更新源真实安装受控高版本包，核对版本、自动登录凭据与服务端 `/v1/me`、配置、无效签名拒绝和失败恢复；后续版本从上一已内部发布稳定包升级。保存最终包与高版本包来源、摘要及原生附件。
 4. 机器核对全部原始结果、清理、候选 SHA、profile 与最终包摘要，交 SOP-018 的 internal 分支。内部包程序/自动验证/受保护证据未就绪时保持 BLOCKED；不得把开发迭代 PASS、测试 App 压缩件或预览 DMG 迁作内部通行证。
 

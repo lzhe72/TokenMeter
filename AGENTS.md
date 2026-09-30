@@ -37,7 +37,7 @@
 6. 修复问题先增加稳定复现用例，再修实现，再执行回归。使用 [修复模板](docs/templates/bugfix.md)。
 7. 不手写通过报告，不伪造厂商日志兼容性，不将合成数据工具的自测宣称为 App E2E。
 8. 文档基线后先按 SOP-009 建立真实 App、服务、数据库初始化和原生测试 target/runner 的工程骨架，不要求预先存在业务红测或产品 PASS。缺 Xcode、GUI 或执行器只阻断依赖它们的构建、运行和验收；可继续有独立验证条件的源码、fixture、测试编写和文档任务。分别记录完成与 BLOCKED，禁止认证旁路或伪造业务结果。生产签名/公证与发布凭据属于 SOP-017/018 前提，不能作为开始开发的前提。
-9. 只有对应 `distribution_profile`（内部或公开）的发布门禁为 `PASS` 才能正式分发安装包、部署服务端或更新 appcast。TM-001 已接入真实原生执行器，当前实现与运行结果以 [docs/status.md](docs/status.md) 为准；迭代通过不替代最终 DMG 安装升级、全平台及受保护发布条件。公开 profile 另要求 Developer ID 与公证；内部 profile 的自动包级门禁尚未实现时为 BLOCKED。
+9. 只有对应 `distribution_profile`（内部或公开）的发布门禁为 `PASS` 才能正式分发安装包、部署服务端或更新 appcast。TM-001 已接入真实原生执行器，当前实现与运行结果以 [docs/status.md](docs/status.md) 为准；迭代通过不替代最终 DMG 安装升级、全平台及受保护发布条件。公开 profile 另要求 Developer ID 与公证；内部 profile 使用 `internal-release.yml` 验证同一最终DMG的两平台完整六例并签发通行证，实际缺证据时仍为BLOCKED。
 
 ## 当前可执行命令
 
@@ -61,7 +61,7 @@ python3 scripts/test_device_credentials.py
 python3 scripts/test_endpoint_configuration.py
 python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
 python3 scripts/quality_gate.py iteration
-python3 scripts/quality_gate.py release
+python3 scripts/quality_gate.py release  # 公开profile诊断；内部发布按SOP-018的独立工作流
 ```
 
 Swift 凭据和地址配置边界检查可在有 Command Line Tools 的本机 macOS 执行，但不能替代原生用例。现有六例原生门禁要求两台 GitHub Mac 各自有完整 Xcode 与已登录桌面；TM-001 第004例的隔离临时签名和更新源在执行 App 的同一台 Mac 上运行，默认回环地址 `http://127.0.0.1:49177/appcast.xml`，无需公网隧道。`127.0.0.1` 始终指正在运行 App 的那台 Mac，远端 runner 不是用户本机。用户本机仅有 Command Line Tools 且 AX 权限未授时不声称本机原生 E2E 通过，也不改系统证书信任/TCC；该状态不替代或阻断远端六例有效结果。缺实际运行条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。

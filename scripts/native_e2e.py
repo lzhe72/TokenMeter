@@ -504,7 +504,11 @@ def load_module(path: Path, name: str):
 
 
 def inspect_production_bootstrap(database: Path, *, after_ui: bool) -> dict:
-    """Read only the owned, isolated production fixture; never export its DB or hashes."""
+    """Read the owned synthetic production fixture without exposing password hashes.
+
+    This helper emits only redacted state. The internal release runner may archive
+    its own session-free synthetic backup for independent verification; never a
+    user database or a snapshot containing usable sessions."""
     if database.is_symlink() or not database.is_file() or database.name != "production.db":
         raise EvidenceError("Isolated production fixture database is missing or unsafe")
     try:

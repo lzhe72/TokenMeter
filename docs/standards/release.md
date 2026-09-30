@@ -2,7 +2,7 @@
 
 ## 当前真实状态
 
-TM-001 已建立 App、服务端、原生执行器和原始结果复核，当前验收结果统一记录在[状态页](../status.md)。迭代门禁根据本次真实原生执行判定；内部分发的最终 DMG/包级原生矩阵/专用机器门禁未就绪，发布仍为 `BLOCKED`；公开分发另缺 Developer ID、公证与受保护签发条件。v0.1.0 的数据库目标是隔离的生产 SQLite，MySQL 不属于本版门禁。
+TM-001 已建立 App、服务端、原生执行器和原始结果复核，当前验收结果统一记录在[状态页](../status.md)。迭代门禁根据本次真实原生执行判定；内部分发按[内部包设计](../releases/01-internal-v0.1.0.md)验证最终DMG及两平台完整原生回归；在该候选实际完成前不具发布资格。公开分发的Developer ID、公证条件独立保留。v0.1.0 的数据库目标是隔离的生产 SQLite，MySQL 不属于本版门禁。
 
 下面定义执行器必须持续满足的合同。不能通过删除阻断、手写 PASS JSON 或让空脚本返回零来宣称完成。
 
@@ -20,14 +20,15 @@ SOP 负责让 Codex 可重放每一步；门禁结论由程序根据本次执行
 | --- | --- | --- |
 | `python3 scripts/quality_gate.py check` | 检查文档基线、功能、用例、数据程序和 SOP 引用 | 仅规范检查；通过也无发布资格 |
 | `python3 scripts/quality_gate.py iteration` | 本次产品迭代门禁 | 规范检查后启动真实原生 E2E，复核本次结果 |
-| `python3 scripts/quality_gate.py release` | 发布候选门禁 | 当前只覆盖公开签名/公证合同；内部 profile 的独立包级门禁尚未实现，两种正式分发均 BLOCKED |
+| `python3 scripts/quality_gate.py release` | 公开发布候选诊断 | 保留Developer ID/公证合同，当前缺凭据时BLOCKED |
+| `internal-release.yml` / `internal_release_gate.py` | 内部最终包发布门禁 | 受保护master同一DMG、两平台六例原件校验；仅完整PASS签发通行证 |
 | `python3 scripts/e2e.py --phase iteration` | 直接运行产品 E2E 适配层 | 真实构建与逐例执行；缺环境记录 BLOCKED |
 
 - `0 / PASS`：该命令对应检查已通过；只有产品发布门禁的 PASS 才有发布资格。
 - `1 / FAIL`：规范无效、测试断言失败或证据校验失败。
 - `2 / BLOCKED`：缺运行条件、执行器、必需数据、平台或有效证据。
 
-报告写入 `.local/e2e/<run-id>/result.json`。`runner_implemented`、`executed_cases`、逐例结果和清理状态必须来自实际执行；零执行/未接入不能通过。父门禁分配本次运行ID并重新解析原始xcresult，检查提交、清单、产物和数据摘要。当前没有发布通行证签发，`release_eligible`保持false；迭代PASS不代表可发布。门禁不接收用户提供的“通过报告”路径。
+报告写入 `.local/e2e/<run-id>/result.json`。`runner_implemented`、`executed_cases`、逐例结果和清理状态必须来自实际执行；零执行/未接入不能通过。父门禁分配本次运行ID并重新解析原始xcresult，检查提交、清单、产物和数据摘要。迭代`release_eligible`始终false。内部最终包门禁只消费同次受保护workflow/attempt的原始资产和原生证据，完整复核后才签发通行证；不接受任意外部PASS报告。
 
 ## 必须自动执行的检查
 
@@ -60,7 +61,7 @@ TM-001 的 `scripts/e2e.py` 与 `scripts/native_e2e.py` 已接入真实执行，
 
 macOS 支持矩阵由受版本控制的配置定义，至少验证最低受支持系统与当前支持系统、arm64 与 x86_64；生产发布验证本版实际目标数据库，v0.1.0 为 SQLite，真实生产库只做非破坏性就绪/备份检查，隔离同构副本执行恢复及完整业务链路。未来迁移至 MySQL 时另增该引擎和迁移矩阵。每个平台都需要对应机器的原生结果，不能用主机名称或编译目标代替执行。
 
-0.1.0 随账号链路交付最小签名更新器。首次没有上一稳定版时，记录历史基线不存在，验证候选干净安装，并从候选 App 更新至隔离源中的受控高版本签名测试包；记录测试包来源、版本、摘要和独立预期，不将其冒称历史公开版本。自 0.2.0 起每次发布验证上一公开稳定版→候选的真实 App 内更新。0.10.0 完善更新体验，不作为首次加入更新器的时间点。开发阶段可用隔离临时自签名包；默认更新源 `http://127.0.0.1:49177/appcast.xml` 只在App所在Mac上服务，固定EdDSA公钥、坏签名拒绝和下载URL边界仍须真实测试；内部发行阶段必须另验无测试路径的最终 DMG、实际 Gatekeeper 行为、包级 E2E 与机器通行证，公开发行另验 Developer ID/公证包。任一分发凭据不作为开始编码的前提。
+0.1.0 随账号链路交付最小签名更新器。首次没有上一稳定版时，记录历史基线不存在，验证候选干净安装，并从候选 App 更新至隔离源中的受控高版本签名测试包；记录测试包来源、版本、摘要和独立预期，不将其冒称历史公开版本。自 0.2.0 起每次发布验证上一对应profile稳定版→候选的真实 App 内更新。0.10.0 完善更新体验，不作为首次加入更新器的时间点。开发阶段可用隔离临时自签名包；默认更新源 `http://127.0.0.1:49177/appcast.xml` 只在App所在Mac上服务，固定EdDSA公钥、坏签名拒绝和下载URL边界仍须真实测试；内部发行阶段必须另验无测试路径的最终 DMG、实际 Gatekeeper 行为、包级 E2E 与机器通行证，公开发行另验 Developer ID/公证包。任一分发凭据不作为开始编码的前提。
 
 ## 产品通过报告必须绑定的证据
 
@@ -81,14 +82,15 @@ macOS 支持矩阵由受版本控制的配置定义，至少验证最低受支�
 ## Git、CI 与发布权限
 
 - [常规工作流](../../.github/workflows/quality.yml)在 PR、主分支更新和手动触发时执行规范与 iteration 门禁，不依赖版本 Tag。
-- [候选工作流](../../.github/workflows/release-candidate.yml)通过默认分支的 workflow_dispatch 接收完整 `candidate_sha`，checkout 该提交并验证 HEAD、干净工作区及同名正式 Tag 尚不存在，再执行 release 门禁。配置 `release-validation` 环境、只读仓库权限，不包含签发或分发能力。当前原生入口仍返回 BLOCKED。
+- [内部发布工作流](../../.github/workflows/internal-release.yml)执行 preflight→单次生产构建→两平台安装回归→原件父门禁→自动Git发布，全部使用同一候选SHA和run/attempt。代码签名与EdDSA私钥只交构建step，写仓库权限仅交发布job；测试job无私钥。发布前后都读回远端状态与摘要。
+- [公开候选工作流](../../.github/workflows/release-candidate.yml)通过默认分支的 workflow_dispatch 接收完整 `candidate_sha`，checkout 该提交并验证 HEAD、干净工作区及同名正式 Tag 尚不存在，再执行 release 门禁。配置 `release-validation` 环境、只读仓库权限，不包含签发或分发能力。当前原生入口仍返回 BLOCKED。
 - [candidate_gate.py](../../scripts/candidate_gate.py)的 PASS 仅表示候选身份与触发上下文有效，`release_eligible` 始终为 false。它不替代产品门禁、可信 CI 证明或远端保护配置核实。
-- **工作流文件不等于已生效的分支保护。** 需要在远端配置 required checks、禁止跳过检查，并保护发布凭据；当前尚未配置/核实，不能宣称已落实远端强制发布控制。
+- **工作流文件不等于已生效的分支保护。** 需要在远端配置 required checks、禁止跳过检查，并保护发布凭据；2026-09-30 已通过GitHub API配置并读回master的governance和两平台product-e2e必需检查、管理员不可绕过、禁止强推/删分支；release-validation环境仅允许master部署，证据见版本06记录。稳定内部签名和EdDSA私钥已保存该环境，只有构建step取用；最终包仍须逐候选真实验证。
 - 发布任务必须依赖同一提交全部 required checks 成功，取已验证构建物进行发布，不能通过后重新构建另一包。
 - appcast、安装包和服务端部署凭据仅供受保护发布任务使用。开发/PR 测试任务无这些凭据。
 - 不允许手工上传包或改 appcast 绕过门禁。热修复执行相同规则。
 - Git tag/Release 和 Changelog 二级标题使用同一 release ID，档案可查询需求→拆解→开发计划→测试计划→发布预案→实际证据/通行证。tag、源码、产品版本、构建物和测试报告对应同一候选提交；源码或依赖变化后重新执行门禁。
 
-当前内部包打包与专用发布门禁尚未实现；公开发布所需 Developer ID/公证仍缺。两种 profile 均不执行真实产品发布或创建产品发布 tag。
+内部发布程序按本轮设计建立并受原始证据约束，实际是否发布以状态页和通行证为准；公开Developer ID/公证缺失只阻断public profile，不能误用其条件阻断已明确的内部发行。
 
 手动工作流需先存在于默认分支；本仓库额外检查实际触发引用必须是默认分支。相关平台行为见 [GitHub 工作流触发文档](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)。环境名称不代表已启用保护，发布前必须按[环境保护文档](https://docs.github.com/en/enterprise-cloud@latest/actions/reference/workflows-and-actions/deployments-and-environments)核实配置并归档证据。

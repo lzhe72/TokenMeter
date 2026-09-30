@@ -197,16 +197,27 @@
     "tests/governance/test_code_signing.py",
     "tests/governance/test_quality_gate.py",
     "scripts/test_endpoint_configuration.py",
-    "tests/macos/EndpointConfigurationTests.swift"
+    "tests/macos/EndpointConfigurationTests.swift",
+    "scripts/internal_package.py",
+    "scripts/internal_release_gate.py",
+    "scripts/internal_publish.py",
+    "scripts/local_distribution.py",
+    "tests/governance/test_internal_package.py",
+    "tests/governance/test_internal_package_e2e.py",
+    "tests/governance/test_internal_release_gate.py",
+    "tests/governance/test_internal_publish.py",
+    "tests/governance/test_local_distribution.py",
+    "scripts/internal_package_e2e.py"
   ],
   "test_data_program": "tests/server/fixtures.py",
   "test_sop": "sop/SOP-014-e2e.md",
   "gate_commands": {
     "metadata": "python3 scripts/quality_gate.py check",
     "iteration": "python3 scripts/quality_gate.py iteration",
-    "release": "python3 scripts/quality_gate.py release",
+    "release": "gh workflow run internal-release.yml --ref master -f candidate_sha=<protected-master-full-sha>",
     "documentation": "python3 scripts/check_docs.py --mode baseline",
-    "documentation_structure": "python3 scripts/check_docs.py --mode structure"
+    "documentation_structure": "python3 scripts/check_docs.py --mode structure",
+    "release_public_diagnostic": "python3 scripts/quality_gate.py release"
   },
   "publication": {
     "planned_git_tag": "v0.1.0-20260929T074814Z",
@@ -218,5 +229,13 @@
   "sop_index": "sop/README.md",
   "document_catalog": "docs/catalog.json",
   "program_bindings_status": "ready",
-  "distribution_profile": "internal"
+  "distribution_profile": "internal",
+  "test_case_index": "docs/testing/cases/README.md",
+  "test_case_documents": [
+    "docs/testing/cases/01-TM-001-accounts.md"
+  ],
+  "internal_release_design": "docs/releases/01-internal-v0.1.0.md",
+  "internal_release_configuration": "releases/v0.1.0-20260929T074814Z/internal-release.json",
+  "release_workflow": ".github/workflows/internal-release.yml",
+  "retrospective": "docs/retrospectives/2026-09-29--2026-09-30-tokenmeter.md"
 }

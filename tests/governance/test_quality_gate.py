@@ -64,7 +64,22 @@ class GateTests(unittest.TestCase):
              "criterion": f"Required behavior {number}", "data_requirements": []}
             for number in range(1, 13)
         ]}
+        self.write_case_documents()
         self.persist()
+
+    def write_case_documents(self):
+        for feature in self.matrix["features"]:
+            relative = f"docs/testing/cases/{feature['id']}.md"
+            feature["test_case_document"] = relative
+            body = f"# {feature['id']} synthetic case document\n\n"
+            for case in feature["cases"]:
+                body += (f"## {case['id']} · Synthetic behavior\n\n"
+                         f"**验收：** {case['acceptance_id']}\n\n"
+                         "**前置/数据：** Fresh synthetic fixture, no product execution.\n\n"
+                         "**步骤：**\n\n1. Exercise the documented behavior.\n\n"
+                         "**独立预期：** Independently defined result.\n\n"
+                         "**绑定/证据/状态：** Planned; no product PASS.\n\n")
+            self.write(relative, body)
 
     def write(self, relative, content):
         path = self.root / relative
@@ -115,6 +130,29 @@ class GateTests(unittest.TestCase):
         case = copy.deepcopy(self.matrix["features"][0]["cases"][0])
         case.update(id="E2E-TM001-002", acceptance_id="AC-TM001-002")
         self.matrix["features"][0]["cases"].append(case)
+        self.write_case_documents()
+
+    def test_feature_requires_its_detailed_case_document(self):
+        self.matrix["features"][0].pop("test_case_document")
+        self.assertTrue(any("test_case_document" in e for e in self.errors()))
+
+    def test_case_document_rejects_missing_or_duplicate_case_sections(self):
+        path = self.root / self.matrix["features"][0]["test_case_document"]
+        original = path.read_text()
+        for changed in (original.replace("## E2E-TM001-001", "## unrelated"), original + original):
+            path.write_text(changed)
+            with self.subTest(changed=changed[:50]):
+                self.assertTrue(any("case document" in e for e in self.errors()))
+
+    def test_case_document_rejects_incomplete_or_hidden_steps_and_wrong_acceptance(self):
+        path = self.root / self.matrix["features"][0]["test_case_document"]
+        original = path.read_text()
+        for changed in (original.replace("**独立预期：** Independently defined result.", ""),
+                        original.replace("1. Exercise the documented behavior.", "<!-- 1. Hidden steps -->"),
+                        original.replace("AC-TM001-001", "AC-TM002-001")):
+            path.write_text(changed)
+            with self.subTest(changed=changed[:50]):
+                self.assertTrue(any("case document" in e for e in self.errors()))
 
     def test_removing_one_required_case_leaves_uncovered_acceptance(self):
         self.add_second_acceptance()
