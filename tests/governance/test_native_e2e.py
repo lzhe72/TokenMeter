@@ -238,8 +238,10 @@ class NativeContractTests(unittest.TestCase):
             with mock.patch.object(native, "command", return_value=mock.Mock(returncode=exit_code)), \
                  self.assertRaises(error):
                 native.require_upgrade_environment(self.root, self.root)
-        with mock.patch.object(native, "command", return_value=mock.Mock(returncode=0)):
+        with mock.patch.object(native, "command", return_value=mock.Mock(returncode=0)) as probe:
             native.require_upgrade_environment(self.root, self.root)
+        self.assertEqual(probe.call_args.kwargs["timeout"], 1800)
+        self.assertFalse(probe.call_args.kwargs["required"])
 
     def test_attachment_export_requires_native_help_and_real_png_files(self):
         bundle = self.root / "native.xcresult"

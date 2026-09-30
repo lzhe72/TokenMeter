@@ -1,6 +1,6 @@
 # SOP-014 自动 E2E
 
-**修订：** 8　**状态：** baselined　**适用：** all
+**修订：** 9　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -24,9 +24,9 @@ SOP-009–013 就绪；具备实际 App、服务、数据库、原生 UI runner�
 2. 运行 python3 scripts/quality_gate.py iteration；它先检查元数据再调用产品入口，不接收任意外部 PASS JSON。
 3. 真实 runner 必须自动构建/初始化账号、驱动原生 UI 和系统交互、贯通真实服务/数据库并断言用户结果与关键持久化。
 4. 收集原生测试包、服务日志、截图附件、命令/退出码及实际用例集合；逐项比较预期集合、平台和实际结果。
-5. TM-001 入口由 `scripts/e2e.py` 调用 `scripts/native_e2e.py`：检查完整 Xcode 和已登录桌面，逐例建立隔离 SQLite，启动真实服务，构建候选，并用 `xcodebuild test-without-building` 执行清单的 `native_test`。每例保存 `native.xcresult`、原生命令日志、候选包和 fixture 摘要；当前六例都需要执行。001–003使用临时回归账号；005在独立临时根执行生产首建程序，以真实 App 验证 `admin` 初始登录、改密和库隔离，绝不访问用户实际生产库。006在默认端口49176及第二隔离端口启动两套真实服务/SQLite，以原生 UI 验证默认值、地址切换、重启持久化及会话隔离；若端口被用户服务占用或双服务执行器缺失则 BLOCKED。第004例先执行009的独立环境探针，允许同一 Quick Tunnel 域名最多 180 秒完成 DNS/TLS 准备；只有系统 TLS 请求核对来源成功才执行产品升级步骤。其余五例可按自身依赖先执行并归档；004探针失败仍阻断全体六例门禁，不得缩小应执行集合或重试产品用例取绿。
+5. TM-001 入口由 `scripts/e2e.py` 调用 `scripts/native_e2e.py`：检查完整 Xcode 和已登录桌面，逐例建立隔离 SQLite，启动真实服务，构建候选，并用 `xcodebuild test-without-building` 执行清单的 `native_test`。每例保存 `native.xcresult`、原生命令日志、候选包和 fixture 摘要；当前六例都需要执行。001–003使用临时回归账号；005在独立临时根执行生产首建程序，以真实 App 验证 `admin` 初始登录、改密和库隔离，绝不访问用户实际生产库。006在默认端口49176及第二隔离端口启动两套真实服务/SQLite，以原生 UI 验证默认值、地址切换、重启持久化及会话隔离；若端口被用户服务占用或双服务执行器缺失则 BLOCKED。第004例先执行009的独立环境探针：同一 Quick Tunnel 域名在共享的最多 180 秒窗口内，先核对两个公共 HTTPS DNS 源的 A 记录，再用 Mac 正常系统 DNS/TLS 请求核对来源；公共 DNS 查询不替代系统检查。任一准备阶段 BLOCKED 时不得执行产品升级步骤，也不得将探针 READY 计作004通过。其余五例可按自身依赖先执行并归档；004探针失败仍阻断全体六例门禁，不得缩小应执行集合或重试产品用例取绿。
 6. 父门禁为本次子进程分配唯一 nonce；子进程返回后，父门禁重新用 `xcresulttool` 解析原始结果，对照提交、清单摘要、原生测试 ID、数量、零失败/跳过及清理结果。只返回退出0或写 PASS JSON 均不能放行。每个 CI 平台分别出结果，开发矩阵全部通过才可验收。
-7. 缺本机 Xcode 时记录本机无法执行，使用版本计划指定的 GitHub 托管 `macos-15` 与 `macos-15-intel` 执行 `.github/workflows/quality.yml`；本机安装 Xcode 不是远端迭代 E2E 的前置条件。每个平台在自身机器上构建并运行真实 App、两套所需隔离服务、数据库和原生 UI，用原始 `xcresult` 核对同一候选及完整六例；远端无有效结果仍为 BLOCKED。远端 PASS 不倒填为本机 PASS。正式发布仍需最终签名/公证包、完整支持矩阵、当前版本指定的生产数据库及受保护流程；v0.1.0 指定服务端 SQLite，MySQL 迁移属于后续独立版本。迭代 PASS 不授予发布资格。
+7. 缺本机 Xcode 时记录本机无法执行，使用版本计划指定的 GitHub 托管 `macos-15` 与 `macos-15-intel` 执行 `.github/workflows/quality.yml`；本机安装 Xcode 不是远端迭代 E2E 的前置条件。每个平台在自身机器上构建并运行真实 App、两套所需隔离服务、数据库和原生 UI，用原始 `xcresult` 核对同一候选及完整六例；远端无有效结果仍为 BLOCKED。`workflow_dispatch` 的 `environment_probe_only=true` 只产生另名 `environment-diagnostic` 检查与环境工件，执行零产品用例；即使探针 READY，也不能用于本步骤 PASS、PR 合并或正式发布。PR/push 以及默认 `workflow_dispatch` 仍须运行完整迭代门禁。远端 PASS 不倒填为本机 PASS。正式发布仍需最终签名/公证包、完整支持矩阵、当前版本指定的生产数据库及受保护流程；v0.1.0 指定服务端 SQLite，MySQL 迁移属于后续独立版本。迭代 PASS 不授予发布资格。
 8. 保存失败证据；修复后新建运行完整回归，不通过重复重试覆盖失败。
 
 ## 输出

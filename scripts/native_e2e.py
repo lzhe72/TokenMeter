@@ -208,8 +208,11 @@ def command(args: list[str], *, root: Path, log: Path, env: dict | None = None,
 
 
 def require_upgrade_environment(root: Path, case_output: Path) -> None:
+    # Allow bounded signing/certificate commands, tunnel readiness, and finally
+    # cleanup to finish. A 300s outer cap can kill the probe before cleanup even
+    # though its 90s URL and shared 180s readiness budgets have not expired.
     result = command([sys.executable, str(root / "scripts/native_environment.py")], root=root,
-                     log=case_output / "environment-probe.log", timeout=300, required=False)
+                     log=case_output / "environment-probe.log", timeout=1800, required=False)
     if result.returncode == 2:
         raise Blocked("E2E-TM001-004 environment is unavailable; see environment-probe.log and environment.json")
     if result.returncode:

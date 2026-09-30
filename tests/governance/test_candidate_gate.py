@@ -103,6 +103,29 @@ class CandidateGateTests(unittest.TestCase):
         self.assertNotIn("contents: write", dispatch)
         self.assertNotIn("continue-on-error:", dispatch)
 
+    def test_environment_diagnostic_cannot_replace_pr_gate_or_package(self):
+        workflow = (REPO / ".github/workflows/quality.yml").read_text()
+        self.assertIn("environment_probe_only:", workflow)
+        self.assertIn("type: boolean\n        required: false\n        default: false", workflow)
+        product_condition = "github.event_name != 'workflow_dispatch' || inputs.environment_probe_only != true"
+        diagnostic_condition = "github.event_name == 'workflow_dispatch' && inputs.environment_probe_only == true"
+        steps = workflow.split("      - name: ")
+        product = next(step for step in steps if step.startswith("Execute product gate\n"))
+        diagnostic = next(step for step in steps if step.startswith("Diagnose isolated environment only\n"))
+        self.assertIn("if: ${{ " + product_condition + " }}", product)
+        self.assertIn("python3 scripts/quality_gate.py iteration", product)
+        self.assertIn("if: ${{ " + diagnostic_condition + " }}", diagnostic)
+        self.assertIn("python3 scripts/native_environment.py", diagnostic)
+        self.assertNotIn("quality_gate.py", diagnostic)
+        for name in ("Package local-only preview DMG", "Retain local-only preview DMG"):
+            step = next(step for step in steps if step.startswith(name))
+            self.assertIn("(" + product_condition + ")", step)
+        # Distinct check and artifact identities prevent READY being mistaken for product PASS.
+        distinct_name = diagnostic_condition + " && 'environment-diagnostic' || 'product-e2e'"
+        self.assertEqual(2, workflow.count(distinct_name))
+        self.assertIn("runner: [macos-15, macos-15-intel]", workflow)
+        self.assertNotIn("continue-on-error:", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()

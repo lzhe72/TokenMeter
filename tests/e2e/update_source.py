@@ -5,6 +5,7 @@ import base64
 from datetime import datetime, timezone
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -182,6 +183,78 @@ class UpdateSource:
             return False, "HTTP 200 with unexpected body"
         return True, "HTTP 200 verified"
 
+    def _dns_publication(self, hostname: str) -> tuple[bool, dict[str, str]]:
+        """Wait for DNS publication before the Mac's resolver can cache NXDOMAIN.
+
+        DoH is only a readiness signal. The App and the final health probe still
+        resolve the hostname normally and use the macOS TLS trust policy.
+        """
+        if re.fullmatch(r"[a-z0-9-]+\.trycloudflare\.com", hostname) is None:
+            raise RuntimeError("Temporary update hostname is invalid")
+        resolvers = {
+            "cloudflare": f"https://cloudflare-dns.com/dns-query?name={hostname}&type=A",
+            "google": f"https://dns.google/resolve?name={hostname}&type=A",
+        }
+        statuses: dict[str, str] = {}
+        for name, url in resolvers.items():
+            try:
+                result = subprocess.run(
+                    ["/usr/bin/curl", "--disable", "--silent", "--show-error", "--fail",
+                     "--proto", "=https", "--max-time", "8", "--max-filesize", "8192",
+                     "--header", "accept: application/dns-json", url],
+                    capture_output=True, timeout=10, check=False,
+                )
+            except subprocess.TimeoutExpired:
+                statuses[name] = "curl-timeout"
+                continue
+            except OSError as exc:
+                statuses[name] = f"curl-unavailable-{exc.errno}"
+                continue
+            if result.returncode:
+                statuses[name] = f"curl-exit-{result.returncode}"
+                continue
+            try:
+                payload = json.loads(result.stdout)
+            except (ValueError, UnicodeError):
+                statuses[name] = "invalid-json"
+                continue
+            if not isinstance(payload, dict) or type(payload.get("Status")) is not int:
+                statuses[name] = "invalid-dns-response"
+            elif payload["Status"] == 3:
+                statuses[name] = "NXDOMAIN"
+            elif payload["Status"] != 0:
+                statuses[name] = f"dns-status-{payload['Status']}"
+            else:
+                answers = payload.get("Answer", [])
+                if not isinstance(answers, list) or not all(isinstance(answer, dict) for answer in answers):
+                    statuses[name] = "invalid-dns-response"
+                    continue
+                names = {hostname}
+                # DNS may return a CNAME chain before the A record. Accept only
+                # records linked to the requested temporary hostname.
+                for _ in answers:
+                    for answer in answers:
+                        owner = answer.get("name")
+                        target = answer.get("data")
+                        if (type(answer.get("type")) is int and answer["type"] == 5 and isinstance(owner, str)
+                                and isinstance(target, str) and owner.rstrip(".").lower() in names):
+                            names.add(target.rstrip(".").lower())
+                valid_address = False
+                for answer in answers:
+                    owner = answer.get("name")
+                    address = answer.get("data")
+                    if (type(answer.get("type")) is not int or answer["type"] != 1 or not isinstance(owner, str)
+                            or owner.rstrip(".").lower() not in names or not isinstance(address, str)):
+                        continue
+                    try:
+                        ipaddress.IPv4Address(address)
+                    except ipaddress.AddressValueError:
+                        continue
+                    valid_address = True
+                    break
+                statuses[name] = "published" if valid_address else "no-matching-A-record"
+        return all(status == "published" for status in statuses.values()), statuses
+
     def start_tunnel(self) -> str:
         """Expose only the isolated HTTPS fixture through a public-trust test URL.
 
@@ -228,11 +301,37 @@ class UpdateSource:
                 break
         if self.url is None:
             raise RuntimeError("Temporary HTTPS tunnel did not provide a URL within 90 seconds")
-        # A newly assigned Quick Tunnel hostname can briefly return NXDOMAIN.
+        hostname = self.url.removeprefix("https://")
+        readiness_started = time.monotonic()
+        readiness_deadline = readiness_started + 180
+        publication_started = readiness_started
+        next_publication_progress = publication_started
+        dns_status: dict[str, str] = {}
+        while time.monotonic() < readiness_deadline:
+            if self.tunnel.poll() is not None:
+                raise RuntimeError("Temporary HTTPS tunnel exited during DNS publication")
+            published, dns_status = self._dns_publication(hostname)
+            now = time.monotonic()
+            if published:
+                print(json.dumps({"event": "fixture_operation", "fixture": "update_source",
+                                  "operation": "public DNS publication", "state": "SUCCEEDED",
+                                  "hostname": hostname, "elapsed_seconds": round(now - publication_started, 1),
+                                  "resolvers": dns_status}), flush=True)
+                break
+            if now >= next_publication_progress:
+                print(json.dumps({"event": "fixture_operation", "fixture": "update_source",
+                                  "operation": "public DNS publication", "state": "WAITING",
+                                  "hostname": hostname, "elapsed_seconds": round(now - publication_started, 1),
+                                  "resolvers": dns_status}), flush=True)
+                next_publication_progress = now + 20
+            time.sleep(3)
+        else:
+            raise RuntimeError(f"Temporary HTTPS tunnel DNS publication unavailable for {hostname}: {dns_status}")
         # Keep the same tunnel alive while the normal macOS resolver catches up;
-        # never substitute an alternate resolver for the App's real DNS path.
+        # DoH results never replace the App's DNS or the public TLS/health check.
+        # Both stages share one bound to fit the independent environment probe.
         started = time.monotonic()
-        deadline = started + 180
+        deadline = readiness_deadline
         next_progress = started
         last_probe = "public endpoint was not checked"
         while time.monotonic() < deadline:
@@ -245,7 +344,8 @@ class UpdateSource:
             if now >= next_progress:
                 print(json.dumps({"event": "fixture_operation", "fixture": "update_source",
                                   "operation": "public TLS and origin check", "state": "WAITING",
-                                  "elapsed_seconds": round(now - started, 1), "last_probe": last_probe}), flush=True)
+                                  "hostname": hostname, "elapsed_seconds": round(now - started, 1),
+                                  "last_probe": last_probe}), flush=True)
                 next_progress = now + 30
             time.sleep(2)
         raise RuntimeError(f"Temporary HTTPS tunnel did not pass public TLS and origin checks ({last_probe})")

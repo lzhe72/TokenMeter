@@ -190,6 +190,7 @@ class UpdateSourceTests(unittest.TestCase):
                                                "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}, clear=True), \
                  mock.patch.object(fixture.Path, "home", return_value=Path(directory)), \
                  mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel) as spawned, \
+                 mock.patch.object(source, "_dns_publication", return_value=(True, {"cloudflare": "published", "google": "published"})) as dns, \
                  mock.patch.object(source, "_probe_public_health", return_value=(True, "HTTP 200 verified")) as verified:
                 self.assertEqual(source.start_tunnel(), "https://example.trycloudflare.com")
                 source.close()
@@ -199,7 +200,139 @@ class UpdateSourceTests(unittest.TestCase):
             self.assertIn(str(source.private / "ca.pem"), args)
             self.assertIn(source.origin_url, args)
             self.assertNotIn("--no-tls-verify", args)
+            dns.assert_called_once_with("example.trycloudflare.com")
             verified.assert_called_once_with("https://example.trycloudflare.com/healthz")
+            self.assertTrue(tunnel.terminated)
+
+    def test_dns_publication_requires_both_verified_doh_answers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = fixture.UpdateSource(Path(directory) / "secrets", Path(directory))
+            published = subprocess.CompletedProcess([], 0, b'{"Status":0,"Answer":[{"name":"example.trycloudflare.com.","type":1,"data":"104.16.230.132"}]}', b"")
+            missing = subprocess.CompletedProcess([], 0, b'{"Status":3}', b"")
+            malformed = subprocess.CompletedProcess([], 0, b'{"Status":0,"Answer":7}', b"")
+            boolean_status = subprocess.CompletedProcess([], 0, b'{"Status":false,"Answer":[{"name":"example.trycloudflare.com.","type":1,"data":"104.16.230.132"}]}', b"")
+            boolean_type = subprocess.CompletedProcess([], 0, b'{"Status":0,"Answer":[{"name":"example.trycloudflare.com.","type":true,"data":"104.16.230.132"}]}', b"")
+            empty = subprocess.CompletedProcess([], 0, b'{"Status":0,"Answer":[]}', b"")
+            bad_ip = subprocess.CompletedProcess([], 0, b'{"Status":0,"Answer":[{"name":"example.trycloudflare.com.","type":1,"data":"not-an-ip"}]}', b"")
+            wrong_name = subprocess.CompletedProcess([], 0, b'{"Status":0,"Answer":[{"name":"unrelated.example.","type":1,"data":"104.16.230.132"}]}', b"")
+            try:
+                with mock.patch.object(fixture.subprocess, "run", side_effect=[
+                    missing, published, malformed, published, boolean_status, published,
+                    boolean_type, published, empty, published, bad_ip, published, wrong_name, published,
+                    published, published,
+                ]) as called:
+                    self.assertEqual(source._dns_publication("example.trycloudflare.com"),
+                                     (False, {"cloudflare": "NXDOMAIN", "google": "published"}))
+                    self.assertEqual(source._dns_publication("example.trycloudflare.com"),
+                                     (False, {"cloudflare": "invalid-dns-response", "google": "published"}))
+                    self.assertEqual(source._dns_publication("example.trycloudflare.com"),
+                                     (False, {"cloudflare": "invalid-dns-response", "google": "published"}))
+                    self.assertEqual(source._dns_publication("example.trycloudflare.com"),
+                                     (False, {"cloudflare": "no-matching-A-record", "google": "published"}))
+                    self.assertEqual(source._dns_publication("example.trycloudflare.com"),
+                                     (False, {"cloudflare": "no-matching-A-record", "google": "published"}))
+                    self.assertEqual(source._dns_publication("example.trycloudflare.com"),
+                                     (False, {"cloudflare": "no-matching-A-record", "google": "published"}))
+                    self.assertEqual(source._dns_publication("example.trycloudflare.com"),
+                                     (False, {"cloudflare": "no-matching-A-record", "google": "published"}))
+                    self.assertEqual(source._dns_publication("example.trycloudflare.com"),
+                                     (True, {"cloudflare": "published", "google": "published"}))
+                commands = [call.args[0] for call in called.call_args_list]
+                self.assertEqual(len(commands), 16)
+                self.assertTrue(all(command[:2] == ["/usr/bin/curl", "--disable"] for command in commands))
+                self.assertTrue(all("--insecure" not in command and "-k" not in command for command in commands))
+                self.assertTrue(any("cloudflare-dns.com" in command[-1] for command in commands))
+                self.assertTrue(any("dns.google" in command[-1] for command in commands))
+            finally:
+                source.close()
+
+    def test_tunnel_does_not_touch_system_dns_before_publication(self):
+        for publishes in (True, False):
+            with self.subTest(publishes=publishes), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                source = fixture.UpdateSource(root / "secrets", root)
+                tunnel = UnitTunnel()
+                binary = root / "tokenmeter-tools/cloudflared"
+                binary.parent.mkdir()
+                binary.write_text("unit-only binary placeholder")
+                binary.chmod(0o700)
+                clock = [0.0]
+                system_probes = []
+
+                def publication(hostname):
+                    self.assertEqual(hostname, "example.trycloudflare.com")
+                    ready = publishes and clock[0] >= 12
+                    return ready, {"cloudflare": "published" if ready else "NXDOMAIN",
+                                   "google": "published"}
+
+                def system_probe(url):
+                    system_probes.append((clock[0], url))
+                    return True, "HTTP 200 verified"
+
+                output = io.StringIO()
+                try:
+                    with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                                       "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"},
+                                         clear=True), \
+                         mock.patch.object(fixture.Path, "home", return_value=root), \
+                         mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel), \
+                         mock.patch.object(source, "_dns_publication", side_effect=publication), \
+                         mock.patch.object(source, "_probe_public_health", side_effect=system_probe), \
+                         mock.patch.object(fixture.time, "monotonic", side_effect=lambda: clock[0]), \
+                         mock.patch.object(fixture.time, "sleep", side_effect=lambda seconds: clock.__setitem__(0, clock[0] + seconds)), \
+                         contextlib.redirect_stdout(output):
+                        if publishes:
+                            self.assertEqual(source.start_tunnel(), "https://example.trycloudflare.com")
+                        else:
+                            with self.assertRaisesRegex(RuntimeError, "DNS publication unavailable.*NXDOMAIN"):
+                                source.start_tunnel()
+                finally:
+                    source.close()
+                self.assertIn('"operation": "public DNS publication"', output.getvalue())
+                if publishes:
+                    self.assertEqual(system_probes, [(12.0, "https://example.trycloudflare.com/healthz")])
+                else:
+                    self.assertEqual(system_probes, [])
+                    self.assertGreaterEqual(clock[0], 180)
+                self.assertTrue(tunnel.terminated)
+
+    def test_dns_and_system_health_share_one_bounded_readiness_window(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = fixture.UpdateSource(root / "secrets", root)
+            tunnel = UnitTunnel()
+            binary = root / "tokenmeter-tools/cloudflared"
+            binary.parent.mkdir()
+            binary.write_text("unit-only binary placeholder")
+            binary.chmod(0o700)
+            clock = [0.0]
+            system_probes = []
+
+            def publication(_hostname):
+                ready = clock[0] >= 170
+                return ready, {"cloudflare": "published" if ready else "NXDOMAIN", "google": "published"}
+
+            def system_probe(_url):
+                system_probes.append(clock[0])
+                return False, "curl exit 6; HTTP 000"
+
+            try:
+                with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                                   "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}, clear=True), \
+                     mock.patch.object(fixture.Path, "home", return_value=root), \
+                     mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel), \
+                     mock.patch.object(source, "_dns_publication", side_effect=publication), \
+                     mock.patch.object(source, "_probe_public_health", side_effect=system_probe), \
+                     mock.patch.object(fixture.time, "monotonic", side_effect=lambda: clock[0]), \
+                     mock.patch.object(fixture.time, "sleep", side_effect=lambda seconds: clock.__setitem__(0, clock[0] + seconds)), \
+                     contextlib.redirect_stdout(io.StringIO()), \
+                     self.assertRaisesRegex(RuntimeError, "public TLS and origin checks"):
+                    source.start_tunnel()
+            finally:
+                source.close()
+            self.assertTrue(system_probes)
+            self.assertGreaterEqual(system_probes[0], 170)
+            self.assertLessEqual(clock[0], 182)
             self.assertTrue(tunnel.terminated)
 
     def test_public_health_uses_system_trust_and_reports_tls_failure(self):
@@ -251,6 +384,7 @@ class UpdateSourceTests(unittest.TestCase):
                                          clear=True), \
                          mock.patch.object(fixture.Path, "home", return_value=root), \
                          mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel), \
+                         mock.patch.object(source, "_dns_publication", return_value=(True, {"cloudflare": "published", "google": "published"})), \
                          mock.patch.object(source, "_probe_public_health", side_effect=probe), \
                          mock.patch.object(fixture.time, "monotonic", side_effect=lambda: clock[0]), \
                          mock.patch.object(fixture.time, "sleep", side_effect=lambda seconds: clock.__setitem__(0, clock[0] + seconds)), \

@@ -5,6 +5,12 @@ on:
   push:
     branches: [master, main]
   workflow_dispatch:
+    inputs:
+      environment_probe_only:
+        description: Diagnose isolated signing and HTTPS readiness; no product tests or merge qualification
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -33,7 +39,7 @@ jobs:
         run: python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
 
   product-e2e:
-    name: product-e2e (${{ matrix.runner }})
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.environment_probe_only == true && 'environment-diagnostic' || 'product-e2e' }} (${{ matrix.runner }})
     needs: governance
     strategy:
       fail-fast: false
@@ -70,10 +76,15 @@ jobs:
           test -x "$RUNNER_TEMP/tokenmeter-tools/cloudflared"
           echo "$RUNNER_TEMP/tokenmeter-tools" >> "$GITHUB_PATH"
       - name: Execute product gate
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.environment_probe_only != true }}
         # All TM-001 cases in the versioned feature matrix are required; missing native evidence blocks this job.
         run: python3 scripts/quality_gate.py iteration
+      - name: Diagnose isolated environment only
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.environment_probe_only == true }}
+        # READY reports zero product cases and never qualifies a PR for merge or release.
+        run: python3 scripts/native_environment.py
       - name: Package local-only preview DMG from tested App
-        if: ${{ always() && matrix.runner == 'macos-15-intel' }}
+        if: ${{ always() && matrix.runner == 'macos-15-intel' && (github.event_name != 'workflow_dispatch' || inputs.environment_probe_only != true) }}
         run: |
           set -euo pipefail
           candidate_zip="$(find .local/e2e -path '*/E2E-TM001-006/candidate-app.zip' -print -quit)"
@@ -85,7 +96,7 @@ jobs:
             --output "$PWD/.local/preview/TokenMeter-${{ github.sha }}-local-preview.dmg" \
             --service-url http://127.0.0.1:49176 | tee .local/preview/manifest.json
       - name: Retain local-only preview DMG
-        if: ${{ always() && matrix.runner == 'macos-15-intel' }}
+        if: ${{ always() && matrix.runner == 'macos-15-intel' && (github.event_name != 'workflow_dispatch' || inputs.environment_probe_only != true) }}
         uses: actions/upload-artifact@v4
         with:
           name: local-preview-dmg-${{ github.sha }}-${{ github.run_attempt }}
@@ -99,7 +110,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: product-e2e-${{ matrix.runner }}-${{ github.sha }}-${{ github.run_attempt }}
+          name: ${{ github.event_name == 'workflow_dispatch' && inputs.environment_probe_only == true && 'environment-diagnostic' || 'product-e2e' }}-${{ matrix.runner }}-${{ github.sha }}-${{ github.run_attempt }}
           path: .local/e2e/
           include-hidden-files: true
           if-no-files-found: error

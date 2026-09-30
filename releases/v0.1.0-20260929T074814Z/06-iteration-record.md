@@ -211,3 +211,13 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 第006例的 Swift 配置、登录页和原生用例已写；runner 先占用49176端口再造两套数据，并将已绑定 socket 传给真实服务，健康确认前保持占用以避免误连已有服务。两套库使用固定种子42/43，测试包无注入服务地址，构建后核对 Info.plist；预览 DMG 工作流选用此候选包，打包器拒绝带注入地址的 App。数据/测试/SOP 入口均存在，manifest 的 `program_bindings_status` 从 planned 改为 ready，表示程序绑定齐备，不表示产品 E2E PASS。本机针对两套真实 FastAPI/SQLite 的账号及跨库 token 冒烟通过；focused native governance 29/29、Swift 语法解析、plist lint、文档 structure/baseline、追踪检查及 `git diff --check` 通过。本机无完整 Xcode，尚无第006例真实原生结果；需提交后的两架构 CI 执行。
 
 整合候选提交前的本机完整检查：`python3 -m unittest discover -s tests/governance -p 'test_*.py'` 180项通过，服务端 pytest 43项通过，更新工具 9项通过；文档 baseline 69份/433链接、追踪 12功能/37场景/6项绑定均通过；Auth 与 AccountStore 的 UITESTING Swift typecheck 退出0。状态页整理后再次执行 baseline 与追踪检查，69份/435链接、12功能/37场景/6项绑定通过，`git diff --check` 退出0。原始完整治理日志保存在 `.local/governance/local-default-precommit.log`；这些本机检查不构成原生产品 E2E。为避免状态页继续将旧五例叙述当作当前结论，当前交接集中在 `docs/status.md`，历史运行链接与根因仍保存在本记录中。下一步是提交后同一候选的两架构六例 CI。
+
+### BUG-TM001-FIXTURE-005：六例候选的更新域名仍不能由系统解析
+
+候选 `9e61d867dc983faaa0012527353742238b72f7f9` 的 [CI run36660917395](https://github.com/lzhe72/TokenMeter/actions/runs/36660917395) 治理作业通过；macOS 15 Apple Silicon 与 Intel 两平台的 001/002/003/005/006 各五例真实原生 PASS。第004例使用同一 Quick Tunnel 随机域名等待 180 秒后，系统 `/usr/bin/curl` 仍返回 DNS 解析错误（退出6），升级产品步骤未执行，004 和完整六例迭代门禁均 BLOCKED。Intel 产生的本机预览 DMG 不构成正式发布包；PR #2 仍不能合并，未签发通行证或创建 Tag。该观察说明此前 45 秒窗口过短不是唯一已证实的阻断条件；不能把继续加长等待或重跑旧候选当成修复。
+
+按 SOP-015 先保留该运行原始失败证据，再为准备阶段增加确定性回归：取得新域名后，在共享的最多 180 秒准备窗口内，先分别通过 Cloudflare 和 Google 的 HTTPS DNS 查询等待公开 A 记录就绪；在此之前不查询 Mac 系统解析器，以避免过早触发可能的负缓存。两方就绪后，用窗口剩余时间经 Mac 正常系统 DNS/TLS 核对公开 HTTPS 状态和隔离源响应。公共 DNS 结果仅是就绪信号，不注入返回 IP、不代替 App 的 TLS、Sparkle EdDSA 或产品断言；任一准备阶段失败仍为 BLOCKED。SOP-000/024 同步 SOP-009/014、总索引、测试执行参考、技术与测试计划、Changelog 和当前状态。此处只是新候选的设计与源码修订，尚未取得两平台第004例原生 PASS，正式签名/公证、最终安装包回归及受保护发布门禁另按 SOP-017/018 判定；源码 PR 合并须先取得完整迭代与适用检查 PASS，不要求提前签发正式发布通行证。
+
+为独立定位环境，`quality.yml` 新增默认关闭的手动 `environment_probe_only` 输入。显式开启时，两个 Mac 只运行 `native_environment.py`，检查/工件标记 `environment-diagnostic`，不运行产品六例、不制作预览 DMG，也不产生 PR 合并或发布资格；PR/push 和默认手动触发仍走完整产品门禁。原生 runner 对独立探针的父进程采用有界 1800 秒超时，以容纳临时签名、取得域名、共享 180 秒 DNS/TLS 准备和清理；不延长域名窗口或重试产品用例。该诊断路线及 DNS 前置检查均需通过工具回归和实际 Mac 诊断验证，不能预填 READY/PASS；随后仍需全量六例迭代回归。
+
+本次本机检查：`python3 scripts/check_docs.py --mode structure` 与 `--mode baseline` 均退出0，各核对69份文档、435个链接；`python3 scripts/quality_gate.py check` 退出0，覆盖12项功能、37个场景与6项测试绑定，报告明确 `release_eligible=false`；`git diff --check` 退出0。整合工具回归 `python3 -m unittest discover -s tests/governance -p 'test_*.py'` 184项通过，原始日志在 `.local/governance-dns-final.log`；更新源 focused 回归12项通过，日志在 `.local/update-source-dns-final.log`。这些只证明规范、追踪和工具检查，DNS 前置修订及独立诊断尚无实际托管 Mac READY，也无第004例原生产品 PASS。

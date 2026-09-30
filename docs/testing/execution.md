@@ -54,7 +54,9 @@ python3 scripts/test_data.py reset --run-id demo
 
 专用 Mac 或 Mac 虚拟机必须有已登录桌面、受支持的 macOS/架构、Xcode 和 UI 自动化权限；发布环境还需真实签名、公证、更新服务和隔离的本版目标数据库。v0.1.0 使用 SQLite。管理员提供凭据和机器初始授权后，Codex 通过程序执行场景、断言结果和判定门禁。缺环境时记录具体原因；用户口头确认、人工截图或手工通过报告不能解除阻断。
 
-TM-001第004例的CI专用源使用临时公开`https://<随机>.trycloudflare.com`访问本机签名更新fixture，`cloudflared`以本次CA池验证本机HTTPS，App以系统TLS验证公开HTTPS并由Sparkle验证EdDSA包。需先验证固定版本的`cloudflared`与SHA256，再运行`python3 scripts/native_environment.py`；同一隧道域名最多等待180秒，以系统TLS客户端核对状态和来源，记录诊断后才标记READY。DNS暂未传播时只等待当前域名，不重建隧道或关闭TLS；180秒仍不可用记BLOCKED。该准备等待不重试App产品用例，探针READY只说明环境可用。Quick Tunnel是开发测试服务且不保证可用；不得以安装系统信任或跳过004解除阻断。证据只保存脱敏请求及产物摘要，不保存临时私钥或账号数据。详见SOP-009/010。
+TM-001第004例的CI专用源使用临时公开`https://<随机>.trycloudflare.com`访问本机签名更新fixture，`cloudflared`以本次CA池验证本机HTTPS，App以系统TLS验证公开HTTPS并由Sparkle验证EdDSA包。需先验证固定版本的`cloudflared`与SHA256，再运行`python3 scripts/native_environment.py`。拿到同一隧道域名后，在共享的最多180秒窗口内先用Cloudflare和Google的HTTPS DNS查询核对公开A记录；两方就绪后，用窗口剩余时间通过Mac正常系统DNS和TLS请求核对状态及来源，记录诊断后才标记READY。DNS答复只用于决定何时开始系统探测，不将返回IP注入App或curl；任一阶段到期仍不可用记BLOCKED，不重建隧道或关闭TLS。该准备等待不重试App产品用例，探针READY只说明环境可用。Quick Tunnel是开发测试服务且不保证可用；不得以安装系统信任或跳过004解除阻断。证据只保存脱敏请求及产物摘要，不保存临时私钥或账号数据。详见SOP-009/010。
+
+若只诊断签名和HTTPS环境，可手动触发`quality.yml`并将`environment_probe_only`设为`true`；两架构只执行`native_environment.py`，检查与工件名称为`environment-diagnostic`，报告中产品用例数为0且无合并、发布资格。不生成预览DMG。默认值`false`、PR和push始终走完整六例产品门禁；诊断READY后仍须以同一待合并候选取得两架构真实E2E原始证据。
 
 ## 2. 准备与数据生成
 
