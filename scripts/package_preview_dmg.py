@@ -60,6 +60,8 @@ def package(app, output, service_url):
         raise ValueError("Only the isolated UITesting app may be packaged as a local preview")
     if info.get("TMTestAPIURL") != "":
         raise ValueError("Preview app must use its bundled local service default")
+    if "TMTestCredentialsDirectory" in info:
+        raise ValueError("Runner-bound credentials make this test app unsuitable for a local preview; build an internal distribution candidate")
     if info.get("SUFeedURL"):
         raise ValueError("Preview app must not have a configured update feed")
     run("codesign", "--verify", "--deep", "--strict", str(app), quiet=True)

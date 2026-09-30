@@ -35,7 +35,7 @@ def expected():
         {"id": IDS["bob"], "username": "test-bob", "role": "member", "is_active": True, "must_change_password": True},
         {"id": IDS["disabled"], "username": "test-disabled", "role": "member", "is_active": False, "must_change_password": True}],
         "changed_password": CHANGED_PASSWORD, "reset_password": RESET_PASSWORD,
-        "initial_schema_version": "0001", "session_seconds": 86400,
+        "initial_schema_version": "0001", "session_seconds": 2592000,
         "login_failure_limit": 5, "login_window_seconds": 300}
 
 

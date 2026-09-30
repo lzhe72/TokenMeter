@@ -19,7 +19,7 @@ from .migrations import assert_schema
 from .models import AuditEvent, AuthSession, LoginBucket, User
 from .security import hash_password, verify_password
 
-SESSION_SECONDS = 86400
+SESSION_SECONDS = 30 * 24 * 60 * 60
 FAILURE_LIMIT = 5
 WINDOW_SECONDS = 300
 DUMMY_HASH = hash_password("TokenMeter credential timing comparison")

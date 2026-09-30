@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import plistlib
 import re
 import shlex
 import subprocess
@@ -25,7 +26,7 @@ def real_path(value: str) -> Path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    for flag in ("derived-data", "output", "feed-url", "public-key", "private-key-file", "api-url", "run-id", "build-version", "code-sign-identity", "signing-keychain"):
+    for flag in ("derived-data", "output", "feed-url", "public-key", "private-key-file", "api-url", "run-id", "build-version", "code-sign-identity", "signing-keychain", "credentials-dir"):
         parser.add_argument("--" + flag, required=True)
     args = parser.parse_args()
     try:
@@ -60,6 +61,16 @@ def main() -> int:
             raise ValueError("Expected a base64 32-byte ephemeral Ed25519 seed")
         derived = real_path(args.derived_data)
         output = real_path(args.output)
+        if not Path(args.credentials_dir).is_absolute():
+            raise ValueError("The test credential directory must be absolute")
+        credentials_dir = real_path(args.credentials_dir)
+        production_credentials = Path.home().resolve() / "Library/Application Support/TokenMeter/credentials"
+        if (credentials_dir.name != "credentials" or not credentials_dir.is_dir()
+                or credentials_dir.parent != output.parent or credentials_dir.parent != derived.parent
+                or credentials_dir == production_credentials
+                or credentials_dir.stat().st_uid != os.getuid()
+                or credentials_dir.stat().st_mode & 0o7777 != 0o700):
+            raise ValueError("The test credential directory must be this run's private directory")
         if output.exists() or derived.exists():
             raise ValueError("Refusing to overwrite an existing build or package directory")
         output.mkdir(parents=True, mode=0o700)
@@ -71,7 +82,8 @@ def main() -> int:
                    "OTHER_CODE_SIGN_FLAGS=--keychain " + shlex.quote(str(signing_keychain)),
                    "CURRENT_PROJECT_VERSION=" + args.build_version,
                    "TM_UPDATE_FEED_URL=" + args.feed_url, "TM_UPDATE_PUBLIC_KEY=" + args.public_key,
-                   "TM_TEST_API_URL=" + args.api_url, "TM_TEST_RUN_ID=" + args.run_id]
+                   "TM_TEST_API_URL=" + args.api_url, "TM_TEST_RUN_ID=" + args.run_id,
+                   "TM_TEST_CREDENTIALS_DIR=" + str(credentials_dir)]
         with (output / "build.log").open("w") as log:
             result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
         if result.returncode:
@@ -79,6 +91,13 @@ def main() -> int:
         app = derived / "Build/Products/UITesting/TokenMeter.app"
         if not app.is_dir():
             raise ValueError("Build produced no application bundle")
+        info_path = app / "Contents/Info.plist"
+        if info_path.is_symlink() or not info_path.is_file():
+            raise ValueError("Built update App has no regular Info.plist")
+        info = plistlib.loads(info_path.read_bytes())
+        if (info.get("TMTestRunID") != args.run_id
+                or info.get("TMTestCredentialsDirectory") != str(credentials_dir)):
+            raise ValueError("Built update App has a wrong credential directory")
         subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         displayed = subprocess.run(["codesign", "-d", "-r-", str(app)], capture_output=True, text=True, check=True)
@@ -109,6 +128,7 @@ def main() -> int:
                     "sha256": digest.hexdigest(), "build_version": args.build_version,
                     "sparkle_version": "2.10.0", "fixture_kind": "isolated_development_update",
                     "code_sign_identity": args.code_sign_identity, "designated_requirement": requirements[0],
+                    "test_credentials_directory_sha256": hashlib.sha256(str(credentials_dir).encode()).hexdigest(),
                     "release_eligible": False}
         (output / "signature.json").write_text(json.dumps(metadata, indent=2) + "\n")
         print(json.dumps({"status": "BUILT", "output": str(output), "release_eligible": False}))

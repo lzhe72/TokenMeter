@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import plistlib
 import subprocess
 import tempfile
 import unittest
@@ -25,11 +26,14 @@ class UpdateFixtureInputTests(unittest.TestCase):
         self.key.chmod(0o600)
         self.keychain = self.root / "test.keychain-db"
         self.keychain.write_text("unit-test sentinel, not a real keychain")
+        self.credentials = self.root / "credentials"
+        self.credentials.mkdir(mode=0o700)
         self.args = {
             "derived-data": str(self.root / "derived"), "output": str(self.root / "output"),
             "feed-url": "https://localhost:8443/appcast.xml", "public-key": base64.b64encode(bytes(32)).decode(),
             "private-key-file": str(self.key), "api-url": "http://127.0.0.1:8765", "run-id": "unit-input-check",
             "build-version": "101", "code-sign-identity": "a" * 40, "signing-keychain": str(self.keychain),
+            "credentials-dir": str(self.credentials),
         }
 
     def run_invalid(self, **changes):
@@ -75,6 +79,28 @@ class UpdateFixtureInputTests(unittest.TestCase):
         alias.symlink_to(self.key)
         self.run_invalid(**{"private-key-file": str(alias)})
 
+    def test_credential_directory_must_be_private_owned_and_within_run(self):
+        self.credentials.chmod(0o755)
+        self.run_invalid()
+        self.credentials.chmod(0o1700)
+        self.run_invalid()
+        self.credentials.chmod(0o700)
+        alias = self.root / "credentials-alias"
+        alias.symlink_to(self.credentials)
+        self.run_invalid(**{"credentials-dir": str(alias)})
+        self.run_invalid(**{"credentials-dir": "relative/credentials"})
+        outside = self.root / "other" / "credentials"
+        outside.mkdir(parents=True, mode=0o700)
+        self.run_invalid(**{"credentials-dir": str(outside)})
+
+    def test_update_fixture_rejects_production_credential_directory(self):
+        production = self.root / "Library/Application Support/TokenMeter/credentials"
+        production.mkdir(parents=True, mode=0o700)
+        with patch.object(MODULE.Path, "home", return_value=self.root):
+            self.run_invalid(**{"credentials-dir": str(production),
+                                "output": str(production.parent / "output"),
+                                "derived-data": str(production.parent / "derived")})
+
     def test_existing_output_is_preserved(self):
         output = self.root / "output"
         output.mkdir()
@@ -109,8 +135,39 @@ class UpdateFixtureInputTests(unittest.TestCase):
                 build_command = run.call_args_list[1].args[0]
                 self.assertEqual(build_command[build_command.index("-destination") + 1],
                                  "platform=macOS,arch=" + architecture)
+                self.assertIn("TM_TEST_CREDENTIALS_DIR=" + str(self.credentials), build_command)
                 self.assertEqual(json.loads(output.getvalue())["status"], "FAIL")
                 self.assertFalse((self.root / architecture / "signature.json").exists())
+
+    def test_update_build_rejects_wrong_embedded_credential_directory_before_packaging(self):
+        argv = ["build_update_fixture.py"]
+        for name, value in self.args.items():
+            argv.extend(["--" + name, value])
+        selected = subprocess.CompletedProcess(["xcode-select", "-p"], 0,
+                                               "/Applications/Xcode.app/Contents/Developer\n", "")
+        calls = []
+        def run(arguments, **_kwargs):
+            calls.append(arguments)
+            if arguments[0] == "xcode-select":
+                return selected
+            if arguments[0] == "xcodebuild":
+                app = self.root / "derived/Build/Products/UITesting/TokenMeter.app/Contents"
+                app.mkdir(parents=True)
+                (app / "Info.plist").write_bytes(plistlib.dumps({
+                    "TMTestRunID": self.args["run-id"],
+                    "TMTestCredentialsDirectory": str(self.root / "wrong-credentials"),
+                }))
+                return subprocess.CompletedProcess(arguments, 0)
+            raise AssertionError("No packaging command should run after a wrong Info.plist")
+        output = io.StringIO()
+        with patch.object(MODULE.platform, "system", return_value="Darwin"), \
+             patch.object(MODULE.sys, "argv", argv), \
+             patch.object(MODULE.subprocess, "run", side_effect=run), \
+             contextlib.redirect_stdout(output):
+            self.assertEqual(MODULE.main(), 1)
+        self.assertEqual(len(calls), 2)
+        self.assertIn("wrong credential directory", output.getvalue())
+        self.assertFalse((self.root / "output/signature.json").exists())
 
 
 if __name__ == "__main__":

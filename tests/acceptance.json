@@ -6,7 +6,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "有效账号可登录；首次改密生效；退出后的凭据不能继续访问",
+      "criterion": "有效账号可登录；首次改密生效；默认自动登录经 /v1/me 恢复，关闭后仅内存会话且重启回登录；退出后的凭据不能继续访问",
       "data_requirements": [
         "account_roles",
         "forced_password_change",
@@ -30,7 +30,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "新密码生效、旧会话失效，管理动作产生审计记录",
+      "criterion": "新密码生效、旧会话及自动登录失效，管理动作产生审计记录",
       "data_requirements": [
         "account_roles",
         "forced_password_change",
@@ -42,7 +42,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "最小更新器随首个产品版本交付；有效包替换与重启成功且保留账号状态，无效签名被拒绝并保留原版",
+      "criterion": "最小更新器随首个产品版本交付；有效包替换与重启成功，默认自动登录经服务确认恢复账号状态；无效签名被拒绝并保留原版",
       "data_requirements": [
         "https_feed",
         "valid_eddsa",
@@ -67,7 +67,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "首次启动默认连接本机 127.0.0.1:49176；登录页改为另一隔离服务后连接该服务并在重启后保留，旧服务会话不能用于新服务；非回环 HTTP 拒绝，HTTPS 地址可配置",
+      "criterion": "首次启动默认连接本机 127.0.0.1:49176；登录页改为另一隔离服务后连接该服务并在重启后保留，旧服务 token 不能用于新服务且凭据按规范化 origin 隔离；非回环 HTTP 拒绝，HTTPS 地址可配置",
       "data_requirements": [
         "account_roles"
       ]

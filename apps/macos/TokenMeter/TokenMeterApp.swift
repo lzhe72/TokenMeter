@@ -129,6 +129,10 @@ struct AccountView: View {
             TextField("服务地址（本机回环或 HTTPS）", text: $store.server).accessibilityIdentifier("auth.server")
             TextField("账号", text: $username).accessibilityIdentifier("auth.username")
             SecureField("密码", text: $password).accessibilityIdentifier("auth.password")
+            Toggle("在此设备上自动登录", isOn: $store.automaticLogin)
+                .toggleStyle(.checkbox).accessibilityIdentifier("auth.automatic-login")
+            Text("有效期 30 天；退出登录或账号凭据变更后需要重新登录。")
+                .font(.caption).foregroundStyle(.secondary)
             Button("登录") {
                 let secret = password
                 password = ""

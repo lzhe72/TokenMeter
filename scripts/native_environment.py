@@ -46,8 +46,8 @@ def execute_probe(root: Path, output: Path, report: dict) -> None:
                         resource.close()
                     except (RuntimeError, OSError, subprocess.SubprocessError) as exc:
                         errors.append(f"{label} cleanup: {e2e.exception_message(exc)}")
+            report["cleanup_completed"] = not errors
             native.record_cleanup_errors(report, errors, primary_error)
-        report["cleanup_completed"] = True
 
 
 def main(root: Path = ROOT) -> int:

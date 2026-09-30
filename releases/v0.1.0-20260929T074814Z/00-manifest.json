@@ -183,6 +183,8 @@
     "tests/server/test_bootstrap_sqlite.py",
     "tests/server/test_network.py",
     "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+    "scripts/test_device_credentials.py",
+    "tests/macos/DeviceCredentialsTests.swift",
     "scripts/e2e.py",
     "scripts/native_e2e.py",
     "tests/e2e/update_source.py",
@@ -213,5 +215,6 @@
   "lookup_command": "python3 scripts/release_registry.py show --release-id v0.1.0-20260929T074814Z",
   "sop_index": "sop/README.md",
   "document_catalog": "docs/catalog.json",
-  "program_bindings_status": "ready"
+  "program_bindings_status": "ready",
+  "distribution_profile": "internal"
 }

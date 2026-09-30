@@ -117,9 +117,10 @@ class CandidateGateTests(unittest.TestCase):
         self.assertIn("if: ${{ " + diagnostic_condition + " }}", diagnostic)
         self.assertIn("python3 scripts/native_environment.py", diagnostic)
         self.assertNotIn("quality_gate.py", diagnostic)
-        for name in ("Package local-only preview DMG", "Retain local-only preview DMG"):
-            step = next(step for step in steps if step.startswith(name))
-            self.assertIn("(" + product_condition + ")", step)
+        # Test builds now contain a runner-owned credential directory and cannot
+        # be repackaged as an installable local preview on another machine.
+        self.assertNotIn("package_preview_dmg.py", workflow)
+        self.assertIn("python3 scripts/test_device_credentials.py", workflow)
         # Distinct check and artifact identities prevent READY being mistaken for product PASS.
         distinct_name = diagnostic_condition + " && 'environment-diagnostic' || 'product-e2e'"
         self.assertEqual(2, workflow.count(distinct_name))

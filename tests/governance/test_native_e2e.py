@@ -155,6 +155,56 @@ class NativeContractTests(unittest.TestCase):
         with self.assertRaises(native.EvidenceError):
             native.verify_default_route_bundle(app, "route-case")
 
+    def test_each_case_uses_owned_private_credential_directory_and_exact_cleanup(self):
+        case = self.root.resolve() / "case-private"
+        case.mkdir(mode=0o700)
+        credentials = native.prepare_test_credentials(case)
+        self.assertEqual(credentials, case / "credentials")
+        self.assertEqual(credentials.stat().st_mode & 0o777, 0o700)
+        token = credentials / "one-origin.token"
+        token.write_text("synthetic test-only token")
+        token.chmod(0o600)
+        native.clean_test_credentials(case, credentials)
+        self.assertFalse(credentials.exists())
+        self.assertFalse(token.exists())
+        with self.assertRaises(native.EvidenceError):
+            native.clean_test_credentials(case, credentials)
+        case.chmod(0o1700)
+        with self.assertRaises(native.EvidenceError):
+            native.prepare_test_credentials(case)
+
+    def test_credential_directory_rejects_alias_and_never_follows_file_symlink(self):
+        case = self.root.resolve() / "case-private"
+        case.mkdir(mode=0o700)
+        alias = self.root.resolve() / "case-alias"
+        alias.symlink_to(case, target_is_directory=True)
+        with self.assertRaises(native.EvidenceError):
+            native.prepare_test_credentials(alias)
+        credentials = native.prepare_test_credentials(case)
+        outside = self.root.resolve() / "outside-token"
+        outside.write_text("must survive")
+        (credentials / "link").symlink_to(outside)
+        with self.assertRaises(native.EvidenceError):
+            native.clean_test_credentials(case, credentials)
+        self.assertEqual(outside.read_text(), "must survive")
+        self.assertFalse(credentials.exists())
+
+    def test_built_app_must_embed_exact_run_credential_directory(self):
+        case = self.root.resolve() / "case-private"
+        case.mkdir(mode=0o700)
+        credentials = native.prepare_test_credentials(case)
+        app = self.root / "TokenMeter.app"
+        (app / "Contents").mkdir(parents=True)
+        info = app / "Contents/Info.plist"
+        info.write_bytes(plistlib.dumps({"TMTestRunID": "this-case",
+                                        "TMTestCredentialsDirectory": str(credentials)}))
+        native.verify_test_credentials_bundle(app, credentials, "this-case")
+        info.write_bytes(plistlib.dumps({"TMTestRunID": "this-case",
+                                        "TMTestCredentialsDirectory": str(case / "other")}))
+        with self.assertRaises(native.EvidenceError):
+            native.verify_test_credentials_bundle(app, credentials, "this-case")
+        native.clean_test_credentials(case, credentials)
+
     def test_production_bootstrap_runner_confines_and_checks_database_evidence(self):
         # This stdlib fixture tests the runner contract. The real initializer is
         # exercised separately by server tests with its locked dependencies.

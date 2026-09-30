@@ -1,6 +1,8 @@
 import XCTest
+import CryptoKit
+import Darwin
 
-/// These cases run one at a time against a fresh database and Keychain namespace.
+/// These cases run one at a time against a fresh database and isolated credential directory.
 /// Direct API requests add server-side assertions; every case also drives the real UI.
 final class TM001AccountUITests: XCTestCase {
     private var app: XCUIApplication!
@@ -10,14 +12,26 @@ final class TM001AccountUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         guard let api = environment["TM_TEST_API_URL"], URL(string: api) != nil,
-              let run = environment["TM_TEST_RUN_ID"], !run.isEmpty else {
+              let run = environment["TM_TEST_RUN_ID"], !run.isEmpty,
+              let credentials = environment["TM_TEST_CREDENTIALS_DIR"],
+              credentials.hasPrefix("/"),
+              canonicalPath(credentials) == credentials,
+              credentials != FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/Application Support/TokenMeter/credentials").path else {
             throw NSError(domain: "TokenMeterE2E", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "Missing isolated API URL or run ID"])
+                          userInfo: [NSLocalizedDescriptionKey: "Missing isolated API, run ID, or resolved credential directory"])
         }
         app = XCUIApplication()
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launchEnvironment["TM_TEST_API_URL"] = api
         app.launchEnvironment["TM_TEST_RUN_ID"] = run
+        app.launchEnvironment["TM_TEST_CREDENTIALS_DIR"] = credentials
+    }
+
+    private func canonicalPath(_ path: String) -> String? {
+        guard let resolved = realpath(path, nil) else { return nil }
+        defer { free(resolved) }
+        return String(cString: resolved)
     }
 
     override func tearDownWithError() throws {
@@ -60,6 +74,55 @@ final class TM001AccountUITests: XCTestCase {
 
     private func login(_ name: String, password: String? = nil) {
         loginUsername("test-\(name)", password: password ?? "TEST-ONLY-\(name)-42!")
+    }
+
+    private func assertAutomaticLogin(_ enabled: Bool) {
+        let checkbox = app.checkBoxes["auth.automatic-login"]
+        XCTAssertTrue(checkbox.waitForExistence(timeout: 15))
+        let selected = NSPredicate { object, _ in
+            guard let checkbox = object as? XCUIElement, checkbox.isEnabled else { return false }
+            if let number = checkbox.value as? NSNumber { return number.boolValue == enabled }
+            return checkbox.value as? String == (enabled ? "1" : "0")
+        }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: selected, object: checkbox)],
+                                     timeout: 15), .completed)
+    }
+
+    private func credentialFile(baseURL: String? = nil) throws -> URL {
+        let root = try XCTUnwrap(environment["TM_TEST_CREDENTIALS_DIR"])
+        var origin = try XCTUnwrap(URLComponents(string: baseURL ?? environment["TM_TEST_API_URL"]!))
+        origin.scheme = origin.scheme?.lowercased()
+        origin.host = origin.host?.lowercased()
+        if (origin.scheme == "http" && origin.port == 80) || (origin.scheme == "https" && origin.port == 443) {
+            origin.port = nil
+        }
+        origin.path = ""
+        let canonical = try XCTUnwrap(origin.string)
+        let name = SHA256.hash(data: Data(canonical.utf8)).map { String(format: "%02x", $0) }.joined()
+        return URL(fileURLWithPath: root, isDirectory: true).appendingPathComponent(name + ".token")
+    }
+
+    private func savedCredential(baseURL: String? = nil) throws -> String {
+        let file = try credentialFile(baseURL: baseURL)
+        let directory = try FileManager.default.attributesOfItem(atPath: file.deletingLastPathComponent().path)
+        let attributes = try FileManager.default.attributesOfItem(atPath: file.path)
+        XCTAssertEqual(directory[.type] as? FileAttributeType, .typeDirectory)
+        XCTAssertEqual((directory[.posixPermissions] as? NSNumber)?.intValue, 0o700)
+        XCTAssertEqual((directory[.ownerAccountID] as? NSNumber)?.intValue, Int(getuid()))
+        XCTAssertEqual(attributes[.type] as? FileAttributeType, .typeRegular)
+        XCTAssertEqual((attributes[.posixPermissions] as? NSNumber)?.intValue, 0o600)
+        XCTAssertEqual((attributes[.ownerAccountID] as? NSNumber)?.intValue, Int(getuid()))
+        let contents = try Data(contentsOf: file)
+        let token = try XCTUnwrap(String(data: contents, encoding: .utf8))
+        let valid = token.utf8.count == 43 && token.range(of: "^[A-Za-z0-9_-]{43}$", options: .regularExpression) != nil
+        // Assert booleans only: never include a credential in failure values or attachments.
+        XCTAssertTrue(valid, "Persist only the opaque session token")
+        return token
+    }
+
+    private func assertNoSavedCredential(baseURL: String? = nil) throws {
+        let file = try credentialFile(baseURL: baseURL)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path), "Current origin credential must be removed")
     }
 
     private func changePassword(current: String, new: String) {
@@ -129,12 +192,14 @@ final class TM001AccountUITests: XCTestCase {
         let oldToken = try token("alice")
         app.launch()
         XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        assertAutomaticLogin(true)
         captureWindow("TM001-001-01-login")
         login("alice")
         XCTAssertTrue(app.secureTextFields["password.new"].waitForExistence(timeout: 15))
         XCTAssertFalse(app.buttons["admin.accounts"].exists)
         changePassword(current: "TEST-ONLY-alice-42!", new: changedPassword)
         assertIdentity("test-alice")
+        let savedToken = try savedCredential()
         captureWindow("TM001-001-02-authenticated-account")
         XCTAssertEqual(try request("GET", "/v1/me", token: oldToken).0, 401)
         XCTAssertEqual(try request("POST", "/v1/auth/login", body: [
@@ -143,6 +208,8 @@ final class TM001AccountUITests: XCTestCase {
         app.terminate()
         app.launch()
         assertIdentity("test-alice")
+        try refreshIdentity("test-alice")
+        XCTAssertTrue(try savedCredential() == savedToken)
         let initialAdmin = try token("admin")
         let adminChanged = try request("POST", "/v1/auth/change-password", token: initialAdmin,
                                        body: ["current_password": "TEST-ONLY-admin-42!", "new_password": changedPassword])
@@ -157,12 +224,34 @@ final class TM001AccountUITests: XCTestCase {
         let logoutCount = try aliceLogoutCount()
         click("session.logout")
         XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        try assertNoSavedCredential()
+        // The login form appears after local cleanup, before server revocation finishes.
+        // Its username field becomes enabled when logout completes; the empty-password
+        // login button remains disabled even when the form is otherwise ready.
+        let logoutFinished = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == YES AND enabled == YES"),
+            object: app.textFields["auth.username"])
+        XCTAssertEqual(XCTWaiter.wait(for: [logoutFinished], timeout: 30), .completed)
+        XCTAssertEqual(try request("GET", "/v1/me", token: savedToken).0, 401)
         XCTAssertEqual(try aliceLogoutCount(), logoutCount + 1, "UI logout must reach the real session revocation endpoint")
         app.terminate()
         app.launch()
         XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        assertAutomaticLogin(true)
+        app.checkBoxes["auth.automatic-login"].click()
+        assertAutomaticLogin(false)
         login("alice", password: changedPassword)
         assertIdentity("test-alice")
+        try assertNoSavedCredential()
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        assertAutomaticLogin(false)
+        app.checkBoxes["auth.automatic-login"].click()
+        assertAutomaticLogin(true)
+        login("alice", password: changedPassword)
+        assertIdentity("test-alice")
+        _ = try savedCredential()
     }
 
     func testE2E_TM001_002() throws {
@@ -227,6 +316,35 @@ final class TM001AccountUITests: XCTestCase {
         login("bob", password: "TEST-ONLY-Reset-42!")
         changePassword(current: "TEST-ONLY-Reset-42!", new: "TEST-ONLY-Bob-New-42!")
         assertIdentity("test-bob")
+        let savedBob = try savedCredential()
+        let administrator = try token("admin", password: changedPassword)
+        let endpoint = "/v1/admin/users/00000000-0000-4000-8000-000000000003"
+        XCTAssertEqual(try request("POST", endpoint + "/reset-password", token: administrator,
+                                   body: ["temporary_password": "TEST-ONLY-Reset-42!"]).0, 200)
+        XCTAssertEqual(try request("GET", "/v1/me", token: savedBob).0, 401)
+        app.terminate()
+        app.launch()
+        expectation(for: NSPredicate(format: "exists == YES AND value CONTAINS %@", "invalid_session"),
+                    evaluatedWith: app.staticTexts["auth.error"])
+        waitForExpectations(timeout: 15)
+        XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["session.username"].exists)
+        try assertNoSavedCredential()
+
+        login("bob", password: "TEST-ONLY-Reset-42!")
+        assertIdentity("test-bob")
+        let beforeDisable = try savedCredential()
+        XCTAssertEqual(try request("POST", endpoint + "/disable", token: administrator).0, 200)
+        XCTAssertEqual(try request("GET", "/v1/me", token: beforeDisable).0, 401)
+        app.terminate()
+        app.launch()
+        expectation(for: NSPredicate(format: "exists == YES AND value CONTAINS %@", "invalid_session"),
+                    evaluatedWith: app.staticTexts["auth.error"])
+        waitForExpectations(timeout: 15)
+        XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["session.username"].exists)
+        try assertNoSavedCredential()
+        captureWindow("TM001-003-02-revoked-automatic-login")
     }
 
     func testE2E_TM001_004() throws {
@@ -238,6 +356,7 @@ final class TM001AccountUITests: XCTestCase {
         login("alice")
         changePassword(current: "TEST-ONLY-alice-42!", new: changedPassword)
         assertIdentity("test-alice")
+        let beforeUpgrade = try savedCredential()
         let originalBuild = try XCTUnwrap(app.staticTexts["app.build"].value as? String)
         XCTAssertFalse(originalBuild.isEmpty)
         XCTAssertNotEqual(originalBuild, expectedBuild)
@@ -280,6 +399,8 @@ final class TM001AccountUITests: XCTestCase {
         waitForExpectations(timeout: 90)
         assertIdentity("test-alice")
         try refreshIdentity("test-alice")
+        XCTAssertTrue(try savedCredential() == beforeUpgrade,
+                      "The real upgraded application must restore the same persisted session")
         captureWindow("TM001-004-01-updated-account")
     }
 
@@ -353,6 +474,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(first, "http://127.0.0.1:49176")
         XCTAssertTrue(second.hasPrefix("http://127.0.0.1:"))
         XCTAssertNotEqual(first, second)
+        XCTAssertNotEqual(try credentialFile(baseURL: first), try credentialFile(baseURL: second))
 
         // The test process uses TM_TEST_API_URL for independent HTTP assertions.
         // The App itself must read its shipped default, with no test URL injection.
@@ -368,11 +490,16 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(try request("GET", "/v1/me", token: firstToken, baseURL: second).0, 401)
         login("alice")
         assertIdentity("test-alice")
+        let savedFirst = try savedCredential(baseURL: first)
+        XCTAssertEqual(try request("GET", "/v1/me", token: savedFirst, baseURL: first).0, 200)
+        XCTAssertEqual(try request("GET", "/v1/me", token: savedFirst, baseURL: second).0, 401)
         app.terminate()
         app.launch()
         assertIdentity("test-alice")
+        XCTAssertTrue(try savedCredential(baseURL: first) == savedFirst)
         click("session.logout")
         XCTAssertTrue(serverField.waitForExistence(timeout: 15))
+        try assertNoSavedCredential(baseURL: first)
 
         text("auth.server", second)
         // The second database has the same account name but an independent seed.
@@ -383,13 +510,20 @@ final class TM001AccountUITests: XCTestCase {
         login("alice", password: "TEST-ONLY-alice-43!")
         assertIdentity("test-alice")
         changePassword(current: "TEST-ONLY-alice-43!", new: changedPassword)
+        let savedSecond = try savedCredential(baseURL: second)
+        XCTAssertEqual(try request("GET", "/v1/me", token: savedSecond, baseURL: second).0, 200)
+        XCTAssertEqual(try request("GET", "/v1/me", token: savedSecond, baseURL: first).0, 401)
+        try assertNoSavedCredential(baseURL: first)
         app.terminate()
         app.launch()
         assertIdentity("test-alice")
         try refreshIdentity("test-alice")
+        XCTAssertTrue(try savedCredential(baseURL: second) == savedSecond)
         captureWindow("TM001-006-02-second-server-restored")
         click("session.logout")
+        XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
         XCTAssertEqual(app.textFields["auth.server"].value as? String, second)
+        try assertNoSavedCredential(baseURL: second)
 
         text("auth.server", "http://192.0.2.1:49176")
         login("bob")

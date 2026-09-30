@@ -8,6 +8,8 @@ from server.tokenmeter_server.main import create_app
 from server.tokenmeter_server.models import AuthSession, LoginBucket, User
 from server.tokenmeter_server.provision import provision
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+import hashlib
 
 
 def changed(client, name="alice"):
@@ -113,13 +115,55 @@ def test_session_survives_server_restart_and_expires_exactly_at_boundary(environ
     client, _, now, url = environment
     token = changed(client)
     with TestClient(create_app(url, clock=lambda: now[0])) as restarted:
-        assert restarted.get("/v1/me", headers=headers(token)).status_code == 200
-        now[0] += 86399
-        assert restarted.get("/v1/me", headers=headers(token)).status_code == 200
+        verified = restarted.get("/v1/me", headers=headers(token))
+        assert verified.status_code == 200
+        now[0] += expected()["session_seconds"] - 1
+        verified = restarted.get("/v1/me", headers=headers(token))
+        assert verified.status_code == 200
         now[0] += 1
         result = restarted.get("/v1/me", headers=headers(token))
         assert result.status_code == 401
         assert result.json()["error"]["code"] == "invalid_session"
+
+
+def test_new_session_has_fixed_thirty_day_lifetime_and_me_does_not_extend_it(environment):
+    client, app, now, _ = environment
+    issued_at = now[0]
+    response = login(client)
+    assert response.status_code == 200
+    payload = response.json()
+    expires_at = int(datetime.fromisoformat(payload["expires_at"].replace("Z", "+00:00")).timestamp())
+    assert expires_at == issued_at + expected()["session_seconds"]
+    token = payload["access_token"]
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    for elapsed in (3600, 15 * 86400, expected()["session_seconds"] - 1):
+        now[0] = issued_at + elapsed
+        verified = client.get("/v1/me", headers=headers(token))
+        assert verified.status_code == 200
+        with transaction(app.state.engine) as session:
+            assert session.get(AuthSession, token_hash).expires_at == expires_at
+    now[0] = expires_at
+    expired = client.get("/v1/me", headers=headers(token))
+    assert expired.status_code == 401
+
+
+def test_existing_session_expiry_is_preserved_after_server_upgrade_and_restart(environment):
+    client, app, now, url = environment
+    token = login(client).json()["access_token"]
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    # Model an already-issued short-lived session without adding an HTTP test hook.
+    previous_expiry = now[0] + 60
+    with transaction(app.state.engine, write=True) as session:
+        session.get(AuthSession, token_hash).expires_at = previous_expiry
+    with TestClient(create_app(url, clock=lambda: now[0])) as restarted:
+        now[0] = previous_expiry - 1
+        verified = restarted.get("/v1/me", headers=headers(token))
+        assert verified.status_code == 200
+        with transaction(app.state.engine) as session:
+            assert session.get(AuthSession, token_hash).expires_at == previous_expiry
+        now[0] = previous_expiry
+        expired = restarted.get("/v1/me", headers=headers(token))
+        assert expired.status_code == 401
 
 
 def test_throttle_is_persistent_and_cannot_trust_forwarded_header(environment):

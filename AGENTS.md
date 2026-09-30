@@ -37,7 +37,7 @@
 6. 修复问题先增加稳定复现用例，再修实现，再执行回归。使用 [修复模板](docs/templates/bugfix.md)。
 7. 不手写通过报告，不伪造厂商日志兼容性，不将合成数据工具的自测宣称为 App E2E。
 8. 文档基线后先按 SOP-009 建立真实 App、服务、数据库初始化和原生测试 target/runner 的工程骨架，不要求预先存在业务红测或产品 PASS。缺 Xcode、GUI 或执行器只阻断依赖它们的构建、运行和验收；可继续有独立验证条件的源码、fixture、测试编写和文档任务。分别记录完成与 BLOCKED，禁止认证旁路或伪造业务结果。生产签名/公证与发布凭据属于 SOP-017/018 前提，不能作为开始开发的前提。
-9. 只有正式发布门禁为 `PASS` 才能发布安装包、部署服务端或更新 appcast。TM-001 已接入真实原生执行器，当前实现与运行结果以 [docs/status.md](docs/status.md) 为准；迭代通过不替代最终签名/公证、全平台和受保护发布条件。
+9. 只有对应 `distribution_profile`（内部或公开）的发布门禁为 `PASS` 才能正式分发安装包、部署服务端或更新 appcast。TM-001 已接入真实原生执行器，当前实现与运行结果以 [docs/status.md](docs/status.md) 为准；迭代通过不替代最终 DMG 安装升级、全平台及受保护发布条件。公开 profile 另要求 Developer ID 与公证；内部 profile 的自动包级门禁尚未实现时为 BLOCKED。
 
 ## 当前可执行命令
 
@@ -57,12 +57,13 @@ python3 scripts/test_data.py reset --run-id demo
 ```sh
 python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
 python3 -m pytest tests/server -q
+python3 scripts/test_device_credentials.py
 python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
 python3 scripts/quality_gate.py iteration
 python3 scripts/quality_gate.py release
 ```
 
-原生用例还要求完整 Xcode、已登录 Mac 桌面；TM-001 升级 fixture 的隔离临时签名与公开 HTTPS 测试源仅允许专用 GitHub Mac CI，不修改系统证书信任。缺条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
+Swift 凭据边界检查可在有 Command Line Tools 的本机 macOS 执行，但不能替代原生用例。原生用例还要求完整 Xcode、已登录 Mac 桌面；TM-001 升级 fixture 的隔离临时自签名与公开 HTTPS 测试源仅允许专用 GitHub Mac CI，不修改系统证书信任。缺条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
 
 编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。
 

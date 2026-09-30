@@ -3,6 +3,7 @@ import base64
 import contextlib
 import importlib.util
 import io
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -187,7 +188,8 @@ class UpdateSourceTests(unittest.TestCase):
             binary.write_text("unit-only binary placeholder")
             binary.chmod(0o700)
             with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
-                                               "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}, clear=True), \
+                                               "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS",
+                                               "TM_E2E_SIGNING_P12_PASSWORD": "sentinel-secret"}, clear=True), \
                  mock.patch.object(fixture.Path, "home", return_value=Path(directory)), \
                  mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel) as spawned, \
                  mock.patch.object(source, "_dns_publication", return_value=(True, {"cloudflare": "published", "google": "published"})) as dns, \
@@ -200,6 +202,7 @@ class UpdateSourceTests(unittest.TestCase):
             self.assertIn(str(source.private / "ca.pem"), args)
             self.assertIn(source.origin_url, args)
             self.assertNotIn("--no-tls-verify", args)
+            self.assertNotIn("TM_E2E_SIGNING_P12_PASSWORD", spawned.call_args.kwargs["env"])
             dns.assert_called_once_with("example.trycloudflare.com")
             verified.assert_called_once_with("https://example.trycloudflare.com/healthz")
             self.assertTrue(tunnel.terminated)
@@ -323,6 +326,7 @@ class UpdateSourceTests(unittest.TestCase):
                      mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel), \
                      mock.patch.object(source, "_dns_publication", side_effect=publication), \
                      mock.patch.object(source, "_probe_public_health", side_effect=system_probe), \
+                     mock.patch.object(source, "_record_dns_diagnostic") as diagnosed, \
                      mock.patch.object(fixture.time, "monotonic", side_effect=lambda: clock[0]), \
                      mock.patch.object(fixture.time, "sleep", side_effect=lambda seconds: clock.__setitem__(0, clock[0] + seconds)), \
                      contextlib.redirect_stdout(io.StringIO()), \
@@ -331,6 +335,7 @@ class UpdateSourceTests(unittest.TestCase):
             finally:
                 source.close()
             self.assertTrue(system_probes)
+            diagnosed.assert_called_once_with("example.trycloudflare.com", "curl exit 6; HTTP 000", 9.0)
             self.assertGreaterEqual(system_probes[0], 170)
             self.assertLessEqual(clock[0], 182)
             self.assertTrue(tunnel.terminated)
@@ -355,6 +360,83 @@ class UpdateSourceTests(unittest.TestCase):
                 self.assertNotIn("--insecure", args)
                 self.assertNotIn("-k", args)
                 self.assertNotIn("--cacert", args)
+            finally:
+                source.close()
+
+    def test_first_system_dns_failure_records_bounded_read_only_diagnostics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = fixture.UpdateSource(root / "secrets", root)
+            hostname = "example.trycloudflare.com"
+            commands = []
+
+            def command(argv, **kwargs):
+                commands.append((argv, kwargs))
+                stdout = (b"resolver #1\n  nameserver[0] : 1.1.1.1\n"
+                          b"  search domain[0] : private.example\n"
+                          b"resolver #2\n  domain : trycloudflare.com\n") if argv[0] == "/usr/sbin/scutil" else b"test output\n"
+                return subprocess.CompletedProcess(argv, 0, stdout, b"")
+
+            try:
+                with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                                   "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}, clear=True), \
+                     mock.patch.object(fixture.subprocess, "run", side_effect=command):
+                    source._record_dns_diagnostic(hostname, "curl exit 6; HTTP 000")
+                report = json.loads((root / "update-dns-diagnostic.json").read_text())
+                self.assertEqual(report["hostname"], hostname)
+                self.assertEqual(report["trigger"], "curl exit 6; HTTP 000")
+                self.assertEqual(len(commands), 10)
+                self.assertTrue(all(kwargs["timeout"] <= 5 for _, kwargs in commands))
+                self.assertTrue(all(kwargs["capture_output"] and not kwargs["check"] for _, kwargs in commands))
+                self.assertTrue(all(not any(key.startswith("TM_E2E_SIGNING_") for key in kwargs["env"])
+                                    for _, kwargs in commands))
+                self.assertNotIn("private.example", json.dumps(report))
+                self.assertIn("search domain[0]: <unrelated>", json.dumps(report))
+                self.assertIn("domain : trycloudflare.com", json.dumps(report))
+                argv = [args for args, _ in commands]
+                self.assertIn(["/usr/bin/dscacheutil", "-q", "host", "-a", "name", hostname], argv)
+                self.assertEqual(sum(args[0] == "/usr/bin/dig" for args in argv), 6)
+                self.assertTrue(all("+stats" in args for args in argv if args[0] == "/usr/bin/dig"))
+                self.assertEqual(sum("AAAA" in args for args in argv), 3)
+                self.assertEqual(sum("A" in args for args in argv), 3)
+                self.assertTrue(any(args[0] == "/usr/bin/curl" and "--ipv4" in args for args in argv))
+                self.assertTrue(all("--insecure" not in args and "--resolve" not in args for args in argv))
+            finally:
+                source.close()
+
+    def test_dns_diagnostic_uses_only_remaining_readiness_budget(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = fixture.UpdateSource(root / "secrets", root)
+            clock = [100.0]
+            calls = []
+            def command(argv, **kwargs):
+                calls.append(kwargs["timeout"])
+                clock[0] += kwargs["timeout"]
+                return subprocess.CompletedProcess(argv, 0, b"", b"")
+            try:
+                with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                                   "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}, clear=True), \
+                     mock.patch.object(fixture.time, "monotonic", side_effect=lambda: clock[0]), \
+                     mock.patch.object(fixture.subprocess, "run", side_effect=command):
+                    source._record_dns_diagnostic("example.trycloudflare.com", "curl exit 6; HTTP 000", 2)
+                report = json.loads((root / "update-dns-diagnostic.json").read_text())
+                self.assertEqual(report["budget_seconds"], 2)
+                self.assertLessEqual(sum(calls), 2)
+                self.assertTrue(any(item.get("status") == "skipped-budget" for item in report["commands"]))
+            finally:
+                source.close()
+
+    def test_dns_diagnostics_refuse_non_hosted_macs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = fixture.UpdateSource(root / "secrets", root)
+            try:
+                with mock.patch.dict("os.environ", {}, clear=True), \
+                     mock.patch.object(fixture.subprocess, "run") as run:
+                    source._record_dns_diagnostic("example.trycloudflare.com", "curl exit 6; HTTP 000")
+                run.assert_not_called()
+                self.assertFalse((root / "update-dns-diagnostic.json").exists())
             finally:
                 source.close()
 
@@ -386,6 +468,7 @@ class UpdateSourceTests(unittest.TestCase):
                          mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel), \
                          mock.patch.object(source, "_dns_publication", return_value=(True, {"cloudflare": "published", "google": "published"})), \
                          mock.patch.object(source, "_probe_public_health", side_effect=probe), \
+                         mock.patch.object(source, "_record_dns_diagnostic", side_effect=RuntimeError("diagnostic failed")) as diagnosed, \
                          mock.patch.object(fixture.time, "monotonic", side_effect=lambda: clock[0]), \
                          mock.patch.object(fixture.time, "sleep", side_effect=lambda seconds: clock.__setitem__(0, clock[0] + seconds)), \
                          contextlib.redirect_stdout(output):
@@ -397,6 +480,8 @@ class UpdateSourceTests(unittest.TestCase):
                 finally:
                     source.close()
                 self.assertEqual({url for _, url in probed}, {"https://example.trycloudflare.com/healthz"})
+                diagnosed.assert_called_once_with("example.trycloudflare.com", "curl exit 6; HTTP 000", 180.0)
+                self.assertIn('"operation": "system DNS diagnostics", "state": "FAILED"', output.getvalue())
                 self.assertIn('"state": "WAITING"', output.getvalue())
                 self.assertGreaterEqual(clock[0], 70 if recovers else 180)
                 self.assertLess(clock[0], 180 if recovers else 182)

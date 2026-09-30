@@ -7,11 +7,11 @@
 | 任务 | 产出与完成标准 | 前序 | 对应用例 |
 | --- | --- | --- | --- |
 | TASK-TM001-PLAN | 六文档、完整追踪、SOP 修正、基线通过 | 需求 | TEST-TM001-GOVERNANCE |
-| TASK-TM001-SERVER | FastAPI/SQLAlchemy/Alembic 工程、真实认证/权限/审计 API、持久会话和失败行为 | 计划、数据/测试 | E2E-TM001-001、E2E-TM001-002、E2E-TM001-003 |
+| TASK-TM001-SERVER | FastAPI/SQLAlchemy/Alembic 工程、真实认证/权限/审计 API；随机可撤销 token 固定30天到期、不滑动，改密/重置/停用撤销旧会话 | 计划、数据/测试 | E2E-TM001-001、E2E-TM001-002、E2E-TM001-003 |
 | TASK-TM001-DATA | 独立测试/生产 SQLite 文件、可执行造数 SQL、生产首建管理员、回归账号/独立预期及安全重置；已有生产密码不可被重建覆盖 | 计划、工程骨架 | TEST-TM001-SERVER、E2E-TM001-001、E2E-TM001-005 |
-| TASK-TM001-MAC | SwiftUI 登录/改密/主页/管理、默认本机服务地址与用户配置持久化、按服务隔离 Keychain、稳定 UI 标识、原生测试 target | API 合同、工程骨架 | E2E-TM001-001、E2E-TM001-002、E2E-TM001-003、E2E-TM001-005、E2E-TM001-006 |
-| TASK-TM001-UPDATE | 固定 Sparkle、HTTPS 更新源/签名测试包/失败包及真实更新用例 | Mac 工程 | E2E-TM001-004 |
-| TASK-TM001-RUNNER | 原生测试执行、xcresult 解析、必测集合/摘要验证、失败证据、CI；第006例以隔离测试服务占用默认回环端口并启动第二套服务/SQLite，不连接真实生产库 | 数据/原生测试 | E2E-TM001-001、E2E-TM001-002、E2E-TM001-003、E2E-TM001-004、E2E-TM001-005、E2E-TM001-006 |
+| TASK-TM001-MAC | SwiftUI 登录/改密/主页/管理、默认本机服务地址与用户配置持久化；默认开启可关闭的设备自动登录、按规范化 origin 隔离的受保护凭据文件与内存会话、稳定 UI 标识、原生测试 target | API 合同、工程骨架 | E2E-TM001-001、E2E-TM001-002、E2E-TM001-003、E2E-TM001-004、E2E-TM001-005、E2E-TM001-006 |
+| TASK-TM001-UPDATE | 固定 Sparkle、HTTPS 更新源/签名测试包/失败包及真实更新用例；两构建沿用同一 UITESTING 临时凭据路径，升级后服务验证自动登录 | Mac 工程 | E2E-TM001-004 |
+| TASK-TM001-RUNNER | 原生测试执行、xcresult 解析、必测集合/摘要验证、失败证据、CI；为001/003/004/006提供独立临时凭据路径、固定时钟/过期与撤销断言；第006例以隔离测试服务占用默认回环端口并启动第二套服务/SQLite，不连接真实生产库 | 数据/原生测试 | E2E-TM001-001、E2E-TM001-002、E2E-TM001-003、E2E-TM001-004、E2E-TM001-005、E2E-TM001-006 |
 | TASK-TM001-REVIEW | 完整回归、流程复盘、PR 与合并判定、发布阻塞记录 | 全部实现任务 | TEST-TM001-GOVERNANCE |
 
 工程骨架可在业务红测前建立；可独立验证的服务 API/数据/源码任务并行推进，缺 native 运行不宣称业务 E2E 已完成。文件所有权在开发计划中固定。

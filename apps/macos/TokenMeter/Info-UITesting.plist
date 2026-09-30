@@ -14,6 +14,7 @@
     <key>NSHighResolutionCapable</key><true/>
     <key>TMTestAPIURL</key><string>$(TM_TEST_API_URL)</string>
     <key>TMTestRunID</key><string>$(TM_TEST_RUN_ID)</string>
+    <key>TMTestCredentialsDirectory</key><string>$(TM_TEST_CREDENTIALS_DIR)</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSExceptionDomains</key>

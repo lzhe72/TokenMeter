@@ -221,3 +221,46 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 为独立定位环境，`quality.yml` 新增默认关闭的手动 `environment_probe_only` 输入。显式开启时，两个 Mac 只运行 `native_environment.py`，检查/工件标记 `environment-diagnostic`，不运行产品六例、不制作预览 DMG，也不产生 PR 合并或发布资格；PR/push 和默认手动触发仍走完整产品门禁。原生 runner 对独立探针的父进程采用有界 1800 秒超时，以容纳临时签名、取得域名、共享 180 秒 DNS/TLS 准备和清理；不延长域名窗口或重试产品用例。该诊断路线及 DNS 前置检查均需通过工具回归和实际 Mac 诊断验证，不能预填 READY/PASS；随后仍需全量六例迭代回归。
 
 本次本机检查：`python3 scripts/check_docs.py --mode structure` 与 `--mode baseline` 均退出0，各核对69份文档、435个链接；`python3 scripts/quality_gate.py check` 退出0，覆盖12项功能、37个场景与6项测试绑定，报告明确 `release_eligible=false`；`git diff --check` 退出0。整合工具回归 `python3 -m unittest discover -s tests/governance -p 'test_*.py'` 184项通过，原始日志在 `.local/governance-dns-final.log`；更新源 focused 回归12项通过，日志在 `.local/update-source-dns-final.log`。这些只证明规范、追踪和工具检查，DNS 前置修订及独立诊断尚无实际托管 Mac READY，也无第004例原生产品 PASS。
+
+### BUG-TM001-FIXTURE-006：双公共DNS已发布后 Intel 系统解析仍失败
+
+修正上段“独立诊断尚无实际 Mac READY”的时间点：[环境诊断 run36663159461](https://github.com/lzhe72/TokenMeter/actions/runs/36663159461) 已在候选 `cc5a87b6ec061c77e354e249597302b457887fd4` 的两台托管 Mac 运行。Apple Silicon 的 `environment-diagnostic` 作业 READY；Intel 的 Cloudflare 与 Google HTTPS DNS 查询在取得随机域名后7.3秒均返回 published，但正常系统 `/usr/bin/curl` 在约0.3、31.6、63.3、95.0、126.8、156.8秒仍为退出6/HTTP000，180秒准备窗口到期后环境报告 BLOCKED、`executed_cases=0`。因此“先等两个公共DNS发布”已被实际证明不足以确保 Intel 的系统解析路径就绪；两平台没有共同 READY，不能把 Apple Silicon 的探针结果追认为产品第004例 PASS。候选的[完整 PR 回归 run36663136535](https://github.com/lzhe72/TokenMeter/actions/runs/36663136535) 在本条记录写入时仍运行，须随后核对原始 `xcresult`；当前 PR 合并和正式发布都不具备门禁条件。
+
+Intel 诊断报告同时显示 `cleanup_completed=false` 与 `cleanup_errors=[]`，字段没有准确区分“主操作失败”和“清理实际完成”。按 SOP-015 保留原报告并修正程序：`finally` 按本次实际清理错误设置该字段；主操作 BLOCKED 且清理成功时应为 true，主状态不改变。为定位系统解析差异，按 SOP-000/009/014 将首次系统 `curl` 退出6后的只读诊断写入规范：`scutil --dns`、同一合成域名的 `dscacheutil`、默认与 `@1.1.1.1`/`@8.8.8.8` 的 A/AAAA `dig`、curl版本与 `--ipv4` HTTPS 健康请求，另读取 `/etc/resolv.conf` 的 nameserver/options。最多10个子命令各5秒，整组60秒且占原共享180秒窗口；无关搜索域脱敏、截断后保存 `update-dns-diagnostic.json`；`dig +stats` 保留响应来源与耗时。该诊断不改变系统 DNS/hosts/信任、不延长等待、不重试产品或替代正常系统 TLS 验收。以上为待实现与验证的修订方案，尚无新候选第004例原生通过证据。
+
+### BUG-TM001-UPGRADE-001：升级安装后 App 构建号未达到 101
+
+更正上段记录时“完整 PR 回归仍运行”的状态：[CI run36663136535](https://github.com/lzhe72/TokenMeter/actions/runs/36663136535) 已结束，GitHub 分支头为 `cc5a87b6ec061c77e354e249597302b457887fd4`，实际检出并测试 PR 合成合并提交 `83910695b9a244804ac35d5f2595bc026c18cb67`。macOS 15 Apple Silicon 与 Intel 均真实构建、启动 App 并执行全部六例；001/002/003/005/006 各 PASS，第004例两平台均为确定性 FAIL，`xcodebuild` 退出65。第004例的 DNS 发布和系统 HTTPS 环境前提在本次两平台产品运行中通过；此结果不改写独立环境诊断 run36663159461 的 Intel BLOCKED，两次运行使用不同临时隧道与域名。
+
+原生失败内容为：点击 Install and Relaunch 后等待90秒，`app.build` 静态文本没有变为预期的 `101`，原始断言 `Asynchronous wait failed: Exceeded timeout of 90 seconds`。机器报告逐平台 `executed_cases=6`、`passed_cases=5`、004 `state=FAIL`、`release_eligible=false`，无清理错误；这证明当前候选没有完成004验收，不能仅凭环境就绪或预览 DMG 放行。原始 job 日志位于 `.local/ci/36663136535-arm64/job.log` 和 `.local/ci/36663136535-intel/job.log`，远端 Actions 工件保存原始 `xcresult` 与附件，正在按需检查更新源请求、Sparkle 事件、安装重启和版本读取以定位根因。当前不能断定是下载、签名、安装、重启还是 UI 读数问题，也不调整90秒预期来消除失败。
+
+按 SOP-015 保留此双平台失败基线和 BUG-TM001-UPGRADE-001 追踪；查明实际失败环节后补稳定回归并修最小原因，再执行 SOP-013/014 的新候选完整六例与两平台检查。产品迭代门禁现为 FAIL，PR #2 不可合并；正式签名、公证、安装后支持矩阵与 SOP-018 通行证仍另外缺失。
+
+BUG-TM001-FIXTURE-006 的只读诊断与清理字段修订现已在未提交工作树落盘，更新源 focused 14项、环境探针4项及治理全套188项通过；全套原始日志为 `.local/ci/local-governance-188.log`。这更正前文“待实现”的源码状态，但没有新的远端诊断或产品验收结果。文档 structure/baseline 69份/435链接、追踪12功能/37场景/6绑定与`git diff --check`均退出0，均不授予发布资格；BUG-TM001-UPGRADE-001 仍须依原始原生附件确定修复。
+
+
+### BUG-TM001-UPGRADE-001 根因复核与内部应用新基线（2026-09-30）
+
+上述“不能断定安装是否成功”是读取原始文字断言时的阶段性结论。随后逐帧复核该次原生测试视频：Sparkle 已实际安装并重启到构建号101，系统弹出 Keychain 凭据访问密码提示，旧 UI 因会话未恢复而未显示 `app.build`，最终004原生断言超时。历史 [run36663136535](https://github.com/lzhe72/TokenMeter/actions/runs/36663136535) 两平台 5/6、004 FAIL 的机器状态保持不变，独立DNS诊断的 Intel BLOCKED 也保持为另一运行。曾尝试制定真实 Apple Development/Developer ID 团队签名路线；本机有效 identity 为0，远端从无四项签名 secrets。用户随后明确本项目仅团队内部使用，无需把付费 Apple 开发者账号作为本轮开发前提。此前临时建立的空 `native-e2e-signing` GitHub environment 已撤回；配置/清理证据位于 `.local/git-sync/native-e2e-signing/`。这是一项新需求与设计变更，不追认历史004通过。
+
+按 SOP-002→007、000/024 重新定义 TM-001：登录页“在此设备上自动登录”默认开启且可关闭。服务端仍签发随机可撤销 token，固定30天过期，不滑动或通过 `/v1/me` 续期；开启时客户端只保存 token 至当前用户的受保护文件（目录0700、文件0600、当前uid、拒绝symlink、原子写、按规范化API origin隔离），关闭后本次成功登录仅内存持有并清除当前origin旧文件，重启回登录页。自动恢复前必须以真实 `/v1/me` 验证；离线、过期、撤销不进入已登录。退出、改密、重置、停用撤销相应会话；离线退出本地清除、仅进程内保留待重试撤销且提示服务端未确认。旧 Keychain 不迁移，旧预览用户首次需重新登录。同设备仅指本机文件保存范围，不是硬件绑定；同uid进程可读，复制 token 仍可能在别处使用。
+
+测试继续使用原六例稳定 ID；001/003/004/006 扩展开关、过期/撤销、升级重启、origin隔离断言。UITESTING 每例由 runner 创建唯一临时凭据目录并将同一真实绝对路径写入候选/高版本 Info.plist，供 Sparkle 自主重启后读取；测试不得触碰生产目录或旧 Keychain。带 `TMTestCredentialsDirectory` 的测试 App 离开 runner 后不适合当作用户预览包；打包器/CI 须拒绝/停止将其生成本机可安装预览 DMG，保留测试 App 压缩件供诊断。内部最终 DMG 需要无测试路径构建、包级原生安装升级矩阵与专用机器门禁；公开 Developer ID/公证流程另保留。两者都仍 BLOCKED，不以预览包或源码迭代替代。
+
+本轮设计修订后实跑 `python3 scripts/check_docs.py --mode structure`、`--mode baseline` 与 `python3 scripts/quality_gate.py check`，均退出0：69份文档、435条链接、12项功能、37个场景、6项绑定；报告 `release_eligible=false`。这是规范和追踪基线，不是新行为的实现、六例原生 E2E 或任一 profile 的发行 PASS。当前准备按 SOP-011/012 补稳定红测与最小实现，之后同候选两架构完整回归。
+
+本轮版本 `00-manifest.json` 已登记 `distribution_profile=internal` 作为机器可查的发行目标；不表示内部门禁程序已经实现。完成全局规范与 SOP-017/018 的 profile 修订后再次实跑 `check_docs --mode structure`、`--mode baseline`、`quality_gate.py check` 和 `git diff --check`，全部退出0；此时文档69份/433链接、12功能/37场景/6绑定，`release_eligible=false`。历史上435链接对应旧文档快照，当前目录链接数以本次运行的433为准。
+
+### 同设备自动登录的基础回归与程序绑定（2026-09-30）
+
+按 SOP-000 先更新总索引，再将 SOP-013 修订为4：在 macOS 上由 Command Line Tools 执行 `python3 scripts/test_device_credentials.py`，编译真实 `Auth.swift` 与 Foundation 断言源 `tests/macos/DeviceCredentialsTests.swift`，将凭据文件权限、符号链接、类型、origin隔离与原子替换作为进入原生 E2E 前的组件检查。两个程序已落盘并登记 `00-manifest.json`、文档目录与03/04计划；登记和源码存在不代表执行 PASS。SOP-024 同步 AGENTS 与测试执行参考。该组件检查无需 XCTest，不能代替原生六例或最终安装包测试。
+
+服务端固定30天期限先有真实失败基线：`tests/server/test_auth.py` 的相关检查在旧实现上出现2失败、1通过，原始记录 `.local/verification/automatic-login/server-red-safe.log`；修改后隔离服务端全套 `tests/server` 为45通过、1个依赖弃用警告，原始记录 `.local/verification/automatic-login/server-green.log`。这只证明服务端基础回归，不证明 App 自动登录、升级或发布。新 Swift 组件和两平台原生六例结果仍需以各自真实命令与 CI 原始证据追加。
+
+本次程序绑定与规范修订后实跑 `python3 scripts/check_docs.py --mode structure`、`--mode baseline` 和 `python3 scripts/quality_gate.py check`，全部退出0：69文档/433链接、12功能/37场景/6绑定，`release_eligible=false`；`git diff --check` 退出0。旧 CI 把带 `TMTestCredentialsDirectory` 的 UITESTING App 包装成预览 DMG 的步骤已移除，打包器增加拒绝该测试路径的保护；目前仍没有新的可分发内部 DMG，SOP-017/018 的内部发行门禁保持 BLOCKED。
+
+本机 `python3 scripts/test_device_credentials.py` 最终编译并执行13例，0失败，原始记录 `.local/ci/device-credentials-13.log`。并发原子替换边界曾真实红测失败：`.local/ci/device-credentials-final.log` 中该例 FAIL（当时程序共11例、1失败）。修复针对已打开的旧 inode 在原子替换后允许链接数0，仍拒绝硬链接数大于1；重新执行该场景及全套13例 PASS。最初测试 fixture 的 `/var` 路径别名使用 `realpath` 修正，未放宽生产代码的符号链接拒绝。`xcrun swiftc -swift-version 5 -typecheck` 对 `Auth.swift`、`AccountStore.swift` 通过，UITest 源码语法解析也通过；这些仅证明源码检查。更新包工具12项通过，记录 `.local/ci/automatic-login-package-tools.log`。这仍未验证真实原生 App 升级后自动登录；旧远端004 FAIL 保留，必须由新候选完整六例重新判定。
+
+补录最终文档核对：增加当前状态到本记录的证据入口后，再次实跑 `python3 scripts/check_docs.py --mode baseline`、`python3 scripts/quality_gate.py check` 与 `git diff --check`，均退出0；文档69份/434链接、12功能/37场景/6绑定，`release_eligible=false`。
+
+提交前整合检查：治理工具193项全部通过，完整日志 `.local/ci/automatic-login-governance.log`。只读审查发现 XCTest 的 Foundation 路径解析会保留 `/var` 别名，已改用系统 `realpath` 核对 runner 的真实路径；退出登录先删除本机凭据再等待服务端撤销；测试配置须具有已存在、当前用户所有、0700的规范路径，缺失时明确错误且不回落生产目录。原生源码解析和账号模块类型检查退出0；新原生结果须在提交后由 CI 产生，未预填通过。

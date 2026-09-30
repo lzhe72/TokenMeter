@@ -96,6 +96,48 @@ def new_run_directory(root: Path, run_id: str) -> Path:
     return result
 
 
+def prepare_test_credentials(case_private: Path) -> Path:
+    """Give one native case an owned directory shared by both App builds."""
+    if (not case_private.is_absolute() or case_private.is_symlink() or not case_private.is_dir()
+            or case_private.resolve(strict=True) != case_private
+            or case_private.stat().st_uid != os.getuid()
+            or case_private.stat().st_mode & 0o7777 != 0o700):
+        raise EvidenceError("Native case has no private resolved fixture directory")
+    directory = case_private / "credentials"
+    try:
+        directory.mkdir(mode=0o700)
+    except FileExistsError as exc:
+        raise EvidenceError("Test credential directory already exists") from exc
+    if (directory.is_symlink() or directory.resolve(strict=True) != directory
+            or directory.stat().st_uid != os.getuid() or directory.stat().st_mode & 0o7777 != 0o700):
+        raise EvidenceError("Test credential directory is not a private resolved directory")
+    return directory
+
+
+def clean_test_credentials(case_private: Path, directory: Path) -> None:
+    """Delete only this case's flat credential files, without following links."""
+    if directory != case_private / "credentials" or directory.is_symlink() or not directory.is_dir():
+        raise EvidenceError("Test credential cleanup target is not this case's directory")
+    if (directory.resolve(strict=True) != directory or directory.stat().st_uid != os.getuid()
+            or directory.stat().st_mode & 0o7777 != 0o700):
+        raise EvidenceError("Test credential cleanup target changed ownership or permissions")
+    unsafe = False
+    for entry in directory.iterdir():
+        if entry.is_symlink():
+            unsafe = True
+            entry.unlink()
+        elif entry.is_file() and entry.stat().st_uid == os.getuid():
+            if entry.stat().st_mode & 0o7777 != 0o600:
+                unsafe = True
+            entry.unlink()
+        else:
+            unsafe = True
+    if not any(directory.iterdir()):
+        directory.rmdir()
+    if unsafe or directory.exists():
+        raise EvidenceError("Test credential directory had unsafe or unremoved entries")
+
+
 def git(root: Path, *args: str) -> str:
     result = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, check=False)
     if result.returncode:
@@ -594,6 +636,16 @@ def verify_default_route_bundle(app: Path, run_id: str) -> None:
         raise EvidenceError("Default-route App retained a test API URL or wrong run ID")
 
 
+def verify_test_credentials_bundle(app: Path, directory: Path, run_id: str) -> None:
+    info_path = app / "Contents/Info.plist"
+    if info_path.is_symlink() or not info_path.is_file():
+        raise EvidenceError("UITesting App has no regular built Info.plist")
+    app_info = plistlib.loads(info_path.read_bytes())
+    if (app_info.get("TMTestRunID") != run_id
+            or app_info.get("TMTestCredentialsDirectory") != str(directory)):
+        raise EvidenceError("UITesting App has a wrong or missing credential directory")
+
+
 def build_command(project: Path, derived: Path) -> list[str]:
     return ["xcodebuild", "-project", str(project), "-scheme", "TokenMeter", "-configuration", "UITesting",
             "-derivedDataPath", str(derived), "-destination", "platform=macOS,arch=" + architecture_family(platform.machine()),
@@ -650,6 +702,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
             case_output.mkdir()
             case_private = private / case_id
             case_private.mkdir(mode=0o700)
+            credentials_dir = prepare_test_credentials(case_private)
             isolation_id = (report["run_id"][:40] + f"-c{index:03d}").lower()
             profile = fixture_profile(case_id)
             secondary_private = None
@@ -699,7 +752,8 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     update_env: dict[str, str] = {}
                     build_settings = ["CURRENT_PROJECT_VERSION=100", "CODE_SIGN_IDENTITY=-", "CODE_SIGNING_ALLOWED=YES",
                                       "TM_TEST_API_URL=" + ("" if profile == "dual_service_routes" else address),
-                                      "TM_TEST_RUN_ID=" + isolation_id]
+                                      "TM_TEST_RUN_ID=" + isolation_id,
+                                      "TM_TEST_CREDENTIALS_DIR=" + str(credentials_dir)]
                     if case_id == "E2E-TM001-004":
                         progress(case_id, "verify-upgrade-environment")
                         require_upgrade_environment(root, case_output)
@@ -723,7 +777,8 @@ def execute(root: Path, output: Path, report: dict) -> None:
                                      "--feed-url", feed, "--public-key", public_key,
                                      "--private-key-file", str(update.private / "sparkle-seed.txt"),
                                      "--code-sign-identity", identity, "--signing-keychain", str(signing.keychain),
-                                     "--api-url", address, "--run-id", isolation_id, "--build-version", "101"],
+                                     "--api-url", address, "--run-id", isolation_id, "--build-version", "101",
+                                     "--credentials-dir", str(credentials_dir)],
                                     root=root, log=case_output / "update-build.log")
                         finally:
                             if (package_output / "build.log").is_file():
@@ -746,6 +801,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     app = derived / "Build/Products/UITesting/TokenMeter.app"
                     if not app.is_dir():
                         raise Blocked("Native build did not produce TokenMeter.app")
+                    verify_test_credentials_bundle(app, credentials_dir, isolation_id)
                     if profile == "dual_service_routes":
                         verify_default_route_bundle(app, isolation_id)
                     if signing is not None:
@@ -753,15 +809,19 @@ def execute(root: Path, output: Path, report: dict) -> None:
                         requirements = [line for line in (displayed.stdout + displayed.stderr).splitlines() if line.startswith("designated =>")]
                         if (displayed.returncode or len(requirements) != 1 or "cdhash" in requirements[0]
                                 or requirements[0] != update_metadata.get("designated_requirement")
-                                or update_metadata.get("code_sign_identity") != identity):
+                                or update_metadata.get("code_sign_identity") != identity
+                                or update_metadata.get("test_credentials_directory_sha256")
+                                   != hashlib.sha256(str(credentials_dir).encode()).hexdigest()):
                             raise EvidenceError("Candidate and update do not share the same stable signing requirement")
                         (case_output / "candidate-signing.json").write_text(json.dumps({
                             "code_sign_identity": identity, "designated_requirement": requirements[0],
-                            "matches_update": True, "developer_id": False, "notarized": False}, indent=2) + "\n")
+                            "matches_update": True, "test_credentials_directory_matches_update": True,
+                            "developer_id": False, "notarized": False}, indent=2) + "\n")
                     archived_app = case_output / "candidate-app.zip"
                     command(["ditto", "-c", "-k", "--keepParent", str(app), str(archived_app)],
                             root=root, log=case_output / "archive.log", timeout=120)
-                    test_env = dict(os.environ, TM_TEST_API_URL=address, TM_TEST_RUN_ID=isolation_id, **update_env)
+                    test_env = dict(os.environ, TM_TEST_API_URL=address, TM_TEST_RUN_ID=isolation_id,
+                                    TM_TEST_CREDENTIALS_DIR=str(credentials_dir), **update_env)
                     if profile == "dual_service_routes":
                         test_env["TM_TEST_SECOND_API_URL"] = secondary_address
                     # xcodebuild forwards explicitly prefixed environment variables
@@ -863,17 +923,12 @@ def execute(root: Path, output: Path, report: dict) -> None:
                             signing.close()
                         except (RuntimeError, OSError, subprocess.SubprocessError) as exc:
                             cleanup_errors.append(f"code-signing cleanup: {exc}")
-                    for service_address in (address, secondary_address):
-                        if service_address is None:
-                            continue
-                        service = "org.tokenmeter.session." + isolation_id + "." + hashlib.sha256(service_address.rstrip("/").encode()).hexdigest()
-                        try:
-                            keychain = subprocess.run(["security", "delete-generic-password", "-s", service,
-                                                       "-a", "access-token"], capture_output=True, text=True, check=False, timeout=15)
-                            if keychain.returncode not in (0, 44):
-                                cleanup_errors.append(f"Scoped test Keychain cleanup failed: {keychain.returncode}")
-                        except (OSError, subprocess.SubprocessError) as exc:
-                            cleanup_errors.append(f"test Keychain cleanup: {exc}")
+                    try:
+                        clean_test_credentials(case_private, credentials_dir)
+                        report.setdefault("credential_cleanup", {})[case_id] = "SUCCEEDED"
+                    except (EvidenceError, OSError) as exc:
+                        report.setdefault("credential_cleanup", {})[case_id] = "FAILED"
+                        cleanup_errors.append(f"test credential cleanup: {exc}")
                     if profile in ("synthetic_accounts", "dual_service_routes"):
                         try:
                             account_data.reset(isolation_id, workspace=case_private)
@@ -885,8 +940,8 @@ def execute(root: Path, output: Path, report: dict) -> None:
                         except (OSError, ValueError) as exc:
                             cleanup_errors.append(f"secondary account fixture cleanup: {exc}")
                     record_cleanup_errors(report, cleanup_errors, primary_error)
-            # XCTest logs out/removes only its own run's session; database and
-            # credentials are removed with the owned temporary directory.
+            # Only the owned temporary directory holds databases and private
+            # fixture inputs; credential files were removed explicitly above.
         report["cleanup_completed"] = True
     if failed:
         raise EvidenceError("; ".join(failed))

@@ -19,6 +19,12 @@ import time
 from xml.sax.saxutils import escape
 
 
+def _subprocess_env() -> dict[str, str]:
+    """Do not pass signing credentials to TLS, DNS, or tunnel processes."""
+    return {key: value for key, value in os.environ.items()
+            if not key.startswith("TM_E2E_SIGNING_")}
+
+
 def appcast(url: str, signature: str, size: int, build: str = "101") -> bytes:
     return (f'<?xml version="1.0" encoding="utf-8"?>\n'
             f'<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel>'
@@ -107,7 +113,8 @@ class UpdateSource:
                               "state": state, "elapsed_seconds": round(time.monotonic() - started, 3), **details}), flush=True)
         progress("STARTED")
         try:
-            result = subprocess.run(args, capture_output=True, text=True, check=False, timeout=60)
+            result = subprocess.run(args, capture_output=True, text=True, check=False, timeout=60,
+                                    env=_subprocess_env())
         except subprocess.TimeoutExpired as exc:
             progress("TIMED_OUT")
             raise RuntimeError(f"Isolated update fixture {name} timed out after 60 seconds") from exc
@@ -165,7 +172,7 @@ class UpdateSource:
             result = subprocess.run(
                 ["/usr/bin/curl", "--disable", "--silent", "--show-error", "--fail", "--proto", "=https",
                  "--max-time", "8", "--max-filesize", "1024", "--write-out", "\n%{http_code}", url],
-                capture_output=True, timeout=10, check=False,
+                capture_output=True, timeout=10, check=False, env=_subprocess_env(),
             )
         except subprocess.TimeoutExpired:
             return False, "system curl timed out"
@@ -202,7 +209,7 @@ class UpdateSource:
                     ["/usr/bin/curl", "--disable", "--silent", "--show-error", "--fail",
                      "--proto", "=https", "--max-time", "8", "--max-filesize", "8192",
                      "--header", "accept: application/dns-json", url],
-                    capture_output=True, timeout=10, check=False,
+                    capture_output=True, timeout=10, check=False, env=_subprocess_env(),
                 )
             except subprocess.TimeoutExpired:
                 statuses[name] = "curl-timeout"
@@ -255,6 +262,92 @@ class UpdateSource:
                 statuses[name] = "published" if valid_address else "no-matching-A-record"
         return all(status == "published" for status in statuses.values()), statuses
 
+    def _record_dns_diagnostic(self, hostname: str, trigger: str, remaining_budget: float = 60) -> None:
+        """Capture one read-only resolver snapshot after system curl cannot resolve.
+
+        This is restricted to the synthetic hosted-Mac fixture and never changes
+        the App's DNS path, TLS verification, or the readiness verdict.
+        """
+        if (os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP")
+                or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted"
+                or os.environ.get("RUNNER_OS") != "macOS"
+                or re.fullmatch(r"[a-z0-9-]+\.trycloudflare\.com", hostname) is None):
+            return
+        commands: list[tuple[str, list[str]]] = [
+            ("macos-resolvers", ["/usr/sbin/scutil", "--dns"]),
+            ("macos-host-cache", ["/usr/bin/dscacheutil", "-q", "host", "-a", "name", hostname]),
+        ]
+        for resolver, prefix in (("default", []), ("cloudflare-udp", ["@1.1.1.1"]),
+                                 ("google-udp", ["@8.8.8.8"])):
+            for record_type in ("A", "AAAA"):
+                commands.append((f"dig-{resolver}-{record_type.lower()}",
+                                 ["/usr/bin/dig", "+time=2", "+tries=1", "+noall", "+answer", "+comments", "+stats",
+                                  *prefix, hostname + ".", record_type]))
+        commands.extend([
+            ("curl-version", ["/usr/bin/curl", "--disable", "--version"]),
+            ("curl-ipv4-diagnostic", ["/usr/bin/curl", "--disable", "--ipv4", "--silent", "--show-error",
+                                      "--fail", "--proto", "=https", "--max-time", "4", "--max-filesize", "1024",
+                                      "--write-out", "\n%{http_code}", f"https://{hostname}/healthz"]),
+        ])
+        started = time.monotonic()
+        budget = min(60, max(0.0, remaining_budget))
+        deadline = started + budget
+        report = {"scope": "github_hosted_mac_update_fixture", "hostname": hostname, "trigger": trigger,
+                  "budget_seconds": round(budget, 3), "commands": []}
+        try:
+            resolv = Path("/etc/resolv.conf").read_text(errors="replace")
+            report["resolv_conf"] = [line.strip() for line in resolv.splitlines()
+                                     if line.strip().startswith(("nameserver ", "options "))][:20]
+        except OSError as exc:
+            report["resolv_conf_error"] = f"errno={exc.errno}"
+        for name, argv in commands:
+            remaining = deadline - time.monotonic()
+            item: dict = {"name": name, "argv": argv}
+            if remaining <= 0:
+                item["status"] = "skipped-budget"
+                report["commands"].append(item)
+                continue
+            try:
+                result = subprocess.run(argv, capture_output=True, check=False, timeout=min(5, remaining),
+                                        env=_subprocess_env())
+                item["exit_code"] = result.returncode
+                lines = result.stdout[:16384].decode("utf-8", "replace").splitlines()
+                if name == "macos-resolvers":
+                    allowed = ("resolver #", "nameserver[", "flags", "reach", "if_index", "options", "order", "port", "timeout")
+                    filtered = []
+                    for line in lines:
+                        line = line.strip()
+                        domain = re.fullmatch(r"(search domain(?:\[\d+\])?|domain)\s*:\s*(\S+)", line)
+                        if domain:
+                            suffix = domain.group(2).rstrip(".").lower()
+                            filtered.append(line if hostname == suffix or hostname.endswith("." + suffix)
+                                            else f"{domain.group(1)}: <unrelated>")
+                        elif line.startswith(allowed):
+                            filtered.append(line)
+                    lines = filtered
+                elif name == "macos-host-cache":
+                    lines = [line.strip() for line in lines
+                             if line.strip().startswith(("name:", "ip_address:", "ipv6_address:"))]
+                item["stdout"] = "\n".join(lines)[:8192]
+                item["stderr"] = result.stderr[:1024].decode("utf-8", "replace")
+            except subprocess.TimeoutExpired:
+                item["status"] = "timeout"
+            except OSError as exc:
+                item["status"] = f"unavailable-errno-{exc.errno}"
+            report["commands"].append(item)
+        report["elapsed_seconds"] = round(time.monotonic() - started, 2)
+        try:
+            (self.evidence / "update-dns-diagnostic.json").write_text(json.dumps(report, indent=2) + "\n")
+        except OSError as exc:
+            print(json.dumps({"event": "fixture_operation", "fixture": "update_source",
+                              "operation": "system DNS diagnostics", "state": "FAILED",
+                              "hostname": hostname, "errno": exc.errno}), flush=True)
+        else:
+            print(json.dumps({"event": "fixture_operation", "fixture": "update_source",
+                              "operation": "system DNS diagnostics", "state": "RECORDED",
+                              "hostname": hostname, "elapsed_seconds": report["elapsed_seconds"],
+                              "evidence": "update-dns-diagnostic.json"}), flush=True)
+
     def start_tunnel(self) -> str:
         """Expose only the isolated HTTPS fixture through a public-trust test URL.
 
@@ -280,7 +373,7 @@ class UpdateSource:
              "--origin-ca-pool", str(self.private / "ca.pem"), "--origin-server-name", "localhost",
              "--metrics", "127.0.0.1:0", "--loglevel", "info"],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-            cwd=self.private,
+            cwd=self.private, env=_subprocess_env(),
         )
         assert self.tunnel.stdout is not None
         self.tunnel_reader = threading.Thread(
@@ -334,12 +427,23 @@ class UpdateSource:
         deadline = readiness_deadline
         next_progress = started
         last_probe = "public endpoint was not checked"
+        dns_diagnosed = False
         while time.monotonic() < deadline:
             if self.tunnel.poll() is not None:
                 raise RuntimeError("Temporary HTTPS tunnel exited during TLS verification")
             healthy, last_probe = self._probe_public_health(self.url + "/healthz")
             if healthy:
                 return self.url
+            if not dns_diagnosed and last_probe == "curl exit 6; HTTP 000":
+                dns_diagnosed = True
+                try:
+                    self._record_dns_diagnostic(hostname, last_probe, max(0.0, deadline - time.monotonic()))
+                except Exception as exc:
+                    # Diagnostics cannot turn the original DNS blocker into a
+                    # different result or hide a subsequent successful probe.
+                    print(json.dumps({"event": "fixture_operation", "fixture": "update_source",
+                                      "operation": "system DNS diagnostics", "state": "FAILED",
+                                      "hostname": hostname, "error_type": type(exc).__name__}), flush=True)
             now = time.monotonic()
             if now >= next_progress:
                 print(json.dumps({"event": "fixture_operation", "fixture": "update_source",
