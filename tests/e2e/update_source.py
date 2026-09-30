@@ -15,7 +15,6 @@ import ssl
 import subprocess
 import threading
 import time
-from urllib.request import urlopen
 from xml.sax.saxutils import escape
 
 
@@ -155,6 +154,34 @@ class UpdateSource:
         self.server.socket = self.context.wrap_socket(self.server.socket, server_side=True)
         return public
 
+    def _probe_public_health(self, url: str) -> tuple[bool, str]:
+        """Verify the public endpoint with the macOS system TLS client.
+
+        Python may use a CA store different from macOS. The App uses macOS trust,
+        so the environment probe must use that trust without disabling TLS.
+        """
+        try:
+            result = subprocess.run(
+                ["/usr/bin/curl", "--disable", "--silent", "--show-error", "--fail", "--proto", "=https",
+                 "--max-time", "8", "--max-filesize", "1024", "--write-out", "\n%{http_code}", url],
+                capture_output=True, timeout=10, check=False,
+            )
+        except subprocess.TimeoutExpired:
+            return False, "system curl timed out"
+        except OSError as exc:
+            return False, f"system curl unavailable (errno={exc.errno})"
+        body, separator, status = result.stdout.rpartition(b"\n")
+        if not separator or not re.fullmatch(rb"[0-9]{3}", status):
+            return False, f"curl exit {result.returncode}; invalid HTTP status output"
+        http_status = status.decode("ascii")
+        if result.returncode:
+            return False, f"curl exit {result.returncode}; HTTP {http_status}"
+        if http_status != "200":
+            return False, f"HTTP {http_status}"
+        if body != b"ready":
+            return False, "HTTP 200 with unexpected body"
+        return True, "HTTP 200 verified"
+
     def start_tunnel(self) -> str:
         """Expose only the isolated HTTPS fixture through a public-trust test URL.
 
@@ -202,17 +229,15 @@ class UpdateSource:
         if self.url is None:
             raise RuntimeError("Temporary HTTPS tunnel did not provide a URL within 90 seconds")
         deadline = time.monotonic() + 45
+        last_probe = "public endpoint was not checked"
         while time.monotonic() < deadline:
             if self.tunnel.poll() is not None:
                 raise RuntimeError("Temporary HTTPS tunnel exited during TLS verification")
-            try:
-                with urlopen(self.url + "/healthz", timeout=8) as response:
-                    if response.status == 200 and response.read() == b"ready":
-                        return self.url
-            except (OSError, ValueError):
-                pass
+            healthy, last_probe = self._probe_public_health(self.url + "/healthz")
+            if healthy:
+                return self.url
             time.sleep(2)
-        raise RuntimeError("Temporary HTTPS tunnel did not pass public TLS and origin checks")
+        raise RuntimeError(f"Temporary HTTPS tunnel did not pass public TLS and origin checks ({last_probe})")
 
     def publish(self, package: Path, signature: str) -> None:
         if self.url is None or self.thread is None or self.tunnel is None or self.tunnel.poll() is not None:

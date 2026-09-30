@@ -3,6 +3,7 @@ import base64
 import importlib.util
 import io
 from pathlib import Path
+import subprocess
 import tempfile
 import threading
 import unittest
@@ -184,15 +185,11 @@ class UpdateSourceTests(unittest.TestCase):
             binary.parent.mkdir()
             binary.write_text("unit-only binary placeholder")
             binary.chmod(0o700)
-            response = mock.MagicMock()
-            response.status = 200
-            response.read.return_value = b"ready"
-            response.__enter__.return_value = response
             with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
                                                "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}, clear=True), \
                  mock.patch.object(fixture.Path, "home", return_value=Path(directory)), \
                  mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel) as spawned, \
-                 mock.patch.object(fixture, "urlopen", return_value=response) as verified:
+                 mock.patch.object(source, "_probe_public_health", return_value=(True, "HTTP 200 verified")) as verified:
                 self.assertEqual(source.start_tunnel(), "https://example.trycloudflare.com")
                 source.close()
             args = spawned.call_args.args[0]
@@ -201,8 +198,31 @@ class UpdateSourceTests(unittest.TestCase):
             self.assertIn(str(source.private / "ca.pem"), args)
             self.assertIn(source.origin_url, args)
             self.assertNotIn("--no-tls-verify", args)
-            verified.assert_called_once_with("https://example.trycloudflare.com/healthz", timeout=8)
+            verified.assert_called_once_with("https://example.trycloudflare.com/healthz")
             self.assertTrue(tunnel.terminated)
+
+    def test_public_health_uses_system_trust_and_reports_tls_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = fixture.UpdateSource(Path(directory) / "secrets", Path(directory))
+            try:
+                healthy = subprocess.CompletedProcess([], 0, b"ready\n200", b"")
+                untrusted = subprocess.CompletedProcess([], 60, b"\n000", b"curl: (60) certificate problem")
+                with mock.patch.object(fixture.subprocess, "run", side_effect=[healthy, untrusted]) as called:
+                    self.assertEqual(source._probe_public_health("https://example.trycloudflare.com/healthz"),
+                                     (True, "HTTP 200 verified"))
+                    self.assertEqual(source._probe_public_health("https://example.trycloudflare.com/healthz"),
+                                     (False, "curl exit 60; HTTP 000"))
+                args = called.call_args.args[0]
+                self.assertEqual(args[0], "/usr/bin/curl")
+                self.assertEqual(args[1], "--disable")  # Ignore any runner ~/.curlrc TLS overrides.
+                self.assertIn("--proto", args)
+                self.assertIn("=https", args)
+                self.assertIn("--fail", args)
+                self.assertNotIn("--insecure", args)
+                self.assertNotIn("-k", args)
+                self.assertNotIn("--cacert", args)
+            finally:
+                source.close()
 
     def test_tunnel_refuses_self_hosted_runner_and_timeout_names_operation(self):
         with tempfile.TemporaryDirectory() as directory:
