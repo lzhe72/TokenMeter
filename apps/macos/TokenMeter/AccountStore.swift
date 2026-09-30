@@ -30,7 +30,7 @@ final class AccountStore: ObservableObject {
         let url = try configuration.serverURL(server)
         api = AuthAPI(baseURL: url)
         keychain = TokenKeychain(origin: url, isolationID: configuration.isolationID)
-        configuration.defaults.set(url.absoluteString, forKey: "serviceURL")
+        configuration.rememberServer(url)
     }
 
     func restore() async {

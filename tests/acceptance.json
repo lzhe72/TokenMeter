@@ -63,6 +63,16 @@
       ]
     },
     {
+      "id": "AC-TM001-006",
+      "feature_id": "TM-001",
+      "requirement_id": "REQ-TM001",
+      "spec": "docs/product/README.md",
+      "criterion": "首次启动默认连接本机 127.0.0.1:49176；登录页改为另一隔离服务后连接该服务并在重启后保留，旧服务会话不能用于新服务；非回环 HTTP 拒绝，HTTPS 地址可配置",
+      "data_requirements": [
+        "account_roles"
+      ]
+    },
+    {
       "id": "AC-TM002-001",
       "feature_id": "TM-002",
       "requirement_id": "REQ-TM002",
@@ -260,6 +270,17 @@
       "spec": "docs/product/README.md",
       "criterion": "拒绝无效包，不进入半更新状态，恢复流程可自动验证",
       "data_requirements": []
+    },
+    {
+      "id": "AC-TM010-003",
+      "feature_id": "TM-010",
+      "requirement_id": "REQ-TM010",
+      "spec": "docs/product/README.md",
+      "criterion": "生产服务器确定后，升级包的新 HTTPS 默认地址只用于未手动改过地址的安装；已有手动地址跨升级保留，认证会话仍按服务地址隔离",
+      "data_requirements": [
+        "default_migration",
+        "manual_override_persistence"
+      ]
     },
     {
       "id": "AC-TM011-001",

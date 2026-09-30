@@ -76,7 +76,7 @@ jobs:
         if: ${{ always() && matrix.runner == 'macos-15-intel' }}
         run: |
           set -euo pipefail
-          candidate_zip="$(find .local/e2e -path '*/E2E-TM001-001/candidate-app.zip' -print -quit)"
+          candidate_zip="$(find .local/e2e -path '*/E2E-TM001-006/candidate-app.zip' -print -quit)"
           test -n "$candidate_zip"
           mkdir -p .local/preview/package-source
           ditto -x -k "$candidate_zip" .local/preview/package-source

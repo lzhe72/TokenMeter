@@ -228,7 +228,12 @@ class UpdateSource:
                 break
         if self.url is None:
             raise RuntimeError("Temporary HTTPS tunnel did not provide a URL within 90 seconds")
-        deadline = time.monotonic() + 45
+        # A newly assigned Quick Tunnel hostname can briefly return NXDOMAIN.
+        # Keep the same tunnel alive while the normal macOS resolver catches up;
+        # never substitute an alternate resolver for the App's real DNS path.
+        started = time.monotonic()
+        deadline = started + 180
+        next_progress = started
         last_probe = "public endpoint was not checked"
         while time.monotonic() < deadline:
             if self.tunnel.poll() is not None:
@@ -236,6 +241,12 @@ class UpdateSource:
             healthy, last_probe = self._probe_public_health(self.url + "/healthz")
             if healthy:
                 return self.url
+            now = time.monotonic()
+            if now >= next_progress:
+                print(json.dumps({"event": "fixture_operation", "fixture": "update_source",
+                                  "operation": "public TLS and origin check", "state": "WAITING",
+                                  "elapsed_seconds": round(now - started, 1), "last_probe": last_probe}), flush=True)
+                next_progress = now + 30
             time.sleep(2)
         raise RuntimeError(f"Temporary HTTPS tunnel did not pass public TLS and origin checks ({last_probe})")
 

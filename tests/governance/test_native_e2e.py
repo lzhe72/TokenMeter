@@ -5,6 +5,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 import plistlib
+import socket
 import sqlite3
 import tempfile
 import time
@@ -50,8 +51,109 @@ class NativeContractTests(unittest.TestCase):
         for index in range(1, 5):
             self.assertEqual(native.fixture_profile(f"E2E-TM001-{index:03d}"), "synthetic_accounts")
         self.assertEqual(native.fixture_profile("E2E-TM001-005"), "production_bootstrap")
+        self.assertEqual(native.fixture_profile("E2E-TM001-006"), "dual_service_routes")
         with self.assertRaises(native.Blocked):
-            native.fixture_profile("E2E-TM001-006")
+            native.fixture_profile("E2E-TM001-007")
+
+    def test_dual_service_data_has_two_owned_databases_and_distinct_credentials(self):
+        account_data = native.load_module(ROOT / "tests/server/fixtures.py", "native_account_fixture_test")
+        case_output = self.root / "case-output"
+        case_output.mkdir()
+        primary = self.root.resolve() / "case-private"
+        secondary = primary / "secondary"
+        secondary.mkdir(parents=True)
+        calls = []
+        def cli(arguments, **kwargs):
+            calls.append(arguments)
+            return mock.Mock(returncode=0)
+        with mock.patch.object(native, "command", side_effect=cli):
+            first_database, first_fixture = native.prepare_account_database(
+                ROOT, primary, case_output, account_data, "route-primary", 42)
+            second_database, second_fixture = native.prepare_account_database(
+                ROOT, secondary, case_output, account_data, "route-secondary", 43, suffix="-secondary")
+        self.assertNotEqual(first_database, second_database)
+        self.assertEqual(len(calls), 4)
+        self.assertEqual(json.loads((primary / ".tokenmeter-test-database.json").read_text())["run_id"], "route-primary")
+        self.assertEqual(json.loads((secondary / ".tokenmeter-test-database.json").read_text())["run_id"], "route-secondary")
+        primary_users = json.loads((first_fixture / "users.json").read_text())["users"]
+        secondary_users = json.loads((second_fixture / "users.json").read_text())["users"]
+        self.assertEqual(primary_users[1]["password"], "TEST-ONLY-alice-42!")
+        self.assertEqual(secondary_users[1]["password"], "TEST-ONLY-alice-43!")
+        manifest = native.write_dual_service_manifest(case_output, first_fixture, second_fixture,
+                                                      "route-primary", "route-secondary")
+        self.assertEqual(json.loads(manifest.read_text())["default_port"], 49176)
+        self.assertNotIn("TEST-ONLY-", manifest.read_text())
+        account_data.reset("route-primary", workspace=primary)
+        account_data.reset("route-secondary", workspace=secondary)
+
+    def test_reserved_port_never_connects_to_an_existing_service(self):
+        private = self.root / "case-private"
+        private.mkdir()
+        database = private / "accounts.sqlite"
+        database.write_bytes(b"isolated-test-file")
+        log = self.root / "service.log"
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as existing:
+            existing.bind(("127.0.0.1", 0))
+            existing.listen(1)
+            with log.open("wb") as stream, mock.patch.object(native.subprocess, "Popen") as launch:
+                with self.assertRaises(native.Blocked):
+                    native.start_isolated_service(ROOT, private, database, stream,
+                                                  port=existing.getsockname()[1])
+                launch.assert_not_called()
+        with log.open("wb") as stream, mock.patch.object(native.subprocess, "Popen") as launch:
+            _, address, listener = native.start_isolated_service(ROOT, private, database, stream)
+            try:
+                self.assertTrue(address.startswith("http://127.0.0.1:"))
+                arguments = launch.call_args.args[0]
+                self.assertIn("--fd", arguments)
+                self.assertNotIn("--host", arguments)
+                self.assertEqual(launch.call_args.kwargs["env"]["TOKENMETER_DATABASE_URL"],
+                                 "sqlite:///" + str(database))
+                self.assertEqual(len(launch.call_args.kwargs["pass_fds"]), 1)
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as intruder:
+                    with self.assertRaises(OSError):
+                        intruder.bind(("127.0.0.1", int(address.rsplit(":", 1)[1])))
+                with mock.patch.object(native, "urlopen") as probe:
+                    with self.assertRaises(native.Blocked):
+                        native.wait_for_service(mock.Mock(poll=mock.Mock(return_value=1)), address)
+                    probe.assert_not_called()
+            finally:
+                listener.close()
+        outside = self.root / "production.db"
+        outside.write_bytes(b"not-an-owned-db")
+        with log.open("wb") as stream, mock.patch.object(native.subprocess, "Popen") as launch:
+            with self.assertRaises(native.EvidenceError):
+                native.start_isolated_service(ROOT, private, outside, stream)
+            launch.assert_not_called()
+
+    def test_default_route_port_conflict_blocks_before_database_or_account_mutation(self):
+        case_private = self.root.resolve() / "case-private"
+        case_output = self.root.resolve() / "case-output"
+        case_private.mkdir()
+        case_output.mkdir()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as existing:
+            existing.bind(("127.0.0.1", 0))
+            existing.listen(1)
+            with mock.patch.object(native, "prepare_account_database") as provision:
+                with self.assertRaises(native.Blocked):
+                    native.prepare_dual_service_databases(
+                        ROOT, case_private, case_output, mock.Mock(), "route-primary",
+                        port=existing.getsockname()[1])
+                provision.assert_not_called()
+        self.assertEqual(list(case_private.iterdir()), [])
+
+    def test_default_route_bundle_rejects_stale_injected_api_url(self):
+        app = self.root / "TokenMeter.app"
+        (app / "Contents").mkdir(parents=True)
+        info = app / "Contents/Info.plist"
+        info.write_bytes(plistlib.dumps({"TMTestAPIURL": "", "TMTestRunID": "route-case"}))
+        native.verify_default_route_bundle(app, "route-case")
+        info.write_bytes(plistlib.dumps({"TMTestAPIURL": "http://127.0.0.1:12345", "TMTestRunID": "route-case"}))
+        with self.assertRaises(native.EvidenceError):
+            native.verify_default_route_bundle(app, "route-case")
+        info.write_bytes(plistlib.dumps({"TMTestAPIURL": "", "TMTestRunID": "other-case"}))
+        with self.assertRaises(native.EvidenceError):
+            native.verify_default_route_bundle(app, "route-case")
 
     def test_production_bootstrap_runner_confines_and_checks_database_evidence(self):
         # This stdlib fixture tests the runner contract. The real initializer is
@@ -396,6 +498,40 @@ class EvidenceVerificationTests(unittest.TestCase):
         state_path.write_text(json.dumps({"post_ui_state": native.expected_bootstrap_state(after_ui=False),
                                           "reinitialization_refused": True}))
         self.report["suites"][0]["bootstrap_state_sha256"] = native.sha256(state_path)
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
+
+    def test_dual_service_case_requires_two_distinct_data_sources(self):
+        case = "E2E-TM001-006"
+        case_output = self.output / case
+        case_output.mkdir()
+        manifest = {
+            "fixture_kind": "dual_service_routes", "default_port": 49176,
+            "primary": {"run_id": "route-primary", "seed": 42, "account_manifest_sha256": "a" * 64},
+            "secondary": {"run_id": "route-secondary", "seed": 43, "account_manifest_sha256": "b" * 64},
+        }
+        manifest_path = case_output / "fixture-manifest.json"
+        manifest_path.write_text(json.dumps(manifest))
+        (case_output / "screen.png").write_bytes((self.output / "E2E-TM001-001/screen.png").read_bytes())
+        self.report["expected_cases"] = [case]
+        self.report["suites"] = [dict(self.report["suites"][0], case_id=case,
+                                      fixture_manifest=f"{case}/fixture-manifest.json",
+                                      fixture_sha256=native.sha256(manifest_path),
+                                      screenshots=[{"path": "screen.png", "sha256": native.sha256(case_output / "screen.png")}])]
+        native.required_cases.return_value = {case: "target/suite/testCase"}
+        self.verify()
+        for key, bad in (("default_port", 49177), ("fixture_kind", "synthetic_accounts")):
+            with self.subTest(key=key):
+                original = manifest[key]
+                manifest[key] = bad
+                manifest_path.write_text(json.dumps(manifest))
+                self.report["suites"][0]["fixture_sha256"] = native.sha256(manifest_path)
+                with self.assertRaises(native.EvidenceError):
+                    self.verify()
+                manifest[key] = original
+        manifest["secondary"]["run_id"] = "route-primary"
+        manifest_path.write_text(json.dumps(manifest))
+        self.report["suites"][0]["fixture_sha256"] = native.sha256(manifest_path)
         with self.assertRaises(native.EvidenceError):
             self.verify()
 

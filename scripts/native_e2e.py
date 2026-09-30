@@ -34,9 +34,11 @@ class EvidenceError(RuntimeError):
 
 
 FIXTURE_PROFILES = {f"E2E-TM001-{number:03d}": "synthetic_accounts" for number in range(1, 5)} | {
-    "E2E-TM001-005": "production_bootstrap"
+    "E2E-TM001-005": "production_bootstrap",
+    "E2E-TM001-006": "dual_service_routes",
 }
 PRODUCTION_BOOTSTRAP_USER_ID = "00000000-0000-4000-8000-000000000005"
+DEFAULT_TEST_PORT = 49176
 
 
 def fixture_profile(case_id: str) -> str:
@@ -335,6 +337,23 @@ def verify_report(root: Path, path: Path, *, run_id: str, phase: str,
                     or json_file(state_path) != {"post_ui_state": expected_bootstrap_state(after_ui=True),
                                                  "reinitialization_refused": True}):
                 raise EvidenceError("Production bootstrap post-UI database state is missing or changed")
+        if fixture_profile(case_id) == "dual_service_routes":
+            manifest = json_file(path.parent / suite["fixture_manifest"])
+            first = manifest.get("primary")
+            second = manifest.get("secondary")
+            if (set(manifest) != {"fixture_kind", "default_port", "primary", "secondary"}
+                    or manifest["fixture_kind"] != "dual_service_routes"
+                    or manifest["default_port"] != DEFAULT_TEST_PORT
+                    or not isinstance(first, dict) or not isinstance(second, dict)
+                    or set(first) != {"run_id", "seed", "account_manifest_sha256"}
+                    or set(second) != {"run_id", "seed", "account_manifest_sha256"}
+                    or first["seed"] != 42 or second["seed"] != 43
+                    or first["run_id"] == second["run_id"]
+                    or not all(isinstance(item["run_id"], str) and item["run_id"]
+                               and isinstance(item["account_manifest_sha256"], str)
+                               and re.fullmatch(r"[a-f0-9]{64}", item["account_manifest_sha256"])
+                               for item in (first, second))):
+                raise EvidenceError("Dual-service fixture evidence does not identify two isolated account sources")
         observed.add(case_id)
     if observed != set(expected) or report.get("executed_cases") != len(expected):
         raise EvidenceError("Native execution differs from required coverage")
@@ -428,6 +447,65 @@ def assert_production_reinitialization_refused(case_private: Path, bootstrap_dat
     raise EvidenceError("Production initializer overwrote an existing database")
 
 
+def prepare_account_database(root: Path, private: Path, output: Path, account_data,
+                             run_id: str, seed: int, *, suffix: str = "") -> tuple[Path, Path]:
+    """Provision only a newly owned, per-case SQLite file and return its fixture."""
+    if private.is_symlink() or not private.is_dir():
+        raise EvidenceError("Synthetic account workspace is not an isolated directory")
+    fixture = account_data.generate(run_id, seed, workspace=private)
+    database = private / "accounts.sqlite"
+    marker = private / ".tokenmeter-test-database.json"
+    if database.exists() or database.is_symlink() or marker.exists() or marker.is_symlink():
+        raise EvidenceError("Synthetic account database or ownership marker already exists")
+    marker.write_text(json.dumps({
+        "owner": "tokenmeter-test-database", "run_id": run_id, "database": database.name
+    }) + "\n")
+    database_url = "sqlite:///" + str(database)
+    command([sys.executable, "-m", "server.tokenmeter_server.cli", "migrate", "--database-url", database_url],
+            root=root, log=output / f"migrate{suffix}.log", timeout=60)
+    command([sys.executable, "-m", "server.tokenmeter_server.cli", "provision", "--database-url", database_url,
+             "--accounts", str(fixture / "users.json"), "--test-run-id", run_id],
+            root=root, log=output / f"provision{suffix}.log", timeout=60)
+    return database, fixture
+
+
+def write_dual_service_manifest(output: Path, primary_fixture: Path, secondary_fixture: Path,
+                                primary_run_id: str, secondary_run_id: str) -> Path:
+    """Publish only fixture identities and hashes; passwords remain in the temp root."""
+    manifest = {
+        "fixture_kind": "dual_service_routes", "default_port": DEFAULT_TEST_PORT,
+        "primary": {"run_id": primary_run_id, "seed": 42,
+                    "account_manifest_sha256": sha256(primary_fixture / "manifest.json")},
+        "secondary": {"run_id": secondary_run_id, "seed": 43,
+                      "account_manifest_sha256": sha256(secondary_fixture / "manifest.json")},
+    }
+    destination = output / "fixture-manifest.json"
+    destination.write_text(json.dumps(manifest, indent=2) + "\n")
+    return destination
+
+
+def prepare_dual_service_databases(root: Path, case_private: Path, case_output: Path,
+                                   account_data, isolation_id: str,
+                                   *, port: int = DEFAULT_TEST_PORT) -> tuple[Path, Path, Path, str, Path, socket.socket]:
+    """Claim the default port before creating either database or account fixture."""
+    listener = reserve_loopback(port)
+    try:
+        database, fixture = prepare_account_database(
+            root, case_private, case_output, account_data, isolation_id, 42)
+        secondary_private = case_private / "secondary"
+        secondary_private.mkdir(mode=0o700)
+        secondary_run_id = isolation_id + "-second"
+        secondary_database, secondary_fixture = prepare_account_database(
+            root, secondary_private, case_output, account_data, secondary_run_id, 43,
+            suffix="-secondary")
+        manifest = write_dual_service_manifest(
+            case_output, fixture, secondary_fixture, isolation_id, secondary_run_id)
+        return database, secondary_database, secondary_private, secondary_run_id, manifest, listener
+    except BaseException:
+        listener.close()
+        raise
+
+
 def wait_for_service(process: subprocess.Popen, address: str) -> None:
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
@@ -443,10 +521,41 @@ def wait_for_service(process: subprocess.Popen, address: str) -> None:
     raise Blocked("Isolated account service readiness timed out")
 
 
-def unused_port() -> int:
-    with socket.socket() as listener:
-        listener.bind(("127.0.0.1", 0))
-        return listener.getsockname()[1]
+def reserve_loopback(port: int) -> socket.socket:
+    listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        listener.bind(("127.0.0.1", port))
+        listener.listen(128)
+    except OSError as exc:
+        listener.close()
+        raise Blocked(f"Isolated loopback port {port} is unavailable; no existing service was used") from exc
+    return listener
+
+
+def start_isolated_service(root: Path, private: Path, database: Path, log_stream,
+                           *, port: int = 0, listener: socket.socket | None = None
+                           ) -> tuple[subprocess.Popen, str, socket.socket]:
+    """Keep the bound socket until health proves that our child is serving it."""
+    owned_listener = listener
+    try:
+        if (private.is_symlink() or database.is_symlink() or not database.is_file()
+                or not database.resolve().is_relative_to(private.resolve())):
+            raise EvidenceError("Service database is outside the owned temporary workspace")
+        if owned_listener is None:
+            owned_listener = reserve_loopback(port)
+        bound_host, bound_port = owned_listener.getsockname()
+        if bound_host != "127.0.0.1" or (port and bound_port != port):
+            raise EvidenceError("Reserved service socket is not bound to the requested loopback address")
+        process = subprocess.Popen(
+            [sys.executable, "-m", "uvicorn", "server.tokenmeter_server.main:app",
+             "--fd", str(owned_listener.fileno()), "--no-proxy-headers"],
+            cwd=root, env=dict(os.environ, TOKENMETER_DATABASE_URL="sqlite:///" + str(database)),
+            stdout=log_stream, stderr=subprocess.STDOUT, pass_fds=(owned_listener.fileno(),))
+        return process, f"http://127.0.0.1:{bound_port}", owned_listener
+    except BaseException:
+        if owned_listener is not None:
+            owned_listener.close()
+        raise
 
 
 def test_configuration(derived: Path, values: dict[str, str]) -> Path:
@@ -471,6 +580,15 @@ def test_configuration(derived: Path, values: dict[str, str]) -> Path:
     output = derived / "Build/Products/TokenMeter-isolated.xctestrun"
     output.write_bytes(plistlib.dumps(document))
     return output
+
+
+def verify_default_route_bundle(app: Path, run_id: str) -> None:
+    info_path = app / "Contents/Info.plist"
+    if info_path.is_symlink() or not info_path.is_file():
+        raise EvidenceError("Default-route App has no regular built Info.plist")
+    app_info = plistlib.loads(info_path.read_bytes())
+    if app_info.get("TMTestAPIURL") != "" or app_info.get("TMTestRunID") != run_id:
+        raise EvidenceError("Default-route App retained a test API URL or wrong run ID")
 
 
 def build_command(project: Path, derived: Path) -> list[str]:
@@ -531,38 +649,54 @@ def execute(root: Path, output: Path, report: dict) -> None:
             case_private.mkdir(mode=0o700)
             isolation_id = (report["run_id"][:40] + f"-c{index:03d}").lower()
             profile = fixture_profile(case_id)
+            secondary_private = None
+            secondary_run_id = None
+            secondary_database = None
+            reserved_listener = None
             if profile == "production_bootstrap":
                 database, public_manifest = prepare_production_bootstrap(case_private, case_output, bootstrap_data)
+            elif profile == "dual_service_routes":
+                (database, secondary_database, secondary_private, secondary_run_id,
+                 public_manifest, reserved_listener) = prepare_dual_service_databases(
+                    root, case_private, case_output, account_data, isolation_id)
             else:
-                fixture = account_data.generate(isolation_id, 42, workspace=case_private)
-                fixture_manifest = json_file(fixture / "manifest.json")
+                database, fixture = prepare_account_database(root, case_private, case_output, account_data,
+                                                             isolation_id, 42)
                 public_manifest = case_output / "fixture-manifest.json"
-                public_manifest.write_text(json.dumps(fixture_manifest, indent=2) + "\n")
-                database = case_private / "accounts.sqlite"
-                (case_private / ".tokenmeter-test-database.json").write_text(json.dumps({
-                    "owner": "tokenmeter-test-database", "run_id": isolation_id, "database": database.name}) + "\n")
-            database_url = "sqlite:///" + str(database)
-            if profile == "synthetic_accounts":
-                command([sys.executable, "-m", "server.tokenmeter_server.cli", "migrate", "--database-url", database_url],
-                        root=root, log=case_output / "migrate.log", timeout=60)
-                command([sys.executable, "-m", "server.tokenmeter_server.cli", "provision", "--database-url", database_url,
-                         "--accounts", str(fixture / "users.json"), "--test-run-id", isolation_id],
-                        root=root, log=case_output / "provision.log", timeout=60)
-            port = unused_port()
-            address = f"http://127.0.0.1:{port}"
-            environment = dict(os.environ, TOKENMETER_DATABASE_URL=database_url)
+                public_manifest.write_text(json.dumps(json_file(fixture / "manifest.json"), indent=2) + "\n")
             update = None
             signing = None
-            with (case_output / "service.log").open("wb") as service_log:
-                process = subprocess.Popen([sys.executable, "-m", "uvicorn", "server.tokenmeter_server.main:app",
-                                            "--host", "127.0.0.1", "--port", str(port), "--no-proxy-headers"], cwd=root, env=environment,
-                                           stdout=service_log, stderr=subprocess.STDOUT)
+            try:
+                service_log = (case_output / "service.log").open("wb")
+            except BaseException:
+                if reserved_listener is not None:
+                    reserved_listener.close()
+                raise
+            with service_log:
+                process, address, health_listener = start_isolated_service(
+                    root, case_private, database, service_log, port=DEFAULT_TEST_PORT if reserved_listener else 0,
+                    listener=reserved_listener)
+                secondary_process = None
+                secondary_log = None
+                secondary_address = None
                 try:
                     progress(case_id, "start-service")
-                    wait_for_service(process, address)
+                    try:
+                        wait_for_service(process, address)
+                    finally:
+                        health_listener.close()
+                    if profile == "dual_service_routes":
+                        secondary_log = (case_output / "service-secondary.log").open("wb")
+                        secondary_process, secondary_address, secondary_listener = start_isolated_service(
+                            root, secondary_private, secondary_database, secondary_log)
+                        try:
+                            wait_for_service(secondary_process, secondary_address)
+                        finally:
+                            secondary_listener.close()
                     update_env: dict[str, str] = {}
                     build_settings = ["CURRENT_PROJECT_VERSION=100", "CODE_SIGN_IDENTITY=-", "CODE_SIGNING_ALLOWED=YES",
-                                      "TM_TEST_API_URL=" + address, "TM_TEST_RUN_ID=" + isolation_id]
+                                      "TM_TEST_API_URL=" + ("" if profile == "dual_service_routes" else address),
+                                      "TM_TEST_RUN_ID=" + isolation_id]
                     if case_id == "E2E-TM001-004":
                         progress(case_id, "verify-upgrade-environment")
                         require_upgrade_environment(root, case_output)
@@ -609,6 +743,8 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     app = derived / "Build/Products/UITesting/TokenMeter.app"
                     if not app.is_dir():
                         raise Blocked("Native build did not produce TokenMeter.app")
+                    if profile == "dual_service_routes":
+                        verify_default_route_bundle(app, isolation_id)
                     if signing is not None:
                         displayed = subprocess.run(["codesign", "-d", "-r-", str(app)], capture_output=True, text=True, check=False)
                         requirements = [line for line in (displayed.stdout + displayed.stderr).splitlines() if line.startswith("designated =>")]
@@ -623,6 +759,8 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     command(["ditto", "-c", "-k", "--keepParent", str(app), str(archived_app)],
                             root=root, log=case_output / "archive.log", timeout=120)
                     test_env = dict(os.environ, TM_TEST_API_URL=address, TM_TEST_RUN_ID=isolation_id, **update_env)
+                    if profile == "dual_service_routes":
+                        test_env["TM_TEST_SECOND_API_URL"] = secondary_address
                     # xcodebuild forwards explicitly prefixed environment variables
                     # to the test process. The App only receives the safe subset
                     # selected by the XCTest launchEnvironment implementation.
@@ -695,15 +833,23 @@ def execute(root: Path, output: Path, report: dict) -> None:
                     primary_error = sys.exc_info()[1]
                     progress(case_id, "cleanup")
                     cleanup_errors = []
-                    try:
-                        process.terminate()
+                    for label, service_process in (("primary", process), ("secondary", secondary_process)):
+                        if service_process is None:
+                            continue
                         try:
-                            process.wait(timeout=10)
-                        except subprocess.TimeoutExpired:
-                            process.kill()
-                            process.wait(timeout=10)
-                    except (OSError, subprocess.SubprocessError) as exc:
-                        cleanup_errors.append(f"service cleanup: {exc}")
+                            service_process.terminate()
+                            try:
+                                service_process.wait(timeout=10)
+                            except subprocess.TimeoutExpired:
+                                service_process.kill()
+                                service_process.wait(timeout=10)
+                        except (OSError, subprocess.SubprocessError) as exc:
+                            cleanup_errors.append(f"{label} service cleanup: {exc}")
+                    if secondary_log is not None:
+                        try:
+                            secondary_log.close()
+                        except OSError as exc:
+                            cleanup_errors.append(f"secondary service log cleanup: {exc}")
                     if update is not None:
                         try:
                             update.close()
@@ -714,19 +860,27 @@ def execute(root: Path, output: Path, report: dict) -> None:
                             signing.close()
                         except (RuntimeError, OSError, subprocess.SubprocessError) as exc:
                             cleanup_errors.append(f"code-signing cleanup: {exc}")
-                    service = "org.tokenmeter.session." + isolation_id + "." + hashlib.sha256(address.rstrip("/").encode()).hexdigest()
-                    try:
-                        keychain = subprocess.run(["security", "delete-generic-password", "-s", service,
-                                                   "-a", "access-token"], capture_output=True, text=True, check=False, timeout=15)
-                        if keychain.returncode not in (0, 44):
-                            cleanup_errors.append(f"Scoped test Keychain cleanup failed: {keychain.returncode}")
-                    except (OSError, subprocess.SubprocessError) as exc:
-                        cleanup_errors.append(f"test Keychain cleanup: {exc}")
-                    if profile == "synthetic_accounts":
+                    for service_address in (address, secondary_address):
+                        if service_address is None:
+                            continue
+                        service = "org.tokenmeter.session." + isolation_id + "." + hashlib.sha256(service_address.rstrip("/").encode()).hexdigest()
+                        try:
+                            keychain = subprocess.run(["security", "delete-generic-password", "-s", service,
+                                                       "-a", "access-token"], capture_output=True, text=True, check=False, timeout=15)
+                            if keychain.returncode not in (0, 44):
+                                cleanup_errors.append(f"Scoped test Keychain cleanup failed: {keychain.returncode}")
+                        except (OSError, subprocess.SubprocessError) as exc:
+                            cleanup_errors.append(f"test Keychain cleanup: {exc}")
+                    if profile in ("synthetic_accounts", "dual_service_routes"):
                         try:
                             account_data.reset(isolation_id, workspace=case_private)
                         except (OSError, ValueError) as exc:
                             cleanup_errors.append(f"account fixture cleanup: {exc}")
+                    if secondary_private is not None and secondary_run_id is not None:
+                        try:
+                            account_data.reset(secondary_run_id, workspace=secondary_private)
+                        except (OSError, ValueError) as exc:
+                            cleanup_errors.append(f"secondary account fixture cleanup: {exc}")
                     record_cleanup_errors(report, cleanup_errors, primary_error)
             # XCTest logs out/removes only its own run's session; database and
             # credentials are removed with the owned temporary directory.

@@ -53,6 +53,17 @@
           "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_005"
         },
         {
+          "id": "E2E-TM001-006",
+          "scenario": "真实 App 首次显示并连接 127.0.0.1:49176；登录页切换到第二套隔离服务和 SQLite，重启后保持地址并隔离旧服务会话；检查非回环 HTTP 与 HTTPS 地址校验；最终正式包另经安装后验收",
+          "expected": "首次启动默认连接本机 127.0.0.1:49176；登录页改为另一隔离服务后连接该服务并在重启后保留，旧服务会话不能用于新服务；非回环 HTTP 拒绝，HTTPS 地址可配置",
+          "data_program": "tests/server/fixtures.py",
+          "dataset": "auth_accounts",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "acceptance_id": "AC-TM001-006",
+          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_006"
+        },
+        {
           "id": "E2E-TM001-004",
           "scenario": "最小更新器：首次候选干净安装后经 HTTPS 获取受控高版本签名测试包并点击更新；后续版本从上一稳定版升级，另尝试无效签名包",
           "expected": "最小更新器随首个产品版本交付；有效包替换与重启成功且保留账号状态，无效签名被拒绝并保留原版",
@@ -425,6 +436,16 @@
           "sop": "sop/SOP-014-e2e.md",
           "automated_test": null,
           "acceptance_id": "AC-TM010-002"
+        },
+        {
+          "id": "E2E-TM010-003",
+          "scenario": "从未手动设置服务地址和已手动设置地址的两套旧版 App，经真实签名升级到内置新生产 HTTPS 默认地址的候选",
+          "expected": "生产服务器确定后，升级包的新 HTTPS 默认地址只用于未手动改过地址的安装；已有手动地址跨升级保留，认证会话仍按服务地址隔离",
+          "data_program": null,
+          "dataset": "server_default_migration",
+          "sop": "sop/SOP-014-e2e.md",
+          "automated_test": null,
+          "acceptance_id": "AC-TM010-003"
         }
       ],
       "source_requirement": "REQ-TM010",

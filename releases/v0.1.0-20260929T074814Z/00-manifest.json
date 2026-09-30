@@ -116,6 +116,13 @@
     {
       "requirement": "REQ-TM001",
       "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-006",
+      "description": "默认本机服务地址、可配置登录界面与按服务隔离的会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
       "task": "TASK-TM001-UPDATE",
       "test": "E2E-TM001-004",
       "description": "TM-001完整开发与验收追踪"
@@ -154,6 +161,13 @@
       "task": "TASK-TM001-RUNNER",
       "test": "E2E-TM001-005",
       "description": "隔离生产首建账号原生证据与清理"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-006",
+      "description": "两套隔离服务、默认端口及配置持久化的原生证据"
     },
     {
       "requirement": "REQ-TM001",

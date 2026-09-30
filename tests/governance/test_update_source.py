@@ -1,5 +1,6 @@
 """Fixture transport/oracle tests; no App or Sparkle execution is simulated."""
 import base64
+import contextlib
 import importlib.util
 import io
 from pathlib import Path
@@ -223,6 +224,49 @@ class UpdateSourceTests(unittest.TestCase):
                 self.assertNotIn("--cacert", args)
             finally:
                 source.close()
+
+    def test_tunnel_keeps_same_hostname_during_dns_propagation_and_has_a_bound(self):
+        for recovers in (True, False):
+            with self.subTest(recovers=recovers), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                source = fixture.UpdateSource(root / "secrets", root)
+                tunnel = UnitTunnel()
+                binary = root / "tokenmeter-tools/cloudflared"
+                binary.parent.mkdir()
+                binary.write_text("unit-only binary placeholder")
+                binary.chmod(0o700)
+                clock = [0.0]
+                probed = []
+
+                def probe(url):
+                    probed.append((clock[0], url))
+                    if recovers and clock[0] >= 70:
+                        return True, "HTTP 200 verified"
+                    return False, "curl exit 6; HTTP 000"
+
+                output = io.StringIO()
+                try:
+                    with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
+                                                       "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"},
+                                         clear=True), \
+                         mock.patch.object(fixture.Path, "home", return_value=root), \
+                         mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel), \
+                         mock.patch.object(source, "_probe_public_health", side_effect=probe), \
+                         mock.patch.object(fixture.time, "monotonic", side_effect=lambda: clock[0]), \
+                         mock.patch.object(fixture.time, "sleep", side_effect=lambda seconds: clock.__setitem__(0, clock[0] + seconds)), \
+                         contextlib.redirect_stdout(output):
+                        if recovers:
+                            self.assertEqual(source.start_tunnel(), "https://example.trycloudflare.com")
+                        else:
+                            with self.assertRaisesRegex(RuntimeError, "curl exit 6; HTTP 000"):
+                                source.start_tunnel()
+                finally:
+                    source.close()
+                self.assertEqual({url for _, url in probed}, {"https://example.trycloudflare.com/healthz"})
+                self.assertIn('"state": "WAITING"', output.getvalue())
+                self.assertGreaterEqual(clock[0], 70 if recovers else 180)
+                self.assertLess(clock[0], 180 if recovers else 182)
+                self.assertTrue(tunnel.terminated)
 
     def test_tunnel_refuses_self_hosted_runner_and_timeout_names_operation(self):
         with tempfile.TemporaryDirectory() as directory:

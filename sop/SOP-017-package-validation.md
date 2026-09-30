@@ -1,6 +1,6 @@
 # SOP-017 安装包验证
 
-**修订：** 5　**状态：** baselined　**适用：** all
+**修订：** 6　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -24,13 +24,13 @@
 
 1. 核对开发 App 的 CI 来源、版本、`.UITesting` bundle ID、签名和原生结果；只接受本机 loopback 测试服务。确认输出文件不存在，不能覆盖正式候选。
 2. 运行 `python3 scripts/package_preview_dmg.py --app <开发App绝对路径> --output <隔离目录/TokenMeter-local-preview.dmg> --service-url http://127.0.0.1:<端口>`。程序验证测试 bundle、签名、空更新源，保留原 App 不修改，生成带预览说明和 Applications 链接的 DMG，并验证镜像与包内 App。记录输出的 SHA256 和源 App 摘要。
-3. 从 DMG 挂载并复制到隔离安装位置；用户已授权本机安装且 `/Applications/TokenMeter.app` 不存在时可复制到该路径。核对复制后签名、bundle ID、可执行文件摘要与镜像中一致，再启动安装后的 App 并验证所选本机服务健康。若服务使用用户生产 SQLite，只读核对真实库，在其隔离副本上验证初始管理员 API 登录；不为诊断向真实生产库写测试会话或重置密码。运行原生 UI 断言时另按 014 记录；只启动进程与 API 登录不能算产品 E2E。`.UITesting` 预览 App 可连本机 HTTP，正式 App 必须使用 HTTPS。
+3. 从 DMG 挂载并复制到隔离安装位置；用户已授权本机安装且 `/Applications/TokenMeter.app` 不存在时可复制到该路径。核对复制后签名、bundle ID、可执行文件摘要与镜像中一致，再启动安装后的 App 并验证所选本机服务健康。若服务使用用户生产 SQLite，只读核对真实库，在其隔离副本上验证初始管理员 API 登录；不为诊断向真实生产库写测试会话或重置密码。运行原生 UI 断言时另按 014 记录；只启动进程与 API 登录不能算产品 E2E。v0.1.0 正式 App 的首次 API 默认值为本机回环 HTTP，非回环 API 与 Sparkle 更新源仍必须 HTTPS；该正式行为须在正式候选分支另行验收，预览包不能证明。
 4. 在版本记录和状态中写明预览包本机路径、安装/启动结果、服务依赖及正式发布缺项；可将同类包以明确的 `local-preview-dmg` 名称上传为 CI Actions 临时工件供下载。转 022 交接，不将预览 DMG 上传为正式 Release 资产或签发通行证。
 
 ### 正式候选验证
 
-1. 使用真实 Developer ID 签名、hardened runtime 和 HTTPS/Sparkle 生产配置生成最终 `TokenMeter.app`。先运行 `python3 scripts/package_release_dmg.py preflight --app <正式App绝对路径>`；预检拒绝 UITesting/ad-hoc 包。再在拥有预存 Keychain 公证 profile 的受保护环境执行 `python3 scripts/package_release_dmg.py package --app <正式App绝对路径> --output <全新DMG绝对路径> --report <全新JSON绝对路径> --notary-profile <Keychain别名> --signing-identity <精确Developer ID Application名称>`。脚本签 DMG、提交并确认 Apple 公证 Accepted、装订票据、核对 Gatekeeper 与包内 App/SHA256；报告的 `release_eligible=false` 仅表示打包证据，不能替代后续安装 E2E 与通行证。记录 DMG、内部 App、服务端和源码摘要；缺证书、profile 或 Apple 公证时保持 BLOCKED。
-2. 在每个声明支持的系统/架构组合，从该DMG安装.app到干净测试环境，由安装后的应用首次启动并执行本次目标和历史功能。核对实际运行路径及.app摘要，不能用DerivedData中的开发构建代替已安装候选。DMG损坏、挂载/安装失败或运行产物不一致均阻断。
+1. 使用真实 Developer ID 签名、hardened runtime 和 HTTPS Sparkle 更新源配置生成最终 `TokenMeter.app`；v0.1.0 的服务 API 首次默认值单独按本机回环例外验收，其他主机 API 必须 HTTPS。先运行 `python3 scripts/package_release_dmg.py preflight --app <正式App绝对路径>`；预检拒绝 UITesting/ad-hoc 包。再在拥有预存 Keychain 公证 profile 的受保护环境执行 `python3 scripts/package_release_dmg.py package --app <正式App绝对路径> --output <全新DMG绝对路径> --report <全新JSON绝对路径> --notary-profile <Keychain别名> --signing-identity <精确Developer ID Application名称>`。脚本签 DMG、提交并确认 Apple 公证 Accepted、装订票据、核对 Gatekeeper 与包内 App/SHA256；报告的 `release_eligible=false` 仅表示打包证据，不能替代后续安装 E2E 与通行证。记录 DMG、内部 App、服务端和源码摘要；缺证书、profile 或 Apple 公证时保持 BLOCKED。
+2. 在每个声明支持的系统/架构组合，从该DMG安装.app到干净测试环境，由安装后的应用首次启动并执行本次目标和历史功能。v0.1.0 还需从正式安装包核对首开默认地址 `http://127.0.0.1:49176`，以两套隔离服务执行地址切换/重启断言；不得连接用户真实生产库或用 UITesting 注入地址代替。核对实际运行路径及.app摘要，不能用DerivedData中的开发构建代替已安装候选。DMG损坏、挂载/安装失败或运行产物不一致均阻断。
 3. 从上一公开稳定包安装测试数据，通过真实 App 内更新器发现候选并自动升级，核对版本、已交付配置/授权、数据库与迁移以及重启结果。只验证安装包覆盖安装不能证明 App 内更新。
 4. 首版 0.1.0 交付最小更新器；没有上一稳定版时，先独立完成最终候选的干净安装和完整原生 E2E，再用隔离更新源执行候选→受控高版本签名测试包，验证随候选交付的真实更新器。测试包来源、版本、摘要和候选均纳入报告；升级后测试包的结果不得替代最终候选自身验收，也不称为“上一稳定版升级”。0.2.0 起每版从上一公开稳定包自动更新到最终候选；0.10.0 增加完整更新设置、变更说明和异常体验。
 5. 测试下载中断、无效签名、安装/迁移失败和恢复，使用真实系统交互与原生断言；缺自动化路径保持 BLOCKED。

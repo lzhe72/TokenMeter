@@ -183,3 +183,31 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 正式发布另需最终Developer ID签名、公证DMG、安装后全量原生回归、macOS14+支持矩阵及受保护通行证。SOP-018明确受信默认分支手动候选任务的`candidate_sha`须等于dispatch的`GITHUB_SHA` tip；不能发布未合并分支或旧提交。PR #2在必需检查未通过时保持草稿，不创建正式Tag/Release，等待新提交完整CI实测后按SOP-019继续。
 
 源码与本机检查：已移除升级fixture的系统证书信任读写，改用专用临时Keychain中的同一自签身份；HTTPS源由固定SHA256的`cloudflared 2026.9.3`临时隧道提供，隧道到回环源仍校验本次CA。候选工作流在检出代码之前及检出后核对输入SHA等于默认分支触发SHA，避免以后为未合并代码开放发布凭据。本机`check_docs.py --mode baseline`通过（69文档、433链接）、`quality_gate.py check`通过（12功能、35场景、5项绑定）、governance 173项、服务端43项、更新包工具9项及`git diff --check`通过。常用全局Python缺服务依赖，服务端检查改用SOP-009建立的隔离`.local/venv-tm001`运行；原始全局Python失败不被记作产品失败。本机`native_environment.py`实际返回BLOCKED，原生0例，原因是仅安装Command Line Tools；未触碰系统信任。新提交的两架构原生及升级结果须由远端CI另行判定，尚未标记PASS。
+
+## 本机服务默认值与可配置地址（2026-09-30）
+
+用户指定本机承担开发与测试，v0.1.0 App 首次默认连接 `http://127.0.0.1:49176`，登录页可更改 TokenMeter 服务地址。依据 SOP-002→003→004→005→006→007→024，新增 AC-TM001-006 / E2E-TM001-006：隔离测试服务占用默认端口，第二套 FastAPI/SQLite 用于配置切换和会话隔离；重启验证手动地址保持，非回环 HTTP 必须拒绝，HTTPS URL 应可配置。两套测试库只含合成账号，不能连接或重置用户生产库。正式包只给本机回环 HTTP 开窄例外，外部服务仍必须 HTTPS。测试机授权不等于完整 Xcode 或原生结果就绪。
+
+生产服务器地址尚未提供，未来升级迁移内置 HTTPS 默认值单列 AC-TM010-003 / E2E-TM010-003，计划数据集为 `server_default_migration`；已有手动覆盖不能被升级改变。此项不属于本轮 v0.1.0 通过条件，若生产服务器更早就绪则在对应版本立项时前移。当前文档与追踪变更不代表第006例已实现或通过，旧五例候选的运行证据不能覆盖新六例范围；源码、数据程序、完整原生回归和正式发布门禁仍按实测结果判定。
+
+规范冲突修订：既有 SOP-009/010/014 写死五例、SOP-017 将正式 App 的服务 API 一律限定 HTTPS。按 SOP-000 先更新总索引，再将 009/010/014/017 分别修订为 9/8/6/6；第004例仍只在专用 CI 使用隔离更新源，正式 App 只允许本机回环 API HTTP，Sparkle 更新源与非回环 API 仍使用 HTTPS。SOP-024 同步产品、架构、路线图、测试策略与版本 00–05，`program_bindings_status=planned` 等待第006例方法与双服务 runner 真正就绪。
+
+本次文档与治理检查实际结果：`python3 scripts/check_docs.py --mode structure` 退出0（69文档、433链接）；`python3 scripts/check_docs.py --mode baseline` 退出0（相同范围）；`python3 scripts/quality_gate.py check` 退出0（12功能、37场景、6项目标测试文件绑定，`release_eligible=false`）；`python3 -m unittest discover -s tests/governance -p 'test_*.py'` 173项通过；`git diff --check` 退出0。这些结果只证明文档、追踪与治理自测，不证明第006例原生执行或正式发布可行。
+
+### 第004例最近远端阻断与探针修订（2026-09-30）
+
+候选 `b173f89cb194cd0d20e5a670f8320ce6fdc3d94b` 的 [CI run36655690112](https://github.com/lzhe72/TokenMeter/actions/runs/36655690112) 治理作业通过；macOS 15 Apple Silicon 与 Intel 的原生 001/002/003/005 各四例 PASS，004 在升级环境探针前置检查返回 BLOCKED，两个产品作业退出2，完整五例均未 PASS。该提交在第006例需求形成之前，不可复用其结果给六例候选。健康探针的下一版修订使用 `/usr/bin/curl` 系统信任验证公开 HTTPS 并保留更明确的诊断；源码修订尚未取得新的远端探针 READY 或 004 原生 PASS，后续必须在同一新候选上完整执行全部六例。
+
+### 本机开发与远端原生验收路线（2026-09-30）
+
+用户确认本机不能安装完整 Xcode，但仍将本机用于开发、SQLite 服务和预览安装。按 SOP-000/009/014/024 更新执行路线：本机源码、服务端和安装预览各按实际检查记录；原生迭代 E2E 使用现有 `quality.yml` 在 GitHub 托管 `macos-15` 与 `macos-15-intel` 上选择 Xcode 16.4，分别执行同一候选的真实 App、隔离 FastAPI/SQLite 和完整六例 XCUITest。CI 中 `127.0.0.1:49176` 是 runner 自己的回环端口，不是用户本机生产服务。每台 runner 必须核对原始 `xcresult`、候选 SHA、fixture 与清理结果；任何一例或平台缺证据仍为 BLOCKED。本机缺 Xcode 仅阻断本机原生运行，不阻断远端有效回归。远端迭代结果不得记作本机原生 PASS，也不替代最终签名/公证 DMG 安装后回归和完整发布矩阵。
+
+### BUG-TM001-FIXTURE-004：新建 Quick Tunnel 域名的系统 DNS 生效晚于探针窗口
+
+[CI run36658315958](https://github.com/lzhe72/TokenMeter/actions/runs/36658315958) 的 Intel 与 Apple Silicon 第004例在公开 HTTPS 就绪探针被阻断；系统 `/usr/bin/curl` 对新域名在原45秒准备窗口返回退出6、HTTP 000。对同一仍在运行的受控隧道进行有界诊断，系统请求在域名创建后约7、28、51、77秒仍无法解析，约105秒首次经正常 TLS 得到预期200，并在129、156、180、202秒持续成功。Cloudflare DoH 在7秒为 NXDOMAIN、28秒已解析；Google DoH 在7秒已有记录，说明不同解析路径生效时间不同。该证据定位为环境准备窗口过短，未观察到 App 升级断言失败；本次候选完整六例仍为 BLOCKED，不能将后续诊断成功追认为原运行 PASS。
+
+修订009/014及测试执行参考，保持单一隧道与域名，允许最多180秒的准备等待，每约30秒留存系统TLS/状态/来源诊断；不覆盖DNS、不关闭证书验证、不重启隧道或自动重试业务用例。超过时限仍 BLOCKED，准备通过仅为第004例前提。fixture 源码与确定性负向治理用例须在同一候选中检查；修复后仍需两架构完整六例原生回归以及正式发布包门禁，当前未取得这些结果。
+
+第006例的 Swift 配置、登录页和原生用例已写；runner 先占用49176端口再造两套数据，并将已绑定 socket 传给真实服务，健康确认前保持占用以避免误连已有服务。两套库使用固定种子42/43，测试包无注入服务地址，构建后核对 Info.plist；预览 DMG 工作流选用此候选包，打包器拒绝带注入地址的 App。数据/测试/SOP 入口均存在，manifest 的 `program_bindings_status` 从 planned 改为 ready，表示程序绑定齐备，不表示产品 E2E PASS。本机针对两套真实 FastAPI/SQLite 的账号及跨库 token 冒烟通过；focused native governance 29/29、Swift 语法解析、plist lint、文档 structure/baseline、追踪检查及 `git diff --check` 通过。本机无完整 Xcode，尚无第006例真实原生结果；需提交后的两架构 CI 执行。
+
+整合候选提交前的本机完整检查：`python3 -m unittest discover -s tests/governance -p 'test_*.py'` 180项通过，服务端 pytest 43项通过，更新工具 9项通过；文档 baseline 69份/433链接、追踪 12功能/37场景/6项绑定均通过；Auth 与 AccountStore 的 UITESTING Swift typecheck 退出0。状态页整理后再次执行 baseline 与追踪检查，69份/435链接、12功能/37场景/6项绑定通过，`git diff --check` 退出0。原始完整治理日志保存在 `.local/governance/local-default-precommit.log`；这些本机检查不构成原生产品 E2E。为避免状态页继续将旧五例叙述当作当前结论，当前交接集中在 `docs/status.md`，历史运行链接与根因仍保存在本记录中。下一步是提交后同一候选的两架构六例 CI。

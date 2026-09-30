@@ -14,7 +14,18 @@
     <key>NSHighResolutionCapable</key><true/>
     <key>TMTestAPIURL</key><string>$(TM_TEST_API_URL)</string>
     <key>TMTestRunID</key><string>$(TM_TEST_RUN_ID)</string>
-    <key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>127.0.0.1</key>
+            <dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/></dict>
+            <key>localhost</key>
+            <dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/></dict>
+            <key>::1</key>
+            <dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/></dict>
+        </dict>
+    </dict>
     <key>SUFeedURL</key><string>$(TM_UPDATE_FEED_URL)</string>
     <key>SUPublicEDKey</key><string>$(TM_UPDATE_PUBLIC_KEY)</string>
     <key>SUVerifyUpdateBeforeExtraction</key><true/>

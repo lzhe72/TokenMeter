@@ -43,10 +43,11 @@ private struct ErrorResponse: Decodable {
 }
 
 struct AppConfiguration {
+    static let localServer = "http://127.0.0.1:49176"
     let defaults: UserDefaults
     let initialServer: String
+    let bundledServer: String
     let isolationID: String
-    var allowsLoopback: Bool { isolationID != "production" }
 
     init() {
         #if UITESTING
@@ -55,26 +56,50 @@ struct AppConfiguration {
         if !run.isEmpty, run.range(of: "^[A-Za-z0-9_-]+$", options: .regularExpression) != nil {
             isolationID = run
             defaults = UserDefaults(suiteName: "org.tokenmeter.TokenMeter.UITesting.\(run)")!
-            initialServer = environment["TM_TEST_API_URL"] ?? Bundle.main.object(forInfoDictionaryKey: "TMTestAPIURL") as? String ?? ""
+            let injected = environment["TM_TEST_API_URL"].flatMap { $0.isEmpty ? nil : $0 }
+                ?? (Bundle.main.object(forInfoDictionaryKey: "TMTestAPIURL") as? String).flatMap { $0.isEmpty ? nil : $0 }
+            bundledServer = injected ?? Self.localServer
+            let legacy = defaults.string(forKey: "serviceURL")
+            initialServer = defaults.string(forKey: "serviceURLOverride")
+                ?? (legacy == bundledServer ? nil : legacy)
+                ?? bundledServer
             return
         }
         #endif
         isolationID = "production"
         defaults = .standard
-        initialServer = defaults.string(forKey: "serviceURL") ?? ""
+        bundledServer = Self.localServer
+        let legacy = defaults.string(forKey: "serviceURL")
+        initialServer = defaults.string(forKey: "serviceURLOverride")
+            ?? (legacy == bundledServer ? nil : legacy)
+            ?? bundledServer
     }
 
     func serverURL(_ input: String) throws -> URL {
         let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let components = URLComponents(string: value), let host = components.host,
+        guard var components = URLComponents(string: value), let host = components.host,
               components.user == nil, components.password == nil,
               components.query == nil, components.fragment == nil,
               components.path.isEmpty || components.path == "/",
-              components.scheme == "https" || (allowsLoopback && components.scheme == "http" && ["localhost", "127.0.0.1", "::1"].contains(host)),
-              let url = components.url else {
-            throw APIError(code: "invalid_server", message: "请输入 HTTPS 服务地址；地址不能包含账号、路径或查询参数")
+              components.scheme == "https" || (components.scheme == "http" && ["localhost", "127.0.0.1", "::1"].contains(host)) else {
+            throw APIError(code: "invalid_server", message: "请输入本机回环 HTTP 或 HTTPS 服务地址；不能包含账号、路径或查询参数")
+        }
+        if components.path == "/" { components.path = "" }
+        guard let url = components.url else {
+            throw APIError(code: "invalid_server", message: "服务地址无效")
         }
         return url
+    }
+
+    func rememberServer(_ url: URL) {
+        // A saved override is distinct from the app's bundled default. A later
+        // version may update that default without replacing an explicit choice.
+        if url.absoluteString == bundledServer {
+            defaults.removeObject(forKey: "serviceURLOverride")
+        } else {
+            defaults.set(url.absoluteString, forKey: "serviceURLOverride")
+        }
+        defaults.removeObject(forKey: "serviceURL")
     }
 }
 

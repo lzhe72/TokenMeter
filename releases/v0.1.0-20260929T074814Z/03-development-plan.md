@@ -33,7 +33,7 @@ Python 3.10+ / FastAPI、SQLAlchemy 2.0、Alembic；v0.1.0 服务端测试与生
 
 ### macOS 与更新
 
-SwiftUI、macOS14 deployment target、Swift5、提交 Xcode project/shared scheme，固定 Sparkle2.10.0。API 端点可设置，生产仅 HTTPS；开发 loopback 仅测试配置允许。Keychain service 按服务源和隔离运行区分；token 不用 UserDefaults。启动经 /v1/me 确认，不从本地注入登录成功。
+SwiftUI、macOS14 deployment target、Swift5、提交 Xcode project/shared scheme，固定 Sparkle2.10.0。v0.1.0 正式 App 内置服务默认值 `http://127.0.0.1:49176`，登录界面可编辑；正式 App 仅对本机回环地址（`127.0.0.1`、`localhost`、`::1`）允许 HTTP，其他地址只接受 HTTPS，且拒绝带凭据、路径、查询或片段的 URL。更新 App 时需区分内置默认值与用户显式覆盖值：本轮实现配置持久化；待生产 HTTPS 地址确定的后续版本只更新未覆盖用户的默认值，不能覆盖手动设置。Keychain service 按服务源和隔离运行区分；切换源不得重用旧源 token，token 不用 UserDefaults。启动经 /v1/me 确认，不从本地注入登录成功。Info.plist 只对这三个回环主机设置 `NSExceptionAllowsInsecureHTTPLoads`，不使用全局 ATS 放宽；macOS 14 起[域例外支持单个 IP 地址](https://developer.apple.com/documentation/BundleResources/Information-Property-List/NSAppTransportSecurity/NSExceptionDomains)，该 HTTP 例外[本身不改变 HTTPS 的默认信任验证](https://developer.apple.com/documentation/bundleresources/information-property-list/nsexceptionallowsinsecurehttploads)。
 
 UI 标识：auth.server/username/password/login/error、password.current/new/confirm/submit、session.username/role/logout/refresh、admin.accounts/disable/enable/reset/audit、updates.check/status。更新使用 SPUStandardUpdaterController、HTTPS SUFeedURL、SUPublicEDKey、SUVerifyUpdateBeforeExtraction。生产配置缺失显示尚未配置，不能伪装已发现版本。测试包同 Bundle ID/源码、递增 build version，隔离更新源有真实有效和无效 EdDSA 包。测试 CA 仅供隔离 CI 的 `cloudflared` 验证本机 TLS origin；App 使用公开可信 HTTPS 域名，不安装测试 CA、不绕过 TLS。
 
@@ -43,7 +43,7 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 
 原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离的GitHub托管Mac CI生成短期测试证书与专用临时Keychain，两个包显式指定同一identity和keychain；结束时恢复原Keychain列表，删除专用Keychain和私钥，不更改System.keychain、管理员信任或`authorizationdb`。旧方案在托管Mac撤销最后一项admin信任时超时，保留失败证据，不再尝试系统信任写入。签名能否被`codesign`及升级后的Keychain访问接受，必须由新探针和实际第004例分别证明；设计本身不等于PASS。
 
-HTTPS更新源由本机临时CA签发的回环TLS服务和固定版本、SHA256校验的`cloudflared` Quick Tunnel组成。`cloudflared --url https://localhost:<端口> --origin-ca-pool <本次ca.pem>` 验证origin证书，App使用临时的`https://<随机子域>.trycloudflare.com`并由系统正常验证边缘证书；两个TLS端点都不得关闭证书检查。无效/有效appcast和签名包仅为合成测试内容，控制切换使用原生用例持有的随机Bearer通过同一HTTPS源，未授权请求拒绝；私钥、账号与数据库不经隧道公开。`native_environment.py`在第004例前探测签名、公开HTTPS连通和完整清理；Quick Tunnel无法使用或任何清理失败都使该例BLOCKED。001–003与005仍实际执行并留证，但不能缩小五例门禁；新候选必须完整重跑。该测试签名和临时源不满足Developer ID、公证或正式发布条件。[Apple签名证书](https://developer.apple.com/documentation/technotes/tn3161-inside-code-signing-certificates)、[Cloudflare Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/)、[Cloudflare origin CA池](https://developers.cloudflare.com/tunnel/troubleshooting/)是设计依据。
+HTTPS更新源由本机临时CA签发的回环TLS服务和固定版本、SHA256校验的`cloudflared` Quick Tunnel组成。`cloudflared --url https://localhost:<端口> --origin-ca-pool <本次ca.pem>` 验证origin证书，App使用临时的`https://<随机子域>.trycloudflare.com`并由系统正常验证边缘证书；两个TLS端点都不得关闭证书检查。无效/有效appcast和签名包仅为合成测试内容，控制切换使用原生用例持有的随机Bearer通过同一HTTPS源，未授权请求拒绝；私钥、账号与数据库不经隧道公开。`native_environment.py`在第004例前探测签名、公开HTTPS连通和完整清理；Quick Tunnel无法使用或任何清理失败都使该例BLOCKED。001–003与005–006仍实际执行并留证，但不能缩小六例门禁；新候选必须完整重跑。该测试签名和临时源不满足Developer ID、公证或正式发布条件。[Apple签名证书](https://developer.apple.com/documentation/technotes/tn3161-inside-code-signing-certificates)、[Cloudflare Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/)、[Cloudflare origin CA池](https://developers.cloudflare.com/tunnel/troubleshooting/)是设计依据。
 
 依据：[Apple TN2206](https://developer.apple.com/library/archive/technotes/tn2206/)、[Code Signing Requirement Language](https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/RequirementLang/RequirementLang.html)。不同ad-hoc包的摘要变化，不能作为跨版本Keychain身份连续性的设计依据。
 
@@ -53,7 +53,7 @@ HTTPS更新源由本机临时CA签发的回环TLS服务和固定版本、SHA256�
 2. 009 创建隔离 venv、服务/数据库和 Mac/native target 骨架。读取工具链状态，本机未配置 Xcode 不触发安装；远端验证 native 探针。
 3. 010/011 创建账号/更新数据、独立 oracle 与真实 API/native 测试，在实现前保存确定性失败；无法运行的 native 红测写 BLOCKED。可先推进有实际单元/接口验证的子任务。
 4. 012 实现服务/界面/更新；数据与测试绑定完整后设 ready/in_progress，产品通过以前不设 implemented。
-5. 013 基础回归，014 完整目标五例 native E2E；失败按015修复并完整重跑。017/018发布前再验最终包与全支持矩阵。
+5. 013 基础回归，014 完整目标六例 native E2E；第006例须在隔离默认端口和第二套真实服务/SQLite 上核对路由及持久化，不能连接用户生产库。失败按015修复并完整重跑。017/018发布前再验最终包与全支持矩阵。
 6. 保存实际证据与流程障碍，创建 PR；适用必需检查通过才合并。不能因用户已授权自动合并而跳过产品测试。
 
 ## 并行边界与恢复入口
@@ -61,7 +61,7 @@ HTTPS更新源由本机临时CA签发的回环TLS服务和固定版本、SHA256�
 - backend agent：`server/`、`tests/server/`，先测试后业务。CLI与 fixtures 的调用合同向 root/native 交接。
 - macOS agent：`apps/macos/`，项目、App 与 XCUITest。只使用统一 API 合同。
 - runner agent：root 确认后负责 `scripts/e2e.py`、原生执行/证据校验与其测试；不得放宽发布。
-- 原生五例各使用独立数据库、服务和 Keychain service，runner 逐例调用 `-only-testing` 并分别保存 xcresult；005 调用生产首建程序但仅指向 runner 临时根，不能让用例顺序承担数据初始化。
+- 原生六例各使用独立数据库、服务和 Keychain service，runner 逐例调用 `-only-testing` 并分别保存 xcresult；005 调用生产首建程序但仅指向 runner 临时根，不能让用例顺序承担数据初始化。006 另启动第二套临时服务与 SQLite，第一套占用默认端口 49176；端口被其他进程占用时先 BLOCKED，不能指向用户实际生产库。
 - root：版本文档、SOP、catalog、矩阵/数据清单、CI、集成与 PR。
 
 候选代码、测试、文档和数据一同提交；测试后代码或依赖变化重新验证。完整命令在入口真实建立后补入，未建立时明确待实现，不写伪造成功记录。

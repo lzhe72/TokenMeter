@@ -126,7 +126,7 @@ struct AccountView: View {
     private var loginForm: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("登录团队账号").font(.title2)
-            TextField("HTTPS 服务地址", text: $store.server).accessibilityIdentifier("auth.server")
+            TextField("服务地址（本机回环或 HTTPS）", text: $store.server).accessibilityIdentifier("auth.server")
             TextField("账号", text: $username).accessibilityIdentifier("auth.username")
             SecureField("密码", text: $password).accessibilityIdentifier("auth.password")
             Button("登录") {

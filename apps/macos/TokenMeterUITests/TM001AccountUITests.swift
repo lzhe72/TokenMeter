@@ -91,8 +91,8 @@ final class TM001AccountUITests: XCTestCase {
     }
 
     private func request(_ method: String, _ path: String, token: String? = nil,
-                         body: [String: Any]? = nil) throws -> (Int, [String: Any]) {
-        let url = URL(string: environment["TM_TEST_API_URL"]! + path)!
+                         body: [String: Any]? = nil, baseURL: String? = nil) throws -> (Int, [String: Any]) {
+        let url = URL(string: (baseURL ?? environment["TM_TEST_API_URL"]!) + path)!
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.timeoutInterval = 15
@@ -345,5 +345,65 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertTrue(app.buttons["admin.accounts"].waitForExistence(timeout: 15))
         try refreshIdentity("admin")
         captureWindow("TM001-005-03-admin-relogin")
+    }
+
+    func testE2E_TM001_006() throws {
+        let first = try XCTUnwrap(environment["TM_TEST_API_URL"])
+        let second = try XCTUnwrap(environment["TM_TEST_SECOND_API_URL"])
+        XCTAssertEqual(first, "http://127.0.0.1:49176")
+        XCTAssertTrue(second.hasPrefix("http://127.0.0.1:"))
+        XCTAssertNotEqual(first, second)
+
+        // The test process uses TM_TEST_API_URL for independent HTTP assertions.
+        // The App itself must read its shipped default, with no test URL injection.
+        app.launchEnvironment.removeValue(forKey: "TM_TEST_API_URL")
+        app.launch()
+        let serverField = app.textFields["auth.server"]
+        XCTAssertTrue(serverField.waitForExistence(timeout: 15))
+        XCTAssertEqual(serverField.value as? String, first)
+        captureWindow("TM001-006-01-default-server")
+
+        let firstToken = try token("alice")
+        XCTAssertEqual(try request("GET", "/v1/me", token: firstToken).0, 200)
+        XCTAssertEqual(try request("GET", "/v1/me", token: firstToken, baseURL: second).0, 401)
+        login("alice")
+        assertIdentity("test-alice")
+        app.terminate()
+        app.launch()
+        assertIdentity("test-alice")
+        click("session.logout")
+        XCTAssertTrue(serverField.waitForExistence(timeout: 15))
+
+        text("auth.server", second)
+        // The second database has the same account name but an independent seed.
+        // This password cannot authenticate against the first service.
+        XCTAssertEqual(try request("POST", "/v1/auth/login", body: [
+            "username": "test-alice", "password": "TEST-ONLY-alice-43!"
+        ]).0, 401)
+        login("alice", password: "TEST-ONLY-alice-43!")
+        assertIdentity("test-alice")
+        changePassword(current: "TEST-ONLY-alice-43!", new: changedPassword)
+        app.terminate()
+        app.launch()
+        assertIdentity("test-alice")
+        try refreshIdentity("test-alice")
+        captureWindow("TM001-006-02-second-server-restored")
+        click("session.logout")
+        XCTAssertEqual(app.textFields["auth.server"].value as? String, second)
+
+        text("auth.server", "http://192.0.2.1:49176")
+        login("bob")
+        let error = app.staticTexts["auth.error"]
+        expectation(for: NSPredicate(format: "value CONTAINS %@", "invalid_server"), evaluatedWith: error)
+        waitForExpectations(timeout: 15)
+        XCTAssertTrue(app.buttons["auth.login"].exists)
+
+        // A local HTTPS endpoint with an HTTP server proves the URL passes the
+        // address validator, then fails at TLS/network rather than invalid_server.
+        text("auth.server", second.replacingOccurrences(of: "http://", with: "https://"))
+        login("bob")
+        expectation(for: NSPredicate(format: "value CONTAINS %@", "无法连接服务"), evaluatedWith: error)
+        waitForExpectations(timeout: 30)
+        XCTAssertTrue(app.buttons["auth.login"].exists)
     }
 }

@@ -148,6 +148,16 @@
         "invalid_eddsa",
         "candidate_upgrade"
       ]
+    },
+    {
+      "id": "server_default_migration",
+      "description": "未来生产 HTTPS 服务器确定后，旧版默认地址与手动覆盖两类安装、真实签名升级和独立服务端身份；具体域名、造数及重置程序在对应版本立项后实现",
+      "status": "planned",
+      "generator": null,
+      "capabilities": [
+        "default_migration",
+        "manual_override_persistence"
+      ]
     }
   ]
 }

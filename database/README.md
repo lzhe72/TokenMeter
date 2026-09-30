@@ -38,7 +38,7 @@ SQL 在执行时检查库内环境标记和 `users` 空表。再次执行会失�
 .local/venv-tm001/bin/python scripts/bootstrap_sqlite.py serve-production --host 127.0.0.1 --port 49176
 ```
 
-该入口从脚本所在仓库动态定位数据库，将 `TOKENMETER_DATABASE_URL` 明确设为 `sqlite:////Users/Shared/Previously Relocated Items/Security/work/git/TokenMeter/database/production/production.db`（当前路径），再启动真实 FastAPI 服务。移动或重克隆仓库后无需修改命令；可用 `printf '%s/database/production/production.db\n' "$(pwd -P)"` 查看新绝对路径。启动前只读核对 schema、库内环境标记和活动管理员，不导入测试账号。此预览入口仅允许绑定 `127.0.0.1` 或 `::1`，拒绝公网地址；当前已安装的 `.UITesting` 预览 App 默认接受 `http://127.0.0.1:49176` 本机服务。正式生产 App 要求 HTTPS 服务地址。首次登录 `admin` / `123456` 后按界面要求修改密码；修改前管理员接口会拒绝使用。正式对外访问的 TLS 和部署配置仍按发布预案执行。
+该入口从脚本所在仓库动态定位数据库，将 `TOKENMETER_DATABASE_URL` 明确设为 `sqlite:////Users/Shared/Previously Relocated Items/Security/work/git/TokenMeter/database/production/production.db`（当前路径），再启动真实 FastAPI 服务。移动或重克隆仓库后无需修改命令；可用 `printf '%s/database/production/production.db\n' "$(pwd -P)"` 查看新绝对路径。启动前只读核对 schema、库内环境标记和活动管理员，不导入测试账号。此入口仅允许绑定 `127.0.0.1` 或 `::1`，拒绝公网地址；v0.1.0 App 首次默认连接 `http://127.0.0.1:49176`，登录页可更改服务地址。正式 App 仅对本机回环 TokenMeter API 允许 HTTP；非回环服务和软件更新源必须使用 HTTPS。首次登录 `admin` / `123456` 后按界面要求修改密码；修改前管理员接口会拒绝使用。正式对外访问的 TLS 和部署配置仍按发布预案执行。
 
 ## 用 SQL 查看数据
 

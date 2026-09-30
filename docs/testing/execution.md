@@ -42,17 +42,19 @@ python3 scripts/test_data.py reset --run-id demo
 
 编制中的文档使用 structure；全部计划完成后由 SOP-008 检查 baseline。版本计划可将程序绑定显式标为 planned；SOP-009 先准备工程骨架，010/011 再实现数据与测试，绑定就绪后改为 ready。每个已填写路径必须存在，规划项用空绑定表达，不写虚构文件。独立验收清单与规格/用例双向检查；数据集的能力必须覆盖场景要求。当前 pricing 仅覆盖基础 USD，历史价格/多币种/订阅依赖 planned 的 pricing_extended。
 
-### 本机接入（已获用户授权）
+### 本机开发与远端原生验收
 
-本机使用与开发CI一致的Xcode16.4。只有Command Line Tools时，先从[Apple下载页](https://developer.apple.com/download/all/?q=Xcode%2016.4)安装完整应用，并首次打开完成组件与许可；用户在系统界面完成Apple登录和初始授权。用`xcode-select -p`确认选中完整Xcode，再运行`xcodebuild -version`。不要仅凭命令路径存在认定就绪。
+用户已授权本机用于开发、运行回环服务和安装预览 App。本机现只有 Command Line Tools，不能运行 XCUITest；无需为了继续开发而在本机安装 Xcode。当前原生迭代验收由 `.github/workflows/quality.yml` 在 GitHub 托管的 `macos-15` 与 `macos-15-intel` 上选择 Xcode 16.4，对同一候选自动调用 `python3 scripts/quality_gate.py iteration`。每个平台各自在其 Mac 上构建真实 App，初始化逐例隔离的 FastAPI/SQLite，执行完整原生用例，并上传 `xcresult`、日志、fixture 摘要及候选 SHA。CI 中的 `127.0.0.1:49176` 指该 runner 自身，不是用户本机服务或 `database/production/production.db`。
 
-随后由Codex在干净候选提交上执行现有`python3 scripts/quality_gate.py iteration`，生成隔离账号、驱动真实App、保留原始结果与截图。001–003及005不需要升级fixture；004的隔离Quick Tunnel/临时Keychain程序目前仅允许专用GitHub Mac CI，本机004运行路径尚未验证。不能设置GitHub环境变量绕过本机边界，缺004仍使整个候选BLOCKED。
+第006例在每台 runner 上先独占默认端口49176，再使用第二套临时端口/SQLite；端口已占用时不得连接已有服务，须 BLOCKED。第004例的 Quick Tunnel、临时 Keychain 和签名更新 fixture 只允许专用 GitHub Mac CI。远端完整六例通过可作为该候选的开发迭代原生证据，但不能填作本机已执行；正式发布还需最终签名公证包、安装后的全量原生回归及完整支持矩阵。本机只有 Command Line Tools 时，本机原生运行仍为 BLOCKED，服务端测试和预览安装分别按实际结果记录。
+
+若将来需要本机原生重跑，先在本机安装并首次启动完整 Xcode 16.4，由用户通过系统界面完成必要组件、许可和 Apple 登录；用 `xcode-select -p` 确认选择完整 Xcode 后才运行 `xcodebuild -version`。第004例 CI 专用 fixture 不能仅靠设置 GitHub 环境变量搬到本机；本机没有独立程序和证据时仍不执行该例。
 
 ### 自动执行环境前提
 
 专用 Mac 或 Mac 虚拟机必须有已登录桌面、受支持的 macOS/架构、Xcode 和 UI 自动化权限；发布环境还需真实签名、公证、更新服务和隔离的本版目标数据库。v0.1.0 使用 SQLite。管理员提供凭据和机器初始授权后，Codex 通过程序执行场景、断言结果和判定门禁。缺环境时记录具体原因；用户口头确认、人工截图或手工通过报告不能解除阻断。
 
-TM-001第004例的CI专用源使用临时公开`https://<随机>.trycloudflare.com`访问本机签名更新fixture，`cloudflared`以本次CA池验证本机HTTPS，App以系统TLS验证公开HTTPS并由Sparkle验证EdDSA包。需先验证固定版本的`cloudflared`与SHA256，再运行`python3 scripts/native_environment.py`；探针READY只说明环境可用。Quick Tunnel是开发测试服务且不保证可用，失败记录BLOCKED；不得以关闭TLS、安装系统信任或跳过004解除阻断。证据只保存脱敏请求及产物摘要，不保存临时私钥或账号数据。详见SOP-009/010。
+TM-001第004例的CI专用源使用临时公开`https://<随机>.trycloudflare.com`访问本机签名更新fixture，`cloudflared`以本次CA池验证本机HTTPS，App以系统TLS验证公开HTTPS并由Sparkle验证EdDSA包。需先验证固定版本的`cloudflared`与SHA256，再运行`python3 scripts/native_environment.py`；同一隧道域名最多等待180秒，以系统TLS客户端核对状态和来源，记录诊断后才标记READY。DNS暂未传播时只等待当前域名，不重建隧道或关闭TLS；180秒仍不可用记BLOCKED。该准备等待不重试App产品用例，探针READY只说明环境可用。Quick Tunnel是开发测试服务且不保证可用；不得以安装系统信任或跳过004解除阻断。证据只保存脱敏请求及产物摘要，不保存临时私钥或账号数据。详见SOP-009/010。
 
 ## 2. 准备与数据生成
 

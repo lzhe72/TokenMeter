@@ -58,6 +58,8 @@ def package(app, output, service_url):
         info = plistlib.load(stream)
     if info.get("CFBundleIdentifier") != "org.tokenmeter.TokenMeter.UITesting":
         raise ValueError("Only the isolated UITesting app may be packaged as a local preview")
+    if info.get("TMTestAPIURL") != "":
+        raise ValueError("Preview app must use its bundled local service default")
     if info.get("SUFeedURL"):
         raise ValueError("Preview app must not have a configured update feed")
     run("codesign", "--verify", "--deep", "--strict", str(app), quiet=True)
@@ -75,8 +77,9 @@ def package(app, output, service_url):
             "TokenMeter 本机预览安装包\n\n"
             "将 TokenMeter.app 拖到 Applications。\n"
             "此包是临时签名的原生测试构建，未经 Developer ID 签名或公证，不能作为正式版发布。\n"
+            "App 首次内置服务地址：http://127.0.0.1:49176\n"
             f"本机测试服务地址：{service_url}\n"
-            "首次登录请将 App 显示的默认服务地址替换为上述地址。服务必须在本机运行。\n"
+            "若测试服务使用其他地址，请在登录页更改；服务须在本机运行。\n"
             "更新源未配置；正式发布仍需完整 E2E、签名、公证及发布通行证。\n",
             encoding="utf-8",
         )
