@@ -9,6 +9,7 @@ import socket
 import sqlite3
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -283,15 +284,128 @@ class NativeContractTests(unittest.TestCase):
         with self.assertRaises(native.EvidenceError):
             native.record_cleanup_errors({}, ["cleanup failed without prior error"], None)
 
-    def test_upgrade_probe_distinguishes_blocked_from_failed_and_never_accepts_nonzero(self):
-        for exit_code, error in ((2, native.Blocked), (1, native.EvidenceError), (7, native.EvidenceError)):
-            with mock.patch.object(native, "command", return_value=mock.Mock(returncode=exit_code)), \
-                 self.assertRaises(error):
-                native.require_upgrade_environment(self.root, self.root)
-        with mock.patch.object(native, "command", return_value=mock.Mock(returncode=0)) as probe:
-            native.require_upgrade_environment(self.root, self.root)
-        self.assertEqual(probe.call_args.kwargs["timeout"], 1800)
-        self.assertFalse(probe.call_args.kwargs["required"])
+    def test_upgrade_environment_checks_the_same_live_resources_used_by_product(self):
+        output = self.root / "evidence"
+        output.mkdir()
+        private = self.root / "update"
+        private.mkdir()
+        (private / "ca.pem").write_bytes(b"synthetic test CA")
+        (private / "server.pem").write_bytes(b"synthetic test leaf")
+        signing = mock.Mock()
+        signing.prepare.return_value = "A" * 40
+        update = mock.Mock()
+        update.private = private
+        update.url = "https://same-live-fixture.trycloudflare.com"
+        update.prepare.return_value = "synthetic public key"
+        order = mock.Mock()
+        order.attach_mock(signing.prepare, "signing")
+        order.attach_mock(update.prepare, "prepare")
+        order.attach_mock(update.start_tunnel, "tunnel")
+        order.attach_mock(update._run, "origin")
+        with mock.patch.object(native, "git", side_effect=lambda _root, *args: "A" * 40 if args == ("rev-parse", "HEAD") else ""):
+            identity, public_key = native.require_upgrade_environment(self.root, output, signing, update)
+        self.assertEqual((identity, public_key), ("A" * 40, "synthetic public key"))
+        self.assertEqual([call[0] for call in order.mock_calls], ["signing", "prepare", "tunnel", "origin"])
+        arguments, operation = update._run.call_args.args
+        self.assertEqual(operation, "verify isolated TLS origin")
+        self.assertEqual(arguments, ["/usr/bin/security", "verify-cert", "-c", str(private / "server.pem"),
+                                     "-p", "ssl", "-n", "localhost", "-r", str(private / "ca.pem"), "-L"])
+        report = native.json_file(output / "environment.json")
+        self.assertEqual(report["state"], "READY")
+        self.assertEqual(report["scope"], "environment_only")
+        self.assertEqual(report["snapshot_stage"], "preparation")
+        self.assertEqual(report["cleanup_owner"], "parent_run_result")
+        self.assertEqual(report["executed_cases"], 0)
+        self.assertFalse(report["release_eligible"])
+        self.assertFalse(report["cleanup_completed"])
+        self.assertEqual(report["tunnel_url"], update.url)
+        self.assertEqual(report["origin_ca_sha256"], native.sha256(private / "ca.pem"))
+        self.assertEqual(report["origin_certificate_sha256"], native.sha256(private / "server.pem"))
+
+    def test_upgrade_environment_verify_failure_never_marks_ready_or_restarts_tunnel(self):
+        output = self.root / "evidence"
+        output.mkdir()
+        private = self.root / "update"
+        private.mkdir()
+        (private / "ca.pem").write_bytes(b"synthetic test CA")
+        (private / "server.pem").write_bytes(b"synthetic test leaf")
+        signing = mock.Mock()
+        signing.prepare.return_value = "A" * 40
+        update = mock.Mock()
+        update.private = private
+        update.url = "https://same-live-fixture.trycloudflare.com"
+        update.prepare.return_value = "synthetic public key"
+        update._run.side_effect = RuntimeError("Isolated update fixture verify isolated TLS origin failed (1)")
+        with mock.patch.object(native, "git", return_value="A" * 40), \
+             self.assertRaisesRegex(RuntimeError, "verify isolated TLS origin failed"):
+            native.require_upgrade_environment(self.root, output, signing, update)
+        self.assertEqual(update.start_tunnel.call_count, 1)
+        self.assertEqual(update._run.call_count, 1)
+        report = native.json_file(output / "environment.json")
+        self.assertEqual(report["state"], "BLOCKED")
+        self.assertIn("verify isolated TLS origin", report["blockers"][0])
+
+    def test_upgrade_environment_failure_closes_the_same_resources_in_case_finally(self):
+        output = self.root / "evidence"
+        output.mkdir()
+        account_data = mock.Mock()
+        signing = mock.Mock()
+        signing.prepare.return_value = "A" * 40
+        signing.keychain = self.root / "synthetic-signing.keychain"
+        update = mock.Mock()
+        update.url = None
+        update.prepare.return_value = "synthetic public key"
+        update.start_tunnel.side_effect = RuntimeError("Temporary HTTPS tunnel DNS unavailable")
+        created = {"signing": 0, "update": 0}
+        def make_signing(private):
+            created["signing"] += 1
+            signing.private = private
+            return signing
+        def make_update(private, evidence):
+            created["update"] += 1
+            update.private = private
+            private.mkdir()
+            return update
+        def prepare_update():
+            (update.private / "ca.pem").write_bytes(b"synthetic test CA")
+            (update.private / "server.pem").write_bytes(b"synthetic test leaf")
+            return "synthetic public key"
+        update.prepare.side_effect = prepare_update
+        modules = {
+            "fixtures.py": account_data,
+            "bootstrap_sqlite.py": mock.Mock(),
+            "update_source.py": SimpleNamespace(UpdateSource=make_update),
+            "code_signing.py": SimpleNamespace(SigningIdentity=make_signing),
+        }
+        def provision(_root, case_private, _case_output, _data, _isolation_id, _seed):
+            fixture = case_private / "fixture"
+            fixture.mkdir()
+            (fixture / "manifest.json").write_text("{}")
+            database = case_private / "database.sqlite"
+            database.write_bytes(b"synthetic, never product data")
+            return database, fixture
+        process = mock.Mock()
+        report = {"run_id": "governance", "suites": [], "executed_cases": 0, "passed_cases": 0,
+                  "cleanup_completed": False}
+        with mock.patch.object(native, "preflight", return_value={"architecture": "arm64", "macos": "15.7.9"}), \
+             mock.patch.object(native, "git", side_effect=lambda _root, *args: "A" * 40 if args == ("rev-parse", "HEAD") else ""), \
+             mock.patch.object(native, "required_cases", return_value={"E2E-TM001-004": self.identity}), \
+             mock.patch.object(native, "snapshot", return_value={}), \
+             mock.patch.object(native, "load_module", side_effect=lambda path, _name: modules[path.name]), \
+             mock.patch.object(native, "prepare_account_database", side_effect=provision), \
+             mock.patch.object(native, "start_isolated_service", return_value=(process, "http://127.0.0.1:12345", mock.Mock())), \
+             mock.patch.object(native, "wait_for_service"), \
+             mock.patch.object(native, "command") as command, \
+             self.assertRaisesRegex(RuntimeError, "tunnel DNS unavailable"):
+            native.execute(ROOT, output, report)
+        self.assertEqual(created, {"signing": 1, "update": 1})
+        signing.close.assert_called_once_with()
+        update.close.assert_called_once_with()
+        update.start_tunnel.assert_called_once_with()
+        update._run.assert_not_called()
+        command.assert_not_called()  # No build, package, or App launch after blocked readiness.
+        self.assertEqual(native.json_file(output / "E2E-TM001-004/environment.json")["state"], "BLOCKED")
+        self.assertEqual(report["credential_cleanup"]["E2E-TM001-004"], "SUCCEEDED")
 
     def test_attachment_export_requires_native_help_and_real_png_files(self):
         bundle = self.root / "native.xcresult"
@@ -442,6 +556,7 @@ class EvidenceVerificationTests(unittest.TestCase):
         self.destination = native.native_destination(self.summary, "arm64", "15.7.9")
         self.report = {
             "state": "PASS", "runner_implemented": True, "run_id": "nonce", "phase": "iteration",
+            "release_id": "v0.1.0-20260929T074814Z",
             "started_at": datetime.fromtimestamp(self.now, timezone.utc).isoformat(),
             "finished_at": datetime.now(timezone.utc).isoformat(),
             "source_commit": "a" * 40, "working_tree_dirty": False,
@@ -468,6 +583,79 @@ class EvidenceVerificationTests(unittest.TestCase):
     def verify(self):
         self.path.write_text(json.dumps(self.report))
         return native.verify_report(self.root, self.path, run_id="nonce", phase="iteration", not_before=self.now)
+
+    def configure_upgrade_snapshot(self):
+        case = "E2E-TM001-004"
+        case_output = self.output / case
+        case_output.mkdir()
+        (case_output / "screen.png").write_bytes((self.output / "E2E-TM001-001/screen.png").read_bytes())
+        self.report["expected_cases"] = [case]
+        self.report["suites"][0]["case_id"] = case
+        native.required_cases.return_value = {case: "target/suite/testCase"}
+        environment = {
+            "scope": "environment_only", "case_id": case, "run_id": "nonce", "state": "READY",
+            "snapshot_stage": "preparation", "cleanup_owner": "parent_run_result",
+            "source_commit": self.report["source_commit"], "working_tree_dirty": False,
+            "release_id": self.report["release_id"], "executed_cases": 0,
+            "release_eligible": False, "cleanup_completed": False,
+            "tunnel_url": "https://same-live-fixture.trycloudflare.com",
+            "origin_ca_sha256": "a" * 64,
+        }
+        environment_path = case_output / "environment.json"
+        environment_path.write_text(json.dumps(environment))
+        self.report["upgrade_environment"] = {
+            "path": f"{case}/environment.json", "sha256": native.sha256(environment_path), "state": "READY"}
+        return environment_path, environment
+
+    def test_upgrade_environment_evidence_is_reopened_and_bound_to_this_run(self):
+        environment_path, environment = self.configure_upgrade_snapshot()
+        self.verify()
+        original = environment_path.read_bytes()
+        environment_path.write_bytes(original + b"\n")
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
+        environment_path.write_bytes(original)
+        environment_path.unlink()
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
+        environment_path.write_bytes(original)
+        self.report.pop("upgrade_environment")
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
+        self.report["upgrade_environment"] = {"path": "../outside.json", "sha256": native.sha256(environment_path),
+                                              "state": "READY"}
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
+        self.report["upgrade_environment"]["path"] = "E2E-TM001-004/environment.json"
+        environment_path.unlink()
+        outside = self.output / "outside.json"
+        outside.write_text(json.dumps(environment))
+        environment_path.symlink_to(outside)
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
+
+    def test_upgrade_environment_rejects_rehashed_wrong_candidate_or_snapshot_claims(self):
+        environment_path, original = self.configure_upgrade_snapshot()
+        self.verify()
+        changes = {
+            "scope": "product_pass", "case_id": "E2E-TM001-003", "run_id": "old-run",
+            "state": "BLOCKED", "snapshot_stage": "cleanup", "cleanup_owner": "environment_probe",
+            "source_commit": "b" * 40, "working_tree_dirty": True, "release_id": "old-release",
+            "executed_cases": 1, "release_eligible": True, "cleanup_completed": True,
+            "tunnel_url": "http://127.0.0.1:12345", "origin_ca_sha256": "invalid",
+        }
+        for field, value in changes.items():
+            with self.subTest(field=field):
+                changed = dict(original, **{field: value})
+                environment_path.write_text(json.dumps(changed))
+                self.report["upgrade_environment"]["sha256"] = native.sha256(environment_path)
+                with self.assertRaises(native.EvidenceError):
+                    self.verify()
+        environment_path.write_text(json.dumps(original))
+        self.report["upgrade_environment"]["sha256"] = native.sha256(environment_path)
+        self.report["upgrade_environment"]["state"] = "PASS"
+        with self.assertRaises(native.EvidenceError):
+            self.verify()
 
     def test_verification_reopens_native_artifact_and_does_not_trust_only_json(self):
         self.verify()

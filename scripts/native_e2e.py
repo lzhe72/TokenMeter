@@ -249,16 +249,39 @@ def command(args: list[str], *, root: Path, log: Path, env: dict | None = None,
     return result
 
 
-def require_upgrade_environment(root: Path, case_output: Path) -> None:
-    # Allow bounded signing/certificate commands, tunnel readiness, and finally
-    # cleanup to finish. A 300s outer cap can kill the probe before cleanup even
-    # though its 90s URL and shared 180s readiness budgets have not expired.
-    result = command([sys.executable, str(root / "scripts/native_environment.py")], root=root,
-                     log=case_output / "environment-probe.log", timeout=1800, required=False)
-    if result.returncode == 2:
-        raise Blocked("E2E-TM001-004 environment is unavailable; see environment-probe.log and environment.json")
-    if result.returncode:
-        raise EvidenceError("E2E-TM001-004 environment probe failed; see environment-probe.log and environment.json")
+def require_upgrade_environment(root: Path, case_output: Path, signing: Any, update: Any) -> tuple[str, str]:
+    """Check the live resources that E2E004 will use, without creating a second tunnel."""
+    evidence = case_output / "environment.json"
+    report = {"scope": "environment_only", "case_id": "E2E-TM001-004", "state": "BLOCKED",
+              "run_id": case_output.parent.name, "snapshot_stage": "preparation",
+              "cleanup_owner": "parent_run_result",
+              "release_eligible": False, "sop_id": "SOP-009", "executed_cases": 0,
+              "source_commit": git(root, "rev-parse", "HEAD"),
+              "working_tree_dirty": bool(git(root, "status", "--porcelain")),
+              "release_id": json_file(root / "releases/current.json")["release_id"],
+              "cleanup_completed": False, "started_at": datetime.now(timezone.utc).isoformat()}
+    try:
+        identity = signing.prepare()
+        public_key = update.prepare()
+        report["certificate_sha1"] = identity
+        report["origin_ca_sha256"] = sha256(update.private / "ca.pem")
+        report["origin_certificate_sha256"] = sha256(update.private / "server.pem")
+        update.start_tunnel()
+        report["tunnel_url"] = update.url
+        # Keep the origin certificate check from the standalone diagnostic. The
+        # public endpoint has already passed normal system DNS and TLS in
+        # start_tunnel(); this check binds its origin to this live fixture CA.
+        update._run(["/usr/bin/security", "verify-cert", "-c", str(update.private / "server.pem"),
+                     "-p", "ssl", "-n", "localhost", "-r", str(update.private / "ca.pem"), "-L"],
+                    "verify isolated TLS origin")
+        report["state"] = "READY"
+        return identity, public_key
+    except (RuntimeError, OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+        report["blockers"] = [str(exc)[:1000]]
+        raise
+    finally:
+        report["finished_at"] = datetime.now(timezone.utc).isoformat()
+        evidence.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
 
 
 def parse_bundle(root: Path, bundle: Path) -> tuple[dict, dict]:
@@ -336,6 +359,33 @@ def verify_report(root: Path, path: Path, *, run_id: str, phase: str,
     suites = report.get("suites")
     if not isinstance(suites, list) or len(suites) != len(expected):
         raise EvidenceError("Incomplete native suites")
+    if "E2E-TM001-004" in expected:
+        descriptor = report.get("upgrade_environment")
+        relative = "E2E-TM001-004/environment.json"
+        case = path.parent / "E2E-TM001-004"
+        environment_path = path.parent / relative
+        if (not isinstance(descriptor, dict) or descriptor.get("path") != relative
+                or descriptor.get("state") != "READY" or case.is_symlink() or not case.is_dir()
+                or environment_path.is_symlink() or not environment_path.is_file()
+                or not environment_path.resolve().is_relative_to(path.parent.resolve())
+                or sha256(environment_path) != descriptor.get("sha256")):
+            raise EvidenceError("E2E004 active environment evidence is missing or changed")
+        environment = json_file(environment_path)
+        if (environment.get("scope") != "environment_only" or environment.get("case_id") != "E2E-TM001-004"
+                or environment.get("run_id") != run_id or environment.get("state") != "READY"
+                or environment.get("snapshot_stage") != "preparation"
+                or environment.get("cleanup_owner") != "parent_run_result"
+                or environment.get("source_commit") != report["source_commit"]
+                or environment.get("working_tree_dirty") is not False
+                or environment.get("release_id") != report.get("release_id")
+                or type(environment.get("executed_cases")) is not int or environment["executed_cases"] != 0
+                or environment.get("release_eligible") is not False
+                or environment.get("cleanup_completed") is not False
+                or not isinstance(environment.get("tunnel_url"), str)
+                or not re.fullmatch(r"https://[a-z0-9-]+\.trycloudflare\.com", environment["tunnel_url"])
+                or not isinstance(environment.get("origin_ca_sha256"), str)
+                or not re.fullmatch(r"[a-f0-9]{64}", environment["origin_ca_sha256"])):
+            raise EvidenceError("E2E004 active environment snapshot does not match this candidate")
     observed: set[str] = set()
     for suite in suites:
         case_id = suite.get("case_id")
@@ -756,17 +806,15 @@ def execute(root: Path, output: Path, report: dict) -> None:
                                       "TM_TEST_CREDENTIALS_DIR=" + str(credentials_dir)]
                     if case_id == "E2E-TM001-004":
                         progress(case_id, "verify-upgrade-environment")
-                        require_upgrade_environment(root, case_output)
-                        progress(case_id, "prepare-signing")
                         signing = signing_data.SigningIdentity(case_private / "code-signing")
-                        identity = signing.prepare()
+                        update = update_data.UpdateSource(case_private / "update-secrets", case_output)
+                        identity, public_key = require_upgrade_environment(root, case_output, signing, update)
+                        report["upgrade_environment"] = {
+                            "path": (case_output / "environment.json").relative_to(output).as_posix(),
+                            "sha256": sha256(case_output / "environment.json"), "state": "READY"}
                         build_settings = [setting for setting in build_settings if not setting.startswith("CODE_SIGN_IDENTITY=")]
                         build_settings += ["CODE_SIGN_IDENTITY=" + identity,
                                            "OTHER_CODE_SIGN_FLAGS=--keychain " + shlex.quote(str(signing.keychain))]
-                        update = update_data.UpdateSource(case_private / "update-secrets", case_output)
-                        progress(case_id, "prepare-https-update")
-                        public_key = update.prepare()
-                        update.start_tunnel()
                         feed = update.url + "/appcast.xml"
                         build_settings += ["TM_UPDATE_FEED_URL=" + feed, "TM_UPDATE_PUBLIC_KEY=" + public_key]
                         package_output = case_private / "update-package"

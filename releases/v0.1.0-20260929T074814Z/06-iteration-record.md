@@ -264,3 +264,15 @@ BUG-TM001-FIXTURE-006 的只读诊断与清理字段修订现已在未提交工�
 补录最终文档核对：增加当前状态到本记录的证据入口后，再次实跑 `python3 scripts/check_docs.py --mode baseline`、`python3 scripts/quality_gate.py check` 与 `git diff --check`，均退出0；文档69份/434链接、12功能/37场景/6绑定，`release_eligible=false`。
 
 提交前整合检查：治理工具193项全部通过，完整日志 `.local/ci/automatic-login-governance.log`。只读审查发现 XCTest 的 Foundation 路径解析会保留 `/var` 别名，已改用系统 `realpath` 核对 runner 的真实路径；退出登录先删除本机凭据再等待服务端撤销；测试配置须具有已存在、当前用户所有、0700的规范路径，缺失时明确错误且不回落生产目录。原生源码解析和账号模块类型检查退出0；新原生结果须在提交后由 CI 产生，未预填通过。
+
+### 同一活跃更新源的第004例环境基线（2026-09-30）
+
+最新[完整PR回归 run36667893097](https://github.com/lzhe72/TokenMeter/actions/runs/36667893097)使用分支头`528859cfde624f31a071f76144ee26ae6a377d7f`，两平台实际检出PR合成合并提交`4df5efb672362f09ec57b86839b9a09b6763793b`。macOS 15 Apple Silicon与Intel各有001/002/003/005/006五例真实PASS；004在更新源准备阶段正常系统`curl`持续退出6/HTTP000，未执行该例原生升级，完整迭代均BLOCKED。原始job日志为`.local/ci/automatic-login-arm-job.log`、`.local/ci/automatic-login-intel-job.log`；门禁与逐例报告在`.local/ci/summaries/36667893097/{arm64,intel}/`。Apple Silicon公共DoH A记录约6.4秒已发布，系统解析直至约155秒仍失败；Intel公共DoH约12.7秒发布，系统解析至约155秒仍失败。只读DNS诊断在同一时刻见默认解析器`192.168.64.1`与Cloudflare UDP A为NXDOMAIN、Google UDP A已发布；AAAA记录TTL 300不能据此推断A记录负缓存持续300秒。此运行与旧run36663136535的004产品FAIL不同，旧FAIL不被新环境BLOCKED改写。
+
+复核执行链发现：原独立`native_environment.py`先创建、验收并销毁一套临时签名身份、隧道与随机域名；004随后又创建另一随机域名。独立诊断的READY仅属于已销毁实例，不能作为004当前域名的准备证据。按SOP-000/004/024先修SOP索引及009/010/014，再同步03/04计划、测试执行说明、状态、Changelog和目录。修订设计要求004在本例拥有的一组活跃`SigningIdentity`与`UpdateSource`上完成签名、同一域名公共DNS及Mac正常系统DNS/TLS准备、本次回环origin的`security verify-cert`，持续保有同一域名、CA和专用Keychain至无效包拒绝、有效包真实升级及请求核对结束，最后统一`finally`清理。独立环境诊断保留零产品用例地位；不得重建域名、延长180秒准备窗口、改系统DNS/hosts/信任、关闭TLS或重试业务取绿。该条为待实现的设计和阻断证据，不能声称新方案004已PASS；源码修订及同一新候选两架构完整六例仍须实跑，PR#2保持草稿，内部/公开发行均无通行证。
+
+本次仅文档修订的实际检查：`python3 scripts/check_docs.py --mode structure`、`--mode baseline`均退出0，核对69份文档和435条链接；`python3 scripts/quality_gate.py check`退出0，追踪12项功能、37个场景、6项程序绑定且`release_eligible=false`；`git diff --check`退出0。旧记录中独立探针由原runner子进程设置1800秒父超时，只描述当时实现；移除“先探针、后新域名”的调用后，不能再把该超时当成004或独立诊断当前保证。文档检查不构成源码修复、产品E2E或发行通过。
+
+独立审查确认单实例执行链和失败阻断保留，并发现新增环境SHA此前只记录、未由父验证器核验。按SOP-000/024先在SOP-014修订13及04测试计划明确不可变准备快照和父报告清理责任，补充父验证器对环境文件路径、摘要、候选和状态的独立校验；该证据合同待源码实现及负向回归，不代替产品原生结果。
+
+源码整合完成：004直接创建并保有一组签名/更新源资源，保留origin证书核验；父验证器重新核验准备快照及同候选/同run绑定，最终清理仍以父报告为准。`python3 -m unittest discover -s tests/governance -p 'test_*.py' -q` 最终197项通过，退出0，原始日志`.local/ci/live-update-fixture-governance-final.log`（上一版195项日志`.local/ci/live-update-fixture-governance.log`保留）。`check_docs.py --mode baseline`核对69份/435链接，`quality_gate.py check`核对12功能/37场景/6绑定，均PASS且不授予发布资格；日志`.local/ci/live-update-fixture-baseline.json`及`live-update-fixture-traceability.json`。已核对远端分支仍为528859c、master仍为548c582；当前提交只推送原版本分支并触发新的完整六例两平台回归，未预填通过或合并。

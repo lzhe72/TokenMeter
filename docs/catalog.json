@@ -679,7 +679,8 @@
         "scripts/native_environment.py",
         ".github/workflows/quality.yml",
         "tests/governance/test_update_source.py",
-        "tests/governance/test_environment_probe.py"
+        "tests/governance/test_environment_probe.py",
+        "scripts/native_e2e.py"
       ],
       "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
@@ -693,7 +694,9 @@
       "base_release": null,
       "inputs": [
         "sop/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "tests/e2e/update_source.py",
+        "scripts/native_e2e.py"
       ],
       "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
@@ -753,7 +756,9 @@
         "sop/README.md",
         "docs/standards/documentation.md",
         "sop/SOP-009-environment.md",
-        ".github/workflows/quality.yml"
+        ".github/workflows/quality.yml",
+        "scripts/native_e2e.py",
+        "scripts/native_environment.py"
       ],
       "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
