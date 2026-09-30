@@ -39,7 +39,7 @@ release_id、源码提交、版本 manifest、Changelog、实际检查证据及�
 2. 受保护发布任务消费候选 CI 生成的原通行证，重新核验受信运行身份、来源、签名产物摘要、对应 commit 和精确 Changelog 标题。若后续配置 Tag 触发，仅用于核对已经通过的发布，不补做或替代创建 Tag 前的候选门禁。
 3. 仅创建与 release_id 完全相同的 annotated tag，指向通过验证的提交；创建同名 Git Release 并附原包、原报告和原通行证。
 4. 检查远端 tag 指向、Release 名称、资产摘要与查询链；不能成功后再替换包或移动 tag。
-5. 实际结果写入不可覆盖的发布记录，源文档不得为写入自身 SHA 而反复提交。当前尚未实现通行证签发和 Tag/Release 发布自动化，基础建设版无产品 PASS，不创建产品 tag。
+5. 实际结果写入不可覆盖的发布记录，源文档不得为写入自身 SHA 而反复提交。内部版由 `internal-release.yml` 的publish job调用 `scripts/internal_publish.py publish` 消费本次通行证，重新读回远端必需检查、依赖job与环境策略后创建annotated Tag和同名Release，并核对GitHub资产SHA256；基础建设版无产品PASS，不创建产品tag。
 
 ## 输出
 

@@ -6,7 +6,7 @@ TM-001：预置账号与登录、权限管理和最小更新器。版本0.1.0，
 
 ## 候选、平台和资产
 
-源文档/代码/数据/测试先形成干净候选。用户本轮目标为团队内部使用：`distribution_profile=internal`。内部 DMG 仍须从固定 SHA 构建、记录 DMG/内部 App 摘要，经 macOS14+ arm64/Intel 实际包安装、启动、六例原生回归、同机隔离回环更新源升级、生产 SQLite 副本备份恢复与专用机器门禁，才能作为内部版本分发；签名类型、Gatekeeper 行为、安装路径和交付边界须在候选上实测并写报告。现有 `package_preview_dmg.py` 只能产生预览诊断包，`package_release_dmg.py` 只覆盖 Developer ID 公证公开分支；内部包打包/验证和 `distribution_profile=internal` 的质量门禁尚未实现，故内部正式发布 BLOCKED，不能把预览包改名或改报告字段冒充通过。公开分支 `distribution_profile=public` 保留 Developer ID、hardened runtime、公证、装订、Gatekeeper 和最终包全矩阵；当前亦缺真实 Developer ID、Keychain 公证 profile 和完整执行证据，保持 BLOCKED。两个 profile 共用 SOP-017/018 的步骤顺序，但各自判定不同，不互借通过证据。开发迭代允许隔离自签身份验证 Sparkle 包签名与本版文件凭据自动登录，迭代 PASS 不授予任一 profile 的发行资格。
+源文档/代码/数据/测试先形成干净候选。用户本轮目标为团队内部使用：`distribution_profile=internal`。内部 DMG 仍须从固定 SHA 构建、记录 DMG/内部 App 摘要，经 用户已确认的macOS15 arm64/Intel 实际包安装、启动、六例原生回归、同机隔离回环更新源升级、生产 SQLite 副本备份恢复与专用机器门禁，才能作为内部版本分发；签名类型、Gatekeeper 行为、安装路径和交付边界须在候选上实测并写报告。现有 `package_preview_dmg.py` 只能产生预览诊断包，`package_release_dmg.py` 只覆盖 Developer ID 公证公开分支；内部包程序、已安装App执行器、父级门禁和自动发布入口已实现，按 `internal-release.yml` 从受保护master执行；最终包证据产生前内部正式发布仍为BLOCKED，不能把预览包改名或改报告字段冒充通过。公开分支 `distribution_profile=public` 保留 Developer ID、hardened runtime、公证、装订、Gatekeeper 和最终包全矩阵；当前亦缺真实 Developer ID、Keychain 公证 profile 和完整执行证据，保持 BLOCKED。两个 profile 共用 SOP-017/018 的步骤顺序，但各自判定不同，不互借通过证据。开发迭代允许隔离自签身份验证 Sparkle 包签名与本版文件凭据自动登录，迭代 PASS 不授予任一 profile 的发行资格。
 
 此前 `package_preview_dmg.py` 曾将 CI 的 UITESTING App 包装成本机预览 DMG；新的严格临时凭据路径被写入 UITESTING Info.plist，离开 runner 后不可用于用户本机登录，也不得回落读取生产凭据。故本候选停止自动从该包生成预览 DMG，脚本须显式拒绝 `TMTestCredentialsDirectory`，工作流仅可保留测试 App 压缩件作诊断，不提供新的可安装预览包。现有 `/Applications/TokenMeter.app` 是旧预览诊断，不代表新候选或内部分发；用户本机使用的新内部 DMG 须等独立无测试路径构建与完整包级门禁。
 
@@ -21,3 +21,7 @@ v0.1.0 服务端生产库为 `database/production/production.db`，Codex 回归�
 ## 当前条件与PR
 
 本机缺完整Xcode且AX权限未授，现有旧App构建100没有更新配置，不能当作新候选的更新验收；两台远端macOS runner须各自在同机回环49177运行App/更新服务并实际执行完整六例。远端内部发版保护与专用机器门禁未就绪；公开分支另缺 Developer ID/公证和受保护分发配置。Codex按用户持续授权创建PR、检查、修复并在适用门禁通过后合并；不得管理员绕过失败检查，不因能合并就创建Tag。缺环境时提交真实进展和阻塞，不能预填通行证。
+
+## 本次发布执行设计
+
+以[内部发布设计](../../docs/releases/01-internal-v0.1.0.md)为当前实施合同：固定SHA、一次构建Universal最终DMG、两平台生产App完整六例、受保护机器通行证和自动Git发布。用户明确“以目前的测试条件为准，先走通链路”，本版不再承诺macOS14；不减少任何功能用例。程序未建立、测试未运行仍如实BLOCKED。

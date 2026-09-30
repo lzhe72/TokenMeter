@@ -300,3 +300,46 @@ BUG-TM001-FIXTURE-006 的只读诊断与清理字段修订现已在未提交工�
 独立审查发现父门禁原先只在自己调用 `xcresulttool` 前核算 `native.xcresult` 完整摘要；若父级解析使 bundle（含 SQLite）变化，单次校验后仍可返回 PASS。先增加模拟父级解析写入 bundle 的治理负测，旧代码真实失败：`.local/ci/loopback-parent-verifier-red.log`，40项中1项失败，未抹除失败证据。随后父级在全部原始解析完成后再次逐文件核算并与子级记录摘要比较，任一次不符均拒绝；SOP-014、04测试计划及测试执行规范同步该判据。整合治理 `python3 -m unittest discover -s tests/governance -p 'test_*.py'` 实际198/198通过，退出0，原始日志`.local/ci/loopback-integrated-governance.log`。
 
 同机回环基础检查实际结果：更新fixture聚焦16/16通过（`.local/ci/loopback-fixture-focused.log`），更新包helper16/16通过（`.local/ci/loopback-integrated-helper.log`），本机Swift凭据组件13/13通过（`.local/ci/loopback-integrated-credentials.log`），本机Swift地址配置组件48项断言0失败（`.local/ci/loopback-integrated-endpoints.log`）。本次文档同步后实跑 `python3 scripts/check_docs.py --mode baseline`、`python3 scripts/quality_gate.py check` 和 `git diff --check` 均退出0：69份文档/436链接、12功能/37场景/6绑定，`release_eligible=false`。这些均为程序/规范基础验证，新候选尚未在两台Mac执行完整六例，PR合并和内部DMG发行仍不具资格。
+
+### 同机更新两平台通过与源码合并（2026-09-30）
+
+SOP-013/014/019/022：CI [36674477502](https://github.com/lzhe72/TokenMeter/actions/runs/36674477502) 在macOS15.7.9 arm64与x86_64各执行六例、子结果与父原始证据门禁均PASS，清理完成。分支头3ad0d7e、PR测试合成4f4d887与最终merge e011857的源码树一致（2b723f41d96256e962cf04ed9105dfb1e2985739）。PR#2已合并master并快进同步本地，未绕过检查。原始日志 `.local/ci/loopback-arm-job.log`、`loopback-intel-job.log` 与治理日志 `loopback-governance-ci.log`；两平台报告 `.local/ci/summaries/36674477502/`；远端核对 `.local/git-sync/loopback-3ad0d7e/handoff.json`。基础198治理、45服务、16helper通过，Mac凭据13项/地址48断言通过。`release_eligible=false`，没有正式Tag/Release/最终DMG。此前状态页停留在提交前的待运行事实，本次同步纠正；新旧候选不得混用。
+
+### 内部发布、详细用例与两日复盘任务（2026-09-30）
+
+用户明确继续发布，同时指出docs看不到每功能test case并要求梳理两天项目对话。按SOP-000/006/024补详细用例总索引和逐功能文件，不以机器矩阵摘要代替步骤/数据/预期；按SOP-023/024对对话与Git/CI交叉核对复盘。发布仍按017/018以实际生产bundle和最终DMG执行，内部应用不把付费Apple账号或公网域名作为前提。需要真实安装包程序、原生最终包矩阵和受保护机器通行证，现有缺口必须实现并测试，不能改写旧迭代报告作为发布报告。该版本尚未发布，继续原release_id和新internal-release分支。
+
+用户明确选择“以目前的测试条件为准，先走通链路”：内部首版支持范围调整为macOS15 arm64/Intel。官方可用矩阵显示个人仓库缺少macOS14 Intel大型runner条件，本机为macOS15，故不能维持未经测试的14承诺。该变化已同步产品、需求、设计、测试和发布计划；不是删除功能用例，六例全部保留。详见内部发布设计。
+
+### 2026-09-30 · 受保护发布环境准备（SOP-009/018/019）
+
+- 用户已授权自动提交、PR、合并和内部发布；据此配置远端master必须通过 `governance`、`product-e2e (macos-15)`、`product-e2e (macos-15-intel)`，要求与最新基线一致，禁止管理员绕过、强推及删除。release-validation环境仅允许master分支部署，不添加人工审批。
+- 三次GitHub API写入退出0，随后读取分支保护与环境部署策略确认生效。证据保存 `.local/git-sync/internal-protection/`；配置成立不表示最终包门禁已通过。
+- 已安装App采用 `XCUIApplication(url:)`，测试runner保留fixture控制变量，被测App启动环境主动移除测试与签名变量；两平台各顺序六例，标准用户目录仅允许专用托管runner在先不存在且已取得所有权后使用/清理。
+
+### 2026-09-30 · 本轮文档基线与用例门禁（SOP-006/008/011/024）
+
+- 补齐[逐功能详细用例](../../docs/testing/cases/README.md)，12份功能文件覆盖37个唯一用例；TM-001六例绑定真实SwiftUI测试，未来31例保留planned及数据/程序缺项。[两日复盘](../../docs/retrospectives/2026-09-29--2026-09-30-tokenmeter.md)整理24个案例，注明可恢复对话的覆盖限制。
+- 用例文档机器检查拒绝缺少文档、缺漏/重复用例、没有独立预期、隐藏操作步骤和不匹配验收ID。治理红测45项中的6个失败观察保留 `.local/ci/case-documents-red.log`；实现后45项全部通过，见 `case-documents-green.log`。
+- 实施前严格基线83份文档/572链接及37用例追踪通过，证据 `.local/ci/internal-baseline-before-implementation.json`、`internal-trace-before-implementation.json`。复盘入档后重新核对。设计关键边界已确认，进入内部打包、已安装App执行器及父级门禁开发；原生验证尚未运行，不能沿用旧候选PASS。
+
+### 2026-09-30 · 内部包实现与基础验证（SOP-009/011/012/013/017–020）
+
+- 稳定自签代码签名与EdDSA密钥在本机私有目录生成，环境secret写入并读回名称；公开配置只含公钥/证书摘要。没有导入用户钥匙串或改变系统信任。root读取真实master保护与环境策略作为后续机器核验基准。
+- 内部打包工具、父级原件门禁、Git发布与本机分发程序已建立；最终安装包执行器与原生installed模式按同一清单整合。独立review发现并修复工作流未创建输出父目录、缺config参数、CI身份字段不一致；父门禁新增必需protection原始证据。
+- 官方Sparkle/Apple资料说明非Apple团队签名与默认library validation不兼容。因此内部构建明确关闭Hardened Runtime/library validation，仍强制稳定非ad-hoc代码签名、固定证书、EdDSA及真实升级。公开profile的Developer ID/hardened要求保留。此为基于资料的预先兼容修正，不宣称已经在本轮包重现崩溃；3项配置回归先失败后修复，内部16+公开14项通过，证据 `.local/ci/internal-runtime-{red,green}.log`。
+- 服务端45项通过（`internal-server-first.log`），升级helper16项通过（`internal-helper-first.log`）。首轮整合治理225项中仅1个正在编写的父门禁入口缺失错误，已保留 `internal-governance-first.log`，不作为通过；完成后重跑全部。相关155项独立复验已通过（`internal-release-independent-review-tests.log`）。
+- 新增本机分发4项工具检查、发布资产/远端约束7项检查、父门禁原始证据负测18项通过；packager另用本机CryptoKit验证真实有效签名并拒绝篡改（`internal-package-crypto-smoke.log`）。工具检查不冒充最终包或产品E2E。源码入口缺失的初始红记录只表示工具尚未建立，不称业务红测。
+- 工作流YAML曾在本机解析发现 `--only-binary=:all:` 未使用多行块，已在提交前修复并重新解析5个job及依赖链，证据 `internal-workflow-yaml.json`。最终包和正式发布结果尚待受保护CI实际产生。
+
+- 本机独立执行新SQLite恢复helper：在新临时根调用真实生产初始化程序，备份→另一库恢复→逐表与完整性核对→第三私有副本启动真实API验证管理员登录，并清理进程和DB/WAL/SHM。结果PASS但仅属隔离数据库/API检查，无产品E2E资格，证据 `.local/ci/internal-sqlite-restore-smoke.log`。用户生产库未访问或修改。
+- 精确DMG三项白名单新增行为红测发现额外文件会被旧工具接受，修复后内部19+公开14项通过，证据 `.local/ci/internal-dmg-layout-behavior-red.log`、`internal-package-layout-green.log`；另以临时合成镜像确认hdiutil正常布局，未使用用户App。
+
+### 2026-09-30 · 内部候选整合检查与提交（SOP-013/019/022）
+
+- 最终安装包runner与父门禁完成字段、清单、归档路径及资源清理合同核对；真实执行顺序001/002/003/005/006/004保持不变。稳定签名生产App的自动检查保持启用，测试源初始提供空合法feed，受控四阶段后才提供升级。
+- 全治理259项通过、服务端45项通过、升级工具16项通过；基线86文档/615链接和12功能/37用例追踪通过，工作流5个job及发布依赖解析通过，diff无空白错误。原始证据为 `.local/ci/internal-governance-final.log`、`internal-server-first.log`、`internal-helper-first.log`、`internal-baseline-final.json`、`internal-quality-final.json`、`internal-workflow-yaml-final.json`。
+- 最终包的原始双平台xcresult归档、逐例报告、父门禁判定与通行证将随原DMG作为Release资产保存；发布程序在上传前和GitHub摘要读回时核对。新增归档验证纳入发布工具9项检查。
+- 接下来推送源码PR，执行两台Mac完整开发回归并在检查通过后合并，再由同SHA master必需检查与内部最终包流程判定发布。未预填任何新候选产品PASS或Release结果。
+
+提交20e3936后的最终清理边界复核：对本次归属App发送终止后最多等待5秒，确认退出再清理标准凭据/defaults；不会终止其他路径的App，超时保持阻断。新增2项回归后全治理261项通过，证据 `.local/ci/internal-governance-cleanup-final.log`。此为执行器修复，不重试失败业务用例。

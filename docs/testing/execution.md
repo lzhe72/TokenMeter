@@ -55,7 +55,7 @@ python3 scripts/test_data.py reset --run-id demo
 
 现有两平台XCUITest需要已登录桌面、受支持的macOS/架构、Xcode和UI自动化权限；内部正式发布需最终包签名/Gatekeeper、同机更新服务与隔离目标数据库，公开profile另需Developer ID及公证。v0.1.0 使用 SQLite。管理员提供凭据和机器初始授权后，Codex 通过程序执行场景、断言结果和判定门禁。缺环境时记录具体原因；用户口头确认、人工截图或手工通过报告不能解除阻断。
 
-TM-001第004例不再依赖公网Quick Tunnel。两台GitHub Mac分别在自身固定端口49177启动只绑定回环的更新fixture，候选和高版本App均从内置默认 `http://127.0.0.1:49177/appcast.xml` 更新，不注入 `TM_UPDATE_FEED_URL`；API仍默认该机49176。固定EdDSA公钥、`SUVerifyUpdateBeforeExtraction`、坏签名拒绝、有效包真实安装重启和`/v1/me`自动登录断言保持必测。当前helper的`--use-default-feed`、配置页及fixture改造尚待实现，不能将旧公网探针READY当成新回环证据。004仅使用一组活跃更新源，先通过 `/healthz` 的一次性 source nonce 核对进程/端口、HTTP状态与来源，发布fixture后再由真实App和请求核验程序检查appcast及包响应，贯穿请求及安装后统一清理；端口被占时BLOCKED，不能连接未知服务或用户真实生产库。更新源URL允许appcast路径但拒绝userinfo、query、fragment、空host与非法端口；HTTP只允许精确回环主机，非回环必须正常HTTPS/TLS，Appcast选中下载URL与重定向也须负测。配置页的合法合成更新URL由006保存、跨重启核对并恢复内置默认，不请求该合成地址，也不另开第二更新服务器。
+TM-001第004例不再依赖公网Quick Tunnel。两台GitHub Mac分别在自身固定端口49177启动只绑定回环的更新fixture，候选和高版本App均从内置默认 `http://127.0.0.1:49177/appcast.xml` 更新，不注入 `TM_UPDATE_FEED_URL`；API仍默认该机49176。固定EdDSA公钥、`SUVerifyUpdateBeforeExtraction`、坏签名拒绝、有效包真实安装重启和`/v1/me`自动登录断言保持必测。helper的`--use-default-feed`、配置页及同机fixture已接通，开发回归证据见状态页；不能将旧公网探针READY当成新回环证据。004仅使用一组活跃更新源，先通过 `/healthz` 的一次性 source nonce 核对进程/端口、HTTP状态与来源，发布fixture后再由真实App和请求核验程序检查appcast及包响应，贯穿请求及安装后统一清理；端口被占时BLOCKED，不能连接未知服务或用户真实生产库。更新源URL允许appcast路径但拒绝userinfo、query、fragment、空host与非法端口；HTTP只允许精确回环主机，非回环必须正常HTTPS/TLS，Appcast选中下载URL与重定向也须负测。配置页的合法合成更新URL由006保存、跨重启核对并恢复内置默认，不请求该合成地址，也不另开第二更新服务器。
 
 手动`environment_probe_only`如果仍存在，仅作零产品用例的环境诊断，旧`native_environment.py`的公网行为不能作为本轮验收。常规PR与push仍需两架构完整六例；独立准备报告不替代004或正式包级门禁。runner保留每例唯一0700测试凭据目录、两个构建同一Info.plist路径、隔离签名Keychain及精确清理，证据只存摘要、脱敏请求、端口与进程归属、原始`xcresult`，不保存token、口令或私钥。`native.xcresult`完整bundle摘要在本例所有`xcresulttool`解析与附件导出退出后计算；父复核在重读原始结果前后各逐文件核算一次，包括SQLite；父级解析期间或之后产生的变化同样FAIL，须有模拟父级解析写入的治理负测。历史Quick Tunnel DNS失败和证据保留在06记录，不作为当前规范或重试理由。
 
@@ -102,7 +102,7 @@ macOS实际运行的是.app；开发阶段可由Xcode构建并由XCUITest直接�
 
 首个没有上一稳定版的发布，记录历史基线不存在，并验证候选干净安装及候选→受控高版本签名测试包的 App 内更新。测试包只进入隔离源，登记来源、版本和摘要；不能冒充上一已分发稳定版。首版已有数据库迁移需求时仍执行迁移测试。开发阶段可用开发签名包，最终发布必须重新验证最终签名、公证包。
 
-release-candidate.yml 在正式 Tag 之前按完整候选 SHA 执行上述门禁；只有取得有效通行证，发布任务才创建 Tag。当前已接入开发原生执行器；最终产物/全发布矩阵、远端保护配置、通行证签发和分发尚未完成验证。
+内部候选使用[internal-release.yml](../../.github/workflows/internal-release.yml)，从受保护master同一SHA构建一次生产DMG，再由两台Mac各安装并执行六例，父级重解析原件通过后签发通行证并自动发布。公开profile仍使用release-candidate.yml，其Developer ID/公证要求独立保留。实际最终包和分发结果见状态页；不得把已配置保护或源码存在当成测试PASS。
 
 ## 5. 失败、复现与清理
 

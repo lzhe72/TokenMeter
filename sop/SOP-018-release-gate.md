@@ -1,6 +1,6 @@
 # SOP-018 发布门禁
 
-**修订：** 6　**状态：** baselined　**适用：** all
+**修订：** 7　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -21,10 +21,10 @@ release_id、distribution_profile、commit、客户端/服务端摘要、场景/
 ## 执行步骤
 
 1. 核对版本范围、distribution_profile、目标及所有此前已交付功能、平台矩阵、Changelog、文档/数据/测试与同一候选一致；internal 与 public 的包和结果不能互换。
-2. 当前 `.github/workflows/release-candidate.yml` 和 `scripts/quality_gate.py release` 只定义公开 Developer ID/公证候选合同；本轮内部包级门禁、最终内部 DMG 的原生安装升级矩阵及机器通行证签发程序尚未实现，`distribution_profile=internal` 必须返回 BLOCKED，不能把当前 release 命令、预览包或迭代 PASS 改名为内部 PASS。内部程序完成后，仍须在受保护默认分支固定 SHA、profile 和最终包摘要，并由机器对照 SOP-017 的所有证据自动判定。对于 `distribution_profile=public`，正式 Tag 创建前，从受信默认分支手动触发 `.github/workflows/release-candidate.yml`，必填完整 `candidate_sha`；它必须等于本次默认分支 dispatch 的 `GITHUB_SHA`，也就是实际检出的主分支 tip，不能指定其他分支或旧提交。受保护 `release-validation` 环境的任务检出并核对该 SHA，执行 `python3 scripts/quality_gate.py release`，绑定同一最终签名产物。常规 quality 工作流执行 iteration，不能以 Tag 触发代替候选门禁。读取完整过程、状态与退出码；前置 traceability_only 的 PASS 不能代替最终结论。
+2. internal执行[内部发布设计](../docs/releases/01-internal-v0.1.0.md)的受保护流程。在master全部必需检查通过后执行 `gh workflow run internal-release.yml --ref master -f candidate_sha=<已核实master完整SHA>`。preflight读取真实分支保护、环境master策略、同SHA必需检查并分配nonce；构建一次最终生产DMG；两平台从同一DMG安装各执行六例；父级 `scripts/internal_release_gate.py` 对照同次run/attempt与清单重解析全部原始xcresult，再签发通行证；发布job重新读回远端前提并上传原包。具体CLI参数固定在工作流，禁止手改报告或以本机输出替换CI产物。对于public，继续用默认分支 `.github/workflows/release-candidate.yml` 的完整candidate_sha，执行 `quality_gate.py release`，其公开签名/公证前提独立保留。两条路径都要求candidate_sha等于本次dispatch GITHUB_SHA和实际HEAD，正式Tag必须尚不存在。
 3. 真实执行器必须核对本次运行身份、原生报告来源与摘要、场景集合相等、零失败/跳过、产物签名及有效时限。
 4. 仅受保护 CI 完整 PASS 后生成 <release_id>.passport.json，绑定 distribution_profile、提交、构建物和执行证据，保存在候选源码之外。
-5. 当前候选入口固定 SHA、Python/Xcode 和依赖，先执行 SOP-013 的治理、服务端及升级工具检查，再运行真实原生回归。服务端数据库按本版发布预案验证；v0.1.0使用SQLite，真实生产库只做非破坏性就绪与备份检查，在隔离同构副本证明初始化、恢复和真实业务链路，MySQL兼容性留待迁移版本。当前 internal 缺最终内部包程序、包级 E2E 与受保护通行证；public 另缺最终签名/公证包、全部支持平台及受保护签发，因此两种正式分发均 BLOCKED；FAIL/BLOCKED不创建Tag或通行证。即使替换为空成功脚本也不得放行，不接受任意外部通过JSON。受保护环境须在远端实际配置后才成立。
+5. 候选先通过SOP-013治理/服务端/工具检查及两平台完整开发回归，再进入上述最终包链路。v0.1.0使用SQLite，真实生产库只做非破坏性就绪与备份检查，隔离同构副本验证初始化、恢复和真实业务；MySQL留迁移版本。内部最终包六例、两架构、清理、恢复、受保护身份或报告缺任一项即FAIL/BLOCKED，不创建Tag或通行证。公开版缺Developer ID/公证保持BLOCKED，不改变内部profile的已定边界。
 6. 保存失败与阻塞记录；任何代码、测试、数据、构建或发布配置变化均使旧候选证据失效，重新验证。
 
 ## 输出

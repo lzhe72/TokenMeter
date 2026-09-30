@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from datetime import datetime, timezone
 import hashlib
 from http.client import HTTPConnection
@@ -26,10 +27,16 @@ def appcast(url: str, signature: str, size: int, build: str = "101") -> bytes:
     return (f'<?xml version="1.0" encoding="utf-8"?>\n'
             f'<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel>'
             f'<title>TokenMeter isolated update</title><item><title>Isolated build {escape(build)}</title>'
-            f'<sparkle:version>{escape(build)}</sparkle:version><sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>'
-            f'<sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>'
+            f'<sparkle:version>{escape(build)}</sparkle:version><sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>'
+            f'<sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>'
             f'<enclosure url="{escape(url)}" sparkle:edSignature="{escape(signature)}" length="{size}" type="application/octet-stream" />'
             f'</item></channel></rss>\n').encode()
+
+
+def empty_appcast() -> bytes:
+    """A valid no-update feed until the first controlled release-test stage."""
+    return (b'<?xml version="1.0" encoding="utf-8"?>\n'
+            b'<rss version="2.0"><channel><title>TokenMeter isolated update</title></channel></rss>\n')
 
 
 class UpdateSource:
@@ -143,6 +150,8 @@ class UpdateSource:
         return result.stdout.strip()
 
     def prepare(self) -> str:
+        if hasattr(self, "public_key"):
+            raise RuntimeError("Loopback update fixture public key is already prepared")
         seed = self.private / "sparkle-seed.txt"
         seed.write_text(base64.b64encode(os.urandom(32)).decode() + "\n")
         seed.chmod(0o600)
@@ -156,6 +165,25 @@ class UpdateSource:
             raise RuntimeError("Invalid generated EdDSA public key")
         self.public_key = public
         return public
+
+    def prepare_existing_public_key(self, public_key: str) -> str:
+        """Serve a package signed upstream without importing its private key."""
+        if hasattr(self, "public_key"):
+            raise RuntimeError("Loopback update fixture public key is already prepared")
+        if not isinstance(public_key, str):
+            raise ValueError("Expected a base64 32-byte Ed25519 public key")
+        try:
+            decoded = base64.b64decode(public_key, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise ValueError("Expected a base64 32-byte Ed25519 public key") from exc
+        if len(decoded) != 32:
+            raise ValueError("Expected a base64 32-byte Ed25519 public key")
+        self.public_key = public_key
+        # The production bundle checks automatically. Do not expose build 101
+        # before the UI test explicitly selects one of its four test stages.
+        self.mode = "idle"
+        self.payloads["/idle.xml"] = empty_appcast()
+        return public_key
 
     def start(self) -> None:
         """Start the bound source and verify this exact instance over loopback HTTP.
@@ -196,6 +224,7 @@ class UpdateSource:
             raise ValueError("Expected a real EdDSA signature")
         payload = package.read_bytes()
         self.payloads = {
+            **({"/idle.xml": empty_appcast()} if self.mode == "idle" else {}),
             "/update.zip": payload,
             "/valid.xml": appcast(self.url + "/update.zip", signature, len(payload)),
             "/invalid.xml": appcast(self.url + "/update.zip", base64.b64encode(bytes(64)).decode(), len(payload)),

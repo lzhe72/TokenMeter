@@ -76,7 +76,8 @@
         }
       ],
       "source_requirement": "REQ-TM001",
-      "depends_on": []
+      "depends_on": [],
+      "test_case_document": "docs/testing/cases/01-TM-001-accounts.md"
     },
     {
       "id": "TM-002",
@@ -109,7 +110,8 @@
       "source_requirement": "REQ-TM002",
       "depends_on": [
         "TM-001"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/02-TM-002-permissions.md"
     },
     {
       "id": "TM-003",
@@ -163,7 +165,8 @@
       "depends_on": [
         "TM-001",
         "TM-002"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/03-TM-003-codex-collection.md"
     },
     {
       "id": "TM-004",
@@ -217,7 +220,8 @@
       "depends_on": [
         "TM-002",
         "TM-003"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/04-TM-004-claude-collection.md"
     },
     {
       "id": "TM-005",
@@ -251,7 +255,8 @@
       "depends_on": [
         "TM-003",
         "TM-004"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/05-TM-005-usage-statistics.md"
     },
     {
       "id": "TM-006",
@@ -284,7 +289,8 @@
       "source_requirement": "REQ-TM006",
       "depends_on": [
         "TM-005"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/06-TM-006-cost-estimates.md"
     },
     {
       "id": "TM-007",
@@ -340,7 +346,8 @@
         "TM-003",
         "TM-004",
         "TM-005"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/07-TM-007-team-sync.md"
     },
     {
       "id": "TM-008",
@@ -374,7 +381,8 @@
       "depends_on": [
         "TM-005",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/08-TM-008-csv-export.md"
     },
     {
       "id": "TM-009",
@@ -408,7 +416,8 @@
       "depends_on": [
         "TM-006",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/09-TM-009-budget-alerts.md"
     },
     {
       "id": "TM-010",
@@ -452,7 +461,8 @@
       "depends_on": [
         "TM-001",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/10-TM-010-software-updates.md"
     },
     {
       "id": "TM-011",
@@ -506,7 +516,8 @@
       "depends_on": [
         "TM-001",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/11-TM-011-data-migration.md"
     },
     {
       "id": "TM-012",
@@ -542,7 +553,8 @@
         "TM-004",
         "TM-005",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/12-TM-012-menu-diagnostics.md"
     }
   ]
 }
