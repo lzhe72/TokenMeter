@@ -341,3 +341,5 @@ SOP-013/014/019/022：CI [36674477502](https://github.com/lzhe72/TokenMeter/acti
 - 全治理259项通过、服务端45项通过、升级工具16项通过；基线86文档/615链接和12功能/37用例追踪通过，工作流5个job及发布依赖解析通过，diff无空白错误。原始证据为 `.local/ci/internal-governance-final.log`、`internal-server-first.log`、`internal-helper-first.log`、`internal-baseline-final.json`、`internal-quality-final.json`、`internal-workflow-yaml-final.json`。
 - 最终包的原始双平台xcresult归档、逐例报告、父门禁判定与通行证将随原DMG作为Release资产保存；发布程序在上传前和GitHub摘要读回时核对。新增归档验证纳入发布工具9项检查。
 - 接下来推送源码PR，执行两台Mac完整开发回归并在检查通过后合并，再由同SHA master必需检查与内部最终包流程判定发布。未预填任何新候选产品PASS或Release结果。
+
+提交20e3936后的最终清理边界复核：对本次归属App发送终止后最多等待5秒，确认退出再清理标准凭据/defaults；不会终止其他路径的App，超时保持阻断。新增2项回归后全治理261项通过，证据 `.local/ci/internal-governance-cleanup-final.log`。此为执行器修复，不重试失败业务用例。

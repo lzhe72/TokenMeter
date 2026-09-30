@@ -20,7 +20,7 @@
 3. 内部最终包必须为生产 bundle，不能包含 `TMTestCredentialsDirectory` 或测试认证路径；从实际 DMG 安装后执行完整原生回归与升级，再由受保护 CI 绑定候选、包摘要、矩阵和证据签发通行证。
 4. 生产内部构建、最终DMG安装执行器、父级门禁和自动发布程序已实现，待同一候选在受保护CI执行；用户已确认本版仅支持现有macOS15 arm64/Intel；macOS14暂不承诺。已在远端配置并读回master三项必需检查、管理员不可绕过、禁止强推/删除及release-validation仅master策略。稳定签名私钥只存该环境secret和本机0700私有目录，不进入Git/产物。
 
-本轮提交前检查：259项治理测试、45项服务端测试和16项升级工具检查通过；文档基线86份/615链接及12功能/37用例追踪通过。新的最终包E2E与发布资格仍待CI判定。基础证据见 `.local/ci/internal-governance-final.log`、`internal-server-first.log`、`internal-helper-first.log`、`internal-baseline-final.json`。
+本轮提交前检查：261项治理测试、45项服务端测试和16项升级工具检查通过；文档基线86份/615链接及12功能/37用例追踪通过。新的最终包E2E与发布资格仍待CI判定。基础证据见 `.local/ci/internal-governance-cleanup-final.log`、`internal-server-first.log`、`internal-helper-first.log`、`internal-baseline-final.json`。
 
 ## 证据与历史
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -67,6 +68,32 @@ class InternalPackageE2ETests(unittest.TestCase):
                     release_e2e.cleanup_production_state(claim)
             self.assertEqual(outside.read_text(), "keep")
             self.assertTrue((credentials / "unknown").is_symlink())
+
+    def test_termination_waits_for_owned_app_to_exit_and_ignores_other_processes(self):
+        installed = Path("/private/tmp/owned/TokenMeter.app")
+        executable = str(installed / "Contents/MacOS/TokenMeter")
+        running = f"42 {executable}\n43 /Applications/TokenMeter.app/Contents/MacOS/TokenMeter\n"
+        unrelated = "43 /Applications/TokenMeter.app/Contents/MacOS/TokenMeter\n"
+        responses = [subprocess.CompletedProcess([], 0, running),
+                     subprocess.CompletedProcess([], 0, running),
+                     subprocess.CompletedProcess([], 0, unrelated)]
+        with mock.patch.object(release_e2e.subprocess, "run", side_effect=responses) as run, \
+                mock.patch.object(release_e2e.os, "kill") as kill, \
+                mock.patch.object(release_e2e.time, "sleep") as sleep:
+            release_e2e.terminate_owned_app(installed)
+        self.assertEqual(run.call_count, 3)
+        kill.assert_called_once_with(42, 15)
+        sleep.assert_called_once_with(0.1)
+
+    def test_termination_blocks_when_owned_app_remains_running(self):
+        installed = Path("/private/tmp/owned/TokenMeter.app")
+        executable = str(installed / "Contents/MacOS/TokenMeter")
+        still_running = subprocess.CompletedProcess([], 0, f"42 {executable}\n")
+        with mock.patch.object(release_e2e.subprocess, "run", return_value=still_running), \
+                mock.patch.object(release_e2e.os, "kill"), \
+                mock.patch.object(release_e2e.time, "monotonic", side_effect=[0, 5]), \
+                self.assertRaisesRegex(release_e2e.EvidenceError, "remained running"):
+            release_e2e.terminate_owned_app(installed)
 
 
 if __name__ == "__main__":

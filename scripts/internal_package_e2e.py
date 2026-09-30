@@ -23,6 +23,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from typing import Any
 from urllib.request import Request, urlopen
 
@@ -396,27 +397,30 @@ def prepare_ui_test_bundle(root: Path, private: Path, output: Path, run_id: str,
 
 def terminate_owned_app(installed: Path) -> None:
     executable = str(installed / "Contents/MacOS/TokenMeter")
-    result = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True,
-                            check=False, timeout=10)
-    if result.returncode:
-        raise EvidenceError("Cannot inspect owned App process after native test")
-    for line in result.stdout.splitlines():
-        parts = line.strip().split(None, 1)
-        if len(parts) != 2 or not (parts[1] == executable or parts[1].startswith(executable + " ")):
-            continue
-        pid = int(parts[0])
-        os.kill(pid, 15)
+    def owned_processes() -> list[int]:
+        result = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True,
+                                check=False, timeout=10)
+        if result.returncode:
+            raise EvidenceError("Cannot inspect owned App process after native test")
+        found: list[int] = []
+        for line in result.stdout.splitlines():
+            parts = line.strip().split(None, 1)
+            if len(parts) == 2 and (parts[1] == executable or parts[1].startswith(executable + " ")):
+                found.append(int(parts[0]))
+        return found
+
+    for pid in owned_processes():
         try:
-            subprocess.run(["kill", "-0", str(pid)], check=False, timeout=2, capture_output=True)
-        except OSError:
+            os.kill(pid, 15)
+        except ProcessLookupError:
             pass
     # The XCTest tearDown is the normal termination path. A still-running App
     # would race standard UserDefaults cleanup, so never silently continue.
-    final = subprocess.run(["ps", "-axo", "command="], capture_output=True, text=True,
-                           check=False, timeout=10)
-    if final.returncode or any(line == executable or line.startswith(executable + " ")
-                               for line in final.stdout.splitlines()):
-        raise EvidenceError("Installed App remained running after its test case")
+    deadline = time.monotonic() + 5
+    while owned_processes():
+        if time.monotonic() >= deadline:
+            raise EvidenceError("Installed App remained running after its test case")
+        time.sleep(0.1)
 
 
 def execute(root: Path, output: Path, report: dict, *, config_path: Path, manifest_path: Path,
