@@ -1,6 +1,7 @@
 """Short-lived CI code-signing identity for real Keychain-preserving upgrades.
 
 This is an isolated development identity, never Developer ID or notarization.
+The self-signed identity stays in a private keychain; system trust is untouched.
 Private files and keychain passwords are not written to release evidence.
 """
 from __future__ import annotations
@@ -14,15 +15,6 @@ import subprocess
 import time
 
 
-def require_automated_trust_cleanup() -> None:
-    # Real hosted-Mac probes failed to revoke the final admin trust entry.
-    # Apple hardcodes this authorization right; do not change authorizationdb.
-    # Add a supported, normally authorized setup/cleanup profile with its SOP
-    # and real evidence before enabling this fixture on any machine.
-    raise RuntimeError("Upgrade fixture is BLOCKED: authorized certificate cleanup has no supported automation profile; "
-                       "configure and validate normal macOS authorization before creating system resources")
-
-
 class SigningIdentity:
     def __init__(self, private: Path):
         self.private = private
@@ -34,8 +26,6 @@ class SigningIdentity:
         self.bundle_password_file = private / "bundle-password"
         self.previous_keychains: list[str] | None = None
         self.keychain_created = False
-        self.trust_attempted = False
-        self.certificate_added = False
         self.identity: str | None = None
 
     def _run(self, arguments: list[str], operation: str) -> str:
@@ -61,7 +51,7 @@ class SigningIdentity:
         return result.stdout.strip()
 
     def create_private_bundle(self) -> Path:
-        """Create only owned files; importing/trusting remains guarded in prepare."""
+        """Create only owned files; importing remains guarded in prepare."""
         config = self.private / "codesign.cnf"
         config.write_text("[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=signing\n"
                           "[dn]\nCN=TokenMeter E2E " + secrets.token_hex(12) + "\n"
@@ -87,8 +77,6 @@ class SigningIdentity:
         if (os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP")
                 or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted" or os.environ.get("RUNNER_OS") != "macOS"):
             raise RuntimeError("Temporary signing identity requires an isolated GitHub runner")
-        require_automated_trust_cleanup()
-        self._run(["sudo", "-n", "/usr/bin/true"], "check noninteractive administrator access")
         self.previous_keychains = shlex.split(self._run(["security", "list-keychains", "-d", "user"], "read keychain list"))
         p12 = self.create_private_bundle()
         fingerprint = self._run(["openssl", "x509", "-in", str(self.certificate), "-noout", "-fingerprint", "-sha1"], "certificate fingerprint")
@@ -103,33 +91,46 @@ class SigningIdentity:
                    "-T", "/usr/bin/codesign"], "import identity")
         self._run(["security", "set-key-partition-list", "-S", "apple-tool:,apple:,codesign:", "-s", "-k", self.password,
                    str(self.keychain)], "grant codesign access")
-        self.trust_attempted = self.certificate_added = True
-        self._run(["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d", "-r", "trustRoot", "-p", "codeSign",
-                   "-k", "/Library/Keychains/System.keychain", str(self.certificate)], "trust ephemeral code-signing certificate")
         self._run(["security", "list-keychains", "-d", "user", "-s", *self.previous_keychains, str(self.keychain)], "register keychain")
-        identities = self._run(["security", "find-identity", "-v", "-p", "codesigning", str(self.keychain)], "verify identity")
+        # The -v filter requires a trusted certificate chain, which is not
+        # necessary for a stable self-signed designated requirement. Prove that
+        # this identity can sign and verify code without installing trust.
+        identities = self._run(["security", "find-identity", "-p", "codesigning", str(self.keychain)], "find signing identity")
         if self.identity.upper() not in identities.upper():
-            raise RuntimeError("Ephemeral identity is not usable for code signing")
+            raise RuntimeError("Ephemeral signing identity is missing from its private keychain")
+        probe_source = self.private / "identity-probe.c"
+        probe_source.write_text("int main(void) { return 0; }\n")
+        probe = self.private / "identity-probe"
+        self._run(["xcrun", "clang", "-x", "c", str(probe_source), "-o", str(probe)], "build identity probe")
+        self._run(["codesign", "--force", "--sign", self.identity, "--keychain", str(self.keychain),
+                   "--timestamp=none", str(probe)], "sign identity probe")
+        self._run(["codesign", "--verify", "--strict", str(probe)], "verify identity probe")
         return self.identity
 
     def close(self) -> None:
         errors = []
         actions = []
-        if self.trust_attempted:
-            actions.append((["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(self.certificate)], "remove signing trust"))
-        if self.certificate_added:
-            actions.append((["sudo", "-n", "/usr/bin/security", "delete-certificate", "-Z", self.identity,
-                             "/Library/Keychains/System.keychain"], "remove signing public certificate"))
         if self.previous_keychains is not None:
             actions.append((["security", "list-keychains", "-d", "user", "-s", *self.previous_keychains], "restore keychain list"))
-        if self.keychain_created:
+        if self.keychain_created and self.keychain.exists():
             actions.append((["security", "delete-keychain", str(self.keychain)], "delete signing keychain"))
         for arguments, operation in actions:
             try:
                 self._run(arguments, operation)
             except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
                 errors.append(str(exc))
+        if self.previous_keychains is not None:
+            try:
+                observed = shlex.split(self._run(["security", "list-keychains", "-d", "user"], "verify restored keychain list"))
+                if observed != self.previous_keychains:
+                    errors.append("Signing keychain search list was not restored")
+                else:
+                    self.previous_keychains = None
+            except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:
+                errors.append(str(exc))
+        if self.keychain_created and not self.keychain.exists():
+            self.keychain_created = False
+        elif self.keychain_created:
+            errors.append("Isolated signing keychain still exists after cleanup")
         if errors:
             raise RuntimeError("; ".join(errors))
-        self.previous_keychains = None
-        self.keychain_created = self.trust_attempted = self.certificate_added = False

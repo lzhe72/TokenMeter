@@ -19,7 +19,6 @@ import native_e2e as native
 def execute_probe(root: Path, output: Path, report: dict) -> None:
     report["platform"] = native.preflight(root)
     signing_data = native.load_module(root / "tests/e2e/code_signing.py", "probe_signing_fixture")
-    signing_data.require_automated_trust_cleanup()
     update_data = native.load_module(root / "tests/e2e/update_source.py", "probe_update_fixture")
     with tempfile.TemporaryDirectory(prefix="tokenmeter-environment-") as temporary:
         private = Path(temporary).resolve()
@@ -31,11 +30,12 @@ def execute_probe(root: Path, output: Path, report: dict) -> None:
             native.progress("environment", "prepare-https")
             update = update_data.UpdateSource(private / "update", output)
             update.prepare()
-            update.trust_on_ephemeral_ci()
-            # The leaf must chain through the installed CA using normal system
-            # trust. No custom anchor (-r), allowed error, or TLS bypass is used.
+            update.start_tunnel()
+            # cloudflared validates the localhost leaf against this run's CA;
+            # the public endpoint was probed using normal system TLS trust.
+            # The local verification below proves the origin certificate chain.
             update._run(["/usr/bin/security", "verify-cert", "-c", str(update.private / "server.pem"),
-                         "-p", "ssl", "-n", "localhost", "-L"], "verify temporary TLS trust")
+                         "-p", "ssl", "-n", "localhost", "-r", str(update.private / "ca.pem"), "-L"], "verify isolated TLS origin")
         finally:
             primary_error = sys.exc_info()[1]
             native.progress("environment", "cleanup")

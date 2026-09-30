@@ -53,6 +53,22 @@ jobs:
       - name: Install locked service and test dependencies
         run: |
           python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
+      - name: Install pinned HTTPS test tunnel
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$(uname -m)" in
+            arm64) archive=cloudflared-darwin-arm64.tgz; digest=587c2cfb1c230fe36c7fa7727da78be459dae028cabe8c001291999350f07095 ;;
+            x86_64) archive=cloudflared-darwin-amd64.tgz; digest=d1155d0837487f261183b15c1eab6c4ebcad9dc49b94675f1524c3564cea3977 ;;
+            *) exit 2 ;;
+          esac
+          mkdir -p "$RUNNER_TEMP/tokenmeter-tools"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/$archive" \
+            "https://github.com/cloudflare/cloudflared/releases/download/2026.9.3/$archive"
+          printf '%s  %s\n' "$digest" "$RUNNER_TEMP/$archive" | shasum -a 256 --check
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/tokenmeter-tools"
+          test -x "$RUNNER_TEMP/tokenmeter-tools/cloudflared"
+          echo "$RUNNER_TEMP/tokenmeter-tools" >> "$GITHUB_PATH"
       - name: Execute product gate
         # All TM-001 cases in the versioned feature matrix are required; missing native evidence blocks this job.
         run: python3 scripts/quality_gate.py iteration

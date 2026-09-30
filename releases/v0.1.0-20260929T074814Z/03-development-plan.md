@@ -35,13 +35,15 @@ Python 3.10+ / FastAPI、SQLAlchemy 2.0、Alembic；v0.1.0 服务端测试与生
 
 SwiftUI、macOS14 deployment target、Swift5、提交 Xcode project/shared scheme，固定 Sparkle2.10.0。API 端点可设置，生产仅 HTTPS；开发 loopback 仅测试配置允许。Keychain service 按服务源和隔离运行区分；token 不用 UserDefaults。启动经 /v1/me 确认，不从本地注入登录成功。
 
-UI 标识：auth.server/username/password/login/error、password.current/new/confirm/submit、session.username/role/logout/refresh、admin.accounts/disable/enable/reset/audit、updates.check/status。更新使用 SPUStandardUpdaterController、HTTPS SUFeedURL、SUPublicEDKey、SUVerifyUpdateBeforeExtraction。生产配置缺失显示尚未配置，不能伪装已发现版本。测试包同 Bundle ID/源码、递增 build version，隔离更新源有真实有效和无效 EdDSA 包。测试 CA 仅可配置到隔离 CI，不在用户机器或 App 中绕过 TLS。
+UI 标识：auth.server/username/password/login/error、password.current/new/confirm/submit、session.username/role/logout/refresh、admin.accounts/disable/enable/reset/audit、updates.check/status。更新使用 SPUStandardUpdaterController、HTTPS SUFeedURL、SUPublicEDKey、SUVerifyUpdateBeforeExtraction。生产配置缺失显示尚未配置，不能伪装已发现版本。测试包同 Bundle ID/源码、递增 build version，隔离更新源有真实有效和无效 EdDSA 包。测试 CA 仅供隔离 CI 的 `cloudflared` 验证本机 TLS origin；App 使用公开可信 HTTPS 域名，不安装测试 CA、不绕过 TLS。
 
 官方依据：[FastAPI 安全](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/)、[SQLAlchemy SQLite](https://docs.sqlalchemy.org/en/20/dialects/sqlite.html)、[Sparkle2.10.0](https://github.com/sparkle-project/Sparkle/blob/2.10.0/Package.swift)、[GitHub macOS runner](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)。具体依赖解析后锁定到文件，失败不能静默升级。
 
 ### 开发升级包的签名连续性
 
-原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离Mac CI生成短期自签测试证书和专用临时keychain，两个包显式指定同一identity和keychain；结束时独立清理临时信任、专用keychain和私钥。仅允许GitHub托管的临时Mac runner，并先验证非交互sudo权限。信任使用admin域：代码签名公钥证书限codeSign策略、HTTPS CA限ssl/localhost策略，两者的公钥证书导入System.keychain后按该证书撤销admin信任并按摘要精确删除；代码签名私钥始终只在专用临时keychain。所有命令有超时，不绕过App验证。当前托管Mac撤销最后admin信任会等待系统授权，且Apple对此权限采用固定规则；不修改authorizationdb。先在写入系统资源前返回明确BLOCKED，恢复依赖正常授权且可完整清理的测试环境与对应程序。独立环境探针在014第004例前执行，001–003与005不依赖升级信任的账号场景正常执行并保留截图和App摘要。探针失败仍阻断整个五例门禁，不算跳过004后的通过；恢复后必须新候选完整重跑，不复用旧通过记录。该测试签名不满足Developer ID、公证或正式发布条件。开发过程不改变用户本机的信任设置。
+原生用例004要求升级后恢复Keychain会话，因此候选和受控高版本包必须使用同一临时代码签名身份。仅在隔离的GitHub托管Mac CI生成短期测试证书与专用临时Keychain，两个包显式指定同一identity和keychain；结束时恢复原Keychain列表，删除专用Keychain和私钥，不更改System.keychain、管理员信任或`authorizationdb`。旧方案在托管Mac撤销最后一项admin信任时超时，保留失败证据，不再尝试系统信任写入。签名能否被`codesign`及升级后的Keychain访问接受，必须由新探针和实际第004例分别证明；设计本身不等于PASS。
+
+HTTPS更新源由本机临时CA签发的回环TLS服务和固定版本、SHA256校验的`cloudflared` Quick Tunnel组成。`cloudflared --url https://localhost:<端口> --origin-ca-pool <本次ca.pem>` 验证origin证书，App使用临时的`https://<随机子域>.trycloudflare.com`并由系统正常验证边缘证书；两个TLS端点都不得关闭证书检查。无效/有效appcast和签名包仅为合成测试内容，控制切换使用原生用例持有的随机Bearer通过同一HTTPS源，未授权请求拒绝；私钥、账号与数据库不经隧道公开。`native_environment.py`在第004例前探测签名、公开HTTPS连通和完整清理；Quick Tunnel无法使用或任何清理失败都使该例BLOCKED。001–003与005仍实际执行并留证，但不能缩小五例门禁；新候选必须完整重跑。该测试签名和临时源不满足Developer ID、公证或正式发布条件。[Apple签名证书](https://developer.apple.com/documentation/technotes/tn3161-inside-code-signing-certificates)、[Cloudflare Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/)、[Cloudflare origin CA池](https://developers.cloudflare.com/tunnel/troubleshooting/)是设计依据。
 
 依据：[Apple TN2206](https://developer.apple.com/library/archive/technotes/tn2206/)、[Code Signing Requirement Language](https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/RequirementLang/RequirementLang.html)。不同ad-hoc包的摘要变化，不能作为跨版本Keychain身份连续性的设计依据。
 
@@ -68,4 +70,4 @@ UI 标识：auth.server/username/password/login/error、password.current/new/con
 
 ## 本机测试环境接入
 
-用户已明确授权本机作为测试机，覆盖本轮App构建和原生测试。实际环境为Intel/macOS15.7.4/已登录桌面，当前只有Command Line Tools。先安装与CI一致的完整Xcode16.4并完成首次启动组件、许可及UI自动化授权；Apple登录和系统管理员确认通过系统界面完成。001–003复用现有真实runner和隔离数据；004的本机证书环境需要独立正常授权与清理设计和程序，目前未接通，不伪造GitHub环境变量或静默改本机信任。完整矩阵与正式发布要求继续保留。
+用户已明确授权本机作为测试机，覆盖本轮App构建和原生测试。实际环境为Intel/macOS15.7.4/已登录桌面，当前只有Command Line Tools。先安装与CI一致的完整Xcode16.4并完成首次启动组件、许可及UI自动化授权；Apple登录和系统管理员确认通过系统界面完成。001–003及005复用现有真实runner和隔离数据；004的新fixture限定专用GitHub Mac CI，本机运行路径尚未独立验证，不伪造GitHub环境变量或静默改本机配置。完整矩阵与正式发布要求继续保留。

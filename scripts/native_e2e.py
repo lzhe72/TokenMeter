@@ -575,7 +575,7 @@ def execute(root: Path, output: Path, report: dict) -> None:
                         update = update_data.UpdateSource(case_private / "update-secrets", case_output)
                         progress(case_id, "prepare-https-update")
                         public_key = update.prepare()
-                        update.trust_on_ephemeral_ci()
+                        update.start_tunnel()
                         feed = update.url + "/appcast.xml"
                         build_settings += ["TM_UPDATE_FEED_URL=" + feed, "TM_UPDATE_PUBLIC_KEY=" + public_key]
                         package_output = case_private / "update-package"
@@ -595,8 +595,9 @@ def execute(root: Path, output: Path, report: dict) -> None:
                         signature = update_metadata["signature"]
                         (case_output / "update-signature.json").write_text(json.dumps(update_metadata, indent=2) + "\n")
                         update.publish(package_output / "update.zip", signature)
-                        report["development_signing"] = {"kind": "ephemeral-self-signed", "certificate_sha1": identity,
-                                                         "developer_id": False, "notarized": False}
+                        report["development_signing"] = {"kind": "ephemeral-self-signed-isolated-keychain",
+                                                         "certificate_sha1": identity, "developer_id": False,
+                                                         "notarized": False, "system_trust_modified": False}
                         update_env = {"TM_TEST_UPDATE_CONTROL_URL": update.url + "/control/valid",
                                       "TM_TEST_UPDATE_CONTROL_TOKEN": update.token,
                                       "TM_TEST_UPDATE_VALID_FEED": update.url + "/valid.xml",

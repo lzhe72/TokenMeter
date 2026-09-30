@@ -46,11 +46,13 @@ python3 scripts/test_data.py reset --run-id demo
 
 本机使用与开发CI一致的Xcode16.4。只有Command Line Tools时，先从[Apple下载页](https://developer.apple.com/download/all/?q=Xcode%2016.4)安装完整应用，并首次打开完成组件与许可；用户在系统界面完成Apple登录和初始授权。用`xcode-select -p`确认选中完整Xcode，再运行`xcodebuild -version`。不要仅凭命令路径存在认定就绪。
 
-随后由Codex在干净候选提交上执行现有`python3 scripts/quality_gate.py iteration`，生成隔离账号、驱动真实App、保留原始结果与截图。001–003及005不需要系统证书信任；004仍需本机正常授权和完整清理程序，当前未接通。不能设置GitHub环境变量绕过本机边界，缺004仍使整个候选BLOCKED。
+随后由Codex在干净候选提交上执行现有`python3 scripts/quality_gate.py iteration`，生成隔离账号、驱动真实App、保留原始结果与截图。001–003及005不需要升级fixture；004的隔离Quick Tunnel/临时Keychain程序目前仅允许专用GitHub Mac CI，本机004运行路径尚未验证。不能设置GitHub环境变量绕过本机边界，缺004仍使整个候选BLOCKED。
 
 ### 自动执行环境前提
 
 专用 Mac 或 Mac 虚拟机必须有已登录桌面、受支持的 macOS/架构、Xcode 和 UI 自动化权限；发布环境还需真实签名、公证、更新服务和隔离的本版目标数据库。v0.1.0 使用 SQLite。管理员提供凭据和机器初始授权后，Codex 通过程序执行场景、断言结果和判定门禁。缺环境时记录具体原因；用户口头确认、人工截图或手工通过报告不能解除阻断。
+
+TM-001第004例的CI专用源使用临时公开`https://<随机>.trycloudflare.com`访问本机签名更新fixture，`cloudflared`以本次CA池验证本机HTTPS，App以系统TLS验证公开HTTPS并由Sparkle验证EdDSA包。需先验证固定版本的`cloudflared`与SHA256，再运行`python3 scripts/native_environment.py`；探针READY只说明环境可用。Quick Tunnel是开发测试服务且不保证可用，失败记录BLOCKED；不得以关闭TLS、安装系统信任或跳过004解除阻断。证据只保存脱敏请求及产物摘要，不保存临时私钥或账号数据。详见SOP-009/010。
 
 ## 2. 准备与数据生成
 

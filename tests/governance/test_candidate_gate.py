@@ -32,7 +32,7 @@ class CandidateGateTests(unittest.TestCase):
 
     def check(self, **changes):
         args = dict(root=self.root, candidate_sha=self.sha, event="workflow_dispatch",
-                    workflow_ref="refs/heads/main", default_branch="main")
+                    workflow_ref="refs/heads/main", default_branch="main", dispatch_sha=self.sha)
         args.update(changes)
         return candidate.validate_context(**args)
 
@@ -48,6 +48,11 @@ class CandidateGateTests(unittest.TestCase):
 
     def test_rejects_different_checkout(self):
         self.assertTrue(self.check(candidate_sha="0" * 40))
+
+    def test_rejects_commit_outside_default_branch_dispatch(self):
+        errors = self.check(dispatch_sha="0" * 40)
+        self.assertTrue(any("default-branch dispatch SHA" in error for error in errors), errors)
+        self.assertTrue(self.check(dispatch_sha="invalid"))
 
     def test_rejects_untrusted_trigger(self):
         self.assertTrue(self.check(event="push"))
@@ -67,13 +72,15 @@ class CandidateGateTests(unittest.TestCase):
         (self.root / "releases/current.json").write_text(json.dumps({"release_id": "--all"}))
         self.git("add", ".")
         self.git("commit", "-qm", "invalid fixture")
-        self.assertTrue(self.check(candidate_sha=self.git("rev-parse", "HEAD")))
+        next_sha = self.git("rev-parse", "HEAD")
+        self.assertTrue(self.check(candidate_sha=next_sha, dispatch_sha=next_sha))
 
     def test_cli_pass_is_context_only(self):
         process = subprocess.run(["python3", str(REPO / "scripts/candidate_gate.py"),
                                   "--root", str(self.root), "--candidate-sha", self.sha,
                                   "--event", "workflow_dispatch", "--workflow-ref", "refs/heads/main",
-                                  "--default-branch", "main"], text=True, capture_output=True)
+                                  "--default-branch", "main", "--dispatch-sha", self.sha],
+                                 text=True, capture_output=True)
         self.assertEqual(0, process.returncode, process.stderr)
         result = json.loads(process.stdout)
         self.assertEqual("candidate_context_only", result["scope"])
@@ -87,6 +94,10 @@ class CandidateGateTests(unittest.TestCase):
         self.assertIn("workflow_dispatch:", dispatch)
         self.assertIn("environment: release-validation", dispatch)
         self.assertIn("ref: ${{ inputs.candidate_sha }}", dispatch)
+        self.assertIn('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"', dispatch)
+        self.assertLess(dispatch.index('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"'),
+                        dispatch.index("actions/checkout@v4"))
+        self.assertIn('--dispatch-sha "$GITHUB_SHA"', dispatch)
         self.assertIn("python3 scripts/quality_gate.py release", dispatch)
         self.assertLess(dispatch.index("scripts/candidate_gate.py"), dispatch.index("scripts/quality_gate.py release"))
         self.assertNotIn("contents: write", dispatch)

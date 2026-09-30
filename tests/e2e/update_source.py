@@ -8,11 +8,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import queue
+import re
 import secrets
 import ssl
 import subprocess
 import threading
 import time
+from urllib.request import urlopen
 from xml.sax.saxutils import escape
 
 
@@ -38,8 +41,9 @@ class UpdateSource:
         self.events: list[dict] = []
         self._events_condition = threading.Condition()
         self._active_gets = 0
-        self.trusted = False
-        self.certificate_added = False
+        self.tunnel: subprocess.Popen | None = None
+        self.tunnel_reader: threading.Thread | None = None
+        self.tunnel_lines: queue.Queue[str] = queue.Queue()
         source = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -53,7 +57,7 @@ class UpdateSource:
                 try:
                     route = self.path.split("?", 1)[0]
                     key = ("/valid.xml" if valid else "/invalid.xml") if route == "/appcast.xml" else route
-                    payload = source.payloads.get(key)
+                    payload = b"ready" if key == "/healthz" else source.payloads.get(key)
                     status = 200 if payload is not None else 404
                     event = {"at": datetime.now(timezone.utc).isoformat(), "path": route,
                              "status": status, "mode": "valid" if valid else "invalid", "served_bytes": 0}
@@ -62,7 +66,8 @@ class UpdateSource:
                     self.send_response(status)
                     self.send_header("Cache-Control", "no-store")
                     self.send_header("Content-Length", str(len(payload or b"")))
-                    self.send_header("Content-Type", "application/xml" if route.endswith(".xml") else "application/octet-stream")
+                    self.send_header("Content-Type", "application/xml" if route.endswith(".xml") else
+                                     ("text/plain" if route == "/healthz" else "application/octet-stream"))
                     self.end_headers()
                     if payload is not None:
                         try:
@@ -91,7 +96,8 @@ class UpdateSource:
 
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self.server.daemon_threads = True
-        self.url = f"https://localhost:{self.server.server_port}"
+        self.origin_url = f"https://localhost:{self.server.server_port}"
+        self.url: str | None = None
         self.thread: threading.Thread | None = None
 
     def _run(self, args: list[str], name: str) -> str:
@@ -149,19 +155,68 @@ class UpdateSource:
         self.server.socket = self.context.wrap_socket(self.server.socket, server_side=True)
         return public
 
-    def trust_on_ephemeral_ci(self) -> None:
+    def start_tunnel(self) -> str:
+        """Expose only the isolated HTTPS fixture through a public-trust test URL.
+
+        cloudflared validates the localhost origin against this run's CA. The App
+        validates the public HTTPS endpoint with the normal macOS trust policy.
+        Neither process writes to the machine's certificate trust settings.
+        """
         if (os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP")
                 or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted" or os.environ.get("RUNNER_OS") != "macOS"):
-            raise RuntimeError("Update fixture CA trust is permitted only on an isolated GitHub runner")
-        self._run(["sudo", "-n", "/usr/bin/true"], "check noninteractive administrator access")
-        self.keychain = "/Library/Keychains/System.keychain"
-        # A tool can fail after a partial import. Mark cleanup as required before
-        # the mutation so the caller always attempts both trust and cert removal.
-        self.trusted = self.certificate_added = True
-        self._run(["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d", "-r", "trustRoot", "-p", "ssl", "-s", "localhost", "-k", self.keychain,
-                   str(self.private / "ca.pem")], "temporary CA trust")
+            raise RuntimeError("Temporary update tunnel requires an isolated GitHub Mac runner")
+        if self.tunnel is not None or self.thread is not None:
+            raise RuntimeError("Temporary update tunnel is already started")
+        binary = Path(os.environ["RUNNER_TEMP"]) / "tokenmeter-tools/cloudflared"
+        if binary.is_symlink() or not binary.is_file() or not os.access(binary, os.X_OK):
+            raise RuntimeError("Pinned cloudflared binary is unavailable")
+        config_directory = Path.home() / ".cloudflared"
+        if any((config_directory / name).exists() for name in ("config.yml", "config.yaml")):
+            raise RuntimeError("GitHub Mac runner has a Cloudflare configuration that prevents Quick Tunnel isolation")
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.tunnel = subprocess.Popen(
+            [str(binary), "tunnel", "--no-autoupdate", "--url", self.origin_url,
+             "--origin-ca-pool", str(self.private / "ca.pem"), "--origin-server-name", "localhost",
+             "--metrics", "127.0.0.1:0", "--loglevel", "info"],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+            cwd=self.private,
+        )
+        assert self.tunnel.stdout is not None
+        self.tunnel_reader = threading.Thread(
+            target=lambda: [self.tunnel_lines.put(line) for line in self.tunnel.stdout], daemon=True)
+        self.tunnel_reader.start()
+        deadline = time.monotonic() + 90
+        pattern = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com\b")
+        while time.monotonic() < deadline:
+            if self.tunnel.poll() is not None:
+                raise RuntimeError("Temporary HTTPS tunnel exited before becoming ready")
+            try:
+                line = self.tunnel_lines.get(timeout=1)
+            except queue.Empty:
+                continue
+            match = pattern.search(line)
+            if match:
+                self.url = match.group()
+                break
+        if self.url is None:
+            raise RuntimeError("Temporary HTTPS tunnel did not provide a URL within 90 seconds")
+        deadline = time.monotonic() + 45
+        while time.monotonic() < deadline:
+            if self.tunnel.poll() is not None:
+                raise RuntimeError("Temporary HTTPS tunnel exited during TLS verification")
+            try:
+                with urlopen(self.url + "/healthz", timeout=8) as response:
+                    if response.status == 200 and response.read() == b"ready":
+                        return self.url
+            except (OSError, ValueError):
+                pass
+            time.sleep(2)
+        raise RuntimeError("Temporary HTTPS tunnel did not pass public TLS and origin checks")
 
     def publish(self, package: Path, signature: str) -> None:
+        if self.url is None or self.thread is None or self.tunnel is None or self.tunnel.poll() is not None:
+            raise RuntimeError("Temporary HTTPS tunnel is not ready")
         if len(base64.b64decode(signature, validate=True)) != 64:
             raise ValueError("Expected a real EdDSA signature")
         payload = package.read_bytes()
@@ -176,8 +231,6 @@ class UpdateSource:
             "invalid_feed_sha256": hashlib.sha256(self.payloads["/invalid.xml"]).hexdigest(),
             "https": True, "private_key_archived": False,
         }, indent=2) + "\n")
-        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
-        self.thread.start()
 
     def verify_exchange(self) -> None:
         """Both UI update attempts must reach the real fixture and download bytes."""
@@ -202,6 +255,21 @@ class UpdateSource:
 
     def close(self) -> None:
         errors = []
+        if self.tunnel is not None:
+            try:
+                if self.tunnel.poll() is None:
+                    self.tunnel.terminate()
+                try:
+                    self.tunnel.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    self.tunnel.kill()
+                    self.tunnel.wait(timeout=5)
+            except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
+                errors.append(f"HTTPS tunnel shutdown: {type(exc).__name__}")
+            if self.tunnel_reader is not None:
+                self.tunnel_reader.join(timeout=3)
+                if self.tunnel_reader.is_alive():
+                    errors.append("HTTPS tunnel log reader did not stop")
         try:
             if self.thread is not None:
                 self.server.shutdown()
@@ -214,19 +282,6 @@ class UpdateSource:
             self.server.server_close()
         except (OSError, RuntimeError) as exc:
             errors.append(f"HTTPS fixture socket cleanup: {exc}")
-        if self.trusted:
-            try:
-                self._run(["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(self.private / "ca.pem")], "remove test CA trust")
-                self.trusted = False
-            except (RuntimeError, OSError, subprocess.SubprocessError) as exc:
-                errors.append(str(exc))
-        if self.certificate_added:
-            try:
-                fingerprint = self._run(["openssl", "x509", "-in", str(self.private / "ca.pem"), "-noout", "-fingerprint", "-sha1"], "CA identity").split("=", 1)[1].replace(":", "")
-                self._run(["sudo", "-n", "/usr/bin/security", "delete-certificate", "-Z", fingerprint, self.keychain], "remove test CA certificate")
-                self.certificate_added = False
-            except (RuntimeError, OSError, subprocess.SubprocessError, IndexError) as exc:
-                errors.append(str(exc))
         (self.evidence / "update-requests.json").write_text(json.dumps(self.events, indent=2) + "\n")
         if errors:
             raise RuntimeError("; ".join(errors))

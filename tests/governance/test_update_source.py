@@ -1,6 +1,7 @@
 """Fixture transport/oracle tests; no App or Sparkle execution is simulated."""
 import base64
 import importlib.util
+import io
 from pathlib import Path
 import tempfile
 import threading
@@ -14,6 +15,29 @@ ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("update_fixture", ROOT / "tests/e2e/update_source.py")
 fixture = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fixture)
+
+
+class UnitTunnel:
+    def __init__(self):
+        self.stdout = io.StringIO("Temporary URL: https://example.trycloudflare.com\n")
+        self.terminated = False
+
+    def poll(self):
+        return None
+
+    def terminate(self):
+        self.terminated = True
+
+    def wait(self, timeout=None):
+        return 0
+
+
+def start_unit_source(source):
+    """Drive only the fixture handler; this is not a product E2E."""
+    source.url = "https://example.trycloudflare.com"
+    source.tunnel = UnitTunnel()
+    source.thread = threading.Thread(target=source.server.serve_forever, daemon=True)
+    source.thread.start()
 
 
 class UpdateSourceTests(unittest.TestCase):
@@ -33,6 +57,7 @@ class UpdateSourceTests(unittest.TestCase):
             source = fixture.UpdateSource(root / "secrets", root)
             package = root / "unit-only-package.zip"
             package.write_bytes(b"Synthetic transport unit fixture, not a signed App")
+            start_unit_source(source)
             source.publish(package, base64.b64encode(bytes(range(64))).decode())
             try:
                 # The handler is tested over HTTP here; prepare() creates TLS for
@@ -70,6 +95,7 @@ class UpdateSourceTests(unittest.TestCase):
             payload = b"isolated update transport payload"
             package = root / "update.zip"
             package.write_bytes(payload)
+            start_unit_source(source)
             source.publish(package, base64.b64encode(bytes(range(64))).decode())
             entered = threading.Event()
             release = threading.Event()
@@ -139,67 +165,68 @@ class UpdateSourceTests(unittest.TestCase):
                 release.set()
                 source.close()
 
-    def test_ca_trust_refuses_regular_developer_machine(self):
-        from unittest import mock
+    def test_tunnel_refuses_regular_developer_machine_before_start(self):
         with tempfile.TemporaryDirectory() as directory:
             source = fixture.UpdateSource(Path(directory) / "secrets", Path(directory))
             try:
                 with mock.patch.dict("os.environ", {}, clear=True), self.assertRaises(RuntimeError):
-                    source.trust_on_ephemeral_ci()
+                    source.start_tunnel()
+                self.assertIsNone(source.tunnel)
+                self.assertIsNone(source.thread)
             finally:
                 source.close()
 
-    def test_ca_trust_and_cleanup_use_noninteractive_admin_domain_and_exact_certificate(self):
+    def test_tunnel_uses_pinned_binary_tls_origin_ca_and_public_https_check(self):
         with tempfile.TemporaryDirectory() as directory:
             source = fixture.UpdateSource(Path(directory) / "secrets", Path(directory))
-            calls = []
-            def run(arguments, operation):
-                calls.append(arguments)
-                return "sha1 Fingerprint=" + ":".join(["AB"] * 20) if operation == "CA identity" else ""
+            tunnel = UnitTunnel()
+            binary = Path(directory) / "tokenmeter-tools/cloudflared"
+            binary.parent.mkdir()
+            binary.write_text("unit-only binary placeholder")
+            binary.chmod(0o700)
+            response = mock.MagicMock()
+            response.status = 200
+            response.read.return_value = b"ready"
+            response.__enter__.return_value = response
             with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
                                                "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "macOS"}, clear=True), \
-                 mock.patch.object(source, "_run", side_effect=run):
-                source.trust_on_ephemeral_ci()
+                 mock.patch.object(fixture.Path, "home", return_value=Path(directory)), \
+                 mock.patch.object(fixture.subprocess, "Popen", return_value=tunnel) as spawned, \
+                 mock.patch.object(fixture, "urlopen", return_value=response) as verified:
+                self.assertEqual(source.start_tunnel(), "https://example.trycloudflare.com")
                 source.close()
-            self.assertIn(["sudo", "-n", "/usr/bin/security", "add-trusted-cert", "-d", "-r", "trustRoot", "-p", "ssl",
-                           "-s", "localhost", "-k", "/Library/Keychains/System.keychain", str(source.private / "ca.pem")], calls)
-            self.assertIn(["sudo", "-n", "/usr/bin/security", "remove-trusted-cert", "-d", str(source.private / "ca.pem")], calls)
-            self.assertIn(["sudo", "-n", "/usr/bin/security", "delete-certificate", "-Z", "AB" * 20,
-                           "/Library/Keychains/System.keychain"], calls)
+            args = spawned.call_args.args[0]
+            self.assertEqual(args[0], str(binary))
+            self.assertIn("--origin-ca-pool", args)
+            self.assertIn(str(source.private / "ca.pem"), args)
+            self.assertIn(source.origin_url, args)
+            self.assertNotIn("--no-tls-verify", args)
+            verified.assert_called_once_with("https://example.trycloudflare.com/healthz", timeout=8)
+            self.assertTrue(tunnel.terminated)
 
-    def test_ca_trust_refuses_self_hosted_runner_and_timeout_names_operation(self):
+    def test_tunnel_refuses_self_hosted_runner_and_timeout_names_operation(self):
         with tempfile.TemporaryDirectory() as directory:
             source = fixture.UpdateSource(Path(directory) / "secrets", Path(directory))
             try:
                 with mock.patch.dict("os.environ", {"GITHUB_ACTIONS": "true", "RUNNER_TEMP": directory,
                                                    "RUNNER_ENVIRONMENT": "self-hosted", "RUNNER_OS": "macOS"}, clear=True), \
-                     mock.patch.object(source, "_run") as run:
+                     mock.patch.object(fixture.subprocess, "Popen") as spawned:
                     with self.assertRaises(RuntimeError):
-                        source.trust_on_ephemeral_ci()
-                    run.assert_not_called()
+                        source.start_tunnel()
+                    spawned.assert_not_called()
                 with mock.patch.object(fixture.subprocess, "run", side_effect=fixture.subprocess.TimeoutExpired(["tool", "secret"], 60)), \
-                     self.assertRaisesRegex(RuntimeError, "temporary CA trust timed out") as caught:
-                    source._run(["tool", "secret"], "temporary CA trust")
+                     self.assertRaisesRegex(RuntimeError, "test CA timed out") as caught:
+                    source._run(["tool", "secret"], "test CA")
                 self.assertNotIn("secret", str(caught.exception))
             finally:
-                with mock.patch.object(source, "_run"):
-                    source.close()
+                source.close()
 
-    def test_failed_trust_removal_still_attempts_certificate_removal(self):
-        from unittest import mock
+    def test_tunnel_cleanup_stops_process_even_if_socket_close_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             source = fixture.UpdateSource(Path(directory) / "secrets", Path(directory))
-            source.trusted = source.certificate_added = True
-            source.keychain = "isolated-test-keychain"
-            operations = []
-
-            def operation(args, name):
-                operations.append(name)
-                if name == "remove test CA trust":
-                    raise RuntimeError("Synthetic failed trust cleanup")
-                return "sha1 Fingerprint=AA:BB" if name == "CA identity" else ""
-
-            with mock.patch.object(source, "_run", side_effect=operation), self.assertRaises(RuntimeError):
+            start_unit_source(source)
+            with mock.patch.object(source.server, "server_close", side_effect=RuntimeError("synthetic failure")), \
+                 self.assertRaises(RuntimeError):
                 source.close()
-            self.assertIn("remove test CA certificate", operations)
-            self.assertFalse(source.certificate_added)
+            self.assertTrue(source.tunnel.terminated)
+            source.server.server_close()

@@ -171,3 +171,15 @@ Apple Big Sur 11.0.1说明与GitHub runner维护者记录均表明，仅root身�
 上述修订后的本机完整检查：文档 baseline 69/69、追踪 12 功能/35 场景/5 目标绑定均退出0（仅规范）；governance 170、server 43、升级 helper 9 项通过，Swift 用例语法解析及双库 `verify` 退出0，`git diff --check`退出0。完整 Xcode 本机尚缺，当前候选五例原生 E2E 和正式发布继续 BLOCKED；源码提交及远端 CI 结果在后续记录，不提前声称通过。
 
 源码候选 `3323c7dddcc44cd17c5f7b9431faf82defc7e098` 已推送分支，远端 [run36589629575](https://github.com/lzhe72/TokenMeter/actions/runs/36589629575)开始检查。推送后本机针对该干净提交执行 `quality_gate.py iteration` 退出2，`.local/e2e/gate-fd2bc7d1c2fb457394d7ea403103d9b6/result.json` 记录 `BLOCKED`、原生0/5，原因是只选中Command Line Tools；此结果不替代远端Mac运行。复核 CI 预览 DMG 时发现它原先内置端口60470，与本机生产服务及已安装预览 App 使用的49176不一致；将后续临时预览工件端口统一为49176，再由新候选完整检查。该修订不改变正式发布包或生产 HTTPS 设计。
+
+## 升级fixture隔离路径修订（2026-09-30）
+
+用户要求继续按SOP自动合并与发版本，适用前提仍是完整产品E2E和正式发布门禁PASS；未收到跳过测试的指令。按SOP-000/009/010/018/024复核环境与文档，远端候选`5de2283aab9600ce6117eece63d9419f5ef70352`的[run36590006685](https://github.com/lzhe72/TokenMeter/actions/runs/36590006685)governance通过，两架构各有001/002/003/005真实原生PASS，004因旧系统信任清理路径不成立而BLOCKED。完整五例迭代门禁两架构均未通过；旧候选结果不能给新提交使用。
+
+技术决定：保留同一临时代码签名身份以验证升级后的Keychain连续性，将签名身份与私钥限制在专用临时Keychain；放弃旧的System.keychain/admin信任写入。隔离HTTPS更新源仍由本机临时CA签发，但`cloudflared`使用`--origin-ca-pool`验证回环TLS，并提供公开可信`trycloudflare.com`临时域名供App正常TLS访问。CI安装固定版本且核对SHA256；签名、公开HTTPS、失效签名包拒绝、有效包升级、会话恢复与清理均需程序实测。第004例的控制请求用随机Bearer保护；测试内容仅限合成包，不上传账号或私钥。Quick Tunnel无法使用或清理失败维持BLOCKED；探针READY也不等于产品PASS。同步修改009/010、开发/测试计划、测试执行参考、Changelog和文档目录，源码与CI程序由后续实现/回归证据验证。
+
+文档编制阶段实际运行`python3 scripts/check_docs.py --mode structure`和`--mode baseline`均退出0，各检查69份文档、433个链接；`git diff --check`退出0。该结果只证明文档结构/基线和空白规范，不改变产品门禁。质量检查、源码回归及远端五例结果须在整合候选后另行记录。
+
+正式发布另需最终Developer ID签名、公证DMG、安装后全量原生回归、macOS14+支持矩阵及受保护通行证。SOP-018明确受信默认分支手动候选任务的`candidate_sha`须等于dispatch的`GITHUB_SHA` tip；不能发布未合并分支或旧提交。PR #2在必需检查未通过时保持草稿，不创建正式Tag/Release，等待新提交完整CI实测后按SOP-019继续。
+
+源码与本机检查：已移除升级fixture的系统证书信任读写，改用专用临时Keychain中的同一自签身份；HTTPS源由固定SHA256的`cloudflared 2026.9.3`临时隧道提供，隧道到回环源仍校验本次CA。候选工作流在检出代码之前及检出后核对输入SHA等于默认分支触发SHA，避免以后为未合并代码开放发布凭据。本机`check_docs.py --mode baseline`通过（69文档、433链接）、`quality_gate.py check`通过（12功能、35场景、5项绑定）、governance 173项、服务端43项、更新包工具9项及`git diff --check`通过。常用全局Python缺服务依赖，服务端检查改用SOP-009建立的隔离`.local/venv-tm001`运行；原始全局Python失败不被记作产品失败。本机`native_environment.py`实际返回BLOCKED，原生0例，原因是仅安装Command Line Tools；未触碰系统信任。新提交的两架构原生及升级结果须由远端CI另行判定，尚未标记PASS。

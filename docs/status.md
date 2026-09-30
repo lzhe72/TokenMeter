@@ -2,7 +2,10 @@
 
 当前功能版本：`v0.1.0-20260929T074814Z`，TM-001 账号登录与最小更新器。上一基础版本已通过 PR #1 合并为 548c582。本页记录实际结果；接手工作第一步仍是读取 [SOP 总索引](../sop/README.md) 及对应独立文件。
 
-## 最新状态（2026-09-29）
+## 最新状态（2026-09-30）
+
+- 当前远端候选`5de2283aab9600ce6117eece63d9419f5ef70352`的[CI run36590006685](https://github.com/lzhe72/TokenMeter/actions/runs/36590006685)已结束：governance通过，macOS15 Apple Silicon与Intel的001/002/003/005原生用例各通过，004在升级fixture环境探针处BLOCKED；完整五例回归两平台均未PASS。该提交没有正式发布资格，PR #2仍为草稿，远端master未合并v0.1.0，无正式Tag/Release。
+- 为解除004的已知admin信任撤销阻断，现按SOP-000/024修订为专用临时Keychain签名和Quick Tunnel公开HTTPS：临时CA由`cloudflared`验证本机TLS，App走正常公开TLS，避免写入系统信任。此处是新的执行设计与源码工作，尚未取得新候选探针READY或004原生PASS；新候选必须在两架构完整重跑五例。Quick Tunnel只供合成升级fixture使用，正式签名/公证、安装包回归与受保护发布门禁继续分别验证。
 
 - 用户指定 v0.1.0 服务端用 SQLite；本机已实际建立 `database/test/test.db`（Codex 回归，四个 `test-*` 账号）和 `database/production/production.db`（用户使用，仅 `admin / 123456`，首次登录强制改密），两份 SQL 位于各自目录且 DB/SQL 均不提交 Git。[数据库说明](../database/README.md)含路径、造数和启动命令。生产库只读检查通过；在隔离副本上经真实认证 API 验证初始登录与强制改密标志，原生产库没有测试会话。
 - 数据库检查现要求测试库和生产库同时存在，缺任一库直接失败；本机预览服务只接受回环绑定。43 项服务端回归覆盖缺库阻断、服务实例重启后的密码/成员保留与两库隔离。固定测试库供 Codex 本机回归，原生 E2E 使用逐例临时测试库，避免修改固定库或用户生产库。

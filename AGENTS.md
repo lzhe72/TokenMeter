@@ -62,7 +62,7 @@ python3 scripts/quality_gate.py iteration
 python3 scripts/quality_gate.py release
 ```
 
-原生用例还要求完整 Xcode、已登录 Mac 桌面；TM-001 升级 fixture 的临时信任/签名仅允许专用 GitHub Mac CI。缺条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
+原生用例还要求完整 Xcode、已登录 Mac 桌面；TM-001 升级 fixture 的隔离临时签名与公开 HTTPS 测试源仅允许专用 GitHub Mac CI，不修改系统证书信任。缺条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
 
 编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。
 
