@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.1.0-20260929T074814Z",
+  "version": "0.1.0",
+  "created_at": "2026-09-29T07:48:14Z",
+  "kind": "product_feature",
+  "feature_ids": [
+    "TM-001"
+  ],
+  "product_feature_matrix": "tests/feature_matrix.json",
+  "documents": {
+    "requirements": "releases/v0.1.0-20260929T074814Z/01-requirements.md",
+    "breakdown": "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
+    "development_plan": "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
+    "test_plan": "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
+    "release_plan": "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+    "iteration_record": "releases/v0.1.0-20260929T074814Z/06-iteration-record.md"
+  },
+  "global_design": "docs/design-plan.md",
+  "lifecycle": "docs/lifecycle.md",
+  "documentation_standard": "docs/standards/documentation.md",
+  "changelog": "CHANGELOG.md",
+  "changelog_heading": "v0.1.0-20260929T074814Z",
+  "traceability": [
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-PLAN",
+      "test": "TEST-TM001-GOVERNANCE",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "E2E-TM001-001",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "E2E-TM001-002",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "E2E-TM001-003",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "E2E-TM001-005",
+      "description": "生产库预置管理员经真实服务和 App 验证"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SERVER",
+      "test": "TEST-TM001-SERVER",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-DATA",
+      "test": "TEST-TM001-SERVER",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-DATA",
+      "test": "E2E-TM001-001",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-DATA",
+      "test": "E2E-TM001-005",
+      "description": "隔离生产库副本与测试库数据边界"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-001",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-002",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-003",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-005",
+      "description": "预置管理员首次登录和改密原生界面"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-MAC",
+      "test": "E2E-TM001-006",
+      "description": "默认本机服务地址、可配置登录界面与按服务隔离的会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE",
+      "test": "E2E-TM001-004",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-001",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-002",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-003",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-004",
+      "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-005",
+      "description": "隔离生产首建账号原生证据与清理"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-RUNNER",
+      "test": "E2E-TM001-006",
+      "description": "两套隔离服务、默认端口及配置持久化的原生证据"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-REVIEW",
+      "test": "TEST-TM001-GOVERNANCE",
+      "description": "TM-001完整开发与验收追踪"
+    }
+  ],
+  "test_programs": [
+    "tests/server/test_auth.py",
+    "tests/server/test_database.py",
+    "tests/server/test_bootstrap_sqlite.py",
+    "tests/server/test_network.py",
+    "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+    "scripts/test_device_credentials.py",
+    "tests/macos/DeviceCredentialsTests.swift",
+    "scripts/e2e.py",
+    "scripts/native_e2e.py",
+    "tests/e2e/update_source.py",
+    "apps/macos/build_update_fixture.py",
+    "apps/macos/tests/test_update_fixture.py",
+    "tests/e2e/code_signing.py",
+    "tests/governance/test_native_e2e.py",
+    "tests/governance/test_update_source.py",
+    "tests/governance/test_package_release_dmg.py",
+    "tests/governance/test_code_signing.py",
+    "tests/governance/test_quality_gate.py",
+    "scripts/test_endpoint_configuration.py",
+    "tests/macos/EndpointConfigurationTests.swift"
+  ],
+  "test_data_program": "tests/server/fixtures.py",
+  "test_sop": "sop/SOP-014-e2e.md",
+  "gate_commands": {
+    "metadata": "python3 scripts/quality_gate.py check",
+    "iteration": "python3 scripts/quality_gate.py iteration",
+    "release": "python3 scripts/quality_gate.py release",
+    "documentation": "python3 scripts/check_docs.py --mode baseline",
+    "documentation_structure": "python3 scripts/check_docs.py --mode structure"
+  },
+  "publication": {
+    "planned_git_tag": "v0.1.0-20260929T074814Z",
+    "expected_passport_asset": "v0.1.0-20260929T074814Z.passport.json",
+    "passport_policy": "issued_only_by_protected_ci_after_verified_product_e2e",
+    "state": "not_published"
+  },
+  "lookup_command": "python3 scripts/release_registry.py show --release-id v0.1.0-20260929T074814Z",
+  "sop_index": "sop/README.md",
+  "document_catalog": "docs/catalog.json",
+  "program_bindings_status": "ready",
+  "distribution_profile": "internal"
+}

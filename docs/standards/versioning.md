@@ -79,7 +79,7 @@ git show <release_id>:CHANGELOG.md
 
 先提交全部源码、计划、测试、数据和 Changelog，形成干净候选提交；再构建、执行 E2E 和生成通行证。通行证引用被测提交，不回写到该提交中，避免“提交内的文件必须包含自己的 commit SHA”的循环依赖。
 
-通行证作为受保护 CI 的不可变产物和 GitHub Release 附件保存，记录：release ID、源码提交、构建物摘要、需求/用例/fixture 摘要、平台矩阵、原生报告摘要、CI 运行身份、签名/公证结果、通过时间和最终判定。发布任务验证证据与候选一致后，才创建指向该提交的 annotated tag 并分发同一批构建物。
+通行证作为受保护 CI 的不可变产物和 GitHub Release 附件保存，记录：release ID、distribution_profile（internal/public）、源码提交、构建物摘要、需求/用例/fixture 摘要、平台矩阵、原生报告摘要、CI 运行身份、profile对应签名/Gatekeeper结果（public另含公证）、通过时间和最终判定。发布任务验证证据与候选一致后，才创建指向该提交的 annotated tag 并分发同一批构建物。
 
 发布前先通过默认分支上的 release-candidate.yml，指定完整候选 SHA，校验真实 HEAD 和同名 Tag 尚不存在，再执行 release 门禁。常规 quality.yml 只运行 iteration，不能将“推送 Tag 后才测试”作为首次发布验证。当前候选工作流无写入或发布权限；远端保护、可信签发与发布任务待实现，不能因候选上下文检查 PASS 就创建 Tag。
 

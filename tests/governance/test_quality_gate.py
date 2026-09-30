@@ -85,7 +85,7 @@ class GateTests(unittest.TestCase):
         feature = self.matrix["features"][0]
         feature["status"] = "implemented"
         feature["cases"][0].update(dataset="available-data", data_program="scripts/fixtures.py",
-                                     automated_test="tests/product_case.py")
+                                     automated_test="tests/product_case.py", native_test="ProductUITests/FirstFeatureTests/testBehavior")
         return feature, feature["cases"][0]
 
     def test_planned_manifest_passes_traceability_only_with_correct_counts(self):
@@ -317,6 +317,16 @@ class GateTests(unittest.TestCase):
             self.assertEqual(gate.main(["check"], root=self.root), 0)
         self.assertFalse(json.loads(output.getvalue())["release_eligible"])
 
+    def test_active_native_identity_is_required_valid_and_unique(self):
+        _, case = self.activate_first()
+        for invalid in (None, "testBehavior", "Product/Suite/test()/extra"):
+            case["native_test"] = invalid
+            with self.subTest(invalid=invalid):
+                self.assertTrue(any("native_test" in error for error in self.errors()))
+        case["native_test"] = "ProductUITests/FirstFeatureTests/testBehavior"
+        self.matrix["features"][1]["cases"][0]["native_test"] = case["native_test"]
+        self.assertTrue(any("duplicate native_test" in error for error in self.errors()))
+
     def test_data_program_must_match_registered_generator(self):
         _, case = self.activate_first()
         self.write("scripts/other_generator.py", "# A different existing program.\n")
@@ -436,6 +446,64 @@ class GateTests(unittest.TestCase):
         self.assertNotEqual(reports[0], reports[1])
         self.assertTrue(all(path.is_file() for path in reports))
 
+    def test_native_failure_does_not_retain_initial_not_started_blocker(self):
+        def fail_after_start(_root, _output, report):
+            report["runner_implemented"] = True
+            raise e2e.native_e2e.EvidenceError("Command exited 64; evidence: build.log")
+
+        with mock.patch.object(e2e.native_e2e, "execute", side_effect=fail_after_start), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(e2e.main(["--phase", "iteration"], root=self.root), 1)
+        reports = list((self.root / ".local/e2e").glob("*/result.json"))
+        report = json.loads(reports[0].read_text())
+        self.assertEqual(report["state"], "FAIL")
+        self.assertEqual(report["blockers"], [])
+        self.assertEqual(report["errors"], ["Command exited 64; evidence: build.log"])
+
+    def test_final_diagnostic_reports_counts_and_safe_case_failures(self):
+        def fail_after_case(_root, _output, report):
+            report["executed_cases"] = 1
+            report["passed_cases"] = 0
+            report["suites"] = [{"case_id": "E2E-TM001-001", "state": "FAIL", "exit_code": 65,
+                                 "error": "Native assertion failed", "environment": {"PASSWORD": "do-not-print"},
+                                 "native_failures": ["XCTAssertEqual failed: session username differs", "access_token=do-not-print"]}]
+            raise e2e.native_e2e.EvidenceError("Native assertion failed")
+
+        output = io.StringIO()
+        with mock.patch.object(e2e.native_e2e, "execute", side_effect=fail_after_case), contextlib.redirect_stdout(output):
+            self.assertEqual(e2e.main(["--phase", "iteration"], root=self.root), 1)
+        result = json.loads(output.getvalue().splitlines()[-1])
+        self.assertEqual(result["executed_cases"], 1)
+        self.assertEqual(result["passed_cases"], 0)
+        self.assertEqual(result["errors"], ["Native assertion failed"])
+        self.assertEqual(result["blockers"], [])
+        self.assertEqual(result["cases"][0]["state"], "FAIL")
+        self.assertEqual(result["cases"][0]["native_failures"], ["XCTAssertEqual failed: session username differs", "access_token=<redacted>"])
+        self.assertNotIn("do-not-print", output.getvalue())
+
+    def test_subprocess_timeout_diagnostic_does_not_print_password_argument(self):
+        error = e2e.subprocess.TimeoutExpired(["security", "create-keychain", "-p", "do-not-print"], 60)
+        output = io.StringIO()
+        with mock.patch.object(e2e.native_e2e, "execute", side_effect=error), contextlib.redirect_stdout(output):
+            self.assertEqual(e2e.main(["--phase", "iteration"], root=self.root), 2)
+        result = json.loads(output.getvalue().splitlines()[-1])
+        self.assertTrue(result["blockers"])
+        self.assertNotIn("do-not-print", output.getvalue())
+        self.assertNotIn("do-not-print", Path(result["report"]).read_text())
+
+    def test_definite_native_failure_takes_precedence_over_later_environment_blocker(self):
+        def later_blocker(_root, _output, report):
+            report["executed_cases"] = 1
+            report["suites"] = [{"case_id": "E2E-TM001-001", "state": "FAIL", "error": "Known native assertion failure"}]
+            raise e2e.native_e2e.Blocked("Missing signing capability for case 004")
+
+        output = io.StringIO()
+        with mock.patch.object(e2e.native_e2e, "execute", side_effect=later_blocker), contextlib.redirect_stdout(output):
+            self.assertEqual(e2e.main(["--phase", "iteration"], root=self.root), 1)
+        report = json.loads(Path(json.loads(output.getvalue().splitlines()[-1])["report"]).read_text())
+        self.assertEqual(report["state"], "FAIL")
+        self.assertIn("Known native assertion failure", report["errors"][0])
+        self.assertEqual(report["blockers"], ["Missing signing capability for case 004"])
+
     def test_e2e_corrupt_deep_release_json_still_records_blocked(self):
         self.write("releases/current.json", "[" * 2000 + "]" * 2000)
         output = io.StringIO()
@@ -446,6 +514,18 @@ class GateTests(unittest.TestCase):
         self.assertEqual(report["state"], "BLOCKED")
         self.assertIsNone(report["release_id"])
         self.assertFalse(report["release_eligible"])
+
+    def test_original_environment_error_and_cleanup_failure_are_both_reported(self):
+        def failure(_root, _output, report):
+            report["cleanup_errors"] = ["remove signing trust failed"]
+            raise e2e.native_e2e.Blocked("trust ephemeral code-signing certificate timed out")
+        output = io.StringIO()
+        with mock.patch.object(e2e.native_e2e, "execute", side_effect=failure), contextlib.redirect_stdout(output):
+            self.assertEqual(e2e.main(["--phase", "iteration"], root=self.root), 1)
+        result = json.loads(output.getvalue().splitlines()[-1])
+        self.assertEqual(result["blockers"], ["trust ephemeral code-signing certificate timed out"])
+        self.assertEqual(result["errors"], ["remove signing trust failed"])
+        self.assertEqual(result["cleanup_errors"], ["remove signing trust failed"])
 
     def test_e2e_refuses_local_or_artifact_root_symlinks(self):
         for parent in (".local", ".local/e2e"):

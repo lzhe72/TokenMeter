@@ -113,6 +113,51 @@
         "subscription_estimates",
         "unknown_prices"
       ]
+    },
+    {
+      "id": "auth_accounts",
+      "description": "TM-001 四个隔离账号、固定UUID与独立权限/会话预期；CLI导入真实SQLite须验证测试库所有权；available表示程序可绑定，实际导入和原生验收另存执行证据",
+      "status": "available",
+      "generator": "tests/server/fixtures.py",
+      "capabilities": [
+        "account_roles",
+        "forced_password_change",
+        "disabled_account",
+        "session_revocation"
+      ]
+    },
+    {
+      "id": "production_bootstrap",
+      "description": "TM-001 隔离的生产 SQLite 首建副本，仅预置 admin、强制首次改密并验证与测试库隔离；不读取或修改用户实际 production.db",
+      "status": "available",
+      "generator": "scripts/bootstrap_sqlite.py",
+      "capabilities": [
+        "production_seed",
+        "database_isolation",
+        "forced_password_change"
+      ]
+    },
+    {
+      "id": "tm001_update_packages",
+      "description": "TM-001候选到受控高版本升级；程序生成临时EdDSA密钥及有效/无效签名包；本版要求执行Mac固定49177回环源，源码改造与真实E2E结果分别记录，不能因生成器存在就称新行为通过。",
+      "status": "available",
+      "generator": "tests/e2e/update_source.py",
+      "capabilities": [
+        "https_feed",
+        "valid_eddsa",
+        "invalid_eddsa",
+        "candidate_upgrade"
+      ]
+    },
+    {
+      "id": "server_default_migration",
+      "description": "未来生产 HTTPS 服务器确定后，旧版默认地址与手动覆盖两类安装、真实签名升级和独立服务端身份；具体域名、造数及重置程序在对应版本立项后实现",
+      "status": "planned",
+      "generator": null,
+      "capabilities": [
+        "default_migration",
+        "manual_override_persistence"
+      ]
     }
   ]
 }

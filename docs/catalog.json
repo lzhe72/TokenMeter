@@ -12,7 +12,7 @@
         "docs/standards/documentation.md",
         "sop/README.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -24,10 +24,27 @@
       "base_release": null,
       "inputs": [
         "docs/standards/versioning.md",
-        "releases/v0.0.1-20260929T060944Z/05-release-plan.md"
+        "releases/v0.0.1-20260929T060944Z/05-release-plan.md",
+        "releases/v0.1.0-20260929T074814Z/05-release-plan.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-007-release-plan.md"
+    },
+    {
+      "doc_id": "DOC-DATABASE-SQLITE",
+      "path": "database/README.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "scripts/bootstrap_sqlite.py",
+        "sop/SOP-010-test-data.md",
+        "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+        "releases/v0.1.0-20260929T074814Z/01-requirements.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-010-test-data.md"
     },
     {
       "doc_id": "DOC-DOCS-README",
@@ -50,9 +67,12 @@
       "applicable_release": "all",
       "base_release": null,
       "inputs": [
-        "docs/product/README.md"
+        "docs/product/README.md",
+        "server/tokenmeter_server/main.py",
+        "apps/macos/TokenMeter/TokenMeterApp.swift",
+        "releases/v0.1.0-20260929T074814Z/03-development-plan.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-004-technical-design.md"
     },
     {
@@ -65,7 +85,7 @@
       "inputs": [
         "releases/current.json"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-002-requirements.md"
     },
     {
@@ -82,7 +102,7 @@
         "tests/acceptance.json",
         "docs/reviews/2026-09-29-plan-consistency.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-004-technical-design.md"
     },
     {
@@ -108,9 +128,10 @@
       "base_release": null,
       "inputs": [
         "docs/decision-inputs.md",
-        "tests/acceptance.json"
+        "tests/acceptance.json",
+        "releases/v0.1.0-20260929T074814Z/01-requirements.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-002-requirements.md"
     },
     {
@@ -142,7 +163,7 @@
         "docs/product/README.md",
         "docs/standards/versioning.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-003-feature-breakdown.md"
     },
     {
@@ -156,7 +177,7 @@
         "docs/lifecycle.md",
         "docs/architecture/README.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-012-development.md"
     },
     {
@@ -183,9 +204,11 @@
         "docs/testing/strategy.md",
         "docs/standards/versioning.md",
         ".github/workflows/release-candidate.yml",
-        "scripts/candidate_gate.py"
+        "scripts/candidate_gate.py",
+        "scripts/quality_gate.py",
+        "scripts/native_e2e.py"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-018-release-gate.md"
     },
     {
@@ -200,7 +223,7 @@
         "docs/standards/documentation.md",
         "scripts/release_contract.py"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-001-version-start.md"
     },
     {
@@ -212,9 +235,10 @@
       "base_release": null,
       "inputs": [
         "docs/design-plan.md",
-        "releases/v0.0.1-20260929T060944Z/06-iteration-record.md"
+        "releases/v0.0.1-20260929T060944Z/06-iteration-record.md",
+        "releases/v0.1.0-20260929T074814Z/06-iteration-record.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-022-archive-handoff.md"
     },
     {
@@ -380,9 +404,16 @@
       "base_release": null,
       "inputs": [
         "docs/testing/strategy.md",
-        "scripts/test_data.py"
+        "scripts/test_data.py",
+        "scripts/native_e2e.py",
+        "tests/server/fixtures.py",
+        "tests/e2e/update_source.py",
+        "tests/e2e/code_signing.py",
+        "tests/governance/test_update_source.py",
+        "tests/governance/test_environment_probe.py",
+        "tests/governance/test_native_e2e.py"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-014-e2e.md"
     },
     {
@@ -398,7 +429,7 @@
         "tests/acceptance.json",
         "tests/datasets.json"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
@@ -509,7 +540,7 @@
         "docs/decision-inputs.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -523,7 +554,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -647,9 +678,16 @@
       "base_release": null,
       "inputs": [
         "sop/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "tests/e2e/update_source.py",
+        "scripts/native_environment.py",
+        ".github/workflows/quality.yml",
+        "tests/governance/test_update_source.py",
+        "tests/governance/test_environment_probe.py",
+        "scripts/native_e2e.py",
+        "releases/v0.1.0-20260929T074814Z/03-development-plan.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -661,9 +699,12 @@
       "base_release": null,
       "inputs": [
         "sop/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "tests/e2e/update_source.py",
+        "scripts/native_e2e.py",
+        "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -675,9 +716,10 @@
       "base_release": null,
       "inputs": [
         "sop/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -703,9 +745,13 @@
       "base_release": null,
       "inputs": [
         "sop/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "scripts/test_device_credentials.py",
+        "tests/macos/DeviceCredentialsTests.swift",
+        "scripts/test_endpoint_configuration.py",
+        "tests/macos/EndpointConfigurationTests.swift"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -717,9 +763,15 @@
       "base_release": null,
       "inputs": [
         "sop/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "sop/SOP-009-environment.md",
+        ".github/workflows/quality.yml",
+        "scripts/native_e2e.py",
+        "scripts/native_environment.py",
+        "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
+        "tests/governance/test_native_e2e.py"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -759,9 +811,11 @@
       "base_release": null,
       "inputs": [
         "sop/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+        "scripts/package_preview_dmg.py"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -773,9 +827,11 @@
       "base_release": null,
       "inputs": [
         "sop/README.md",
-        "docs/standards/documentation.md"
+        "docs/standards/documentation.md",
+        "sop/SOP-017-package-validation.md",
+        "scripts/quality_gate.py"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -875,6 +931,89 @@
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-010-test-data.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-REQUIREMENTS",
+      "path": "releases/v0.1.0-20260929T074814Z/01-requirements.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "docs/decision-inputs.md",
+        "docs/design-plan.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-002-requirements.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-BREAKDOWN",
+      "path": "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/01-requirements.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-003-feature-breakdown.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-DEVELOPMENT-PLAN",
+      "path": "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
+        "docs/architecture/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-005-development-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-TEST-PLAN",
+      "path": "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-RELEASE-NOTES",
+      "path": "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
+        "docs/standards/release.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-007-release-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-ITERATION-RECORD",
+      "path": "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
+        "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-023-iteration.md"
     }
   ]
 }

@@ -8,7 +8,7 @@
 
 每次测试计划和执行记录顶部必须带同一 `release_id`，格式及分配规则见[统一版本规范](../standards/versioning.md)。该标识关联需求、功能拆分、开发计划、测试计划、发布说明、Changelog 和最终 Git 发布；每次测试仍分配独立的 `run_id`。
 
-当前产品 App、服务端和原生 E2E 执行器尚未实现，产品门禁为 **BLOCKED**。基础设施自检、数据生成或静态文档检查的成功不能解除此状态。后续落地执行器时，必须同时补齐所需依赖、环境配置和原生证据路径。
+TM-001 已进入 App、服务端与原生 E2E 联调，实际验收状态见[当前状态](../status.md)。执行器已接入 `xcodebuild` 和原始 `xcresult` 复核；源码存在不证明原生用例通过。缺完整 Xcode、GUI 或有效结果时为 **BLOCKED**；基础工具自检和文档检查不能替代产品验收。
 
 ### 当前可执行入口
 
@@ -19,6 +19,7 @@ python3 scripts/check_docs.py --mode structure
 python3 scripts/check_docs.py --mode baseline
 python3 -m unittest discover -s tests/governance -p 'test_*.py'
 python3 scripts/quality_gate.py check
+python3 scripts/test_device_credentials.py
 python3 scripts/test_data.py generate --run-id demo --seed 42
 python3 scripts/e2e.py --phase iteration
 python3 scripts/quality_gate.py iteration
@@ -27,12 +28,14 @@ python3 scripts/quality_gate.py release
 python3 scripts/test_data.py reset --run-id demo
 ```
 
-- governance 测试和 `check` 只校验仓库规则与辅助程序，不是产品 E2E。
+- governance 测试和 `check` 只校验仓库规则与辅助程序，不是产品 E2E。`test_device_credentials.py` 在 macOS 用 Swift 工具链编译真实凭据存储代码和 Foundation 断言程序；Command Line Tools 可执行，须按 SOP-013 保存原始结果，也不代表原生产品 E2E 通过。
 - 数据生成产物位于 `.local/test-runs/demo/`：`users.json`、`usage.jsonl`、`prices.json`、`expected.json`、`manifest.json` 和所有权标记 `.tokenmeter-fixture.json`。
 - 种子 42 创建 `test-admin`、`test-alice`、`test-bob`、`test-disabled` 的合成账号资料，密码保存在生成的测试文件中；此时尚未导入任何实际 App/服务端用户库。
 - `manifest.json` 标记 `fixture_kind=normalized-test-spec`，固定参考时间为 `2026-09-29T04:00:00Z`、时区 `Asia/Shanghai`，并记录文件 SHA256。这些数据不能验证真实 Codex/Claude 日志解析。
 - `generate` 拒绝覆盖已存在的运行目录；`reset` 只清理固定根目录下有有效所有权标记的对应数据，不清理产品库、系统授权或 Keychain。完整产品重置入口仍须实现。
-- `e2e.py` 当前只输出阻断证据；`iteration`/`release` 不允许用任意外部 PASS 报告放行。预期结果均为 BLOCKED，不能忽略非零退出码继续发布。
+- TM-001 账号由 `tests/server/fixtures.py` 生成并由原生 runner 通过真实 CLI 导入逐例隔离库，详见 SOP-010。生成账号 JSON 与原生 UI 验收分别记录。
+- 本机可用 `scripts/bootstrap_sqlite.py init-test --run-id <唯一ID>` 生成 `database/test/test.db` 和可执行的 `database/test/seed.sql`；`verify` 只读核对双库。实际生产库只在首次初始化时预置管理员，005 原生场景对临时根调用同一初始化程序，不会连接用户的 `database/production/production.db`。完整命令见[数据库说明](../../database/README.md)。
+- `e2e.py` 调用真实原生 runner；`iteration`/`release` 不允许用任意外部 PASS 报告放行。缺环境返回 BLOCKED；实际断言失败为 FAIL；所有必测原生结果和证据一致才可能得到迭代 PASS。正式发布条件仍单独检查。
 
 `quality_gate.py` 和 `e2e.py` 的退出码为 `0=PASS`、`1=FAIL`、`2=BLOCKED`；`check` 的 PASS 仅代表基础规范检查通过。E2E 每次生成独立的 `.local/e2e/<run-id>/result.json`，命令输出其绝对路径。`quality_gate.py iteration` 和 `release` 在检查元数据后会自动调用 E2E；单独调用 `e2e.py` 用于诊断，不需要为正式门禁重复执行。
 
@@ -40,9 +43,21 @@ python3 scripts/test_data.py reset --run-id demo
 
 编制中的文档使用 structure；全部计划完成后由 SOP-008 检查 baseline。版本计划可将程序绑定显式标为 planned；SOP-009 先准备工程骨架，010/011 再实现数据与测试，绑定就绪后改为 ready。每个已填写路径必须存在，规划项用空绑定表达，不写虚构文件。独立验收清单与规格/用例双向检查；数据集的能力必须覆盖场景要求。当前 pricing 仅覆盖基础 USD，历史价格/多币种/订阅依赖 planned 的 pricing_extended。
 
+### 本机开发与远端原生验收
+
+用户已授权本机用于开发、运行回环服务和安装预览 App。本机现只有 Command Line Tools，不能运行 XCUITest；无需为了继续开发而在本机安装 Xcode。当前原生迭代验收由 `.github/workflows/quality.yml` 在 GitHub 托管的 `macos-15` 与 `macos-15-intel` 上选择 Xcode 16.4，对同一候选自动调用 `python3 scripts/quality_gate.py iteration`。每个平台各自在其 Mac 上构建真实 App，初始化逐例隔离的 FastAPI/SQLite，执行完整原生用例，并上传 `xcresult`、日志、fixture 摘要及候选 SHA。CI 中的 `127.0.0.1:49176` 指该 runner 自身，不是用户本机服务或 `database/production/production.db`。
+
+第006例在每台 runner 上先独占默认端口49176，再使用第二套临时端口/SQLite；端口已占用时不得连接已有服务，须 BLOCKED。第004例在执行App的同一台GitHub Mac固定49177启动一个隔离回环更新源；临时自签身份与更新fixture仍只用于开发迭代。runner 为每例创建唯一0700临时凭据目录，两个构建的 Info.plist 与 XCTest 首次环境使用同一路径，Sparkle 自主重启后须读取同一目录；不得访问生产凭据或旧 Keychain。远端完整六例通过可作为该候选的开发迭代原生证据，但不能填作本机已执行；内部发行还需最终 DMG 包级安装升级、完整原生回归、支持矩阵与专用自动门禁；公开发行另需 Developer ID 签名公证。本机只有 Command Line Tools 时，本机原生运行仍为 BLOCKED，服务端测试和预览安装分别按实际结果记录。
+
+若将来需要本机XCUITest重跑，先在本机安装并首次启动完整Xcode，由用户通过正常系统界面完成必要组件和许可；用`xcode-select -p`确认后才运行`xcodebuild -version`。本机仅有Command Line Tools时可另计划CLT构建与原生AX驱动，但当前`AXIsProcessTrusted=false`且执行器未实现，不声称本机E2E通过。用户此Mac可用同机49177服务和新App做体验诊断，须隔离数据库、凭据、安装位置且不能拿旧`/Applications/TokenMeter.app`构建100冒充新候选。
+
 ### 自动执行环境前提
 
-专用 Mac 或 Mac 虚拟机必须有已登录桌面、受支持的 macOS/架构、Xcode 和 UI 自动化权限；发布环境还需真实签名、公证、更新服务和隔离 MySQL。管理员提供凭据和机器初始授权后，Codex 通过程序执行场景、断言结果和判定门禁。缺环境时记录具体原因；用户口头确认、人工截图或手工通过报告不能解除阻断。
+现有两平台XCUITest需要已登录桌面、受支持的macOS/架构、Xcode和UI自动化权限；内部正式发布需最终包签名/Gatekeeper、同机更新服务与隔离目标数据库，公开profile另需Developer ID及公证。v0.1.0 使用 SQLite。管理员提供凭据和机器初始授权后，Codex 通过程序执行场景、断言结果和判定门禁。缺环境时记录具体原因；用户口头确认、人工截图或手工通过报告不能解除阻断。
+
+TM-001第004例不再依赖公网Quick Tunnel。两台GitHub Mac分别在自身固定端口49177启动只绑定回环的更新fixture，候选和高版本App均从内置默认 `http://127.0.0.1:49177/appcast.xml` 更新，不注入 `TM_UPDATE_FEED_URL`；API仍默认该机49176。固定EdDSA公钥、`SUVerifyUpdateBeforeExtraction`、坏签名拒绝、有效包真实安装重启和`/v1/me`自动登录断言保持必测。当前helper的`--use-default-feed`、配置页及fixture改造尚待实现，不能将旧公网探针READY当成新回环证据。004仅使用一组活跃更新源，先通过 `/healthz` 的一次性 source nonce 核对进程/端口、HTTP状态与来源，发布fixture后再由真实App和请求核验程序检查appcast及包响应，贯穿请求及安装后统一清理；端口被占时BLOCKED，不能连接未知服务或用户真实生产库。更新源URL允许appcast路径但拒绝userinfo、query、fragment、空host与非法端口；HTTP只允许精确回环主机，非回环必须正常HTTPS/TLS，Appcast选中下载URL与重定向也须负测。配置页的合法合成更新URL由006保存、跨重启核对并恢复内置默认，不请求该合成地址，也不另开第二更新服务器。
+
+手动`environment_probe_only`如果仍存在，仅作零产品用例的环境诊断，旧`native_environment.py`的公网行为不能作为本轮验收。常规PR与push仍需两架构完整六例；独立准备报告不替代004或正式包级门禁。runner保留每例唯一0700测试凭据目录、两个构建同一Info.plist路径、隔离签名Keychain及精确清理，证据只存摘要、脱敏请求、端口与进程归属、原始`xcresult`，不保存token、口令或私钥。`native.xcresult`完整bundle摘要在本例所有`xcresulttool`解析与附件导出退出后计算；父复核在重读原始结果前后各逐文件核算一次，包括SQLite；父级解析期间或之后产生的变化同样FAIL，须有模拟父级解析写入的治理负测。历史Quick Tunnel DNS失败和证据保留在06记录，不作为当前规范或重试理由。
 
 ## 2. 准备与数据生成
 
@@ -68,20 +83,26 @@ python3 scripts/test_data.py reset --run-id demo
 
 规范化 fixture 的自检仅验证数据合同。日志采集测试必须将受支持版本的原始日志放入授权目录，由待测 App 真实读取；同步测试必须经过真实服务端认证与上传接口。
 
+## 开发构建与最终安装包的边界
+
+macOS实际运行的是.app；开发阶段可由Xcode构建并由XCUITest直接启动.app，不需要DMG。运行在远端Mac时，本机不会显示该窗口；记录实际Mac环境、构建路径、用例结果和原生截图。DMG是面向用户的分发容器，开发构建通过不能证明其安装流程通过。
+
+正式内部或公开分发都必须从对应 `distribution_profile` 的最终 DMG 安装，再对安装后的 .app 执行完整原生回归，并绑定 DMG 与 .app 各自摘要。内部包还须验证实际签名/Gatekeeper 行为及专用机器门禁；公开包另须 Developer ID 与公证。缺最终包或安装测试时只能记录开发结果，任一正式分发保持 BLOCKED。带 `TMTestCredentialsDirectory` 的 UITESTING App 不得包装成本机可登录预览 DMG。
+
 ## 4. 发布与安装升级
 
 1. 固定 `release_id`、候选提交、版本、同标识的 Changelog 标题、App/服务端产物摘要及 fixture 摘要。
-2. 完成签名、公证、更新包签名，保存校验结果。产品 E2E 与安装升级必须针对此候选产物建立证据链。
+2. 完成 profile 对应最终包签名/Gatekeeper 核对及更新包签名；public 另完成公证，保存校验结果。产品 E2E 与安装升级必须针对此候选产物建立证据链。
 3. 在所有已声明支持的 Mac 系统/架构组合执行全新安装，以及本次应执行集合的全部原生产品 E2E。
-4. 自 0.2.0 起安装上一公开稳定版并用程序生成旧版本数据；从 App UI 自动执行真实更新，验证版本、数据迁移、配置和授权保留。更多受支持直升路径逐一验证。最小更新器已列入 0.1.0 的交付基础。
+4. 自 0.2.0 起安装上一已分发稳定版并用程序生成旧版本数据；从 App UI 自动执行真实更新，验证版本、数据迁移、配置和授权保留。更多受支持直升路径逐一验证。最小更新器已列入 0.1.0 的交付基础。
 5. 自动验证下载中断、签名异常、迁移失败及备份恢复；UI 自动化处理操作系统弹窗并断言授权、安装和更新结果。尚无法自动验证的必需路径保持 BLOCKED。
-6. 生产发布在目标 MySQL 执行应执行集合的完整业务 E2E，以及已支持迁移/备份恢复路径；开发兼容回归使用 SQLite。
+6. 生产发布使用与本版目标数据库同 schema 的隔离副本执行完整业务 E2E，以及已支持迁移/备份恢复路径；真实生产库只做非破坏性的就绪与备份检查。v0.1.0 目标为 SQLite，Codex 的测试 DB 与用户生产 DB 分开。后续迁移 MySQL 时再验证该引擎和 SQLite→MySQL 路径。
 7. 检查全部证据与候选一致，确认远端必需检查和受保护发布任务已配置。
 8. 在候选提交验证之后，由程序在源码版本控制之外生成 passport，绑定实际执行和产物来源；通过门禁后，发布任务才以同一 `release_id` 创建 Git 发布并分发已验证的安装包。保留 tag、passport、测试报告和更新清单的关联。任何阶段失败不得生成产品 PASS 或更新正式清单。
 
-首个没有上一稳定版的发布，记录历史基线不存在，并验证候选干净安装及候选→受控高版本签名测试包的 App 内更新。测试包只进入隔离源，登记来源、版本和摘要；不能冒充上一公开稳定版。首版已有数据库迁移需求时仍执行迁移测试。开发阶段可用开发签名包，最终发布必须重新验证最终签名、公证包。
+首个没有上一稳定版的发布，记录历史基线不存在，并验证候选干净安装及候选→受控高版本签名测试包的 App 内更新。测试包只进入隔离源，登记来源、版本和摘要；不能冒充上一已分发稳定版。首版已有数据库迁移需求时仍执行迁移测试。开发阶段可用开发签名包，最终发布必须重新验证最终签名、公证包。
 
-release-candidate.yml 在正式 Tag 之前按完整候选 SHA 执行上述门禁；只有取得有效通行证，发布任务才创建 Tag。当前仅有候选入口，远端保护配置、原生执行器、通行证签发和分发仍未实现/核实。
+release-candidate.yml 在正式 Tag 之前按完整候选 SHA 执行上述门禁；只有取得有效通行证，发布任务才创建 Tag。当前已接入开发原生执行器；最终产物/全发布矩阵、远端保护配置、通行证签发和分发尚未完成验证。
 
 ## 5. 失败、复现与清理
 

@@ -32,7 +32,7 @@ class CandidateGateTests(unittest.TestCase):
 
     def check(self, **changes):
         args = dict(root=self.root, candidate_sha=self.sha, event="workflow_dispatch",
-                    workflow_ref="refs/heads/main", default_branch="main")
+                    workflow_ref="refs/heads/main", default_branch="main", dispatch_sha=self.sha)
         args.update(changes)
         return candidate.validate_context(**args)
 
@@ -48,6 +48,11 @@ class CandidateGateTests(unittest.TestCase):
 
     def test_rejects_different_checkout(self):
         self.assertTrue(self.check(candidate_sha="0" * 40))
+
+    def test_rejects_commit_outside_default_branch_dispatch(self):
+        errors = self.check(dispatch_sha="0" * 40)
+        self.assertTrue(any("default-branch dispatch SHA" in error for error in errors), errors)
+        self.assertTrue(self.check(dispatch_sha="invalid"))
 
     def test_rejects_untrusted_trigger(self):
         self.assertTrue(self.check(event="push"))
@@ -67,13 +72,15 @@ class CandidateGateTests(unittest.TestCase):
         (self.root / "releases/current.json").write_text(json.dumps({"release_id": "--all"}))
         self.git("add", ".")
         self.git("commit", "-qm", "invalid fixture")
-        self.assertTrue(self.check(candidate_sha=self.git("rev-parse", "HEAD")))
+        next_sha = self.git("rev-parse", "HEAD")
+        self.assertTrue(self.check(candidate_sha=next_sha, dispatch_sha=next_sha))
 
     def test_cli_pass_is_context_only(self):
         process = subprocess.run(["python3", str(REPO / "scripts/candidate_gate.py"),
                                   "--root", str(self.root), "--candidate-sha", self.sha,
                                   "--event", "workflow_dispatch", "--workflow-ref", "refs/heads/main",
-                                  "--default-branch", "main"], text=True, capture_output=True)
+                                  "--default-branch", "main", "--dispatch-sha", self.sha],
+                                 text=True, capture_output=True)
         self.assertEqual(0, process.returncode, process.stderr)
         result = json.loads(process.stdout)
         self.assertEqual("candidate_context_only", result["scope"])
@@ -87,10 +94,38 @@ class CandidateGateTests(unittest.TestCase):
         self.assertIn("workflow_dispatch:", dispatch)
         self.assertIn("environment: release-validation", dispatch)
         self.assertIn("ref: ${{ inputs.candidate_sha }}", dispatch)
+        self.assertIn('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"', dispatch)
+        self.assertLess(dispatch.index('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"'),
+                        dispatch.index("actions/checkout@v4"))
+        self.assertIn('--dispatch-sha "$GITHUB_SHA"', dispatch)
         self.assertIn("python3 scripts/quality_gate.py release", dispatch)
         self.assertLess(dispatch.index("scripts/candidate_gate.py"), dispatch.index("scripts/quality_gate.py release"))
         self.assertNotIn("contents: write", dispatch)
         self.assertNotIn("continue-on-error:", dispatch)
+
+    def test_environment_diagnostic_cannot_replace_pr_gate_or_package(self):
+        workflow = (REPO / ".github/workflows/quality.yml").read_text()
+        self.assertIn("environment_probe_only:", workflow)
+        self.assertIn("type: boolean\n        required: false\n        default: false", workflow)
+        product_condition = "github.event_name != 'workflow_dispatch' || inputs.environment_probe_only != true"
+        diagnostic_condition = "github.event_name == 'workflow_dispatch' && inputs.environment_probe_only == true"
+        steps = workflow.split("      - name: ")
+        product = next(step for step in steps if step.startswith("Execute product gate\n"))
+        diagnostic = next(step for step in steps if step.startswith("Diagnose isolated environment only\n"))
+        self.assertIn("if: ${{ " + product_condition + " }}", product)
+        self.assertIn("python3 scripts/quality_gate.py iteration", product)
+        self.assertIn("if: ${{ " + diagnostic_condition + " }}", diagnostic)
+        self.assertIn("python3 scripts/native_environment.py", diagnostic)
+        self.assertNotIn("quality_gate.py", diagnostic)
+        # Test builds now contain a runner-owned credential directory and cannot
+        # be repackaged as an installable local preview on another machine.
+        self.assertNotIn("package_preview_dmg.py", workflow)
+        self.assertIn("python3 scripts/test_device_credentials.py", workflow)
+        # Distinct check and artifact identities prevent READY being mistaken for product PASS.
+        distinct_name = diagnostic_condition + " && 'environment-diagnostic' || 'product-e2e'"
+        self.assertEqual(2, workflow.count(distinct_name))
+        self.assertIn("runner: [macos-15, macos-15-intel]", workflow)
+        self.assertNotIn("continue-on-error:", workflow)
 
 
 if __name__ == "__main__":

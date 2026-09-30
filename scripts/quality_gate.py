@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check traceability, or invoke the product E2E gate (currently blocked).
+"""Check traceability, or invoke and verify the native product E2E gate.
 
 Metadata PASS never grants product release eligibility. No command accepts an
 external result file as proof of execution.
@@ -13,6 +13,8 @@ import json
 import re
 import subprocess
 import sys
+import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -173,6 +175,7 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
         features = []
     seen_features: set[str] = set()
     seen_cases: set[str] = set()
+    native_bindings: set[str] = set()
     covered_acceptances: set[str] = set()
     feature_rows: dict[str, dict[str, Any]] = {}
     for feature in features:
@@ -264,6 +267,14 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
             if active or binding is not None:
                 if file_ref(binding, f"{case_id}.automated_test"):
                     counts["test_bindings"] += 1
+            native_identity = case.get("native_test")
+            if active or native_identity is not None:
+                if not isinstance(native_identity, str) or not re.fullmatch(r"[A-Za-z0-9_]+/[A-Za-z0-9_]+/test[A-Za-z0-9_]+", native_identity):
+                    errors.append(f"{case_id}.native_test: target/suite/testMethod identity required")
+                elif native_identity in native_bindings:
+                    errors.append(f"{case_id}: duplicate native_test {native_identity}")
+                else:
+                    native_bindings.add(native_identity)
     missing = sorted(REQUIRED_FEATURES - seen_features)
     if missing:
         errors.append("required v1 features removed: " + ", ".join(missing))
@@ -350,19 +361,35 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
     if not runner.resolve().is_relative_to(root.resolve()) or not runner.is_file():
         print(json.dumps({"state": "BLOCKED", "reason": "Missing product E2E runner", "release_eligible": False}))
         return 2
-    # Fixed repository-owned entrypoint; external pass.json files are not inputs.
+    # Allocate the nonce here, before the child runs. Never look up a report by a
+    # user-supplied path or accept an old report as evidence for this invocation.
+    run_id = "gate-" + uuid.uuid4().hex
+    started = time.time()
     try:
-        result = subprocess.run([sys.executable, str(runner), "--phase", args.phase], cwd=root, check=False)
+        result = subprocess.run([sys.executable, str(runner), "--phase", args.phase, "--run-id", run_id], cwd=root, check=False)
     except OSError as exc:
         print(json.dumps({"state": "BLOCKED", "reason": str(exc), "release_eligible": False}))
         return 2
     if result.returncode:
         return 2 if result.returncode == 2 else 1
-    # Bootstrap safeguard: connecting an executor also requires implementing and
-    # testing the evidence verifier defined in docs/standards/release.md. A stub exit 0
-    # or forged PASS output must never be enough to unlock release.
-    print(json.dumps({"state": "BLOCKED", "reason": "Native evidence verifier not implemented", "release_eligible": False}))
-    return 2
+    report_path = root / ".local/e2e" / run_id / "result.json"
+    if not report_path.is_file():
+        print(json.dumps({"state": "BLOCKED", "reason": "Current invocation produced no native evidence", "release_eligible": False}))
+        return 2
+    try:
+        spec = importlib.util.spec_from_file_location("tokenmeter_native_evidence", Path(__file__).with_name("native_e2e.py"))
+        if spec is None or spec.loader is None:
+            raise ImportError("Native evidence verifier unavailable")
+        verifier = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(verifier)
+        report = verifier.verify_report(root, report_path, run_id=run_id, phase=args.phase, not_before=started)
+    except (OSError, ValueError, RuntimeError, ImportError, KeyError, subprocess.SubprocessError) as exc:
+        blocked = type(exc).__name__ == "Blocked" or isinstance(exc, (ImportError, FileNotFoundError))
+        print(json.dumps({"state": "BLOCKED" if blocked else "FAIL", "reason": str(exc), "release_eligible": False}))
+        return 2 if blocked else 1
+    print(json.dumps({"state": "PASS", "scope": "iteration_native_e2e", "report": str(report_path),
+                      "executed_cases": report["executed_cases"], "platform": report["platform"], "release_eligible": False}))
+    return 0
 
 
 if __name__ == "__main__":

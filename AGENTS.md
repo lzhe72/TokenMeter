@@ -37,11 +37,11 @@
 6. 修复问题先增加稳定复现用例，再修实现，再执行回归。使用 [修复模板](docs/templates/bugfix.md)。
 7. 不手写通过报告，不伪造厂商日志兼容性，不将合成数据工具的自测宣称为 App E2E。
 8. 文档基线后先按 SOP-009 建立真实 App、服务、数据库初始化和原生测试 target/runner 的工程骨架，不要求预先存在业务红测或产品 PASS。缺 Xcode、GUI 或执行器只阻断依赖它们的构建、运行和验收；可继续有独立验证条件的源码、fixture、测试编写和文档任务。分别记录完成与 BLOCKED，禁止认证旁路或伪造业务结果。生产签名/公证与发布凭据属于 SOP-017/018 前提，不能作为开始开发的前提。
-9. 只有自动门禁为 `PASS` 才能发布安装包、部署服务端或更新 appcast。当前仓库处于基础规范阶段，产品 E2E 尚未接通。
+9. 只有对应 `distribution_profile`（内部或公开）的发布门禁为 `PASS` 才能正式分发安装包、部署服务端或更新 appcast。TM-001 已接入真实原生执行器，当前实现与运行结果以 [docs/status.md](docs/status.md) 为准；迭代通过不替代最终 DMG 安装升级、全平台及受保护发布条件。公开 profile 另要求 Developer ID 与公证；内部 profile 的自动包级门禁尚未实现时为 BLOCKED。
 
 ## 当前可执行命令
 
-在仓库根目录执行，Python 3.10+，无需第三方依赖：
+在仓库根目录执行以下治理检查，Python 3.10+ 无需第三方包；代码签名工具自测还需要 `openssl` 命令：
 
 ```sh
 python3 scripts/check_docs.py --mode structure
@@ -50,11 +50,23 @@ python3 scripts/quality_gate.py check
 python3 -m unittest discover -s tests/governance -p 'test_*.py'
 python3 scripts/test_data.py generate --run-id demo --seed 42
 python3 scripts/test_data.py reset --run-id demo
+```
+
+服务端和原生门禁需先按 [SOP-009](sop/SOP-009-environment.md) 在隔离环境安装锁定依赖，再执行 [SOP-013](sop/SOP-013-build-and-check.md) 的基础回归和 [SOP-014](sop/SOP-014-e2e.md) 的原生流程：
+
+```sh
+python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
+python3 -m pytest tests/server -q
+python3 scripts/test_device_credentials.py
+python3 scripts/test_endpoint_configuration.py
+python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
 python3 scripts/quality_gate.py iteration
 python3 scripts/quality_gate.py release
 ```
 
-编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。最后两条在真实产品 E2E 接通前必须返回非零 `BLOCKED`；不要为使 CI 变绿删掉阻断。
+Swift 凭据和地址配置边界检查可在有 Command Line Tools 的本机 macOS 执行，但不能替代原生用例。现有六例原生门禁要求两台 GitHub Mac 各自有完整 Xcode 与已登录桌面；TM-001 第004例的隔离临时签名和更新源在执行 App 的同一台 Mac 上运行，默认回环地址 `http://127.0.0.1:49177/appcast.xml`，无需公网隧道。`127.0.0.1` 始终指正在运行 App 的那台 Mac，远端 runner 不是用户本机。用户本机仅有 Command Line Tools 且 AX 权限未授时不声称本机原生 E2E 通过，也不改系统证书信任/TCC；该状态不替代或阻断远端六例有效结果。缺实际运行条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
+
+编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。
 
 ## 数据与实现约束
 
@@ -63,7 +75,8 @@ python3 scripts/quality_gate.py release
 - 累计计数、缓存子项、会话分支、子代理及重复同步必须有专门用例；未知值不能用零掩盖。
 - 测试只使用隔离目录与合成账号。不能扫描开发者真实 `~/.codex`、`~/.claude` 生成测试数据。
 - 时间统一存 UTC，团队默认 Asia/Shanghai；费用以价格版本计算，并标注估算。
-- 先保持客户端/服务端的简单单体结构。客户端 SQLite；服务端开发 SQLite，生产 MySQL。
+- 先保持客户端/服务端的简单单体结构。客户端 SQLite；v0.1.0 服务端测试与生产均使用隔离的 SQLite 文件，MySQL 迁移在后续独立版本设计和验证。
+- v0.1.0 测试库为 `database/test/test.db`，只供 Codex 回归；用户生产库为 `database/production/production.db`，首次建库预置 `admin / 123456` 并强制改密。初始化、SQL 造数、只读检查和生产服务启动必须按 [数据库说明](database/README.md) 与 SOP-009/010 执行，不得用生产库重置测试数据。
 
 ## 文档、Git 与交接
 
@@ -73,5 +86,6 @@ python3 scripts/quality_gate.py release
 - 长任务在 docs/status.md 保留已完成项、未完成项、实际测试命令、结果和阻塞项，便于新会话接续。
 - 完成汇报写清：改了什么、实际执行了什么、结果/证据在哪里、产品 E2E 是否通过、是否具备发布资格。
 - 对测试和质量门禁的改动同样需要回归，不能仅通过修改期望值消除失败。
+- 用户已授权后续工作由 Codex 自行提交、推送、创建 PR，并在适用检查通过后合并；按 SOP-019 核对候选 SHA、检查和远端结果，不再重复索取授权。授权不等于允许跳过产品 E2E 或发布门禁。
 
 文件名使用 `AGENTS.md`。Codex 的目录级指令读取行为见 [官方说明](https://learn.chatgpt.com/docs/agent-configuration/agents-md)。

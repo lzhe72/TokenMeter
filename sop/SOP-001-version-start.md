@@ -1,6 +1,6 @@
 # SOP-001 版本立项
 
-**修订：** 3　**状态：** baselined　**适用：** all
+**修订：** 4　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -24,7 +24,7 @@
 2. 按变更性质选择 MAJOR/MINOR/PATCH，在立项时以 UTC 秒时间分配 vMAJOR.MINOR.PATCH-YYYYMMDDTHHMMSSZ；此后固定不变。
 3. 按版本规范建立 releases/<release_id>/00-manifest.json 及 01–06 编号文档；未完成文档登记为 draft，保留明确待补内容。技术设计先按 SOP-004 在开发计划的独立设计章节或附件中形成，再编写 SOP-005 的实施计划。
 4. 更新 releases/current.json、文档目录、Changelog 的精确版本标题；使用版本规范中的分支和提交命名，先保留现有未提交工作。
-5. 明确档案为未发布，按 SOP-024 执行 `python3 scripts/check_docs.py --mode structure` 后进入需求编制；全套计划完成后才进入 SOP-008。本轮基础建设继续使用 v0.0.1-20260929T060944Z，不创建产品 tag。
+5. 明确档案为未发布，按 SOP-024 执行 `python3 scripts/check_docs.py --mode structure` 后进入需求编制；全套计划完成后才进入 SOP-008。以 current.json 和本次用户目标确定继续当前迭代还是分配新版本，不将任何历史基础版本写死为后续立项结果；立项不创建产品 tag。
 
 ## 输出
 

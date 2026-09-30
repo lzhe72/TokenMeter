@@ -1,6 +1,6 @@
 # SOP-019 Git 发布
 
-**修订：** 3　**状态：** baselined　**适用：** all
+**修订：** 4　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -27,7 +27,13 @@ release_id、源码提交、版本 manifest、Changelog、实际检查证据及�
 3. 确认提交范围后，按授权目标执行 `git push --set-upstream origin HEAD`，默认推送当前版本分支。不得隐式强推、改写远端历史或改推主分支；冲突先检查原因。
 4. 用 `git rev-parse HEAD` 和 `git ls-remote --heads origin <实际分支名>` 核对完整 SHA；保存命令、退出码、远端引用与结果到本轮证据。仅推送源码时转 SOP-022，不创建 Tag/Release 或通行证。
 
-### 正式产品发布
+### PR 创建与合并
+
+用户已授权后续由 Codex 自行创建 PR 并在适用检查通过后合并。源码推送后先用 `gh pr list --head <实际分支>` 查重；不存在时用 `gh pr create --base <已核实默认分支> --head <实际分支> --title <版本标题> --body-file <说明文件>` 创建。说明写最终范围、实际测试、阻塞与版本档案；创建后将 PR 链接附加到当前任务。
+
+用 `gh pr view <PR> --json headRefOid,mergeable,statusCheckRollup` 和 `gh pr checks <PR>` 核对实际候选及检查，失败先读取日志并按 SOP-015 修复。产品功能 PR 必须有完整本轮与历史 E2E，通过后以 `gh pr merge <PR> --merge --match-head-commit <已验证SHA>` 合并；不得使用管理员绕过、删除失败检查或把产品改成基础规范逃避。合并后核对 PR merged 状态、merge SHA 与远端主分支，再快进同步本地；保留失败证据。缺环境时可以创建带明确阻塞的 PR，不能宣称功能验收完成或强行合并。
+
+### 正式产品发布步骤
 
 1. 执行 python3 scripts/release_registry.py show 核对当前档案；如发布其他版本，使用 --release-id 指定实际编号，并核对返回编号。
 2. 受保护发布任务消费候选 CI 生成的原通行证，重新核验受信运行身份、来源、签名产物摘要、对应 commit 和精确 Changelog 标题。若后续配置 Tag 触发，仅用于核对已经通过的发布，不补做或替代创建 Tag 前的候选门禁。

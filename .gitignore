@@ -8,3 +8,15 @@ DerivedData/
 .env
 .env.*
 !.env.example
+
+.pytest_cache/
+xcuserdata/
+
+# Local SQLite data and generated, salted seed SQL. Directory placeholders stay tracked.
+database/test/test.db*
+database/test/seed.sql
+database/test/seed.sql.tmp-*
+database/test/.tokenmeter-test-database.json*
+database/production/production.db*
+database/production/seed.sql
+database/*/.bootstrap-*/
