@@ -1,5 +1,10 @@
 # v0.1.0-20260929T074814Z — 实际测试结果
 
+## 2026-10-02 · 709d配置与更新三次定向原件
+
+TM-001同一709d源码/DMG候选：`CONFIG-01..06`独立run`local-a9e4d3d99b6f4997b2f5df32a8d95563`六父/27步、清理PASS，六项审计PASS；`UPDATE-01..04`run`local-6f929a978dc54f608824992e10d7ef1b`四父/15步、清理PASS，仅UPDATE-01/04审计PASS；`UPDATE-06..08`run`local-8c8930fe7be44ef88bdf56a41b74900c`三父/15步、清理PASS，仅UPDATE-07审计PASS。三批结果表和verification均逐份回读PASS，原始报告与Excel在`.local/ci/<run_id>/`及`.local/test-results/<run_id>/`，总表分别登记第29–31批次。UPDATE-05父例/13变体已单独登记第16批次，8父+13变体的局部结果不可合并伪称最终完整门禁。旧c291完整门禁FAIL、其余功能与正式发行状态不变。
+
+
 本文按 SOP-014/018/022/024 汇总已保存的真实原件和当前执行结果。它是结果索引，不是手写通过报告。dev07六个聚合场景组属于历史运行，不能回填新增精细TC。首轮精细全量`local-7feea03dd72e4eddba0651cede8fd23d`为BLOCKED；新版全量`local-343e54113b0b442383e80f137013014b`为FAIL。两轮原件均保留，后续定向及新包运行不改写它们。
 
 ## UPDATE-05定向探针：PASS，仅限709d候选（2026-10-02回读）

@@ -2,7 +2,11 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
-TM-003 的 `CORE-01`～`CORE-07`固定模块测试、套件注册表和 `run_source_check.mjs` 已随本地 master 合入本文档候选树；机器用例现逐条绑定程序、测试名、owner 重置和独立命令，`TEST_CASES.md`与总表同步。先前各模块 PASS 原件仍只证明原候选；本次绑定后的整合树尚未新run，产品 App/IPC/真实授权和正式发行仍NOT_RUN。文档树 `.local` 目录权限曾使治理两例在前置安全检查失败，改回 owner 0700 后该两例重跑2/2 PASS；全量治理首次509/511，待整合树复核。
+TM-001 709d候选的CONFIG六父、UPDATE-01..04四父、UPDATE-06..08三父分别在三次真实App定向run中PASS，共57步，独立Excel/verification及所列独立审计均回读，登记总表第29–31批次。UPDATE-05另见第16批次；旧完整门禁FAIL与正式发行NOT_RUN保留。
+
+TM-003同树绑定候选`2324173`重新执行CORE01–07四套固定source_check，合计7/7、27步，四份独立Excel回读PASS，登记第32–35批次；治理全量511/511 PASS。本结果只证明辅助模块，0.3产品E2E与正式门禁仍NOT_RUN。
+
+TM-003 的 `CORE-01`～`CORE-07`固定模块测试、套件注册表和 `run_source_check.mjs` 已随本地 master 合入本文档候选树；机器用例现逐条绑定程序、测试名、owner 重置和独立命令，`TEST_CASES.md`与总表同步。先前各模块 PASS 原件仍只证明原候选；本次绑定后的整合树尚未新run，产品 App/IPC/真实授权和正式发行仍NOT_RUN。文档树 `.local` 目录权限曾使治理两例在前置安全检查失败，改回 owner 0700 后该两例重跑2/2 PASS；全量治理首次509/511，权限恢复后整合树复核511/511 PASS。
 
 TM-001 709d候选`ADMIN`定向run`local-cd15a5fef2444f748088d1fcdd29fe0d`覆盖6父+5变体，11行/33步PASS、清理和Excel回读PASS；仅`ADMIN-03`独立审计PASS，作为总表第28批次。其他TM-001功能、完整审计、旧c291完整门禁FAIL与正式发行NOT_RUN保持。
 
