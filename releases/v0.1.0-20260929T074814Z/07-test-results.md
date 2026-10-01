@@ -1,5 +1,9 @@
 # v0.1.0-20260929T074814Z — 实际测试结果
 
+## 2026-10-02 · 709d首次建库四例定向原件
+
+安装App定向run`local-3d36f9cbe62a4c1e889e8ea2fa476281`绑定709d源码`709d21253a0f88bc703a431cbf3adba3df17e508`及tree`6309bb70540407d90c8b059b4faef15879e691f9`，固定`BOOTSTRAP-01..04`四父例4/4、18步、清理PASS，12张截图；原报告SHA-256`cf4512d135781f83284314ec890471971a8b165dd7a0eadbdbc4f3b21e4feee1`。独立结果Excel的verification回读12 Sheet、四例18步PASS，SHA-256`72bbb219917b522635c99d011011fda80b7fcfb5e9a121472dd90a603936a502`，登记根总表第36批次。原件见`.local/ci/<run_id>/`及`.local/test-results/<run_id>/`；本批没有独立审计。仅证明该候选的首次建库定向，其他功能、旧c291完整门禁FAIL、正式发行NOT_RUN不变。
+
 ## 2026-10-02 · 709d配置与更新三次定向原件
 
 TM-001同一709d源码/DMG候选：`CONFIG-01..06`独立run`local-a9e4d3d99b6f4997b2f5df32a8d95563`六父/27步、清理PASS，六项审计PASS；`UPDATE-01..04`run`local-6f929a978dc54f608824992e10d7ef1b`四父/15步、清理PASS，仅UPDATE-01/04审计PASS；`UPDATE-06..08`run`local-8c8930fe7be44ef88bdf56a41b74900c`三父/15步、清理PASS，仅UPDATE-07审计PASS。三批结果表和verification均逐份回读PASS，原始报告与Excel在`.local/ci/<run_id>/`及`.local/test-results/<run_id>/`，总表分别登记第29–31批次。UPDATE-05父例/13变体已单独登记第16批次，8父+13变体的局部结果不可合并伪称最终完整门禁。旧c291完整门禁FAIL、其余功能与正式发行状态不变。

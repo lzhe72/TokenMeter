@@ -126,3 +126,7 @@ TM-004 开发会话交接其独立分支 `codex/v0.4.0-20261001T040433Z/claude-e
 当前解析器固定：只消费完整LF行；同 `message.id` 的双内容块和原样复制 fork 只记一次；父 Agent tool_result 的用量摘要不再入账，子 Agent 只有可验证的同版父 summary 才归属；0/0 保持 `ambiguous_zero`，未知版本、缺/非法 usage、时间与结构记诊断，同ID冲突或不明继承保留首可信调用，不把内容/路径放入返回结果。11项单元检查使用 PARSER-02/03、LINEAGE-01/02/05、INCREMENTAL-01、DIAG-01/02 的稳定父TC编号作范围提示，但没有执行这些TC的完整输入/逐步UI/DB判据，不能代填测试清单。改写UUID fork、`fork-context-ref`、嵌套Agent及有效零的原生来源仍不足，保留 `baseline_pending`；整版严格baseline和quality因详细用例仍draft而失败，正式数据、产品E2E/发行NOT_RUN。
 
 编制此记录时主仓库Git对象库路径在外部操作后暂不可见，文档会话不能核对新提交对象或提交本版文档，只按开发交接的短SHA、仍在其工作树中的源码文件和实际日志记录。恢复后须读回完整commit/tree并把本记录纳入文档候选，不把短SHA或单元日志当作整版基线。
+
+## 2026-10-02 · 整合候选CORE01–05固定模块结果
+
+被测干净整合候选`08463b31c5eef5e6c90978cb8d6cd79e4aa76e1a`（tree`4006e74c124de972541385dc45ff50eb9dce5a75`）对三套固定`source_check`分别运行：`tm004-core-20261001T213019Z`的CORE01–03为3/3、九步、原报告SHA-256`9cc1946772bd4aa5bda5ff3d82c0c87d62aa5ae4b7aab7d4ed33cd712557cc5c`、Excel`720dd83017a9765eccf26067ebddcd0edfce77bfa1a49a8eeddbaf2e226c60f8`；`tm004-core04-20261001T213019Z`的CORE04为1/1、三步、报告`808475184b90b425b83b088f1268c9b46c2623962f489c7ec5f5712816fb3019`、Excel`0c7326318027f173e84714eec6aa17c17601e4b497ee1f2a94507d6964c9f2e5`；`tm004-core05-20261001T213019Z`的CORE05为1/1、四步、报告`30d976676c63a3bf2a0112d125430159e5da0e94d4e2bf4affd4ec04b1e4ae64`、Excel`59a6bc54758c89992d9d82d9cb392fbad9d6308f5a3173a2855a0952d04f39dd`。三份原始TAP、逐例清理及独立`verification.json`均按哈希回读PASS；原件位于`.local/source-check-runs/<run_id>/`和`.local/test-results/<run_id>/`，总表第37–39批次仅登记摘要/入口。结果证明对应辅助合同，不证明原20产品TC、真实App/授权/服务或正式发行；这些仍NOT_RUN。
