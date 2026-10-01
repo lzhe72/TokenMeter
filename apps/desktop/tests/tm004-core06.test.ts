@@ -129,7 +129,9 @@ class Harness {
     this.data = new Map([...(copyFrom?.data ?? original)].map(([name, body]) => [name, Buffer.from(body)]));
     if (copyFrom) {
       cpSync(join(copyFrom.profile, 'sources'), join(this.profile, 'sources'), {recursive: true});
+      chmodSync(join(this.profile, 'sources'), 0o700);
       copyFileSync(copyFrom.dbPath, this.dbPath);
+      chmodSync(this.dbPath, 0o600);
       this.sourceId = copyFrom.sourceId;
       this.accountId = copyFrom.accountId;
       this.principalKey = copyFrom.principalKey;
