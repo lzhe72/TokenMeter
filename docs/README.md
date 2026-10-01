@@ -11,7 +11,7 @@
 | 定义和执行任一步骤 | [SOP 总索引](../sop/README.md)：先查工作，再完整读独立文件 |
 | 理解全流程顺序 | [全流程框架](lifecycle.md) |
 | 阅读完整设计 | [总设计计划](design-plan.md) |
-| 查阅问题、决定与经验 | [复盘索引](retrospectives/README.md)：9月历史和10月1日接续 |
+| 查阅问题、决定与经验 | [复盘索引](retrospectives/README.md)：9月历史、10月1日前段及10月1日晚至2日续篇 |
 | 接续上次任务 | [当前状态](status.md) |
 | 确认产品需求 | [产品约定](product/README.md)、[独立验收登记](../tests/acceptance.json)、[功能矩阵](../tests/feature_matrix.json) |
 | 修改模块/数据/接口 | [架构](architecture/README.md) |

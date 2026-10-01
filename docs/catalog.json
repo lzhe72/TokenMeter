@@ -1928,6 +1928,25 @@
       ],
       "updated_at": "2026-10-02",
       "sop": "sop/SOP-022-archive-handoff.md"
+    },
+    {
+      "doc_id": "DOC-RETRO-20261001-20261002",
+      "path": "docs/retrospectives/2026-10-01--2026-10-02-followup.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/retrospectives/2026-10-01-development-and-governance.md",
+        "docs/project-sessions.md",
+        "docs/status.md",
+        "releases/v0.1.0-20260929T074814Z/07-test-results.md",
+        "releases/v0.2.0-20261001T034118Z/06-iteration-record.md",
+        "releases/v0.3.0-20261001T034652Z/06-iteration-record.md",
+        "releases/v0.5.0-20261001T034729Z/06-iteration-record.md"
+      ],
+      "updated_at": "2026-10-02",
+      "sop": "sop/SOP-023-iteration.md"
     }
   ]
 }
