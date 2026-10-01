@@ -75,16 +75,18 @@ test('TM004 guarded module boundary: synchronous commit runs before scan lease c
       return () => { order.push('guard'); assert.equal(order.includes('cancel'), false); }; },
     cancelScan() { order.push('cancel'); },
   };
-  const result = await commitClaudeSource(access, sourceId, secret, async () => null, plan => {
+  const result = await commitClaudeSource(access, sourceId, secret, async () => null, (plan, commitGuard) => {
     order.push('commit');
     assert.equal(order.includes('guard'), true);
     assert.equal(order.includes('cancel'), false);
+    assert.equal(typeof commitGuard, 'function');
+    commitGuard(); // The SQLite adapter invokes the same guard again before COMMIT.
     assert.equal(plan.calls.length, 1);
     assert.equal(plan.cursors.length, 1);
     return plan.calls[0].inputTokens + plan.calls[0].outputTokens;
   });
   assert.equal(result, 20);
-  assert.deepEqual(order.slice(-4), ['get-guard', 'guard', 'commit', 'cancel']);
+  assert.deepEqual(order.slice(-5), ['get-guard', 'guard', 'commit', 'guard', 'cancel']);
 });
 
 test('TM004 guarded module boundary: revoked lease cannot invoke SQLite commit', async () => {

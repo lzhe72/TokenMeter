@@ -60,7 +60,8 @@ export function prepareClaudeBatch(plan: ClaudeScanPlan): ClaudePreparedBatch {
 export async function collectClaudeUsage<T>(
   access: GuardedClaudeSourceScanAccess, sourceId: string, secret: Buffer,
   loadCursor: (fileIdentity: string) => Promise<ClaudeFileCursor | null>,
-  commitSync: (batch: ClaudePreparedBatch) => T,
+  commitSync: (batch: ClaudePreparedBatch, guard: () => void) => T,
 ): Promise<T> {
-  return commitClaudeSource(access, sourceId, secret, loadCursor, plan => commitSync(prepareClaudeBatch(plan)));
+  return commitClaudeSource(access, sourceId, secret, loadCursor,
+    (plan, guard) => commitSync(prepareClaudeBatch(plan), guard));
 }

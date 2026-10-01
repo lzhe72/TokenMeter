@@ -48,7 +48,7 @@ test('TM004 collection module boundary: guarded source reaches synchronous batch
   const scanId = '00000000-0000-4000-8000-000000000001';
   const sourceId = '00000000-0000-4000-8000-000000000002';
   const secret = Buffer.alloc(32, 0x42);
-  let guardCalled = false, canceled = false, committed = false;
+  let guardCalls = 0, canceled = false, committed = false;
   const access: GuardedClaudeSourceScanAccess = {
     async beginCandidateScan() { return {scanId, complete: true, candidates: [{
       relativeName: 'project/session.jsonl', size: bytes.length,
@@ -56,12 +56,12 @@ test('TM004 collection module boundary: guarded source reaches synchronous batch
     }]}; },
     async nextCandidatePage() { throw new Error('unexpected_page'); },
     async readCandidateChunk(_scan, _token, offset, maxBytes) { return bytes.subarray(offset, offset + maxBytes); },
-    async commitGuard() { return () => { guardCalled = true; assert.equal(canceled, false); }; },
+    async commitGuard() { return () => { guardCalls++; assert.equal(canceled, false); }; },
     cancelScan() { canceled = true; },
   };
-  const receipt = await collectClaudeUsage(access, sourceId, secret, async () => null, batch => {
+  const receipt = await collectClaudeUsage(access, sourceId, secret, async () => null, (batch, guard) => {
     committed = true;
-    assert.equal(guardCalled, true);
+    assert.equal(guardCalls, 1);
     assert.equal(canceled, false);
     assert.equal(batch.events.length, 1);
     assert.deepEqual(batch.events[0].usage, {inputTokens: 13, outputTokens: 7,
@@ -70,9 +70,11 @@ test('TM004 collection module boundary: guarded source reaches synchronous batch
     assert.equal(batch.cursors[0].committedByteOffset, bytes.length);
     assert.deepEqual(batch.coverage, {scanIncomplete: false, candidateCount: 1});
     assert.equal(JSON.stringify(batch).includes('project/session.jsonl'), false);
+    guard();
     return {accepted: batch.events.length};
   });
   assert.deepEqual(receipt, {accepted: 1});
+  assert.equal(guardCalls, 2);
   assert.equal(committed, true);
   assert.equal(canceled, true);
 });

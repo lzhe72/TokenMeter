@@ -126,12 +126,12 @@ export async function scanClaudeSource(
 export async function commitClaudeSource<T>(
   access: GuardedClaudeSourceScanAccess, sourceId: string, secret: Buffer,
   loadCursor: (fileIdentity: string) => Promise<ClaudeFileCursor | null>,
-  commitSync: (plan: ClaudeScanPlan) => T,
+  commitSync: (plan: ClaudeScanPlan, guard: () => void) => T,
 ): Promise<T> {
   return withClaudeScanLease(access, sourceId, secret, loadCursor, async (plan, scanId) => {
     const guard = await access.commitGuard(scanId);
     guard();
-    const result = commitSync(plan);
+    const result = commitSync(plan, guard);
     if (result !== null && typeof result === 'object' && 'then' in result)
       throw new Error('claude_async_commit');
     return result;
