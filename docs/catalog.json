@@ -12,7 +12,7 @@
         "docs/standards/documentation.md",
         "sop/README.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -27,7 +27,7 @@
         "releases/v0.0.1-20260929T060944Z/05-release-plan.md",
         "releases/v0.1.0-20260929T074814Z/05-release-plan.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-007-release-plan.md"
     },
     {
@@ -177,7 +177,7 @@
         "docs/lifecycle.md",
         "docs/architecture/README.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-012-development.md"
     },
     {
@@ -190,7 +190,7 @@
       "inputs": [
         "docs/decision-inputs.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -208,7 +208,7 @@
         "scripts/quality_gate.py",
         "scripts/native_e2e.py"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-018-release-gate.md"
     },
     {
@@ -223,7 +223,7 @@
         "docs/standards/documentation.md",
         "scripts/release_contract.py"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-001-version-start.md"
     },
     {
@@ -540,7 +540,7 @@
         "docs/decision-inputs.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -554,7 +554,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -568,7 +568,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -582,7 +582,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -596,7 +596,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -610,7 +610,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -624,7 +624,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -638,7 +638,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -652,7 +652,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -666,7 +666,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -687,7 +687,7 @@
         "scripts/native_e2e.py",
         "releases/v0.1.0-20260929T074814Z/03-development-plan.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -704,7 +704,7 @@
         "scripts/native_e2e.py",
         "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -719,7 +719,7 @@
         "docs/standards/documentation.md",
         "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -733,7 +733,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -751,7 +751,7 @@
         "scripts/test_endpoint_configuration.py",
         "tests/macos/EndpointConfigurationTests.swift"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -771,7 +771,7 @@
         "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
         "tests/governance/test_native_e2e.py"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -785,7 +785,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -799,7 +799,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -815,7 +815,7 @@
         "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
         "scripts/package_preview_dmg.py"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -831,7 +831,7 @@
         "sop/SOP-017-package-validation.md",
         "scripts/quality_gate.py"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -845,7 +845,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -859,7 +859,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -873,7 +873,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -887,7 +887,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -901,7 +901,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -915,7 +915,7 @@
         "sop/README.md",
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -1012,8 +1012,79 @@
         "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
         "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-023-iteration.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-STANDARDS-PROJECT-WORKBOOK-MD",
+      "path": "docs/standards/project-workbook.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-STANDARDS-TEST-CASES-MD",
+      "path": "docs/standards/test-cases.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-TEMPLATES-TEST-CASE-MD",
+      "path": "docs/templates/test-case.md",
+      "type": "template",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-TEMPLATES-TEST-EXECUTION-MD",
+      "path": "docs/templates/test-execution.md",
+      "type": "template",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-ELECTRON-LOCAL-010",
+      "path": "docs/architecture/01-electron-local.md",
+      "type": "design",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/01-requirements.md",
+        "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-004-technical-design.md"
     }
   ]
 }

@@ -1,5 +1,7 @@
 # 全流程版本编号与查询
 
+> 2026-09-30当前执行基线：[Electron本机设计](../architecture/01-electron-local.md)。Electron/React/TypeScript、Vite/electron-vite、Playwright Electron、electron-builder；本机开发/全量测试/打包，当前仅macOS15 Intel实测范围。Git保存源码/文档/版本；DMG、更新包、报告和通行证只存本地，Actions仅明确多环境要求时启用。旧流程在历史提交与明确标记的历史设计中查询。每项功能真实E2E与发布门禁不变。
+
 ## 唯一编号
 
 发布编号（`release_id`）固定格式：
@@ -26,14 +28,14 @@ v<MAJOR>.<MINOR>.<PATCH>-<YYYYMMDD>T<HHMMSS>Z
 | 功能分支 | `codex/<release_id>/<短功能名>` |
 | commit 标题 | `[<release_id>][TM-编号] 类型: 具体变更` |
 | Git annotated tag | 与 `release_id` 完全相同，通过门禁后才创建 |
-| GitHub Release 标题 | 与 `release_id` 完全相同 |
+| 本地发行目录 | 以 `release_id` 命名，不创建GitHub Release |
 | Changelog 二级标题 | `## <release_id>`，不使用模糊的“本次更新” |
 | 发布资产 | `<release_id>-<平台/组件>.<后缀>` |
-| 通行证 | `<release_id>.passport.json`，仅受保护 CI 校验通过后签发 |
+| 通行证 | `<release_id>.passport.json`，仅本机机器门禁校验完整证据后签发 |
 
 Changelog 每个版本记录状态、关联功能、变更、兼容/迁移影响、测试计划和发布文档链接。计划中或阻断中的版本也可提前写 Changelog，但必须明确“未发布”，不能据此创建产品 tag。
 
-用户授权后可以把已检查的工程基础源码和文档推送到版本分支，按 SOP-019 的源码推送流程核对远端 SHA，并保留产品真实测试状态。源码提交与正式产品 Tag/Release 分别记录，正式发布继续要求有效通行证。
+用户授权后，各需求分支先在本地提交并由总控集成到本地`master`；对最终整合候选完成适用检查与完整产品E2E后，由总控统一推送远端`master`并读回SHA。需求分支单独的测试或提交不能作为远端整合候选通过证据。源码提交、正式源码Tag与本地发行分别记录，正式发布继续要求有效通行证；步骤见[SOP-019](../../sop/SOP-019-git-release.md)。
 
 ## 每个编号对应的版本档案
 
@@ -50,7 +52,7 @@ releases/<release_id>/
 
 文件名使用两位顺序前缀：`00` 为机器总索引，`01`–`06` 依次为需求、拆解、开发计划、测试计划、发布预案、迭代记录。编号体现主文档顺序，迭代记录从立项起持续追加。技术设计仍在开发计划中记录或链接独立设计附件，按 SOP-004 在开发计划前完成。模板复制到版本目录时使用这些目标文件名；机器索引的语义键和文档 ID 保持稳定。
 
-`program_bindings_status` 记录计划中的程序是否已建立：planned 允许 `test_programs=[]`、`test_data_program=null`；ready 要求真实的非空程序绑定。两者均需完整需求→任务→用例追踪和实际 SOP 文件，已填写的引用必须有效。此字段不表示测试已通过：本基础版本的治理程序为 ready，产品 E2E 仍 BLOCKED。
+`program_bindings_status` 记录计划中的程序是否已建立：planned 允许 `test_programs=[]`、`test_data_program=null`；ready 要求真实的非空程序绑定。两者均需完整需求→任务→用例追踪和实际 SOP 文件，已填写的引用必须有效。此字段不表示测试已通过：本基础版本的治理程序为 ready；当前 Electron 开发包 E2E 六组中升级004 FAIL，精细TC仍未执行。
 
 检查器与查询器共用 [release_contract.py](../../scripts/release_contract.py)，拒绝空追踪、孤立需求/任务/用例、错功能归属、程序或 SOP 断链，以及把版本目录文档错误登记为 all。编制中的草稿使用 structure，并直接读取 00-manifest.json；严格 baseline 和完整版本查询要求文档基线齐全，不能为了查询草稿而伪标完成。
 
@@ -63,7 +65,7 @@ python3 scripts/release_registry.py show
 python3 scripts/release_registry.py show --release-id v0.0.1-20260929T060944Z
 ```
 
-默认从 current.json 取编号；已有同名 Tag 时读取该 Tag 中的不可变档案，否则读取工作树。输出需求/功能/任务/用例、数据程序和 SOP、计划、Changelog、本地 Git 提交/Tag、预期通行证资产名。它不签发或验证通行证；发布资格仍由受保护门禁判定。尚未立项的路线图版本没有完整 release ID，不能当作已发布版本查询。
+默认从 current.json 取编号；已有同名 Tag 时读取该 Tag 中的不可变档案，否则读取工作树。输出需求/功能/任务/用例、数据程序和 SOP、计划、Changelog、本地 Git 提交/Tag、预期通行证资产名。它不签发或验证通行证；发布资格仍由本机机器门禁判定。尚未立项的路线图版本没有完整 release ID，不能当作已发布版本查询。
 
 未发布时直接读取 `releases/<release_id>/00-manifest.json`，索引中列出需求、拆解、计划、测试程序、Changelog、发布说明和预期通行证名。正式 Git 发布后可通过以下命令查询不可变版本档案：
 
@@ -73,15 +75,15 @@ git log --all --fixed-strings --grep='<release_id>'
 git show <release_id>:CHANGELOG.md
 ```
 
-查询命令中的 `<release_id>` 替换成实际编号。正式版本的通行证与测试报告从同名 Git Release 的附件查询，并核对提交和产物摘要；当前版本无发布 tag 和 PASS 通行证。Git tag 存在也不能替代通行证验证。后续自动发布工具必须实现同样的机器索引校验。
+查询命令中的`<release_id>`替换为实际编号。通行证与原始报告从本机同名版本目录查询并核对提交/产物摘要；Git tag提供源码追踪，不单独证明发布资格。
 
 ## 通行证与源码提交的关系
 
 先提交全部源码、计划、测试、数据和 Changelog，形成干净候选提交；再构建、执行 E2E 和生成通行证。通行证引用被测提交，不回写到该提交中，避免“提交内的文件必须包含自己的 commit SHA”的循环依赖。
 
-通行证作为受保护 CI 的不可变产物和 GitHub Release 附件保存，记录：release ID、distribution_profile（internal/public）、源码提交、构建物摘要、需求/用例/fixture 摘要、平台矩阵、原生报告摘要、CI 运行身份、profile对应签名/Gatekeeper结果（public另含公证）、通过时间和最终判定。发布任务验证证据与候选一致后，才创建指向该提交的 annotated tag 并分发同一批构建物。
+通行证作为本机版本档案保存：release ID、internal profile、被测SHA/tree、原包摘要、用例/fixture/SOP摘要、实际平台、原始报告、运行身份、签名/Gatekeeper实际结果、通过时间与判定。只有机器复核通过才创建源码Tag并归档原件，不创建GitHub Release。
 
-发布前先通过默认分支上的 release-candidate.yml，指定完整候选 SHA，校验真实 HEAD 和同名 Tag 尚不存在，再执行 release 门禁。常规 quality.yml 只运行 iteration，不能将“推送 Tag 后才测试”作为首次发布验证。当前候选工作流无写入或发布权限；远端保护、可信签发与发布任务待实现，不能因候选上下文检查 PASS 就创建 Tag。
+发布前以本地`master`最终整合提交为完整候选，核对真实HEAD、源码tree、同名Tag尚不存在，再执行最终包与本机发布门禁。只有PASS且远端保护实际可满足，才由总控按SOP-019推送或受控PR合并、读回远端SHA/tree，随后创建源码Tag；不能将“推送Tag后才测试”作为首次验证。GitHub Actions完整测试只在用户明确要求多环境时运行；2026-10-01已移除远端`master`旧Actions必需检查，当前仍强制PR及其他保护。不得用旧候选或手写状态创建Tag。
 
 失败或缺环境只产生 FAIL/BLOCKED 执行记录，不签发通行证。不得手写、复制旧版本或接受任意外部 PASS JSON；验证规则见 [发布门禁](release.md)。
 
