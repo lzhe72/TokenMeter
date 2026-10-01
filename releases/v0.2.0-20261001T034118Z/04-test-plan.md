@@ -45,7 +45,7 @@
 | `TC-TM002-ACCESS-04` | ACCESS | 002 | 失效后重新选择取消仍停止读取。 |
 | `TC-TM002-ACCESS-05` | ACCESS | 002 | 恢复 A 后由真实面板重新选择并明确确认，刷新和重启均可见新增候选一次。 |
 | `TC-TM002-ACCESS-06` | ACCESS | 辅助 | 内部能力对稳定的 1201 个候选按 256/256/256/256/177 五页穷尽；UI 预览仍标 1000 上限不完整，撤销或首页后在早排序位置真实插入候选分别使旧游标失效、覆盖不完整。 |
-| `TC-TM002-SECURITY-01` | ACCESS | 辅助 | renderer 伪造绝对路径/越界 IPC 被主进程拒绝；不代替产品 E2E。 |
+| `TC-TM002-SECURITY-01` | ACCESS | 辅助 | `previewSource.selectionId`的绝对路径、file URL、`../`及未签发UUID返回`invalid_selection`且不读B；不代替产品 E2E。 |
 | `TC-TM002-DATA-01` | DATA | 辅助 | fixture 只创建、改变、恢复并清理自己拥有的根；manifest/预期/摘要可重复。 |
 | `TC-TM002-CATALOG-01` | CATALOG | 辅助 | 0.1.0、0.2.0 TC 的 TASK 均按各自 release 校验，错误归属时检查失败。 |
 | `TC-TM002-EVIDENCE-01` | RUNNER | 辅助 | 每条产品 TC 的原始操作、独立预期、文件审计、安装包和清理证据缺一即 FAIL/BLOCKED。 |

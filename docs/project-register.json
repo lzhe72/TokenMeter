@@ -12,7 +12,7 @@
     "observed_source_commit": "6e80dd12d60ee5dad641bca030445a2153a269c9",
     "observed_working_tree_dirty": true,
     "production_initial_password_reference": "scripts/bootstrap_sqlite.py::PRODUCTION_INITIAL_PASSWORD（本机配置引用；总表不保存取值）",
-    "notes": "2026-10-01开发阶段：先完成TM001→TM005源码及各功能已基线固定TC回归；总控按依赖顺序本地整合，目标源码完成后按远端保护登记master。正式跨需求完整E2E、SOP018/020、稳定包和Tag待用户另行启动正式发行，当前完整发行门禁NOT_RUN。文档树当前版本指针0.2，历史13个TM001批次按原结果保留；TM003新增3条CORE辅助TC，新仓库候选7d77d63独立开发切片就绪但程序/产品结果仍缺；总目录219父TC/41变体。TM001 c291最终包门禁FAIL，新9f06cb1修复后定向App仍FAIL/BLOCKED/ENOSPC。TM002开发树已有实现与33个固定E2E叶入口，产品E2E受AX和隔离测试账号阻断；本独立文档树未合代码。TM004仅纯内存解析器子集单元通过；TM005仍为设计/纯统计候选。主仓库已在新位置恢复至本地master 8f6cac8；文档正从受保护快照迁入独立新worktree，旧Git对象丢失事实和测试原件仍保留。",
+    "notes": "2026-10-02文档同步：恢复的新主仓库本地master d606fbd 已含文档基线，旧Git对象丢失与历史c291门禁FAIL不变。TM003独立代码分支311deedf的CORE模块3/3 PASS原件已核对，但未进本文档树且不是产品E2E；模块结果Excel导出规范待SOP补齐。TM005新增3条纯统计CORE辅助TC，原32条产品父TC/6变体不变；总目录225父TC/41变体。正式跨需求产品门禁NOT_RUN，根Excel保存固定输入与历史13批次。 TM004新增3条reader CORE辅助TC，原20产品TC不变，切片核对待提交。 SOP会话模块结果修订4cca918/本地master整合6bbab2e已同步至项目登记和总表；TM003/TM005模块原始3/3与模块Excel/批次BLOCKED分别记录。 TM002 SECURITY-01三个路径变体明确previewSource.selectionId、短根和invalid_selection；TM005 CORE-01明确调用方传固定UTC界，不验证IANA换算。TM004 reader CORE-01/02/03独立切片在干净文档候选ebbcfd0就绪。 TM003新不可覆盖模块run tm003-core-20261001T163807Z的独立Excel已回读并作为第14批次登记；仅模块3/3，产品E2E NOT_RUN。 共享模块runner支持owned_root/memory_only清理类型；TM003新run tm003-core-20261001T165439Z第15批次已回读，最新模块3/3，旧ea6批次保留。 TM003新增CORE-04/05固定模块输入，原27条产品TC不变；两例未执行，root Excel候选行随设计同步。",
     "observed_raw_state": "BLOCKED",
     "observed_raw_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674/result.json",
     "observed_review_model": ".local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/granular-source.json",
@@ -1919,13 +1919,13 @@
     {
       "sop_id": "SOP-011",
       "name": "SOP-011 测试实现",
-      "revision": 9,
+      "revision": 10,
       "status": "baselined",
       "purpose": "将验收场景实现为真实Electron产品E2E与必要基础回归。",
       "trigger": "新增功能、缺陷或客户端迁移。",
       "prerequisites": "006/010数据设计与可运行009骨架；源码可先编写，业务红测必须真实运行。",
       "inputs": "详细用例、固定ID、fixture、真实App/服务。",
-      "ordered_operations": "1. 测试必须是仓库中固化、可按TC编号重复执行的代码。输入、动作、预期和断言在运行前确定；AI只能调用这些代码并分析原始结果，不能以临场操作、看图判断或手填结果代替测试。缺自动化绑定或缺可执行判据为BLOCKED。 每条绑定记录代码文件、测试名称、数据生成/重置程序和独立命令。\n\n2. 先逐条读取已基线的TASK→TC及其独立预期，再编写数据准备、测试动作和断言；保留TM001六个E2E场景组ID，后续版本另登记自身稳定场景组，组内每个TC/参数变体独立记录。每步实际动作、预期/实测值和原始证据须按[执行记录合同](../docs/templates/test-execution.md)采集，未建立逐TC绑定不能用大场景PASS覆盖。开发阶段为该功能固定全部适用TC、变体和程序绑定；正式发布启动时，由固定代码另核对`tests/test_cases.json`、变体清单、功能矩阵与各来源release版本计划，求最终候选的全部目标及已交付功能精确父TC/变体/辅助/聚合/审计并集。来源版本、ID、程序绑定及清单摘要随原件保存，未来planned项不得混入。\n\n3. TM001沿用六例稳定ID和UI交互/独立预期；后续版本按自身已基线的场景组和TC绑定增加执行入口，使用Playwright Electron启动真实构建或安装App，禁止改测浏览器页面替代桌面产品。TM001的`scripts/local_e2e.py`、`scripts/granular_e2e.py`等入口仅在实际运行后证明其执行范围；开发阶段能按功能ID单独重复运行，最终发行阶段还须按冻结并集逐来源执行并记录TM002/003及后续新增项。跨版本入口未就绪时只阻断正式发布门禁，不冒充已完成的产品回归。\n4. 逐条编写UI操作、服务/SQLite旁证和边界断言；测试不得通过route、IPC stub、写用户表或修改App状态生成成功。\n5. 修复先保留稳定失败，再改实现；缺环境或入口不称业务失败。迁移保留旧测试为历史，新的Electron绑定就绪后同步矩阵/manifest。\n6. 为最终包采用executablePath指向从原DMG复制的App，记录进程路径与哈希，显式chromiumSandbox；业务用例不能靠关安全配置取绿。\n7. 004必须观察实际自主升级与重启，测试只重连新进程。系统原生弹窗不可用DOM stub证明，签名/Gatekeeper另记实际系统结果。\n8. 记录原始Playwright JSON、trace、截图、断言/服务日志和清理；账号/凭据仅合成且证据本地0700。",
+      "ordered_operations": "1. 测试必须是仓库中固化、可按TC编号重复执行的代码。输入、动作、预期和断言在运行前确定；AI只能调用这些代码并分析原始结果，不能以临场操作、看图判断或手填结果代替测试。缺自动化绑定或缺可执行判据为BLOCKED。 每条绑定记录代码文件、测试名称、数据生成/重置程序和独立命令。\n\n2. 先逐条读取已基线的TASK→TC及其独立预期，再编写数据准备、测试动作和断言；保留TM001六个E2E场景组ID，后续版本另登记自身稳定场景组，组内每个TC/参数变体独立记录。每步实际动作、预期/实测值和原始证据须按[执行记录合同](../docs/templates/test-execution.md)采集，未建立逐TC绑定不能用大场景PASS覆盖。开发阶段为该功能固定全部适用TC、变体和程序绑定；正式发布启动时，由固定代码另核对`tests/test_cases.json`、变体清单、功能矩阵与各来源release版本计划，求最终候选的全部目标及已交付功能精确父TC/变体/辅助/聚合/审计并集。来源版本、ID、程序绑定及清单摘要随原件保存，未来planned项不得混入。固定模块TC若只验证源码或模块接口，绑定类型写`source_check`，由SOP-013执行；产品TC绑定类型写`product_e2e`，由SOP-014执行。类型由已基线用例决定，不能依据当前运行能力改写。两类结果的ID、计数和PASS结论分别保存，模块PASS不能覆盖产品TC或功能产品验收。\n\n3. TM001沿用六例稳定ID和UI交互/独立预期；后续版本按自身已基线的场景组和TC绑定增加执行入口，使用Playwright Electron启动真实构建或安装App，禁止改测浏览器页面替代桌面产品。TM001的`scripts/local_e2e.py`、`scripts/granular_e2e.py`等入口仅在实际运行后证明其执行范围；开发阶段能按功能ID单独重复运行，最终发行阶段还须按冻结并集逐来源执行并记录TM002/003及后续新增项。跨版本入口未就绪时只阻断正式发布门禁，不冒充已完成的产品回归。\n4. 逐条编写UI操作、服务/SQLite旁证和边界断言；测试不得通过route、IPC stub、写用户表或修改App状态生成成功。\n5. 修复先保留稳定失败，再改实现；缺环境或入口不称业务失败。迁移保留旧测试为历史，新的Electron绑定就绪后同步矩阵/manifest。\n6. 为最终包采用executablePath指向从原DMG复制的App，记录进程路径与哈希，显式chromiumSandbox；业务用例不能靠关安全配置取绿。\n7. 004必须观察实际自主升级与重启，测试只重连新进程。系统原生弹窗不可用DOM stub证明，签名/Gatekeeper另记实际系统结果。\n8. 产品E2E记录原始Playwright JSON、trace、截图、断言/服务日志和清理；模块检查记录固定测试程序及其映射、原始运行输出、退出码、逐TC断言/步骤结果、环境与源码身份、数据/重置和清理。两类证据均使用本地0700目录，仅使用合成数据。为每种执行类型建立仓库内固定、可重复的结果导出绑定；原始输出不足以支持某行实测或判定时，该字段和报告完整性记BLOCKED，不从测试名称、既定预期或AI观察补写。导出程序缺失时保留测试原始结论，独立Excel与批次登记保持BLOCKED。",
       "outputs": "真实测试程序、失败基线、数据/SOP/矩阵绑定。",
       "success_failure": "能检测错误业务行为才有意义；零用例、mock成功或无法复现视为未完成。",
       "exception_recovery": "失败分类定位，保留首个证据，不删断言或多次重试取绿。",
@@ -1953,15 +1953,15 @@
     {
       "sop_id": "SOP-013",
       "name": "SOP-013 构建与检查",
-      "revision": 8,
+      "revision": 9,
       "status": "baselined",
       "purpose": "在本机运行文档、基础工具、服务与Electron构建检查。",
       "trigger": "实现/依赖变化后、开发功能回归前；正式发布完整E2E前再次针对最终候选执行。",
       "prerequisites": "012实现、009本机运行时和锁文件就绪。",
       "inputs": "候选源码、依赖和真实命令。",
-      "ordered_operations": "1. 整版已基线或正式发布时运行`python3 scripts/check_docs.py --mode baseline`及`python3 scripts/quality_gate.py check`，核对文档与完整追踪。仅按SOP-008独立开发切片推进且整版仍draft时，运行`python3 scripts/check_docs.py --mode structure`和治理测试，核对切片ID/依赖/输入摘要与SOP-008就绪记录；整版baseline/quality保留原NOT_RUN或FAIL/BLOCKED，不因其未通过阻断已核准的独立切片，但绝不称整版文档PASS。\n2. 执行python3 -m unittest discover -s tests/governance -p test_*.py，使用隔离Python执行.local/venv-tm001/bin/python -m pytest tests/server -q；保留原始数量/退出码。\n3. 在apps/desktop按009锁文件安装依赖/运行时，再执行npm run build和npm test。图标SVG改变时在根目录执行node scripts/build_desktop_icon.mjs，检查PNG/ICNS；正式包检查嵌入图标摘要。\n4. 锁定Electron/Playwright与构建工具，核对CSP、IPC、凭据、配置URL、更新验证层基础负测。遗留Swift工具可用于历史回归，不是新客户端验收入口。\n5. 图形界面变动按当前设计在真实App检查默认/最小尺寸、深浅色、焦点与表单状态并保存截图；适用时执行`.local/venv-tm001/bin/python apps/desktop/tests/visual_fixture.py`生成隔离SQL/服务与10张截图，由`apps/desktop/tests/hig.visual.cjs`断言并审查截图。`scripts/quality_gate.py check`只检查文档和追踪；开发阶段按SOP-014执行本功能已基线固定TC的真实产品回归。用户另行启动正式发布后，在最终候选重新执行适用基础检查、完整跨需求E2E，并由SOP-018使用`scripts/local_gate.py`核验。打包检查使用同一候选源码/依赖，不得以基础检查代替产品PASS。",
-      "outputs": "构建物和基础原始结果或精确缺项。",
-      "success_failure": "所有本阶段适用基础检查真实通过；失败、零测试、缺构建物不能称本阶段通过。未执行的正式门禁记NOT_RUN，不阻断源码版本登记。",
+      "ordered_operations": "1. 整版已基线或正式发布时运行`python3 scripts/check_docs.py --mode baseline`及`python3 scripts/quality_gate.py check`，核对文档与完整追踪。仅按SOP-008独立开发切片推进且整版仍draft时，运行`python3 scripts/check_docs.py --mode structure`和治理测试，核对切片ID/依赖/输入摘要与SOP-008就绪记录；整版baseline/quality保留原NOT_RUN或FAIL/BLOCKED，不因其未通过阻断已核准的独立切片，但绝不称整版文档PASS。\n2. 执行python3 -m unittest discover -s tests/governance -p test_*.py，使用隔离Python执行.local/venv-tm001/bin/python -m pytest tests/server -q；保留原始数量/退出码。已基线的固定模块TC按SOP-011绑定的独立命令逐项运行，保存预先冻结的TC清单、测试代码/输入摘要、commit/tree、run_id、执行环境、原始输出、退出码、实际断言与清理证据。一个命令包含多个TC时须由固定程序输出逐TC结果和可追溯的失败归属；聚合计数不能凭名称分配PASS。模块检查的执行类型固定为`source_check`，产品E2E状态另记`NOT_RUN`或引用SOP-014同候选的真实批次。零例、跳过、重试取绿或缺逐TC判据按真实状态记FAIL/BLOCKED，不得推断通过。\n3. 在apps/desktop按009锁文件安装依赖/运行时，再执行npm run build和npm test。图标SVG改变时在根目录执行node scripts/build_desktop_icon.mjs，检查PNG/ICNS；正式包检查嵌入图标摘要。\n4. 锁定Electron/Playwright与构建工具，核对CSP、IPC、凭据、配置URL、更新验证层基础负测。遗留Swift工具可用于历史回归，不是新客户端验收入口。\n5. 图形界面变动按当前设计在真实App检查默认/最小尺寸、深浅色、焦点与表单状态并保存截图；适用时执行`.local/venv-tm001/bin/python apps/desktop/tests/visual_fixture.py`生成隔离SQL/服务与10张截图，由`apps/desktop/tests/hig.visual.cjs`断言并审查截图。`scripts/quality_gate.py check`只检查文档和追踪；开发阶段按SOP-014执行本功能已基线固定TC的真实产品回归。用户另行启动正式发布后，在最终候选重新执行适用基础检查、完整跨需求E2E，并由SOP-018使用`scripts/local_gate.py`核验。打包检查使用同一候选源码/依赖，不得以基础检查代替产品PASS。\n6. 对每次固定模块TC的实际运行，由仓库中固化的`source_check`导出程序读取本次不可覆盖的原始报告/日志与摘要，生成`TokenMeter测试结果-<run_id>.xlsx`及独立导出收据，保留FAIL/BLOCKED和缺失项。Excel至少含批次身份、执行类型、候选SHA/tree、环境、逐TC预期与实际断言/步骤、结果、证据路径及摘要、数据/重置和清理状态；不能从设计文档或人工判断生成实测值。程序必须拒绝错误类型、不同run/候选/输入、日志摘要不符、缺证据、重复ID或覆盖历史文件；导出后回读行数、ID和状态，并保留负测原始输出。当前仓库若只有产品E2E导出程序，不能把模块结果包装成其`result.json`或`E2E-TM...`行；在真实模块导出程序和所需逐TC原始字段接通前，保留模块测试原始PASS/FAIL，但将Excel导出与批次索引记BLOCKED，缺字段须新run补采而非修改旧原件。按SOP-024交文档会话同步总表规范与模板。",
+      "outputs": "构建物、基础及固定模块TC原始结果、独立批次Excel和导出收据，或精确缺项。",
+      "success_failure": "所有本阶段适用基础检查真实通过；失败、零测试、缺构建物不能称本阶段通过。固定模块TC原始执行结论与报告导出结论分开：测试可据原件记真实PASS，导出缺失时本阶段结果归档/总表登记仍为BLOCKED。模块PASS不证明产品E2E通过或功能产品验收。未执行的正式门禁记NOT_RUN，不阻断源码版本登记。",
       "exception_recovery": "保留首个失败并修根因，然后重做受影响基础检查及本功能固定TC；正式发布时对最终候选执行完整E2E。",
       "evidence_location": "本机.local/ci日志与版本06。",
       "next_step": "014本功能固定TC回归；收到正式发布指令时在最终候选进入014完整E2E。\n\n具体合同见[Electron本机设计](../docs/architecture/01-electron-local.md)。旧云端/Swift路径仅用于历史查询，不能覆盖用户本机优先规则。",
@@ -1970,13 +1970,13 @@
     {
       "sop_id": "SOP-014",
       "name": "SOP-014 自动 E2E",
-      "revision": 27,
+      "revision": 28,
       "status": "baselined",
-      "purpose": "开发阶段按每项功能已基线固定TC验证真实桌面App行为；用户另行启动正式对外发布时，针对固定最终候选执行全部目标及已交付功能的完整端到端并集。",
+      "purpose": "开发阶段按每项功能已基线的`product_e2e`固定TC验证真实桌面App行为；用户另行启动正式对外发布时，针对固定最终候选执行全部目标及已交付功能的完整端到端并集。`source_check`模块TC依SOP-013执行和导出，结果单独记录。",
       "trigger": "每次功能完成或修复时执行对应固定TC回归；收到用户明确正式发布指令后执行最终候选完整回归。",
       "prerequisites": "009–013、本机GUI、Electron/Playwright及真实服务/隔离DB。TM001 UPDATE-05受控签名变体另需SOP-009/010的显式私有签名输入及原包身份预检；缺前置只阻断依赖用例。",
       "inputs": "开发运行输入为本功能已基线固定TC/变体、候选源码和构建输入、数据/SQL、独立预期与隔离执行目录；正式发布另输入固定最终候选、`tests/test_cases.json`及各来源版本的父TC/固定变体/辅助/聚合/审计清单、功能矩阵、版本计划和原包。UPDATE-05另有仅供本机runner读取的`--key-dir <绝对受限目录>`。TM001六组及后续版本各自聚合场景作为补充证据，不能代替逐TC结果。",
-      "ordered_operations": "1. 测试必须是仓库中固化、可按TC编号重复执行的代码。输入、动作、预期和断言在运行前确定；AI只能调用这些代码并分析原始结果，不能以临场操作、看图判断或手填结果代替测试。缺自动化绑定或缺可执行判据为BLOCKED。 运行前冻结测试代码并记录摘要；运行中改变断言、数据或代码使本批次证据失效，修复后必须创建新run。\n\n2. 先确定运行原因和TC集合：调试定位执行与改动/缺陷有关的固定用例；声明某功能已完成时，运行该功能全部已基线适用TC及固定变体，并按TC/步骤记录真实输入、动作、预期、实测、证据、失败与清理。缺项或失败阻断该功能的验收结论，但可保留源码检查点与本地整合记录，状态不得写PASS。正式发布从最终固定候选的机器清单和各来源release基线求全部目标加此前已交付功能的精确并集，覆盖父TC、固定变体、辅助、聚合场景和独立审计；记录清单摘要、来源release、候选SHA/tree与各ID归属。重复、漏项、错误归属、未基线目标或混入未来planned项阻断正式门禁。聚合场景通过不能代替缺失子用例。记录合同见[测试规范](../docs/standards/test-cases.md)。\n\n3. 先读Electron本机设计与详细用例；默认只在本机执行，Actions仅明确多环境要求后启用。新客户端必须有新证据，不能借旧Swift/CI PASS。\n4. TM001的入口为`scripts/granular_e2e.py`逐TC与`scripts/local_e2e.py`六组补充回归、`apps/desktop/e2e`；后续版本须按SOP-011扩展或新增固定入口。开发时使用固定代码按功能TC运行；依赖签名的UPDATE-05仍接收显式私有`--key-dir`并执行SOP-009/010预检，不从worktree的`.local/internal-release-keys`猜测。正式父门禁才由`scripts/local_gate.py --key-dir <绝对受限目录>`运行完整逐来源并集。参数、逐层透传、负测和预检未可执行前，依赖用例BLOCKED，不能把计划命令当作已通过。runner在全新目录核对本次候选SHA、包/DMG与清单摘要、平台、来源release和归属；旧候选原始PASS不能充当新候选回归。\n5. 开发回归用真实Electron App/服务/隔离SQLite，不以API、IPC mock或截图代替；若TC明确要求安装包，则从本次NOT-RELEASED原DMG安装测试。正式包模式从最终DMG安装并逐例用Playwright executablePath启动该App。每例新profile与测试库，动态独占端口经真实设置UI选择。TM002/003/004中调用macOS`safeStorage`的用例在任何首次密钥调用前，核对SOP-009针对被测包原生探针的实际Keychain item身份和SOP-010本次独占所有权；`--user-data-dir`本身不证明Keychain隔离。身份未证实、测试item已存在或可能访问正式item即BLOCKED，不启动依赖该能力的场景。\n6. 006先核对内置默认127.0.0.1:49176与更新源，再UI切两套动态服务验证实际登录、重启和origin隔离，不能为了默认端口使用用户生产服务。\n7. 004启动前检查Squirrel固定用户缓存和launchd job；两者均不存在才创建本次owner标记并执行，已有未知状态返回BLOCKED，不能覆盖。结束时核对ShipIt目标属于本次安装，再清理本次状态。只有启动前不存在、当前uid且内容为空、创建时间不早于本次owner的ByHost偏好文件，才允许随本次状态清理，先保存文件摘要/副本。含内容、归属不明或旧偏好保持BLOCKED。历史失败残留另存恢复记录，不能改写原失败。UPDATE-05各受控签名负例在App启动前先按009/010核对显式私有目录、原ZIP的Ed25519重签名与p12公有证书指纹；缺失、不安全或身份不符记测试前置BLOCKED，保留既有c291批次的13个原FAIL，不重写为BLOCKED或PASS。预检通过仅准许执行，不能替代App断言。然后证明账号验证后自动发现当前204源，再执行同一更新源四阶段：非法下载URL在传输前拒绝，非回环HTTP重定向在跟随前拒绝，完整坏签名包验签失败保持原版，正确包经成熟原生更新器安装并自主重启到101。Electron不要求旧Swift ATS错误码-1022；必须用独立请求日志证明拒绝边界。\n8. 升级后只连接已自行启动的新PID，不调用launch高版；核对实际包路径/版本/hash、同一runtime侧文件与profile、/v1/me自动登录、配置与token保留。\n9. 保存本次运行的原始JSON/trace/截图、fixture与SQL摘要、服务审计/DB验证、更新请求和清理；关闭本次进程并验证端口/镜像/profile及适用的精确测试Keychain item清理，只操作本次拥有的资源，记录清理前后元数据和归属，不能清理正式item。TM001历史主run的116行、105个执行或可从变体推导项、11个无步骤辅助占位，以及辅助11、审计12、聚合6、最终78父TC/38变体，是该来源当时原件的固定核对口径，原报告及BLOCKED原样保留。只有正式发布的最终候选才按步骤2的完整并集逐来源保存同一候选/DMG的新原件，并独立验真每个父TC、变体、辅助、聚合、审计；有独立辅助原件承接的无步骤占位才可在主原件保持BLOCKED，其余原件须PASS。父门禁从冻结原件与目录重算规范化结果，所有应测项零跳过、零重试、零FAIL/BLOCKED且证据齐全才可继续。最终gate自身派生TC（当前TM002的`TC-TM002-DELIVERY-01`）不要求预先PASS：先保持BLOCKED，待其他原件与真实升级验真后由独立门禁计算，不能预填或借历史结果。\n10. 精细用例执行后，TM001 使用已建立的`python3 scripts/audit_granular_evidence.py --report <本批次result.json> --output <新的audit.json>`检查其固定旁证；后续来源须建立同等固定审计程序或明确机器判据，未建立时该来源BLOCKED。审计绑定原报告和代码摘要，不改原件；缺断言/旁证为BLOCKED，原FAIL不得升级为PASS。签名目录或预检失败且App未启动属于测试准备BLOCKED；预检通过后真实App行为/断言失败记FAIL，逐项保留日志。修复准备条件后可按步骤2作新run单例验证，不能用新结果覆盖旧失败或声称完整发布回归通过。\n11. `scripts/local_e2e.py`在其结果落盘后调用`test_result_export.py`，从本批次原始结果生成独立`TokenMeter测试结果-<run_id>.xlsx`，包括FAIL/BLOCKED。TM001精细结果使用`granular_test_result.py`，传入同批次原报告、辅助报告和独立审计；正式发布跨版本候选须扩展固定导出入口覆盖步骤2的全部来源及gate派生TC，程序未接通即BLOCKED。运行前按[总表规范](../docs/standards/project-workbook.md)准备Codex捆绑Node与artifact-tool。结果保存在`.local/test-results/<run_id>/`；同源重复导出只验证，禁止覆盖历史。逐步实测、失败和证据放在该文件。导出收据为独立`excel-export.json`，不改产品结果；生成失败保留原始结论并非零返回，不能声称本步完成。开发功能批次可按SOP-024同步总表索引，明确被测SHA及未发布状态；正式候选门禁和发行归档先在干净被测树上完成，随后另作只索引原件的文档提交。",
+      "ordered_operations": "1. 测试必须是仓库中固化、可按TC编号重复执行的代码。输入、动作、预期和断言在运行前确定；AI只能调用这些代码并分析原始结果，不能以临场操作、看图判断或手填结果代替测试。缺自动化绑定或缺可执行判据为BLOCKED。 运行前冻结测试代码并记录摘要；运行中改变断言、数据或代码使本批次证据失效，修复后必须创建新run。\n\n2. 先确定运行原因和TC集合：调试定位执行与改动/缺陷有关的固定用例；声明某功能已完成时，运行该功能全部已基线适用TC及固定变体，并按TC/步骤记录真实输入、动作、预期、实测、证据、失败与清理。缺项或失败阻断该功能的验收结论，但可保留源码检查点与本地整合记录，状态不得写PASS。正式发布从最终固定候选的机器清单和各来源release基线求全部目标加此前已交付功能的精确并集，覆盖父TC、固定变体、辅助、聚合场景和独立审计；记录清单摘要、来源release、候选SHA/tree与各ID归属。重复、漏项、错误归属、未基线目标或混入未来planned项阻断正式门禁。聚合场景通过不能代替缺失子用例。记录合同见[测试规范](../docs/standards/test-cases.md)。\n\n3. 先读Electron本机设计与详细用例；默认只在本机执行，Actions仅明确多环境要求后启用。新客户端必须有新证据，不能借旧Swift/CI PASS。\n4. TM001的入口为`scripts/granular_e2e.py`逐TC与`scripts/local_e2e.py`六组补充回归、`apps/desktop/e2e`；后续版本须按SOP-011扩展或新增固定入口。开发时使用固定代码按功能TC运行；依赖签名的UPDATE-05仍接收显式私有`--key-dir`并执行SOP-009/010预检，不从worktree的`.local/internal-release-keys`猜测。正式父门禁才由`scripts/local_gate.py --key-dir <绝对受限目录>`运行完整逐来源并集。参数、逐层透传、负测和预检未可执行前，依赖用例BLOCKED，不能把计划命令当作已通过。runner在全新目录核对本次候选SHA、包/DMG与清单摘要、平台、来源release和归属；旧候选原始PASS不能充当新候选回归。\n5. 开发回归用真实Electron App/服务/隔离SQLite，不以API、IPC mock或截图代替；若TC明确要求安装包，则从本次NOT-RELEASED原DMG安装测试。正式包模式从最终DMG安装并逐例用Playwright executablePath启动该App。每例新profile与测试库，动态独占端口经真实设置UI选择。TM002/003/004中调用macOS`safeStorage`的用例在任何首次密钥调用前，核对SOP-009针对被测包原生探针的实际Keychain item身份和SOP-010本次独占所有权；`--user-data-dir`本身不证明Keychain隔离。身份未证实、测试item已存在或可能访问正式item即BLOCKED，不启动依赖该能力的场景。\n6. 006先核对内置默认127.0.0.1:49176与更新源，再UI切两套动态服务验证实际登录、重启和origin隔离，不能为了默认端口使用用户生产服务。\n7. 004启动前检查Squirrel固定用户缓存和launchd job；两者均不存在才创建本次owner标记并执行，已有未知状态返回BLOCKED，不能覆盖。结束时核对ShipIt目标属于本次安装，再清理本次状态。只有启动前不存在、当前uid且内容为空、创建时间不早于本次owner的ByHost偏好文件，才允许随本次状态清理，先保存文件摘要/副本。含内容、归属不明或旧偏好保持BLOCKED。历史失败残留另存恢复记录，不能改写原失败。UPDATE-05各受控签名负例在App启动前先按009/010核对显式私有目录、原ZIP的Ed25519重签名与p12公有证书指纹；缺失、不安全或身份不符记测试前置BLOCKED，保留既有c291批次的13个原FAIL，不重写为BLOCKED或PASS。预检通过仅准许执行，不能替代App断言。然后证明账号验证后自动发现当前204源，再执行同一更新源四阶段：非法下载URL在传输前拒绝，非回环HTTP重定向在跟随前拒绝，完整坏签名包验签失败保持原版，正确包经成熟原生更新器安装并自主重启到101。Electron不要求旧Swift ATS错误码-1022；必须用独立请求日志证明拒绝边界。\n8. 升级后只连接已自行启动的新PID，不调用launch高版；核对实际包路径/版本/hash、同一runtime侧文件与profile、/v1/me自动登录、配置与token保留。\n9. 保存本次运行的原始JSON/trace/截图、fixture与SQL摘要、服务审计/DB验证、更新请求和清理；关闭本次进程并验证端口/镜像/profile及适用的精确测试Keychain item清理，只操作本次拥有的资源，记录清理前后元数据和归属，不能清理正式item。TM001历史主run的116行、105个执行或可从变体推导项、11个无步骤辅助占位，以及辅助11、审计12、聚合6、最终78父TC/38变体，是该来源当时原件的固定核对口径，原报告及BLOCKED原样保留。只有正式发布的最终候选才按步骤2的完整并集逐来源保存同一候选/DMG的新原件，并独立验真每个父TC、变体、辅助、聚合、审计；有独立辅助原件承接的无步骤占位才可在主原件保持BLOCKED，其余原件须PASS。父门禁从冻结原件与目录重算规范化结果，所有应测项零跳过、零重试、零FAIL/BLOCKED且证据齐全才可继续。最终gate自身派生TC（当前TM002的`TC-TM002-DELIVERY-01`）不要求预先PASS：先保持BLOCKED，待其他原件与真实升级验真后由独立门禁计算，不能预填或借历史结果。\n10. 精细用例执行后，TM001 使用已建立的`python3 scripts/audit_granular_evidence.py --report <本批次result.json> --output <新的audit.json>`检查其固定旁证；后续来源须建立同等固定审计程序或明确机器判据，未建立时该来源BLOCKED。审计绑定原报告和代码摘要，不改原件；缺断言/旁证为BLOCKED，原FAIL不得升级为PASS。签名目录或预检失败且App未启动属于测试准备BLOCKED；预检通过后真实App行为/断言失败记FAIL，逐项保留日志。修复准备条件后可按步骤2作新run单例验证，不能用新结果覆盖旧失败或声称完整发布回归通过。\n11. `scripts/local_e2e.py`在其结果落盘后调用`test_result_export.py`，从本批次原始结果生成独立`TokenMeter测试结果-<run_id>.xlsx`，包括FAIL/BLOCKED。TM001精细结果使用`granular_test_result.py`，传入同批次原报告、辅助报告和独立审计；正式发布跨版本候选须扩展固定导出入口覆盖步骤2的全部来源及gate派生TC，程序未接通即BLOCKED。运行前按[总表规范](../docs/standards/project-workbook.md)准备Codex捆绑Node与artifact-tool。结果保存在`.local/test-results/<run_id>/`；同源重复导出只验证，禁止覆盖历史。逐步实测、失败和证据放在该文件。导出收据为独立`excel-export.json`，不改产品结果；生成失败保留原始结论并非零返回，不能声称本步完成。此导出入口只接收其已定义的产品E2E报告，不能为`source_check`模块TC伪造`result.json`、产品用例ID或产品PASS；模块Excel走SOP-013。开发功能批次可按SOP-024同步总表索引，明确被测SHA及未发布状态；正式候选门禁和发行归档先在干净被测树上完成，随后另作只索引原件的文档提交。",
       "outputs": "开发阶段的本功能逐TC原始结果、清理和独立批次Excel；正式发布阶段的最终完整并集结果；或真实FAIL/BLOCKED/NOT_RUN及缺失项。",
       "success_failure": "开发功能验收要求本功能应测集合精确相等、每例实际成功且证据一致；缺项或失败只阻断功能验收与正式发行，不抹去源码整合事实。正式发布要求最终候选跨需求并集完整PASS。API/截图/构建成功不等于E2E，零例/跳过/假报告/重试取绿无效。",
       "exception_recovery": "按015保留首个失败、复现、修复后重跑受影响固定TC；正式发布失败则对新最终候选重新执行完整门禁。不接管用户App/库/端口。",
@@ -2140,7 +2140,7 @@
     {
       "sop_id": "SOP-024",
       "name": "SOP-024 文档变更",
-      "revision": 7,
+      "revision": 8,
       "status": "baselined",
       "purpose": "由「文档」会话统一创建、修改或删除所有非SOP项目文档，同步事实来源、元数据和关联引用，保持文档驱动的执行链。`sop/`文件由「SOP」会话按SOP-000维护。",
       "trigger": "新增文档、实现/接口/命令/测试变化、状态更新、链接迁移或记录关键决定。",
@@ -2204,7 +2204,7 @@
       "distribution_profile": "internal",
       "asset_storage": "本机版本归档及 dmg/<release_id>/；当前无本版正式包",
       "github_release": false,
-      "actual_state": "设计基线已完成：3功能点、9 TASK、28父TC、35变体。开发工作树已有原生目录面板、加密locator、根FD受限读取、React授权UI及33个固定E2E叶入口（28可执行、5场景摘要）；报告单元59/59、治理473/473、构建PASS。产品E2E因AX trusted=false及隔离标准测试账号不可用BLOCKED，Keychain最终包隔离未证实。本独立文档树未合该代码，机器绑定仍planned；正式发行完整门禁NOT_RUN、未发布。0.2公开配置为version0.2.0/build200及测试高版0.2.1/build201，实际0.2包尚未证明。",
+      "actual_state": "设计基线已完成：3功能点、9 TASK、28父TC、35变体。开发工作树已有原生目录面板、加密locator、根FD受限读取、React授权UI及33个固定E2E叶入口（28可执行、5场景摘要）；报告单元59/59、治理473/473、构建PASS。产品E2E因AX trusted=false及隔离标准测试账号不可用BLOCKED，Keychain最终包隔离未证实。本独立文档树未合该代码，机器绑定仍planned；正式发行完整门禁NOT_RUN、未发布。0.2公开配置为version0.2.0/build200及测试高版0.2.1/build201，实际0.2包尚未证明。 2026-10-02修订SECURITY-01三个恶意字串变体的固定IPC method/字段/错误码，产品状态不变；需在整合候选重核基线及固定程序。",
       "historical_evidence": "TM001独立候选d2门禁PASS只属历史；本地master c2911bc首次最终包门禁FAIL、无SOP-020稳定原包，不能作为0.2升级源；本版无实际产品运行。",
       "source": "releases/v0.2.0-20261001T034118Z/00-manifest.json",
       "status_source": "releases/v0.2.0-20261001T034118Z/06-iteration-record.md",
@@ -2224,12 +2224,12 @@
       "distribution_profile": "internal",
       "asset_storage": "dmg/<release_id>/：正式包仅在本机门禁 PASS 后保存",
       "github_release": false,
-      "actual_state": "整版draft、未发布。原27条目标TC保留，新增3条无授权CORE辅助TC在恢复新仓库候选7d77d63按SOP-008独立切片判为development_slice_ready；固定程序绑定与实际运行仍缺，30条TM003目标/辅助TC均未获得产品PASS。授权/真实App/服务/Keychain及产品E2E仍BLOCKED，0.3整版baseline和正式发行完整门禁NOT_RUN。",
+      "actual_state": "整版draft、未发布。27条产品TC未执行；3条CORE辅助TC已在文档提交48ca089独立切片就绪，在开发分支311deedf运行模块3/3 PASS，原始receipt在该分支.local/ci/tm003-core-20261001/。代码尚未合入本文档树，机器绑定保持空；模块报告不能作为产品E2E或发行门禁，结果Excel规范待SOP修订。 2026-10-02新代码候选44379e6已有逐步模块3/3与桌面29/29/typecheck/build原件；source_check独立Excel导出程序仍缺，批次登记BLOCKED，产品E2E仍NOT_RUN。 固定导出器新run tm003-core-20261001T163807Z在ea6b187候选生成3/3/9步source_check独立Excel并回读PASS，现已按被测SHA登记模块批次；原27条产品TC与发行仍NOT_RUN。 新清理合同候选d7c3d39的独立run tm003-core-20261001T165439Z亦3/3/9步及Excel回读PASS，作为最新模块批次；旧ea6批次保留。 后续CORE-04/05的测试输入已编制，程序未绑定、未执行；独立SOP-008切片复核待文档干净提交。",
       "historical_evidence": "TM-001 干净源码候选为技术基底；其产品门禁不继承给TM-003",
       "source": "releases/v0.3.0-20261001T034652Z/00-manifest.json",
       "status_source": "releases/v0.3.0-20261001T034652Z/06-iteration-record.md",
       "remote_code_saved": "未核实同名功能分支SHA/tree读回",
-      "local_product_state": "产品E2E未执行；本机稳定包未归档",
+      "local_product_state": "CORE模块3/3只在独立开发分支PASS；真实安装App产品E2E未运行；本机稳定包未归档",
       "remote_master_state": "本轮五版稳定后一次受保护PR；待办",
       "tag_state": "本轮五版稳定及远端master读回后逐版登记；待办"
     },
@@ -2243,7 +2243,7 @@
       "distribution_profile": "internal",
       "asset_storage": "dmg/<release_id>/：仅门禁PASS后放正式DMG",
       "github_release": false,
-      "actual_state": "整版draft、未发布。8 TASK、20细TC及四组摘要已登记；纯内存Claude 2.1.126解析器f2c3972覆盖已验证主会话、复制fork、同ID双块及可核实单层Agent，单元36/36、治理452/452PASS。改写UUID、fork-context-ref、嵌套Agent、有效零及授权/身份/SQLite仍缺证据或集成；20条产品TC未执行，正式发行完整门禁NOT_RUN。",
+      "actual_state": "整版draft、未发布。原20产品细TC及四组摘要保留，3条reader CORE辅助TC在输入提交fea41fe/同步SOP后的干净候选ebbcfd0上按SOP-008独立判为development_slice_ready；程序绑定仍空。本版代码分支e52b62e报告reader目标9/9、桌面49/49和build PASS，仅为模块原件，Excel/总表批次尚无固定导出器。产品授权、稳定文件身份最终接口、SQLite原子事务、IPC/App E2E未验证，正式发行门禁NOT_RUN。",
       "historical_evidence": "TM004源分支原生零/缺失与nested Agent定向探针仅为研究证据；0.3及此前稳定原包尚未形成，真实升级BLOCKED。",
       "source": "releases/v0.4.0-20261001T040433Z/00-manifest.json",
       "status_source": "releases/v0.4.0-20261001T040433Z/06-iteration-record.md",
@@ -2262,7 +2262,7 @@
       "distribution_profile": "internal",
       "asset_storage": "dmg/<release_id>/：仅门禁PASS后放正式原名包",
       "github_release": false,
-      "actual_state": "整版draft、未发布。6 TASK、32父TC、6稳定变体及两组摘要已登记；纯统计语义oracle仅可验证算术/覆盖合同，不证明双来源真实采集。固定产品数据、SQLite/IPC、安装App逐TC绑定未完成；正式发行完整门禁NOT_RUN。",
+      "actual_state": "整版draft、未发布。原32条产品父TC、6稳定变体和两组摘要保留；纯统计CORE-01/02/03辅助TC在输入提交061c759后，经SOP-008内容核对及结构/治理457项PASS，独立切片development_slice_ready，程序绑定仍为空、模块实际运行unexecuted。静态oracle与切片就绪不证明真实双来源采集或产品E2E；固定产品数据、SQLite/IPC、安装App逐TC绑定未完成，正式发行完整门禁NOT_RUN。 独立代码提交6a0f6f的source_check CORE3/3、桌面29/29、build PASS，原件在TM005工作树.local/tm005-core-postcommit-20261001T162401Z；程序尚未进入本文档树、模块Excel导出/批次登记BLOCKED，产品E2E仍NOT_RUN。 CORE-01仅验证已给UTC半开界聚合，不验证IANA日期换算；该单独辅助TC待固定。",
       "historical_evidence": "TM005语义oracle只验证规范化样例；0.4及此前稳定原包尚未形成，真实升级BLOCKED。",
       "source": "releases/v0.5.0-20261001T034729Z/00-manifest.json",
       "status_source": "releases/v0.5.0-20261001T034729Z/06-iteration-record.md",
@@ -2757,7 +2757,8 @@
       "release_eligible": false,
       "summary": "六个历史聚合场景，升级004失败；不回填新增TC。结果表修订02修正时间显示，原表和测试证据保留；未新增测试运行。",
       "result_workbook": ".local/test-results/local-a1b2c3d4e5f60718293a4b5c6d7e8f94/revisions/02/TokenMeter测试结果-local-a1b2c3d4e5f60718293a4b5c6d7e8f94.xlsx",
-      "raw_report": ".local/ci/e2e-dev-probe-07/result.json"
+      "raw_report": ".local/ci/e2e-dev-probe-07/result.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-7feea03dd72e4eddba0651cede8fd23d",
@@ -2772,7 +2773,8 @@
       "release_eligible": false,
       "summary": "前16条登录实际PASS；第17条参数路径中的#被SQLite URI截断，准备阶段中断。78父TC为16 PASS/62 BLOCKED；31变体未完成。清理全真，缺项未以旧场景通过代替。",
       "result_workbook": ".local/test-results/local-7feea03dd72e4eddba0651cede8fd23d-frozen/TokenMeter测试结果-local-7feea03dd72e4eddba0651cede8fd23d.xlsx",
-      "raw_report": ".local/ci/local-7feea03dd72e4eddba0651cede8fd23d/result.json"
+      "raw_report": ".local/ci/local-7feea03dd72e4eddba0651cede8fd23d/result.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-343e54113b0b442383e80f137013014b",
@@ -2789,7 +2791,8 @@
       "summary": "78父用例：62 PASS、9 FAIL、7 BLOCKED；38参数变体：31 PASS、7 FAIL（不与父用例相加）。真实产品95个执行入口，另11条辅助检查。独立代码复核保留原始失败，证据不足降BLOCKED。含3,397条证据链接和12张截图。",
       "result_workbook": ".local/test-results/local-343e54113b0b442383e80f137013014b-reviewed/TokenMeter测试结果-local-343e54113b0b442383e80f137013014b.xlsx",
       "raw_report": ".local/ci/local-343e54113b0b442383e80f137013014b/result.json",
-      "result_model": ".local/test-results/local-343e54113b0b442383e80f137013014b-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-343e54113b0b442383e80f137013014b-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-877830fb340a4d12b4e29cf76fa422ed",
@@ -2806,7 +2809,8 @@
       "summary": "15个实际Playwright入口；3父用例2 PASS/1 FAIL，13变体8 PASS/5 FAIL。PASSWORD05独立peer与ADMIN03收尾脚本修复验证通过；UPDATE05五个解压身份场景20秒后仍有临时目录残留。其余75父用例范围外。原全量失败保留，本次不构成全量发布回归。",
       "result_workbook": ".local/test-results/local-877830fb340a4d12b4e29cf76fa422ed-reviewed/TokenMeter测试结果-local-877830fb340a4d12b4e29cf76fa422ed.xlsx",
       "raw_report": ".local/ci/local-877830fb340a4d12b4e29cf76fa422ed/result.json",
-      "result_model": ".local/test-results/local-877830fb340a4d12b4e29cf76fa422ed-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-877830fb340a4d12b4e29cf76fa422ed-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "aux-ui01-local-343e54113b0b442383e80f137013014b-02",
@@ -2823,7 +2827,8 @@
       "summary": "仅UI01一条PASS，77条TM001不在本次范围。修复#fff缩写颜色解析后，程序测得浅色对比度16.235、深色12.513，6页无溢出。7张截图、53条证据链接；不覆盖首次FAIL，不代表完整产品回归通过。",
       "result_workbook": ".local/test-results/aux-ui01-local-343e54113b0b442383e80f137013014b-02-reviewed/TokenMeter测试结果-aux-ui01-local-343e54113b0b442383e80f137013014b-02.xlsx",
       "raw_report": ".local/ci/aux-ui01-local-343e54113b0b442383e80f137013014b-02/result.json",
-      "result_model": ".local/test-results/aux-ui01-local-343e54113b0b442383e80f137013014b-02-reviewed/granular-source.json"
+      "result_model": ".local/test-results/aux-ui01-local-343e54113b0b442383e80f137013014b-02-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-571dd63bfe5b4d90a95ed9c70d80de07",
@@ -2840,7 +2845,8 @@
       "summary": "78父TC：66 PASS、1 FAIL（SESSION-09）、11辅助占位BLOCKED；38参数变体全部PASS。原始运行FAIL，清理完成；独立审计PASS只证明被审计旁证，不改变产品结论。 参数变体另计：38 PASS、0 FAIL、0 BLOCKED。",
       "result_workbook": ".local/test-results/local-571dd63bfe5b4d90a95ed9c70d80de07-reviewed/TokenMeter测试结果-local-571dd63bfe5b4d90a95ed9c70d80de07.xlsx",
       "raw_report": ".local/ci/local-571dd63bfe5b4d90a95ed9c70d80de07/result.json",
-      "result_model": ".local/test-results/local-571dd63bfe5b4d90a95ed9c70d80de07-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-571dd63bfe5b4d90a95ed9c70d80de07-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-4a8815e9d61e4b4bbdd41f7a2f897c52",
@@ -2857,7 +2863,8 @@
       "summary": "SESSION-09一例PASS、清理完成；其余77父TC范围外。仅定位前次禁用按钮点击失败，不覆盖完整回归FAIL。",
       "result_workbook": ".local/test-results/local-4a8815e9d61e4b4bbdd41f7a2f897c52-reviewed/TokenMeter测试结果-local-4a8815e9d61e4b4bbdd41f7a2f897c52.xlsx",
       "raw_report": ".local/ci/local-4a8815e9d61e4b4bbdd41f7a2f897c52/result.json",
-      "result_model": ".local/test-results/local-4a8815e9d61e4b4bbdd41f7a2f897c52-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-4a8815e9d61e4b4bbdd41f7a2f897c52-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-f47f8257607c48458cc52b886d281d70",
@@ -2874,7 +2881,8 @@
       "summary": "78父TC：65 PASS、1 FAIL（UPDATE-07清理不完整）、12 BLOCKED（UPDATE-08及11辅助占位）；38参数变体全部PASS。原始运行FAIL、cleanup_completed=false；不能放行。 参数变体另计：38 PASS、0 FAIL、0 BLOCKED。",
       "result_workbook": ".local/test-results/local-f47f8257607c48458cc52b886d281d70-reviewed/TokenMeter测试结果-local-f47f8257607c48458cc52b886d281d70.xlsx",
       "raw_report": ".local/ci/local-f47f8257607c48458cc52b886d281d70/result.json",
-      "result_model": ".local/test-results/local-f47f8257607c48458cc52b886d281d70-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-f47f8257607c48458cc52b886d281d70-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-c8e31657d5e4428584a6f316936113e1",
@@ -2891,7 +2899,8 @@
       "summary": "UPDATE-07因本轮拥有资源未完全清理而FAIL，UPDATE-08为避免接管残留而BLOCKED；cleanup_completed=false。其余76父TC范围外，原始失败保留。",
       "result_workbook": ".local/test-results/local-c8e31657d5e4428584a6f316936113e1-reviewed/TokenMeter测试结果-local-c8e31657d5e4428584a6f316936113e1.xlsx",
       "raw_report": ".local/ci/local-c8e31657d5e4428584a6f316936113e1/result.json",
-      "result_model": ".local/test-results/local-c8e31657d5e4428584a6f316936113e1-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-c8e31657d5e4428584a6f316936113e1-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-70e531d3092c4cbea30160117c379287",
@@ -2908,7 +2917,8 @@
       "summary": "启动时使用系统Python，缺少alembic；UPDATE-07/08均在准备阶段BLOCKED，实际执行0例。原始BLOCKED及环境原因保留，清理完成。",
       "result_workbook": ".local/test-results/local-70e531d3092c4cbea30160117c379287-reviewed/TokenMeter测试结果-local-70e531d3092c4cbea30160117c379287.xlsx",
       "raw_report": ".local/ci/local-70e531d3092c4cbea30160117c379287/result.json",
-      "result_model": ".local/test-results/local-70e531d3092c4cbea30160117c379287-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-70e531d3092c4cbea30160117c379287-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-b6627e4379c64386bfc1a535fb432c16",
@@ -2925,7 +2935,8 @@
       "summary": "使用项目venv执行UPDATE-07/08，2例PASS、清理完成；UPDATE-07独立旁证审计PASS。其余76父TC范围外，不覆盖此前完整回归FAIL。",
       "result_workbook": ".local/test-results/local-b6627e4379c64386bfc1a535fb432c16-reviewed/TokenMeter测试结果-local-b6627e4379c64386bfc1a535fb432c16.xlsx",
       "raw_report": ".local/ci/local-b6627e4379c64386bfc1a535fb432c16/result.json",
-      "result_model": ".local/test-results/local-b6627e4379c64386bfc1a535fb432c16-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-b6627e4379c64386bfc1a535fb432c16-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-534748ff47cb44229183a6bd878c1674",
@@ -2975,7 +2986,8 @@
       "verification": ".local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/verification.json",
       "auxiliary_report": ".local/ci/aux-818fe55e1e8940e4a3196b9d03b76563/result.json",
       "aggregate_report": ".local/ci/local-5197628d58ac4136b004b87da438220c/result.json",
-      "audit_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674-audit-v2/audit.json"
+      "audit_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674-audit-v2/audit.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-0512d4fc44544eba97f9d1ae79cbfc37",
@@ -3007,7 +3019,54 @@
       "raw_report": "/Users/lz/.codex/worktrees/tm001-tm005-integration/TokenMeter/.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/granular/result.json",
       "result_model": "/Users/lz/.codex/worktrees/tm001-tm005-integration/TokenMeter/.local/test-results/local-0512d4fc44544eba97f9d1ae79cbfc37-reviewed/granular-source.json",
       "verification": ".local/test-results/local-0512d4fc44544eba97f9d1ae79cbfc37-reviewed/verification.json",
-      "gate_report": "/Users/lz/.codex/worktrees/tm001-tm005-integration/TokenMeter/.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/gate.json"
+      "gate_report": "/Users/lz/.codex/worktrees/tm001-tm005-integration/TokenMeter/.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/gate.json",
+      "execution_type": "product_e2e"
+    },
+    {
+      "run_id": "tm003-core-20261001T163807Z",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "execution_type": "source_check",
+      "scope": "TM-003 CORE-01/02/03 固定模块验证；非产品E2E",
+      "state": "PASS",
+      "included_cases": 3,
+      "executed_cases": 3,
+      "passed_cases": 3,
+      "failed_cases": 0,
+      "blocked_cases": 0,
+      "source_commit": "ea6b18765ce63a5b32b7de0488de5d2a4647de94",
+      "candidate_tree": "126e3f2c866d908661b651b1ee027440db0b9af1",
+      "working_tree_dirty": false,
+      "release_eligible": false,
+      "product_e2e_state": "NOT_RUN",
+      "summary": "source_check固定3条/9步骤PASS，逐例清理PASS；独立结果Excel/verification回读PASS。仅模块，不覆盖TM003原27条产品TC；产品E2E和发行门禁NOT_RUN。",
+      "result_workbook": ".local/test-results/tm003-core-20261001T163807Z/TokenMeter测试结果-tm003-core-20261001T163807Z.xlsx",
+      "raw_report": ".local/source-check-runs/tm003-core-20261001T163807Z/report.json",
+      "verification": ".local/test-results/tm003-core-20261001T163807Z/verification.json",
+      "result_workbook_sha256": "f4a359bd7f7658992685570d90c6d88c8f5f31871b84611dbafbb82dcc3b3cff",
+      "source_fingerprint": "34deaa2269c05ffde5447cbdbe64e1f6d88f7ed8ef914142316c4cb98bfd8f9c"
+    },
+    {
+      "run_id": "tm003-core-20261001T165439Z",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "execution_type": "source_check",
+      "scope": "TM-003 CORE-01/02/03 固定模块验证；非产品E2E",
+      "state": "PASS",
+      "included_cases": 3,
+      "executed_cases": 3,
+      "passed_cases": 3,
+      "failed_cases": 0,
+      "blocked_cases": 0,
+      "source_commit": "d7c3d39ac0a007f0e16f55bbb3cfc9b15fd9fe34",
+      "candidate_tree": "d23f3e0f285e63b17293da5c603d951db37716c6",
+      "working_tree_dirty": false,
+      "release_eligible": false,
+      "product_e2e_state": "NOT_RUN",
+      "summary": "共享source_check清理合同扩展后的新候选：CORE固定3/3、九步PASS，owned_root清理逐例PASS；独立Excel/verification回读PASS。旧ea6b187批次保留；原27条产品TC与正式发行仍NOT_RUN。",
+      "result_workbook": ".local/test-results/tm003-core-20261001T165439Z/TokenMeter测试结果-tm003-core-20261001T165439Z.xlsx",
+      "raw_report": ".local/source-check-runs/tm003-core-20261001T165439Z/report.json",
+      "verification": ".local/test-results/tm003-core-20261001T165439Z/verification.json",
+      "result_workbook_sha256": "51b6f476b16d255eb29caba77f447e33d4c7efb8f3030239d6b08adf4831d620",
+      "source_fingerprint": "720c2837e2ea08940c82e1b22e24bf0110dab11cd78419bbf7755f24f765d289"
     }
   ],
   "latest_case_states": {
@@ -3088,7 +3147,10 @@
     "TC-TM001-RECORDS-02": "BLOCKED",
     "TC-TM001-GATE-01": "BLOCKED",
     "TC-TM001-GATE-02": "BLOCKED",
-    "TC-TM001-GATE-03": "BLOCKED"
+    "TC-TM001-GATE-03": "BLOCKED",
+    "TC-TM003-CORE-01": "PASS",
+    "TC-TM003-CORE-02": "PASS",
+    "TC-TM003-CORE-03": "PASS"
   },
   "latest_case_runs": {
     "TC-TM001-LOGIN-01": "local-0512d4fc44544eba97f9d1ae79cbfc37",
@@ -3168,6 +3230,9 @@
     "TC-TM001-RECORDS-02": "local-0512d4fc44544eba97f9d1ae79cbfc37",
     "TC-TM001-GATE-01": "local-0512d4fc44544eba97f9d1ae79cbfc37",
     "TC-TM001-GATE-02": "local-0512d4fc44544eba97f9d1ae79cbfc37",
-    "TC-TM001-GATE-03": "local-0512d4fc44544eba97f9d1ae79cbfc37"
+    "TC-TM001-GATE-03": "local-0512d4fc44544eba97f9d1ae79cbfc37",
+    "TC-TM003-CORE-01": "tm003-core-20261001T165439Z (source_check；产品E2E未运行)",
+    "TC-TM003-CORE-02": "tm003-core-20261001T165439Z (source_check；产品E2E未运行)",
+    "TC-TM003-CORE-03": "tm003-core-20261001T165439Z (source_check；产品E2E未运行)"
   }
 }

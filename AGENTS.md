@@ -72,7 +72,7 @@ python3 -m unittest discover -s tests/governance -p 'test_*.py'
 
 ## 文档、Git 与交接
 
-- 用户统一查看入口为根目录 `TokenMeter项目总表.xlsx`；测试用例一例一行汇总，每次实际测试单独生成 `TokenMeter测试结果-<run_id>.xlsx`，总表仅登记批次摘要和文件入口。按[总表规范](docs/standards/project-workbook.md)在候选测试前提交需求、任务、用例和版本输入；门禁与本机归档完成后由后续文档提交登记批次及被测SHA，不能回写被测树或冒充新包验收。总表随Git提交，详细运行结果留本机且不覆盖历史。腾讯在线表格未更新，用户已改为本地Excel。
+- 用户统一查看入口为根目录 `TokenMeter项目总表.xlsx`；测试用例一例一行汇总，每次实际测试单独生成 `TokenMeter测试结果-<run_id>.xlsx`，总表仅登记批次摘要和文件入口。`source_check`模块与`product_e2e`产品批次分别用固定导出器生成、回读和计数；模块PASS不授予产品PASS，导出器或逐TC原件缺失时Excel及批次登记BLOCKED。按[总表规范](docs/standards/project-workbook.md)在候选测试前提交需求、任务、用例和版本输入；开发模块批次在原件与独立Excel回读后、正式发行产品批次在门禁与本机归档后，由后续文档提交登记批次及被测SHA，不能回写被测树或冒充新包验收。总表随Git提交，详细运行结果留本机且不覆盖历史。腾讯在线表格未更新，用户已改为本地Excel。
 
 - 统一编号使用 `vMAJOR.MINOR.PATCH-YYYYMMDDTHHMMSSZ`，在立项时分配 UTC 时间；贯穿版本档案、Changelog 标题、commit、通行证和最终 tag。见 [版本规范](docs/standards/versioning.md)。
 - 分支使用 `codex/<release_id>/<功能名>`，commit 标题带 `[release_id][TM-编号]`；一个可验收功能一个版本，修复升补丁版本。不要把每个中间提交都当作发布。

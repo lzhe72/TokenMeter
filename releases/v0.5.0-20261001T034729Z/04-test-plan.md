@@ -3,6 +3,8 @@
 **release_id：** `v0.5.0-20261001T034729Z`
 **状态：** draft / baseline_pending；所有下列 TC 未执行。
 
+纯统计开发切片另固定 `TC-TM005-CORE-01/02/03` 三条辅助模块TC，输入/独立预期由 [core fixture](../../tests/fixtures/tm005-core-slice.json) 与[04a逐步用例](04a-test-cases.md#无原生日志依赖的纯统计辅助tc)共同给出。只使用已可信的双来源合成事件和声明式覆盖事实，不调用授权、原生日志、产品数据库或App；相应TASK/TC可按SOP-008单独核对，原32条产品父TC及6变体继续draft/unexecuted。完整0.5 baseline、产品E2E和发行门禁未执行。
+
 逐 TC 的输入、有序动作、逐步 UI/DB 预期、类型、数据与缺口见[04a 逐 TC 草案](04a-test-cases.md)。以下是任务级摘要；两处均属设计，程序未绑定。
 
 ## 独立输入与已知预期
@@ -65,4 +67,4 @@ TM-001 候选 `3467dc1` 虽已有 `scripts/run_test_case.py`、`scripts/granular
 | `TC-TM005-MODEL-02` | `TASK-TM005-UI`（依赖事件合同） | 模型字段真实未知 `null` 仍计入可信用量；未知模型110+已知模型220=330 | 原生缺模型 fixture、受限 IPC/SQL 与 UI 绑定 |
 | `TC-TM005-E2E-01` | `TASK-TM005-E2E` | 安装包逐 TC 执行、原始结果和清理完整，完整回归精确集合 | 固定程序与最终候选包 |
 
-以上为设计草案，尚不满足每步 UI/API/DB 预期和可执行绑定。32 条父 TC 与 6 个变体已进入 `tests/test_cases.json`、根 `TEST_CASES.md` 及项目总表；`python3 scripts/check_tm005_bindings.py` 固定校验其集合、版本和来源，并如实报告全部 38 个产品绑定缺失。原稳定场景组 `E2E-TM005-001` 与 `E2E-TM005-002` 继续保留，且必须同时包含 Codex 和 Claude Code 的真实采集输入；待依赖 schema 稳定后补齐数据清单、逐项程序绑定和真实产品结果。执行状态一律 unexecuted；不得记录 PASS。
+以上产品部分仍为设计草案，尚不满足每步 UI/API/DB 预期和可执行绑定。原32条产品父TC、6个变体与新增3条辅助模块TC进入 `tests/test_cases.json`、根 `TEST_CASES.md` 及项目总表；`python3 scripts/check_tm005_bindings.py` 在TM-005开发分支的固定预检核对原产品集合并如实报告38个产品绑定缺失，不能把辅助模块绑定算作产品补齐。原稳定场景组 `E2E-TM005-001` 与 `E2E-TM005-002` 继续保留，且必须同时包含 Codex 和 Claude Code 的真实采集输入；待依赖 schema 稳定后补齐数据清单、逐项程序绑定和真实产品结果。执行状态一律 unexecuted；不得记录 PASS。

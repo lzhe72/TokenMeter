@@ -14,7 +14,7 @@
 | `FP-TM005-05` · 数据 / 两项 AC | `TASK-TM005-DATA` | seed 42、参考时钟、经验证的 Codex/Claude 原始 fixture；独立 expected、账户/库/目录重置 | TM-003/004 的版本化 raw 样例；SQL 不直接灌规范化用量来证明采集 |
 | `FP-TM005-06` · 测试 / 两项 AC | `TASK-TM005-E2E` | 逐 TC 固定程序、安装后的 App、真实服务与隔离 SQLite；原始逐步结果 | 每个必测 TC 与此前已交付功能完整 E2E 通过 |
 
-各任务的稳定验收用例入口为[04a 逐 TC 草案](04a-test-cases.md)，其中产品例均须真实安装包执行：`EVENT-CONTRACT` 对应 `CONTRACT-01` 至 `10`（`10-USAGE/MODEL` 分行）；`RANGE-QUERY` 对应 `RANGE-01` 至 `11`（`10-START-EMPTY/END-EMPTY`、`11-SPRING/FALL` 分行）；`COVERAGE` 对应 `STATE-01` 至 `06`；`UI` 对应 `MODEL-01/02` 与范围/状态的界面断言；`DATA` 对应 `DATA-01/02`；`E2E` 对应 `E2E-01` 和 `E2E-TM005-001/002` 两组。TC 编号、TASK 和 REQ 的机器追踪已列于本版 manifest；未绑定程序的用例仍为计划，不能以编号存在证明验收。
+各任务的稳定验收用例入口为[04a 逐 TC 草案](04a-test-cases.md)，其中原32条产品例均须真实安装包执行：`EVENT-CONTRACT` 对应 `CONTRACT-01` 至 `10`（`10-USAGE/MODEL` 分行）；`RANGE-QUERY` 对应 `RANGE-01` 至 `11`（`10-START-EMPTY/END-EMPTY`、`11-SPRING/FALL` 分行）；`COVERAGE` 对应 `STATE-01` 至 `06`；`UI` 对应 `MODEL-01/02` 与范围/状态的界面断言；`DATA` 对应 `DATA-01/02`；`E2E` 对应 `E2E-01` 和 `E2E-TM005-001/002` 两组。另有 `CORE-01/02/03` 三条辅助模块TC，分别归 `EVENT-CONTRACT`/`RANGE-QUERY`、`EVENT-CONTRACT`/`COVERAGE`、`COVERAGE`，只以受控合成标准事件与声明式覆盖事实验证纯统计函数；它们不验原生日志、授权、数据库或App，也不代替原32条产品例。TC 编号、TASK 和 REQ 的机器追踪列于本版 manifest；未绑定程序的用例仍为计划，不能以编号存在证明验收。
 
 ## 顺序及边界
 

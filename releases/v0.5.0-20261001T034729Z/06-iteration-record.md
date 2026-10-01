@@ -1,5 +1,29 @@
 # TM-005 执行记录
 
+## 2026-10-02 · CORE-01 UTC界输入纠错
+
+开发会话指出已提交纯统计实现由调用方直接传`start_utc/end_exclusive_utc`，原CORE-01“按当地日调用”措辞可能误导为同函数负责IANA换算。核对冻结fixture同时给出`timezone/local_day`与UTC界后，文档会话明确CORE-01只按固定UTC半开界筛选、输入主体及事件；`Asia/Shanghai`当地日到UTC、纽约春秋23/25小时日界另设固定辅助TC，不把现有模块3/3当日期转换PASS。原32条产品TC/6变体及RANGE-11真实App判据不变；03a、04a、机器目录和总表随本纠错重新核对，旧SOP-008切片收据只对应此前文本，新内容需新的切片收据。
+
+文档干净提交`e96ff005b69b99aafb7acc471f49b8171411e171`已纳入这项澄清；本地`.local/docs-checks/20261002-document-realtime-sync/`对该树运行structure、当前0.2 baseline、quality、治理477/477、用例225/712、总表15批次回读和diff检查均退出0。针对CORE三例的独立SOP-008切片复核另见`.local/docs-checks/20261002-tm005-core-slice-utc-corrected/receipt.json`；只确认固定UTC界纯统计部分，整版0.5仍draft，IANA换算和产品E2E未运行。
+
+代码会话随后提交`69d2ccff5dd65d5dd07c11dca6c2f14e79b5953a`（tree`7513406143b056ba4d1dfc9cb9fb01d39c2631c9`）的结构化CORE步骤证据；原始`.local/tm005-core-structured-20261001T171140Z/summary.json`和`core.txt`报告三例每例三步、`memory_only`清理事实、桌面29/29及build退出0，产品E2E执行0。该候选尚无支持`memory_only`的共享runner合并与新run独立Excel，模块Excel和总表批次登记保持BLOCKED；不把内存重置写成目录删除。
+
+## 2026-10-02 · 固定模块程序原件交接
+
+TM-005开发工作树干净提交`6a0f6f44096b04052ce5a0d1d4ff8939a421abd1`、tree`a7f9c40036df81f98c2cf247eb03df25833b5531`中，`apps/desktop/tests/tm005-core.test.ts`按`TC-TM005-CORE-01/02/03`各有固定Node入口。原始`.local/tm005-core-postcommit-20261001T162401Z/{summary.json,core.txt,desktop_tests.txt,build.txt}`显示fixture摘要与文档冻结值一致、CORE3/3逐步PASS、桌面29/29和build退出0；此前预期红测3/3失败原件在`.local/tm005-core-red-20261002/`，未被绿测覆盖。代码尚未进入本文档工作树，机器binding保持null；原32条产品TC/6变体、双来源真实SQLite/IPC/App及产品E2E仍未执行。按SOP会话新提交`4cca918`，模块独立结果Excel须用固定`source_check`导出器从原始逐TC字段生成；现行产品导出器不适用，模块Excel和总表批次登记BLOCKED，正式发行NOT_RUN。模块结果可作为后续独立切片的实现证据，不能写为整版0.5或产品PASS。
+
+## 2026-10-02 · SOP-008 纯统计独立切片就绪
+
+对固定输入提交 `061c759a9dbe52e15a5fb06ca1b1451a61e65c55`（tree `44b201503b85f480d8d5d2e9ae3a031aa5002487`）逐项核对 `TC-TM005-CORE-01/02/03`：CORE-01 的A/B筛选、半开时界、主体隔离、330总数与非法值拒绝；CORE-02 的已知330、未知诊断后partial、仅诊断时unknown且总数为null；CORE-03 的complete/missing/partial/unknown声明式代数。三例均有固定合成输入、顺序步骤与逐步独立预期、无需产品DB的验证和重置方式。`TASK-TM005-EVENT-CONTRACT/RANGE-QUERY/COVERAGE` 的纯函数部分可独立实现；TM-003/004 原生日志、来源身份、授权、真实覆盖事实、SQLite、IPC和App均在此切片之外，相关未决决定不改变本切片已固定的合成输入预期。若上游合同将来改变该纯函数输入，撤销本判定并重新核对。
+
+收据 `.local/docs-checks/20261002-tm005-core-slice/receipt.json` 保存八份输入SHA-256、提交、逐项语义边界及命令日志：structure退出0，治理457/457退出0，工作簿回读退出0，diff检查退出0。独立切片判定 `development_slice_ready`；原32条产品父TC、6个变体继续draft/unexecuted且绑定null，三条CORE程序也尚未绑定/执行。0.5整版 `baseline` 与 `quality_gate check` **NOT_RUN**；模块运行、真实产品E2E、正式发行均 `NOT_RUN`。根项目总表本次回读为11 Sheet、222父TC、41变体、263用例行、13个旧历史批次，SHA-256 `4a596813f2fa99fd1473bbaacd743341f9d2ef01e3546f779327e41705b11e65`；这是固定输入与状态索引，不是产品测试报告。
+
+## 2026-10-01 · 新仓库纯统计开发切片编制
+
+总控在新仓库 `/Users/lz/文档/git/TokenMeter` 恢复 TM-001 Electron 源码及当前0.2文档总表，原记录中“当前工作树缺 Electron 源码”只描述旧分支当时基点。TM-005开发会话在新分支交接纯静态 oracle 检查；它核对预先归一化的合成算术，不接原生日志、客户端SQLite、IPC或App，不授予产品TC PASS。文档会话按新SOP-008修订5，将 `TASK-TM005-EVENT-CONTRACT/RANGE-QUERY/COVERAGE` 的纯函数部分拆为 `CORE-01/02/03` 三条辅助模块TC，冻结 `tests/fixtures/tm005-core-slice.json` 的双来源可信合成事件、unknown诊断及声明式coverage状态代数。原32条产品父TC和6变体保持draft/unexecuted且绑定null；合成complete标签不证明真实连续空日覆盖。整版0.5 baseline、产品E2E和正式发行仍NOT_RUN/BLOCKED。
+
+SOP-024编制检查：`python3 scripts/check_docs.py --mode structure` 退出0（134文档、1211链接），`python3 -m unittest discover -s tests/governance -p 'test_*.py'` 退出0（457/457），`git diff --check`退出0；`python3 scripts/verify_project_workbook.py`退出0，根总表11 Sheet、222父TC、41变体、263用例行、13个原有历史批次，SHA-256 `d0bcb363a618930453b1a9cd399382132133e7b6c6d9b2671072358e21949f07`。这些是文档/治理检查，没有运行CORE模块程序或产品E2E。固定输入摘要：合成fixture `2dad1a42bc3051c8a1f820d12211c832522ba46586c3b84e00ebcd3b708470e9`，逐TC文档 `9e0fb9933801df891284b4294c95dc3933e5ea4783053d3412b5fa3dba4f3cbd`，机器用例 `cd748133c90d0d83c2d6e6d242d996fe3aeb7227b2600bb69ff954d7d777f3fc`。SOP-008独立切片的内容/依赖判定与提交SHA另记下一条；此处仅固定编制输入。
+
 ## 文档会话接管机器用例与语义oracle（2026-10-01）
 
 文档会话从TM-005源工作树接管01–06、03a/04a、32条细TC和6个固定变体；原语义oracle `tests/fixtures/tm005-semantic-expected.json` 以相同SHA-256 `a1a054e704e44cd409ce2a24bc163003c34c39f9b6cfeaf08090e10a35f375b1`复制。六个变体补有序动作、逐步预期和文件只读预期；两条聚合E2E的来源行修正为当前详细文档19/36行。TM-005代码提交`4bb7afe490e1193fb0f7cf7c4e6dee11d7d58022`新增语义oracle检查与治理负测，只证明规范化算术，不证明双来源原生日志或产品E2E。本版固定产品程序、原生数据与上一0.4稳定包仍缺，执行保持BLOCKED。
