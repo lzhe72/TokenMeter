@@ -29,7 +29,7 @@ macOS 团队模型用量监控工具。产品目标是读取 Codex、Claude Code
 
 ## 本地检查
 
-以下文档与治理检查使用 Python 3.10+ 标准库：
+下列命令以 Python 3.10+ 启动。`release_registry.py`、`check_docs.py`、`quality_gate.py`与`test_data.py`可只用标准库；**全量治理发现测试还会调用固定结果 Excel 导出器**，需本机 Node 和工作簿依赖。运行治理前按本机 Codex `load_workspace_dependencies` 返回的实际 Node 可执行文件设置`TOKENMETER_WORKBOOK_NODE`，并将忽略目录`.local/workbook/node_modules`指向同一依赖包目录（其中有`@oai/artifact-tool`）；缺少依赖时应记环境 BLOCKED，不把部分测试当全量 PASS：
 
 ```sh
 python3 scripts/release_registry.py show
