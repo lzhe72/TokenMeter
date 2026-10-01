@@ -48,6 +48,12 @@
       "cases": ["TC-TM003-CORE-09"],
       "reset_kind": "owned_root"
     },
+    "tm003-core10": {
+      "release_id": "v0.3.0-20261001T034652Z",
+      "file": "apps/desktop/tests/tm003-core10.test.ts",
+      "cases": ["TC-TM003-CORE-10"],
+      "reset_kind": "owned_root"
+    },
     "tm005-core04": {
       "release_id": "v0.5.0-20261001T034729Z",
       "file": "apps/desktop/tests/tm005-iana.test.ts",
