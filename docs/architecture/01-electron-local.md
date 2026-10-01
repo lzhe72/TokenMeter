@@ -22,6 +22,8 @@
 
 正式App支持通用`--user-data-dir <绝对路径>`作为独立工作目录，不是测试认证入口。main在ready与任何网络/存储前验证目录并`app.setPath('userData', ...)`，sessionData/cache/log也放此目录。无token的干净profile在用户登录前不向默认API发送登录/写请求。
 
+TM002已确定使用`safeStorage.encryptStringAsync`保存用户所选来源的加密locator。macOS Keychain在profile目录之外，故`--user-data-dir`不能单独证明测试与用户正式TokenMeter凭据隔离。[Electron 44.5.1 源码](https://github.com/electron/electron/blob/v44.5.1/shell/browser/electron_browser_main_parts.cc)显示`PostCreateMainMessageLoop()`将Browser Name用于`KeychainPassword`的service/account；[Electron safeStorage文档](https://www.electronjs.org/docs/latest/api/safe-storage)确认异步API在macOS使用Keychain并延迟初始化。这两项仅支持设计隔离方案，尚不证明异步提供者在本项目最终DMG中的实际item身份。TM002/003/004在本机同用户E2E前须按SOP-009在隔离测试账号或经证明独立的Keychain命名空间，对**同一最终DMG**原生核对实际service/account（或等效标识）及签名访问边界；进入目标用户环境前再按SOP-010确认精确测试item不存在并记录本次owner。若不能证明与正式item分离，相关E2E保持BLOCKED。只读观察和清理限本次测试item，不读取密钥值、不碰正式item；源码依据与最终包运行证据分开记录。
+
 Squirrel原生重启不保证保留argv，因此显式工作目录首次登记在App同级`TokenMeter.runtime.json`：文件0600、同uid、非symlink、仅绑定当前规范化App路径与既存0700 profile。启动先读取并校验此文件；损坏、替换或无归属时硬失败，不能回退到用户默认目录。它在.app外，不随包更新替换。默认用户安装不带此文件；测试只在自己创建的安装父目录写入。E2E从同一分发包验证初装和自动更新后的实际profile路径相同。
 
 当前本机49176已有用户生产服务，旧`/Applications/TokenMeter.app`也在运行；本轮不得终止、覆盖或用其造数。每例动态分配独占回环API端口，经真实配置UI选择；006先检查首次UI的内置默认，再切两个隔离服务验证登录/持久化/origin隔离。004更新源也可用独占动态端口，经真实UI配置。默认API仍`http://127.0.0.1:49176`，默认更新清单为`http://127.0.0.1:49177/version.json`。旧Sparkle XML不作为新客户端输入。

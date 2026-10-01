@@ -1,6 +1,6 @@
 # SOP-009 环境准备
 
-**修订：** 18　**状态：** baselined　**适用：** all
+**修订：** 19　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -24,8 +24,9 @@ SOP-008文档基线与Electron本机设计就绪。
 2. 按本机设计准备apps/desktop真实工程；程序未就绪时只做源码/依赖准备，不声称产品可运行。Python使用隔离环境与requirements-dev.txt，npm使用锁文件安装，不全局升级工具。Electron44不再通过postinstall下载运行时；apps/desktop执行npm ci后必须npm run runtime:install，使用本项目.local独立npm/Electron缓存，不修改用户缓存权限。
 3. 先只读核对现有App、生产库、端口和profile。本机49176及旧/Applications应用属于用户；新测试使用自有安装父目录、动态回环服务、0700 profile，不能接管旧服务。
 4. 生产App通用--user-data-dir在ready前显式设置userData/sessionData；同级0600 runtime侧文件维持更新重启归属，拒绝坏路径/符号链接/其他用户文件。缺隔离条件不得启动App。
-5. 建立真实App启动与Playwright最小探针；仅验证环境，零业务用例不能算E2E PASS。记录实际版本、命令、退出码。需要系统授权时走正常界面，不修改TCC。
-6. 默认本机执行。用户明确要求多环境时才启用对应Actions和矩阵；旧云端通过证据不覆盖新Electron候选。
+5. TM002/003/004 若以 macOS `safeStorage` 保存来源 locator，先将 Keychain 视为独立于 `--user-data-dir` 的系统资源。首次调用 `safeStorage` 前，核对未改动的最终 DMG、签名、实际测试 App 名称及密钥提供者，确定测试 item 的 service/account（或异步提供者的等效身份）与正式 App 不同；只读证明目标测试身份当前不存在，不查询正式 item 的值。Electron 44.5.1 源码中 `PostCreateMainMessageLoop()` 按 Browser Name 设置 `KeychainPassword` service/account 仅是设计依据，**不证明异步提供者或最终包**采用同一身份。须用隔离的 macOS 测试账号或经证明独立的 Keychain 命名空间对同一最终 DMG 做原生探针，核对实际创建 item 身份与签名访问边界，再允许本机测试；仅改 profile 或运行时推测 App 名称不足以放行。无法在触碰用户现有凭据前证明身份分离时，相关 E2E 为 BLOCKED，其他不依赖步骤可继续。探针记录包摘要、平台、实际身份、操作及退出码，不保存密钥值。
+6. 建立真实App启动与Playwright最小探针；仅验证环境，零业务用例不能算E2E PASS。记录实际版本、命令、退出码。需要系统授权时走正常界面，不修改TCC。
+7. 默认本机执行。用户明确要求多环境时才启用对应Actions和矩阵；旧云端通过证据不覆盖新Electron候选。
 
 ## 输出
 
