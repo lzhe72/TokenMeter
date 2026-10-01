@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 import json
+import subprocess
 import zipfile
 from unittest.mock import patch
 
@@ -12,6 +13,47 @@ spec=importlib.util.spec_from_file_location('release_local_test',ROOT/'scripts/l
 release=importlib.util.module_from_spec(spec);spec.loader.exec_module(release)
 
 class ArchiveTests(unittest.TestCase):
+    def write_publish_receipt(self,archive,rid,descriptor,*,state='PASS'):
+        package=archive/'package';package.mkdir(parents=True,exist_ok=True)
+        evidence=archive/'evidence';evidence.mkdir(parents=True,exist_ok=True)
+        manifest=package/'package-manifest.json';manifest.write_text('{"synthetic":true}')
+        passport=evidence/(rid+'.passport.json');passport.write_text('{"synthetic":true}')
+        filename=descriptor['path']
+        files={'package/'+filename:descriptor['sha256'],
+               'package/package-manifest.json':release.gate.sha256(manifest),
+               'evidence/'+rid+'.passport.json':release.gate.sha256(passport)}
+        receipt={'schema_version':2,'state':state,'release_id':rid,
+                 'candidate_sha':'a'*40,'candidate_tree':'b'*40,'git_head':'a'*40,
+                 'milestone_sha':'a'*40,'milestone_tree':'b'*40,'master_tip_sha':'c'*40,
+                 'remote_source_state':'PENDING','github_release':False,
+                 'dmg':'package/'+filename,'dmg_sha256':descriptor['sha256'],
+                 'passport_sha256':files['evidence/'+rid+'.passport.json'],
+                 'package_manifest_sha256':files['package/package-manifest.json'],'files':files}
+        (archive/'release-index.json').write_text(json.dumps(receipt))
+        return receipt
+
+    def git(self,root,*args):
+        process=subprocess.run(['git',*args],cwd=root,text=True,capture_output=True,check=False)
+        self.assertEqual(process.returncode,0,(args,process.stdout,process.stderr))
+        return process.stdout.strip()
+
+    def synthetic_milestone(self,root):
+        rid='v0.1.0-20260929T074814Z'
+        self.git(root,'init','-q')
+        self.git(root,'config','user.email','synthetic@example.test')
+        self.git(root,'config','user.name','Synthetic Test')
+        self.git(root,'checkout','-q','-b','master')
+        version=root/'releases'/rid;version.mkdir(parents=True)
+        (root/'releases/current.json').write_text(json.dumps({'release_id':rid}))
+        (version/'00-manifest.json').write_text(json.dumps({'release_id':rid}))
+        (root/'payload.txt').write_text('synthetic source')
+        self.git(root,'add','.')
+        self.git(root,'commit','-q','-m','synthetic milestone')
+        sha=self.git(root,'rev-parse','HEAD')
+        tree=self.git(root,'rev-parse','HEAD^{tree}')
+        result={'release_id':rid,'candidate_sha':sha,'candidate_tree':tree}
+        return result,dict(result),dict(result)
+
     def synthetic_release_inputs(self, root):
         manifest=root/'package.json';manifest.write_text('{}')
         raw=root/'e2e'/'result.json';raw.parent.mkdir();raw.write_text('{}')
@@ -273,6 +315,102 @@ class ArchiveTests(unittest.TestCase):
             with self.assertRaises(release.gate.Invalid):release.new_directory(target)
             self.assertEqual((target/'keep').read_text(),'keep')
 
+    def test_real_git_milestone_is_exact_and_can_precede_master_tip(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t).resolve();result,passport,package=self.synthetic_milestone(root)
+            sha,tree=result['candidate_sha'],result['candidate_tree']
+            with patch.object(release,'ROOT',root):
+                first=release.verify_local_milestone(result,passport,package,
+                    milestone_sha=sha,milestone_tree=tree)
+                self.assertEqual(first,{'milestone_sha':sha,'milestone_tree':tree,'master_tip_sha':sha})
+                self.git(root,'commit','--allow-empty','-q','-m','later source milestone')
+                later=self.git(root,'rev-parse','HEAD')
+                self.git(root,'checkout','-q','--detach',sha)
+                subsequent=release.verify_local_milestone(result,passport,package,
+                    milestone_sha=sha,milestone_tree=tree)
+                self.assertEqual(subsequent['master_tip_sha'],later)
+                with self.assertRaisesRegex(release.gate.Invalid,'advanced while archiving'):
+                    release.verify_local_milestone(result,passport,package,
+                        milestone_sha=sha,milestone_tree=tree,expected_master_tip=sha)
+
+    def test_same_tree_different_head_cannot_borrow_passport(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t).resolve();result,passport,package=self.synthetic_milestone(root)
+            self.git(root,'commit','--allow-empty','-q','-m','same tree, different commit')
+            self.assertEqual(self.git(root,'rev-parse','HEAD^{tree}'),result['candidate_tree'])
+            with patch.object(release,'ROOT',root):
+                with self.assertRaisesRegex(release.gate.Invalid,'SHA/tree differs'):
+                    release.verify_local_milestone(result,passport,package,
+                        milestone_sha=result['candidate_sha'],milestone_tree=result['candidate_tree'])
+
+    def test_unintegrated_and_missing_master_are_rejected(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t).resolve();self.synthetic_milestone(root)
+            self.git(root,'checkout','-q','--orphan','unintegrated')
+            self.git(root,'add','-A')
+            self.git(root,'commit','-q','-m','same files on unrelated branch')
+            sha=self.git(root,'rev-parse','HEAD');tree=self.git(root,'rev-parse','HEAD^{tree}')
+            rid='v0.1.0-20260929T074814Z'
+            identity={'release_id':rid,'candidate_sha':sha,'candidate_tree':tree}
+            with patch.object(release,'ROOT',root):
+                with self.assertRaisesRegex(release.gate.Invalid,'not an ancestor'):
+                    release.verify_local_milestone(identity,identity,identity,
+                        milestone_sha=sha,milestone_tree=tree)
+                self.git(root,'branch','-D','master')
+                with self.assertRaisesRegex(release.gate.Blocked,'master ref is unavailable'):
+                    release.verify_local_milestone(identity,identity,identity,
+                        milestone_sha=sha,milestone_tree=tree)
+
+    def test_wrong_identity_dirty_checkout_and_archive_preflight_are_rejected(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t).resolve();result,passport,package=self.synthetic_milestone(root)
+            sha,tree=result['candidate_sha'],result['candidate_tree']
+            with patch.object(release,'ROOT',root):
+                for change in ({'milestone_sha':'f'*40}, {'milestone_tree':'e'*40}):
+                    with self.subTest(change=change),self.assertRaisesRegex(release.gate.Invalid,
+                                                                             'Explicit local milestone differs'):
+                        release.verify_local_milestone(result,passport,package,
+                            milestone_sha=change.get('milestone_sha',sha),
+                            milestone_tree=change.get('milestone_tree',tree))
+                for field in ('candidate_sha','candidate_tree','release_id'):
+                    changed=dict(passport);changed[field]='wrong'
+                    with self.subTest(source='passport',field=field),self.assertRaisesRegex(release.gate.Invalid,
+                                                                                              'passport does not belong'):
+                        release.verify_local_milestone(result,changed,package,
+                            milestone_sha=sha,milestone_tree=tree)
+                    changed=dict(package);changed[field]='wrong'
+                    with self.subTest(source='package',field=field),self.assertRaisesRegex(release.gate.Invalid,
+                                                                                             'package does not belong'):
+                        release.verify_local_milestone(result,passport,changed,
+                            milestone_sha=sha,milestone_tree=tree)
+                destination=root/'release-archive'
+                with patch.object(release,'verify_inputs',return_value=(result,passport,{},package)),\
+                     patch.object(release,'publish_final_dmg') as publish:
+                    with self.assertRaisesRegex(release.gate.Invalid,'Explicit local milestone differs'):
+                        release.archive(root,root/'manifest.json',destination,
+                                        milestone_sha='f'*40,milestone_tree=tree)
+                    publish.assert_not_called()
+                self.assertFalse(destination.exists())
+                (root/'payload.txt').write_text('changed after test')
+                with self.assertRaisesRegex(release.gate.Invalid,'not clean'):
+                    release.verify_local_milestone(result,passport,package,
+                        milestone_sha=sha,milestone_tree=tree)
+
+    def test_checked_out_release_id_must_own_milestone(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t).resolve();result,passport,package=self.synthetic_milestone(root)
+            (root/'releases/current.json').write_text('{"release_id":"v9.0.0-20260929T074814Z"}')
+            with patch.object(release,'ROOT',root),self.assertRaisesRegex(release.gate.Invalid,
+                                                                          'does not own the release'):
+                release.verify_local_milestone(result,passport,package,
+                    milestone_sha=result['candidate_sha'],milestone_tree=result['candidate_tree'])
+
+    def test_cli_requires_explicit_milestone_before_verifying(self):
+        with patch.object(release,'verify_inputs') as verify:
+            self.assertEqual(release.main(['verify','--gate-dir','/tmp/none',
+                                           '--package-manifest','/tmp/none']),1)
+            verify.assert_not_called()
+
     def test_publish_final_dmg_is_hash_checked_and_never_overwrites(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t).resolve();rid='v0.1.0-20260929T074814Z'
@@ -280,8 +418,7 @@ class ArchiveTests(unittest.TestCase):
             filename=f'TokenMeter-{rid}-internal.dmg';source=package/filename
             source.write_bytes(b'synthetic final dmg')
             descriptor={'path':filename,'sha256':release.gate.sha256(source),'bytes':source.stat().st_size}
-            (archive/'release-index.json').write_text(json.dumps({'state':'PASS','release_id':rid,
-                'dmg':'package/'+filename,'files':{'package/'+filename:descriptor['sha256']}}))
+            self.write_publish_receipt(archive,rid,descriptor)
             version=root/'dmg'/rid;version.mkdir(parents=True)
             (version/'README.md').write_text('Synthetic preview and final locations')
             (version/f'TokenMeter-{rid}-DEVELOPMENT-NOT-RELEASED.dmg').write_bytes(b'preview')
@@ -294,14 +431,33 @@ class ArchiveTests(unittest.TestCase):
                 release.publish_final_dmg(archive,rid,descriptor,dmg_root=root/'dmg')
             self.assertEqual(target.read_bytes(),source.read_bytes())
 
+    def test_publish_refuses_unbound_milestone_or_changed_archived_passport(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t).resolve();rid='v0.1.0-20260929T074814Z'
+            archive=root/'archive';package=archive/'package';package.mkdir(parents=True)
+            filename=f'TokenMeter-{rid}-internal.dmg';source=package/filename;source.write_bytes(b'synthetic final')
+            descriptor={'path':filename,'sha256':release.gate.sha256(source),'bytes':source.stat().st_size}
+            receipt=self.write_publish_receipt(archive,rid,descriptor)
+            index=archive/'release-index.json'
+            for field,value in [('milestone_sha','f'*40),('milestone_tree','invalid'),
+                                ('remote_source_state','REGISTERED'),('passport_sha256','0'*64),
+                                ('schema_version',1),('files',[])]:
+                index.write_text(json.dumps({**receipt,field:value}))
+                with self.subTest(field=field),self.assertRaises(release.gate.Invalid):
+                    release.publish_final_dmg(archive,rid,descriptor,dmg_root=root/'dmg')
+            index.write_text(json.dumps(receipt))
+            (archive/'evidence'/(rid+'.passport.json')).write_text('{"changed":true}')
+            with self.assertRaises(release.gate.Invalid):
+                release.publish_final_dmg(archive,rid,descriptor,dmg_root=root/'dmg')
+            self.assertFalse((root/'dmg').exists())
+
     def test_publish_refuses_symlink_directories_and_destination(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t).resolve();rid='v0.1.0-20260929T074814Z'
             package=root/'archive'/'package';package.mkdir(parents=True)
             filename=f'TokenMeter-{rid}-internal.dmg';source=package/filename;source.write_bytes(b'final')
             descriptor={'path':filename,'sha256':release.gate.sha256(source),'bytes':source.stat().st_size}
-            (root/'archive'/'release-index.json').write_text(json.dumps({'state':'PASS','release_id':rid,
-                'dmg':'package/'+filename,'files':{'package/'+filename:descriptor['sha256']}}))
+            self.write_publish_receipt(root/'archive',rid,descriptor)
             (root/'outside').mkdir();(root/'linked-dmg').symlink_to(root/'outside',target_is_directory=True)
             with self.assertRaises(release.gate.Invalid):
                 release.publish_final_dmg(root/'archive',rid,descriptor,dmg_root=root/'linked-dmg')
@@ -319,8 +475,7 @@ class ArchiveTests(unittest.TestCase):
             package=root/'archive'/'package';package.mkdir(parents=True)
             filename=f'TokenMeter-{rid}-internal.dmg';source=package/filename;source.write_bytes(b'final')
             descriptor={'path':filename,'sha256':release.gate.sha256(source),'bytes':source.stat().st_size}
-            (root/'archive'/'release-index.json').write_text(json.dumps({'state':'PASS','release_id':rid,
-                'dmg':'package/'+filename,'files':{'package/'+filename:descriptor['sha256']}}))
+            self.write_publish_receipt(root/'archive',rid,descriptor)
             def corrupt(_read,write):write.write(b'changed')
             with patch.object(release.shutil,'copyfileobj',side_effect=corrupt):
                 with self.assertRaises(release.gate.Invalid):
@@ -335,13 +490,11 @@ class ArchiveTests(unittest.TestCase):
             filename=f'TokenMeter-{rid}-internal.dmg';source=package/filename;source.write_bytes(b'final')
             descriptor={'path':filename,'sha256':release.gate.sha256(source),'bytes':source.stat().st_size}
             (archive/'INCOMPLETE.json').write_text('{}')
-            (archive/'release-index.json').write_text(json.dumps({'state':'PASS','release_id':rid,
-                'dmg':'package/'+filename,'files':{'package/'+filename:descriptor['sha256']}}))
+            self.write_publish_receipt(archive,rid,descriptor)
             with self.assertRaises(release.gate.Invalid):
                 release.publish_final_dmg(archive,rid,descriptor,dmg_root=root/'dmg')
             (archive/'INCOMPLETE.json').unlink()
-            (archive/'release-index.json').write_text(json.dumps({'state':'FAIL','release_id':rid,
-                'dmg':'package/'+filename,'files':{'package/'+filename:descriptor['sha256']}}))
+            self.write_publish_receipt(archive,rid,descriptor,state='FAIL')
             with self.assertRaises(release.gate.Invalid):
                 release.publish_final_dmg(archive,rid,descriptor,dmg_root=root/'dmg')
             self.assertFalse((root/'dmg').exists())
@@ -351,7 +504,9 @@ class ArchiveTests(unittest.TestCase):
             root=Path(t).resolve()
             with patch.object(release,'verify_inputs',side_effect=release.gate.Invalid('No release qualification')):
                 with patch.object(release,'publish_final_dmg') as publish:
-                    with self.assertRaises(release.gate.Invalid):release.archive(root,root/'manifest.json',root/'dmg'/'release-archive')
+                    with self.assertRaises(release.gate.Invalid):
+                        release.archive(root,root/'manifest.json',root/'dmg'/'release-archive',
+                                        milestone_sha='a'*40,milestone_tree='b'*40)
                     publish.assert_not_called()
             self.assertFalse((root/'dmg').exists())
 
@@ -359,7 +514,9 @@ class ArchiveTests(unittest.TestCase):
         rid='v0.1.0-20260929T074814Z'
         with patch.object(release,'verify_inputs',return_value=({'release_id':rid},None,None,None)):
             with patch.object(release,'archive',return_value={'state':'PASS'}) as archive:
-                self.assertEqual(release.main(['archive','--gate-dir','/tmp/gate','--package-manifest','/tmp/manifest']),0)
+                self.assertEqual(release.main(['archive','--gate-dir','/tmp/gate','--package-manifest','/tmp/manifest',
+                                               '--milestone-sha','a'*40,'--milestone-tree','b'*40]),0)
         self.assertEqual(archive.call_args.args[2],ROOT/'dmg'/rid/'release-archive')
+        self.assertEqual(archive.call_args.kwargs,{'milestone_sha':'a'*40,'milestone_tree':'b'*40})
 
 if __name__=='__main__':unittest.main()
