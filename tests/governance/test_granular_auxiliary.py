@@ -17,7 +17,10 @@ class AuxiliaryTests(unittest.TestCase):
         files = ("tests/test_cases.json", "tests/granular_login_variants.json",
                  "tests/granular_update_variants.json")
         catalog = json.loads((results.ROOT / files[0]).read_text())
-        payload = {"schema_version": 3, "run_id": "parent-test-01", "release_id": catalog["release_id"],
+        source_releases = {case["release_id"] for case in catalog["cases"]
+                           if case.get("feature_id") == "TM-001"}
+        self.assertEqual(len(source_releases), 1)
+        payload = {"schema_version": 3, "run_id": "parent-test-01", "release_id": source_releases.pop(),
                    "source_commit": "a" * 40, "candidate_tree": "b" * 40,
                    "package": {"manifest_sha256": "c" * 64, "dmg_sha256": "d" * 64,
                                "installed_source": "development_dmg"},
@@ -62,6 +65,37 @@ class AuxiliaryTests(unittest.TestCase):
                 raw, status, _ = results.evidence_file(output, item["evidence"][role])
                 self.assertEqual(status, "已核对")
                 self.assertTrue(raw)
+
+    def test_tm001_parent_accepts_newer_combined_catalog(self):
+        catalog = json.loads((results.ROOT / "tests/test_cases.json").read_text())
+        source_releases = {case["release_id"] for case in catalog["cases"]
+                           if case.get("feature_id") == "TM-001"}
+        self.assertEqual(len(source_releases), 1)
+        source_release = source_releases.pop()
+        self.assertNotEqual(source_release, catalog["release_id"])
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            parent = self.parent(root)
+            payload = json.loads(parent.read_text())
+            payload["release_id"] = source_release
+            parent.write_text(json.dumps(payload))
+            output = root / "auxiliary"
+            args = argparse.Namespace(parent_report=parent, output=output, run_id="aux-test-newer-catalog",
+                                      case_id=["TC-TM001-CATALOG-02"], with_ui=False,
+                                      package_manifest=None, dmg=None, update_zip=None)
+            self.assertEqual(auxiliary.execute(args), 0)
+            report = json.loads((output / "result.json").read_text())
+            self.assertEqual(report["release_id"], source_release)
+            self.assertEqual(report["tc_results"][0]["state"], "PASS")
+
+    def test_catalog_index_includes_registered_inline_variants(self):
+        catalog = json.loads((results.ROOT / "tests/test_cases.json").read_text())
+        self.assertTrue(any(case.get("variants") for case in catalog["cases"]))
+        with tempfile.TemporaryDirectory() as temp:
+            actual = auxiliary.catalog_01(Path(temp), {"catalog": catalog})
+            self.assertTrue(actual["passed"])
+            self.assertEqual(actual["workbook_count"], sum(1 + len(case.get("variants", []))
+                                                          for case in catalog["cases"]))
 
 
 if __name__ == "__main__":

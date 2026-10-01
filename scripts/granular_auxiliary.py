@@ -114,7 +114,8 @@ def catalog_01(case_dir: Path, context: dict) -> dict:
     rendered = export_test_cases.render_markdown(catalog)
     workbook = ROOT / "TokenMeter项目总表.xlsx"
     from_workbook = workbook_case_ids(workbook)
-    identifiers = [case["id"] for case in catalog["cases"]]
+    identifiers = [identity for case in catalog["cases"]
+                   for identity in [case["id"], *(variant["id"] for variant in case.get("variants", []))]]
     concrete = [case for case in catalog["cases"] if not case.get("aggregate_planned")]
     actual = {"catalog_errors": errors, "catalog_count": len(identifiers),
               "unique_count": len(set(identifiers)), "all_concrete_have_tasks_and_ac":
@@ -553,8 +554,10 @@ def execute(args: argparse.Namespace) -> int:
         if (not isinstance(frozen, dict) or raw is None
                 or frozen.get(relative) != results.sha(raw)):
             raise results.Invalid(f"Auxiliary {relative} differs from parent frozen input")
-    if parent.get("release_id") != catalog["release_id"]:
-        raise results.Invalid("Parent release differs from current catalog")
+    source_releases = {case.get("release_id", catalog["release_id"])
+                       for case in catalog["cases"] if case.get("feature_id") == "TM-001"}
+    if source_releases != {parent.get("release_id")}:
+        raise results.Invalid("Parent release differs from TM-001 source cases")
     cases = [case for case in catalog["cases"] if case["id"] in CASES]
     if len(cases) != len(CASES) or {case["id"] for case in cases} != set(CASES):
         raise results.Invalid("Auxiliary 11 TC catalog is incomplete")
@@ -590,7 +593,7 @@ def execute(args: argparse.Namespace) -> int:
     report = {"schema_version": 3,
               "scope": "granular_auxiliary_targeted_probe" if args.case_id else "granular_auxiliary_package",
               "state": "BLOCKED", "release_eligible": False, "run_id": args.run_id,
-              "parent_run_id": parent["run_id"], "release_id": catalog["release_id"],
+              "parent_run_id": parent["run_id"], "release_id": parent["release_id"],
               "source_commit": parent.get("source_commit"), "candidate_tree": parent.get("candidate_tree"),
               "package": parent.get("package"), "started_at": now(), "finished_at": None,
               "parent_report_sha256": results.sha(parent_bytes),
