@@ -93,3 +93,6 @@ SOP 会话以提交`1bc01e38e8de5ab2786a2b5207dbaff434206156`修订SOP-019至11�
 总控交接的 0.1 本地 `master` 首次最终包门禁 `c2911bc` 为 FAIL；文档会话只读核对其 `gate.json` 与精细原件，UPDATE-05 的 13 个变体缺签名输入而失败。0.1 本机稳定原包仍不存在，本版 `TC-TM002-DELIVERY-01` 真实升级依赖继续 BLOCKED。该失败批次已在 0.1 版本记录和根项目总表单独登记；不改变本版 `unexecuted`、`release_eligible=false`。
 
 TM-002 开发会话后续交接：0.2 实现工作树完整治理 460/460 PASS，原件 `.local/ci/tm002-governance-cross-release.log`（在该开发工作树），SOP-008 baseline/quality PASS；已准备 SOP-009 本机工具链和锁定依赖，桌面基线构建 PASS、Node 单元 26/26、服务 pytest 55/55。来源存储、native helper 和 E2E 固定代码仍为未提交 WIP，尚无可交接干净候选 SHA/tree；Keychain/AX 隔离仍 BLOCKED、产品 E2E 未执行。以上为开发会话检查事实，不宣称本树执行过这些构建或测试。
+## 2026-10-02 · SECURITY-01三条路径输入纠错
+
+TM-002开发会话复核发现原`TC-TM002-SECURITY-01#ABSOLUTE/#FILE_URL/#DOTDOT`只写“向业务IPC提交路径”，没有method/字段/值/错误码；`chooseSource({tool,rootPath})`会忽略额外`rootPath`并触发选择器，不能用其证明安全拒绝。文档会话据真实`tokenmeter:invoke`与`SourceAccess.preview`合同，把三变体固定为`previewSource({selectionId:<B绝对路径/file URL/../B/b.jsonl>})`，测试拥有短根`R=/tmp/t2-<8位十六进制>`，输入长度≤64；预期snapshot`error=invalid_selection`、pending/confirmed不变、B的metadata/open/read=0。原四个恶意参数变体及三竞态变体均保留，没有把草稿行为或程序结果写成产品PASS。同步详细用例、机器目录、04计划、TEST_CASES和根Excel；严格基线与相关固定程序回归须在整合候选重核，产品E2E仍受原有AX/账号与Keychain前置阻断。

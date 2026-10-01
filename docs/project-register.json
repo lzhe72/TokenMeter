@@ -12,7 +12,7 @@
     "observed_source_commit": "6e80dd12d60ee5dad641bca030445a2153a269c9",
     "observed_working_tree_dirty": true,
     "production_initial_password_reference": "scripts/bootstrap_sqlite.py::PRODUCTION_INITIAL_PASSWORD（本机配置引用；总表不保存取值）",
-    "notes": "2026-10-02文档同步：恢复的新主仓库本地master d606fbd 已含文档基线，旧Git对象丢失与历史c291门禁FAIL不变。TM003独立代码分支311deedf的CORE模块3/3 PASS原件已核对，但未进本文档树且不是产品E2E；模块结果Excel导出规范待SOP补齐。TM005新增3条纯统计CORE辅助TC，原32条产品父TC/6变体不变；总目录225父TC/41变体。正式跨需求产品门禁NOT_RUN，根Excel保存固定输入与历史13批次。 TM004新增3条reader CORE辅助TC，原20产品TC不变，切片核对待提交。 SOP会话模块结果修订4cca918/本地master整合6bbab2e已同步至项目登记和总表；TM003/TM005模块原始3/3与模块Excel/批次BLOCKED分别记录。",
+    "notes": "2026-10-02文档同步：恢复的新主仓库本地master d606fbd 已含文档基线，旧Git对象丢失与历史c291门禁FAIL不变。TM003独立代码分支311deedf的CORE模块3/3 PASS原件已核对，但未进本文档树且不是产品E2E；模块结果Excel导出规范待SOP补齐。TM005新增3条纯统计CORE辅助TC，原32条产品父TC/6变体不变；总目录225父TC/41变体。正式跨需求产品门禁NOT_RUN，根Excel保存固定输入与历史13批次。 TM004新增3条reader CORE辅助TC，原20产品TC不变，切片核对待提交。 SOP会话模块结果修订4cca918/本地master整合6bbab2e已同步至项目登记和总表；TM003/TM005模块原始3/3与模块Excel/批次BLOCKED分别记录。 TM002 SECURITY-01三个路径变体明确previewSource.selectionId、短根和invalid_selection；TM005 CORE-01明确调用方传固定UTC界，不验证IANA换算。TM004 reader CORE-01/02/03独立切片在干净文档候选ebbcfd0就绪。 TM003新不可覆盖模块run tm003-core-20261001T163807Z的独立Excel已回读并作为第14批次登记；仅模块3/3，产品E2E NOT_RUN。 共享模块runner支持owned_root/memory_only清理类型；TM003新run tm003-core-20261001T165439Z第15批次已回读，最新模块3/3，旧ea6批次保留。",
     "observed_raw_state": "BLOCKED",
     "observed_raw_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674/result.json",
     "observed_review_model": ".local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/granular-source.json",
@@ -2204,7 +2204,7 @@
       "distribution_profile": "internal",
       "asset_storage": "本机版本归档及 dmg/<release_id>/；当前无本版正式包",
       "github_release": false,
-      "actual_state": "设计基线已完成：3功能点、9 TASK、28父TC、35变体。开发工作树已有原生目录面板、加密locator、根FD受限读取、React授权UI及33个固定E2E叶入口（28可执行、5场景摘要）；报告单元59/59、治理473/473、构建PASS。产品E2E因AX trusted=false及隔离标准测试账号不可用BLOCKED，Keychain最终包隔离未证实。本独立文档树未合该代码，机器绑定仍planned；正式发行完整门禁NOT_RUN、未发布。0.2公开配置为version0.2.0/build200及测试高版0.2.1/build201，实际0.2包尚未证明。",
+      "actual_state": "设计基线已完成：3功能点、9 TASK、28父TC、35变体。开发工作树已有原生目录面板、加密locator、根FD受限读取、React授权UI及33个固定E2E叶入口（28可执行、5场景摘要）；报告单元59/59、治理473/473、构建PASS。产品E2E因AX trusted=false及隔离标准测试账号不可用BLOCKED，Keychain最终包隔离未证实。本独立文档树未合该代码，机器绑定仍planned；正式发行完整门禁NOT_RUN、未发布。0.2公开配置为version0.2.0/build200及测试高版0.2.1/build201，实际0.2包尚未证明。 2026-10-02修订SECURITY-01三个恶意字串变体的固定IPC method/字段/错误码，产品状态不变；需在整合候选重核基线及固定程序。",
       "historical_evidence": "TM001独立候选d2门禁PASS只属历史；本地master c2911bc首次最终包门禁FAIL、无SOP-020稳定原包，不能作为0.2升级源；本版无实际产品运行。",
       "source": "releases/v0.2.0-20261001T034118Z/00-manifest.json",
       "status_source": "releases/v0.2.0-20261001T034118Z/06-iteration-record.md",
@@ -2224,7 +2224,7 @@
       "distribution_profile": "internal",
       "asset_storage": "dmg/<release_id>/：正式包仅在本机门禁 PASS 后保存",
       "github_release": false,
-      "actual_state": "整版draft、未发布。27条产品TC未执行；3条CORE辅助TC已在文档提交48ca089独立切片就绪，在开发分支311deedf运行模块3/3 PASS，原始receipt在该分支.local/ci/tm003-core-20261001/。代码尚未合入本文档树，机器绑定保持空；模块报告不能作为产品E2E或发行门禁，结果Excel规范待SOP修订。 2026-10-02新代码候选44379e6已有逐步模块3/3与桌面29/29/typecheck/build原件；source_check独立Excel导出程序仍缺，批次登记BLOCKED，产品E2E仍NOT_RUN。",
+      "actual_state": "整版draft、未发布。27条产品TC未执行；3条CORE辅助TC已在文档提交48ca089独立切片就绪，在开发分支311deedf运行模块3/3 PASS，原始receipt在该分支.local/ci/tm003-core-20261001/。代码尚未合入本文档树，机器绑定保持空；模块报告不能作为产品E2E或发行门禁，结果Excel规范待SOP修订。 2026-10-02新代码候选44379e6已有逐步模块3/3与桌面29/29/typecheck/build原件；source_check独立Excel导出程序仍缺，批次登记BLOCKED，产品E2E仍NOT_RUN。 固定导出器新run tm003-core-20261001T163807Z在ea6b187候选生成3/3/9步source_check独立Excel并回读PASS，现已按被测SHA登记模块批次；原27条产品TC与发行仍NOT_RUN。 新清理合同候选d7c3d39的独立run tm003-core-20261001T165439Z亦3/3/9步及Excel回读PASS，作为最新模块批次；旧ea6批次保留。",
       "historical_evidence": "TM-001 干净源码候选为技术基底；其产品门禁不继承给TM-003",
       "source": "releases/v0.3.0-20261001T034652Z/00-manifest.json",
       "status_source": "releases/v0.3.0-20261001T034652Z/06-iteration-record.md",
@@ -2243,7 +2243,7 @@
       "distribution_profile": "internal",
       "asset_storage": "dmg/<release_id>/：仅门禁PASS后放正式DMG",
       "github_release": false,
-      "actual_state": "整版draft、未发布。原20产品细TC及四组摘要保留，新增3条已打开只读句柄的reader CORE辅助TC，固定LF、前缀MAC/重扫和损坏行输入，切片检查未完成。开发树模块红0/3与绿3/3仅是交接证据，且代码未形成干净提交；产品授权、稳定文件身份、SQLite原子事务、IPC/App E2E未验证，正式发行门禁NOT_RUN。",
+      "actual_state": "整版draft、未发布。原20产品细TC及四组摘要保留，3条reader CORE辅助TC在输入提交fea41fe/同步SOP后的干净候选ebbcfd0上按SOP-008独立判为development_slice_ready；程序绑定仍空。本版代码分支e52b62e报告reader目标9/9、桌面49/49和build PASS，仅为模块原件，Excel/总表批次尚无固定导出器。产品授权、稳定文件身份最终接口、SQLite原子事务、IPC/App E2E未验证，正式发行门禁NOT_RUN。",
       "historical_evidence": "TM004源分支原生零/缺失与nested Agent定向探针仅为研究证据；0.3及此前稳定原包尚未形成，真实升级BLOCKED。",
       "source": "releases/v0.4.0-20261001T040433Z/00-manifest.json",
       "status_source": "releases/v0.4.0-20261001T040433Z/06-iteration-record.md",
@@ -2262,7 +2262,7 @@
       "distribution_profile": "internal",
       "asset_storage": "dmg/<release_id>/：仅门禁PASS后放正式原名包",
       "github_release": false,
-      "actual_state": "整版draft、未发布。原32条产品父TC、6稳定变体和两组摘要保留；纯统计CORE-01/02/03辅助TC在输入提交061c759后，经SOP-008内容核对及结构/治理457项PASS，独立切片development_slice_ready，程序绑定仍为空、模块实际运行unexecuted。静态oracle与切片就绪不证明真实双来源采集或产品E2E；固定产品数据、SQLite/IPC、安装App逐TC绑定未完成，正式发行完整门禁NOT_RUN。 独立代码提交6a0f6f的source_check CORE3/3、桌面29/29、build PASS，原件在TM005工作树.local/tm005-core-postcommit-20261001T162401Z；程序尚未进入本文档树、模块Excel导出/批次登记BLOCKED，产品E2E仍NOT_RUN。",
+      "actual_state": "整版draft、未发布。原32条产品父TC、6稳定变体和两组摘要保留；纯统计CORE-01/02/03辅助TC在输入提交061c759后，经SOP-008内容核对及结构/治理457项PASS，独立切片development_slice_ready，程序绑定仍为空、模块实际运行unexecuted。静态oracle与切片就绪不证明真实双来源采集或产品E2E；固定产品数据、SQLite/IPC、安装App逐TC绑定未完成，正式发行完整门禁NOT_RUN。 独立代码提交6a0f6f的source_check CORE3/3、桌面29/29、build PASS，原件在TM005工作树.local/tm005-core-postcommit-20261001T162401Z；程序尚未进入本文档树、模块Excel导出/批次登记BLOCKED，产品E2E仍NOT_RUN。 CORE-01仅验证已给UTC半开界聚合，不验证IANA日期换算；该单独辅助TC待固定。",
       "historical_evidence": "TM005语义oracle只验证规范化样例；0.4及此前稳定原包尚未形成，真实升级BLOCKED。",
       "source": "releases/v0.5.0-20261001T034729Z/00-manifest.json",
       "status_source": "releases/v0.5.0-20261001T034729Z/06-iteration-record.md",
@@ -2757,7 +2757,8 @@
       "release_eligible": false,
       "summary": "六个历史聚合场景，升级004失败；不回填新增TC。结果表修订02修正时间显示，原表和测试证据保留；未新增测试运行。",
       "result_workbook": ".local/test-results/local-a1b2c3d4e5f60718293a4b5c6d7e8f94/revisions/02/TokenMeter测试结果-local-a1b2c3d4e5f60718293a4b5c6d7e8f94.xlsx",
-      "raw_report": ".local/ci/e2e-dev-probe-07/result.json"
+      "raw_report": ".local/ci/e2e-dev-probe-07/result.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-7feea03dd72e4eddba0651cede8fd23d",
@@ -2772,7 +2773,8 @@
       "release_eligible": false,
       "summary": "前16条登录实际PASS；第17条参数路径中的#被SQLite URI截断，准备阶段中断。78父TC为16 PASS/62 BLOCKED；31变体未完成。清理全真，缺项未以旧场景通过代替。",
       "result_workbook": ".local/test-results/local-7feea03dd72e4eddba0651cede8fd23d-frozen/TokenMeter测试结果-local-7feea03dd72e4eddba0651cede8fd23d.xlsx",
-      "raw_report": ".local/ci/local-7feea03dd72e4eddba0651cede8fd23d/result.json"
+      "raw_report": ".local/ci/local-7feea03dd72e4eddba0651cede8fd23d/result.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-343e54113b0b442383e80f137013014b",
@@ -2789,7 +2791,8 @@
       "summary": "78父用例：62 PASS、9 FAIL、7 BLOCKED；38参数变体：31 PASS、7 FAIL（不与父用例相加）。真实产品95个执行入口，另11条辅助检查。独立代码复核保留原始失败，证据不足降BLOCKED。含3,397条证据链接和12张截图。",
       "result_workbook": ".local/test-results/local-343e54113b0b442383e80f137013014b-reviewed/TokenMeter测试结果-local-343e54113b0b442383e80f137013014b.xlsx",
       "raw_report": ".local/ci/local-343e54113b0b442383e80f137013014b/result.json",
-      "result_model": ".local/test-results/local-343e54113b0b442383e80f137013014b-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-343e54113b0b442383e80f137013014b-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-877830fb340a4d12b4e29cf76fa422ed",
@@ -2806,7 +2809,8 @@
       "summary": "15个实际Playwright入口；3父用例2 PASS/1 FAIL，13变体8 PASS/5 FAIL。PASSWORD05独立peer与ADMIN03收尾脚本修复验证通过；UPDATE05五个解压身份场景20秒后仍有临时目录残留。其余75父用例范围外。原全量失败保留，本次不构成全量发布回归。",
       "result_workbook": ".local/test-results/local-877830fb340a4d12b4e29cf76fa422ed-reviewed/TokenMeter测试结果-local-877830fb340a4d12b4e29cf76fa422ed.xlsx",
       "raw_report": ".local/ci/local-877830fb340a4d12b4e29cf76fa422ed/result.json",
-      "result_model": ".local/test-results/local-877830fb340a4d12b4e29cf76fa422ed-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-877830fb340a4d12b4e29cf76fa422ed-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "aux-ui01-local-343e54113b0b442383e80f137013014b-02",
@@ -2823,7 +2827,8 @@
       "summary": "仅UI01一条PASS，77条TM001不在本次范围。修复#fff缩写颜色解析后，程序测得浅色对比度16.235、深色12.513，6页无溢出。7张截图、53条证据链接；不覆盖首次FAIL，不代表完整产品回归通过。",
       "result_workbook": ".local/test-results/aux-ui01-local-343e54113b0b442383e80f137013014b-02-reviewed/TokenMeter测试结果-aux-ui01-local-343e54113b0b442383e80f137013014b-02.xlsx",
       "raw_report": ".local/ci/aux-ui01-local-343e54113b0b442383e80f137013014b-02/result.json",
-      "result_model": ".local/test-results/aux-ui01-local-343e54113b0b442383e80f137013014b-02-reviewed/granular-source.json"
+      "result_model": ".local/test-results/aux-ui01-local-343e54113b0b442383e80f137013014b-02-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-571dd63bfe5b4d90a95ed9c70d80de07",
@@ -2840,7 +2845,8 @@
       "summary": "78父TC：66 PASS、1 FAIL（SESSION-09）、11辅助占位BLOCKED；38参数变体全部PASS。原始运行FAIL，清理完成；独立审计PASS只证明被审计旁证，不改变产品结论。 参数变体另计：38 PASS、0 FAIL、0 BLOCKED。",
       "result_workbook": ".local/test-results/local-571dd63bfe5b4d90a95ed9c70d80de07-reviewed/TokenMeter测试结果-local-571dd63bfe5b4d90a95ed9c70d80de07.xlsx",
       "raw_report": ".local/ci/local-571dd63bfe5b4d90a95ed9c70d80de07/result.json",
-      "result_model": ".local/test-results/local-571dd63bfe5b4d90a95ed9c70d80de07-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-571dd63bfe5b4d90a95ed9c70d80de07-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-4a8815e9d61e4b4bbdd41f7a2f897c52",
@@ -2857,7 +2863,8 @@
       "summary": "SESSION-09一例PASS、清理完成；其余77父TC范围外。仅定位前次禁用按钮点击失败，不覆盖完整回归FAIL。",
       "result_workbook": ".local/test-results/local-4a8815e9d61e4b4bbdd41f7a2f897c52-reviewed/TokenMeter测试结果-local-4a8815e9d61e4b4bbdd41f7a2f897c52.xlsx",
       "raw_report": ".local/ci/local-4a8815e9d61e4b4bbdd41f7a2f897c52/result.json",
-      "result_model": ".local/test-results/local-4a8815e9d61e4b4bbdd41f7a2f897c52-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-4a8815e9d61e4b4bbdd41f7a2f897c52-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-f47f8257607c48458cc52b886d281d70",
@@ -2874,7 +2881,8 @@
       "summary": "78父TC：65 PASS、1 FAIL（UPDATE-07清理不完整）、12 BLOCKED（UPDATE-08及11辅助占位）；38参数变体全部PASS。原始运行FAIL、cleanup_completed=false；不能放行。 参数变体另计：38 PASS、0 FAIL、0 BLOCKED。",
       "result_workbook": ".local/test-results/local-f47f8257607c48458cc52b886d281d70-reviewed/TokenMeter测试结果-local-f47f8257607c48458cc52b886d281d70.xlsx",
       "raw_report": ".local/ci/local-f47f8257607c48458cc52b886d281d70/result.json",
-      "result_model": ".local/test-results/local-f47f8257607c48458cc52b886d281d70-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-f47f8257607c48458cc52b886d281d70-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-c8e31657d5e4428584a6f316936113e1",
@@ -2891,7 +2899,8 @@
       "summary": "UPDATE-07因本轮拥有资源未完全清理而FAIL，UPDATE-08为避免接管残留而BLOCKED；cleanup_completed=false。其余76父TC范围外，原始失败保留。",
       "result_workbook": ".local/test-results/local-c8e31657d5e4428584a6f316936113e1-reviewed/TokenMeter测试结果-local-c8e31657d5e4428584a6f316936113e1.xlsx",
       "raw_report": ".local/ci/local-c8e31657d5e4428584a6f316936113e1/result.json",
-      "result_model": ".local/test-results/local-c8e31657d5e4428584a6f316936113e1-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-c8e31657d5e4428584a6f316936113e1-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-70e531d3092c4cbea30160117c379287",
@@ -2908,7 +2917,8 @@
       "summary": "启动时使用系统Python，缺少alembic；UPDATE-07/08均在准备阶段BLOCKED，实际执行0例。原始BLOCKED及环境原因保留，清理完成。",
       "result_workbook": ".local/test-results/local-70e531d3092c4cbea30160117c379287-reviewed/TokenMeter测试结果-local-70e531d3092c4cbea30160117c379287.xlsx",
       "raw_report": ".local/ci/local-70e531d3092c4cbea30160117c379287/result.json",
-      "result_model": ".local/test-results/local-70e531d3092c4cbea30160117c379287-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-70e531d3092c4cbea30160117c379287-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-b6627e4379c64386bfc1a535fb432c16",
@@ -2925,7 +2935,8 @@
       "summary": "使用项目venv执行UPDATE-07/08，2例PASS、清理完成；UPDATE-07独立旁证审计PASS。其余76父TC范围外，不覆盖此前完整回归FAIL。",
       "result_workbook": ".local/test-results/local-b6627e4379c64386bfc1a535fb432c16-reviewed/TokenMeter测试结果-local-b6627e4379c64386bfc1a535fb432c16.xlsx",
       "raw_report": ".local/ci/local-b6627e4379c64386bfc1a535fb432c16/result.json",
-      "result_model": ".local/test-results/local-b6627e4379c64386bfc1a535fb432c16-reviewed/granular-source.json"
+      "result_model": ".local/test-results/local-b6627e4379c64386bfc1a535fb432c16-reviewed/granular-source.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-534748ff47cb44229183a6bd878c1674",
@@ -2975,7 +2986,8 @@
       "verification": ".local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/verification.json",
       "auxiliary_report": ".local/ci/aux-818fe55e1e8940e4a3196b9d03b76563/result.json",
       "aggregate_report": ".local/ci/local-5197628d58ac4136b004b87da438220c/result.json",
-      "audit_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674-audit-v2/audit.json"
+      "audit_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674-audit-v2/audit.json",
+      "execution_type": "product_e2e"
     },
     {
       "run_id": "local-0512d4fc44544eba97f9d1ae79cbfc37",
@@ -3007,7 +3019,54 @@
       "raw_report": "/Users/lz/.codex/worktrees/tm001-tm005-integration/TokenMeter/.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/granular/result.json",
       "result_model": "/Users/lz/.codex/worktrees/tm001-tm005-integration/TokenMeter/.local/test-results/local-0512d4fc44544eba97f9d1ae79cbfc37-reviewed/granular-source.json",
       "verification": ".local/test-results/local-0512d4fc44544eba97f9d1ae79cbfc37-reviewed/verification.json",
-      "gate_report": "/Users/lz/.codex/worktrees/tm001-tm005-integration/TokenMeter/.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/gate.json"
+      "gate_report": "/Users/lz/.codex/worktrees/tm001-tm005-integration/TokenMeter/.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/gate.json",
+      "execution_type": "product_e2e"
+    },
+    {
+      "run_id": "tm003-core-20261001T163807Z",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "execution_type": "source_check",
+      "scope": "TM-003 CORE-01/02/03 固定模块验证；非产品E2E",
+      "state": "PASS",
+      "included_cases": 3,
+      "executed_cases": 3,
+      "passed_cases": 3,
+      "failed_cases": 0,
+      "blocked_cases": 0,
+      "source_commit": "ea6b18765ce63a5b32b7de0488de5d2a4647de94",
+      "candidate_tree": "126e3f2c866d908661b651b1ee027440db0b9af1",
+      "working_tree_dirty": false,
+      "release_eligible": false,
+      "product_e2e_state": "NOT_RUN",
+      "summary": "source_check固定3条/9步骤PASS，逐例清理PASS；独立结果Excel/verification回读PASS。仅模块，不覆盖TM003原27条产品TC；产品E2E和发行门禁NOT_RUN。",
+      "result_workbook": ".local/test-results/tm003-core-20261001T163807Z/TokenMeter测试结果-tm003-core-20261001T163807Z.xlsx",
+      "raw_report": ".local/source-check-runs/tm003-core-20261001T163807Z/report.json",
+      "verification": ".local/test-results/tm003-core-20261001T163807Z/verification.json",
+      "result_workbook_sha256": "f4a359bd7f7658992685570d90c6d88c8f5f31871b84611dbafbb82dcc3b3cff",
+      "source_fingerprint": "34deaa2269c05ffde5447cbdbe64e1f6d88f7ed8ef914142316c4cb98bfd8f9c"
+    },
+    {
+      "run_id": "tm003-core-20261001T165439Z",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "execution_type": "source_check",
+      "scope": "TM-003 CORE-01/02/03 固定模块验证；非产品E2E",
+      "state": "PASS",
+      "included_cases": 3,
+      "executed_cases": 3,
+      "passed_cases": 3,
+      "failed_cases": 0,
+      "blocked_cases": 0,
+      "source_commit": "d7c3d39ac0a007f0e16f55bbb3cfc9b15fd9fe34",
+      "candidate_tree": "d23f3e0f285e63b17293da5c603d951db37716c6",
+      "working_tree_dirty": false,
+      "release_eligible": false,
+      "product_e2e_state": "NOT_RUN",
+      "summary": "共享source_check清理合同扩展后的新候选：CORE固定3/3、九步PASS，owned_root清理逐例PASS；独立Excel/verification回读PASS。旧ea6b187批次保留；原27条产品TC与正式发行仍NOT_RUN。",
+      "result_workbook": ".local/test-results/tm003-core-20261001T165439Z/TokenMeter测试结果-tm003-core-20261001T165439Z.xlsx",
+      "raw_report": ".local/source-check-runs/tm003-core-20261001T165439Z/report.json",
+      "verification": ".local/test-results/tm003-core-20261001T165439Z/verification.json",
+      "result_workbook_sha256": "51b6f476b16d255eb29caba77f447e33d4c7efb8f3030239d6b08adf4831d620",
+      "source_fingerprint": "720c2837e2ea08940c82e1b22e24bf0110dab11cd78419bbf7755f24f765d289"
     }
   ],
   "latest_case_states": {
@@ -3088,7 +3147,10 @@
     "TC-TM001-RECORDS-02": "BLOCKED",
     "TC-TM001-GATE-01": "BLOCKED",
     "TC-TM001-GATE-02": "BLOCKED",
-    "TC-TM001-GATE-03": "BLOCKED"
+    "TC-TM001-GATE-03": "BLOCKED",
+    "TC-TM003-CORE-01": "PASS",
+    "TC-TM003-CORE-02": "PASS",
+    "TC-TM003-CORE-03": "PASS"
   },
   "latest_case_runs": {
     "TC-TM001-LOGIN-01": "local-0512d4fc44544eba97f9d1ae79cbfc37",
@@ -3168,6 +3230,9 @@
     "TC-TM001-RECORDS-02": "local-0512d4fc44544eba97f9d1ae79cbfc37",
     "TC-TM001-GATE-01": "local-0512d4fc44544eba97f9d1ae79cbfc37",
     "TC-TM001-GATE-02": "local-0512d4fc44544eba97f9d1ae79cbfc37",
-    "TC-TM001-GATE-03": "local-0512d4fc44544eba97f9d1ae79cbfc37"
+    "TC-TM001-GATE-03": "local-0512d4fc44544eba97f9d1ae79cbfc37",
+    "TC-TM003-CORE-01": "tm003-core-20261001T165439Z (source_check；产品E2E未运行)",
+    "TC-TM003-CORE-02": "tm003-core-20261001T165439Z (source_check；产品E2E未运行)",
+    "TC-TM003-CORE-03": "tm003-core-20261001T165439Z (source_check；产品E2E未运行)"
   }
 }

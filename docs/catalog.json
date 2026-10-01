@@ -1346,7 +1346,7 @@
         "tests/acceptance.json",
         "docs/testing/strategy.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
@@ -1581,7 +1581,7 @@
         "releases/v0.2.0-20261001T034118Z/03-development-plan.md",
         "docs/testing/strategy.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
@@ -1608,7 +1608,7 @@
       "inputs": [
         "releases/v0.2.0-20261001T034118Z/01-requirements.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-022-archive-handoff.md"
     },
     {
