@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {appendFileSync, chmodSync, closeSync, existsSync, ftruncateSync, futimesSync, mkdtempSync,
-  openSync, readFileSync, rmSync, statSync, writeFileSync} from 'node:fs';
+  openSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync, writeSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
@@ -23,7 +23,7 @@ const bytes = (...items: string[]): Buffer => Buffer.from(items.join(''), 'utf8'
 const sha = (value: Buffer): string => createHash('sha256').update(value).digest('hex');
 const report = (t: {diagnostic(message: string): void}, id: string, step: number, actual: object): void =>
   t.diagnostic(JSON.stringify({kind: 'step', case_id: id, step, actual}));
-function root(): string { const path = mkdtempSync(join(tmpdir(), 'tm003-core45-')); chmodSync(path, 0o700); return path; }
+function root(): string { const path = mkdtempSync(join(tmpdir(), 'tm003-core45-')); chmodSync(path, 0o700); return realpathSync(path); }
 function cleanup(t: {diagnostic(message: string): void}, id: string, path: string): void {
   rmSync(path, {recursive: true, force: true}); assert.equal(existsSync(path), false);
   t.diagnostic(JSON.stringify({kind: 'cleanup', case_id: id, owned_root_removed: true}));
@@ -145,7 +145,9 @@ test('TC-TM003-CORE-05 LF cursor continues append and resets on prefix rewrite o
     report(t, ID5, 3, {mutable_snapshot_digest: 'changed-2', usage: state.usage,
       cursor: state.cursor, reset: scan.reset});
 
-    const before = statSync(file); writeFileSync(fd, rewritten, {encoding: 'utf8'});
+    futimesSync(fd, 1760000000, 1760000000);
+    const before = statSync(file);
+    assert.equal(writeSync(fd, rewritten, 0, rewritten.length, 0), rewritten.length);
     futimesSync(fd, before.atime, before.mtime);
     assert.equal(statSync(file).size, before.size); assert.equal(statSync(file).mtimeMs, before.mtimeMs);
     scan = scanCodexIncremental(readFileSync(file), store.loadCursor(PRINCIPAL, SOURCE_KEY, key1), FILE_ID, key1);
