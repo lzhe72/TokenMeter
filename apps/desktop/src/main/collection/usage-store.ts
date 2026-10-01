@@ -113,6 +113,18 @@ export class UsageStore {
       .run(wanted);
   }
 
+  /** Refuse a replacement key before any scanner can read or write this database. */
+  assertIdentitySecret(secret: Buffer): void { this.checkMarker(secret, false); }
+
+  hasPersistedIdentity(): boolean {
+    const row = this.db.prepare(`SELECT
+      (SELECT COUNT(*) FROM identity_key_state) AS markers,
+      (SELECT COUNT(*) FROM usage_event) AS events,
+      (SELECT COUNT(*) FROM source_cursor) AS cursors,
+      (SELECT COUNT(*) FROM coverage) AS coverages`).get()!;
+    return [row.markers, row.events, row.cursors, row.coverages].some(value => Number(value) > 0);
+  }
+
   loadCursor(principalKey: string, sourceKey: string, secret: Buffer): UsageCursor | null {
     hexKey(principalKey); hex64(sourceKey, 'invalid_source_key'); this.checkMarker(secret, false);
     const row = this.db.prepare(`SELECT file_identity, committed_byte_offset, prefix_mac
@@ -231,6 +243,7 @@ export class UsageStore {
     const usage = event.usage;
     this.db.exec('BEGIN IMMEDIATE');
     try {
+      this.checkMarker(secret, true);
       const existing = this.db.prepare(`SELECT source_scope_key, model_id, input_tokens, output_tokens,
         cached_input_tokens, cache_write_input_tokens, reasoning_output_tokens
         FROM usage_event WHERE principal_key = ? AND source = ? AND source_event_key = ?`)

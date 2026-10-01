@@ -92,6 +92,7 @@ test('TC-TM003-CORE-08 owner profile protects and preserves one identity secret'
       random_calls_each: 0, prior_events_each: 1, prior_total_each: 110, db_unchanged_each: true});
 
     const unavailableRandom = random();
+    const priorDb = snapshotBytes(dbPath);
     assert.throws(() => openUsageProfile(root, {cipher: cipher(false), randomBytes: unavailableRandom.generate}),
       /identity_secret_unavailable/);
     assert.equal(unavailableRandom.calls, 0);
@@ -99,6 +100,7 @@ test('TC-TM003-CORE-08 owner profile protects and preserves one identity secret'
       encryptString: (s: string) => Buffer.from(s), decryptString: () => Buffer.alloc(32, 0x20).toString('hex')},
       randomBytes: () => { throw new Error('unexpected_random'); }}), /identity_secret_mismatch/);
     assert.deepEqual(snapshotBytes(secretPath), ciphertext);
+    assert.deepEqual(snapshotBytes(dbPath), priorDb);
     assert.deepEqual([state(dbPath).events, state(dbPath).total], [1,110]);
     assert.equal(snapshotBytes(dbPath).includes(publicKey), false);
     step(t, 4, {encryption_unavailable_code: 'identity_secret_unavailable', wrong_key_code: 'identity_secret_mismatch',
