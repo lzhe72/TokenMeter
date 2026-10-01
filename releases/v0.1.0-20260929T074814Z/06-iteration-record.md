@@ -735,3 +735,7 @@ TM-001开发会话的代码提交`fbab99b13022d7178a96dc344fb5ff9db8dd85f0`已�
 文档会话用固定 `scripts/granular_test_result.py` 从本次原件导出独立 `TokenMeter测试结果-local-0512d4fc44544eba97f9d1ae79cbfc37.xlsx`；导出程序退出 0、表格回读 PASS，产品状态仍 FAIL。结果模型为 78 父 TC 中 66 PASS/1 FAIL/11 BLOCKED，38 个变体 25 PASS/13 FAIL；导出副本与总控整合树原件摘要一致，文件保存在本工作树 `.local/test-results/local-0512d4fc44544eba97f9d1ae79cbfc37-reviewed/`。根总表新增这一失败批次并标注被测 SHA，未覆盖此前 12 批。TM-001 开发会话正在按 SOP-015 修复签名输入缺口；下次门禁必须使用新固定候选、真实重跑并保留本次失败。
 
 根总表此次重新导出与 `python3 scripts/verify_project_workbook.py` 回读均退出 0：11 Sheet、164 父 TC、35 变体、199 用例行、13 测试批次，SHA-256 `fa36939ff901254b9bce7775d194943ceccc3c7e41d64680c0ab1b4b22701a5d`。`product_tests_executed=false`、`release_eligible=false` 是导表范围声明；最新批次的原始 FAIL 不因导表成功改变。最终导出日志 `.local/docs-checks/20261001-remote-checkpoint-docs/workbook-after-tm002-progress.log`（首次纳入失败批次日志 `workbook-after-c291-fail.log` 保留），导表不是 c291 的被测候选输入。
+
+## 2026-10-02 · UPDATE-05定向批次结果Excel回读
+
+TM-001开发会话交接`709d21253a0f88bc703a431cbf3adba3df17e508`原始`local-65796d0033704e3988cd7174dec93c81`：范围仅UPDATE-05父例与13固定变体，14/14 PASS、26步骤、清理完成、77父TC范围外、`release_eligible=false`。后置独立导出修复`de081a67734316381d598929ddd5a7814de7e264`生成12 Sheet结果Excel并回读PASS；复制到文档会话本机`.local/test-results/<run_id>/`保存原结果与旁证，报告SHA-256`63068b93a6959fee58acbeb00dde9d6da062726df9b8de6aa0dd757b63403e48`、Excel SHA-256`579dbfde25149265a97ab12bf85846b5e128d62cf4f94df7ff03b376eda16c16`。本轮仅索引第16个批次，被测候选仍709d；初次导出版本错配与空审计的FAIL原件、旧c291完整门禁FAIL均保留。定向PASS不满足全部产品E2E或发行门禁，正式发行NOT_RUN；详细见[07测试结果](07-test-results.md)。
