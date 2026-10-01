@@ -6,6 +6,8 @@ SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc40
 
 TM-002 `EVIDENCE-01#MISSING_CHOOSER_WITNESS`已作为第七固定负例进入详细用例、机器目录与总表：删除合成picker事件的确认按钮字段并重算单项摘要后，独立复核仍必须拒绝，不能用通用弹窗冒充目录选择确认。`SECURITY-01`合成A/B继续在短`/tmp`根，测试profile另在当前用户独占私有目录，避免SourceStore拒绝world-writable祖先。0.2现有28父TC、36变体，新增变体未运行；产品E2E和正式发行仍NOT_RUN。
 
+TM-002上述修订的干净输入提交`0c4f2604657484ae29cc601b6246bbc232e49450`已按SOP-008复核当前文档基线，收据`.local/docs-checks/20261002-tm002-chooser-baseline/receipt.json`：structure、baseline、quality、治理477/477、机器用例和Excel回读均PASS。它只确认冻结测试输入，`EVIDENCE-01#MISSING_CHOOSER_WITNESS`的程序绑定/实际运行及0.2产品E2E仍未由文档检查产生PASS。
+
 TM-003新的`CORE-04/05`固定输入已写入[0.3测试计划](../releases/v0.3.0-20261001T034652Z/04-test-plan.md)及详细用例，fixture精确冻结410/750/1090字节偏移、原子事务故障注入、有效错键、完整LF增量与前缀MAC改写/截短；机器目录和总表增加两行，当前两例程序绑定null、unexecuted。独立SOP-008切片须先对干净文档候选做语义/结构/治理核对，不能因已有CORE-01/02/03的模块3/3而填通过；原27条产品TC继续未执行。
 
 上述`CORE-04/05`输入提交`ba9c782da2cd24f909e26a22c77c506627a40a2f`已按SOP-008独立判`development_slice_ready`，收据`.local/docs-checks/20261002-tm003-core45-slice-ready/receipt.json`绑定该提交/tree、fixture/详细用例/机器目录SHA：structure、治理477/477、用例227/721、总表227父+41变体/15批次均PASS。只允许无TM-002授权依赖的同步事务和合成句柄游标模块进入红测/实现；两条TC实际执行仍0，0.3整版、产品E2E及正式发行均NOT_RUN。

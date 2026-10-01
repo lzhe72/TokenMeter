@@ -100,3 +100,5 @@ TM-002开发会话复核发现原`TC-TM002-SECURITY-01#ABSOLUTE/#FILE_URL/#DOTDO
 ## 2026-10-02 · chooser见证负例与SECURITY profile纠错
 
 开发会话提交具体复核负例ID`TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS`：从完整合成报告副本只删`picker-01.json.chooser_confirm_button`，重算该单项旁证摘要，仍保留原生面板事件、步骤及其它报告字段；固定独立复核须非零退出/FAIL并指出`native picker event`不可信，通用弹窗见证不能补证。它作为第七稳定变体加入EVIDENCE-01，本版仍28父TC，变体由35增至36；仅是设计基线补强，不是已运行产品TC。另因SourceStore私有目录拒绝world-writable `/tmp` 祖先，SECURITY-01继续以短R放A/B攻击文件，但profile改在当前用户realpath化的独占0700私有临时目录；三路径变体仍经生产`previewSource.selectionId`预期`invalid_selection`，不改变拒绝判据。机器用例、详细文档、04测试计划、TEST_CASES及根总表同轮同步；SOP-008对整合候选重核后才能按新变体运行。
+
+SOP-008在干净输入提交`0c4f2604657484ae29cc601b6246bbc232e49450`（tree`70cbd4af0698900035209635ad010fa0dc5545f9`）对上述修订重核：structure、当前0.2 baseline、quality、用例227父/721步、总表11 Sheet/227父/42全局变体/269行/16批次、治理477/477均PASS，工作树clean。逐输入SHA、命令日志和第七变体/私有profile语义核对在`.local/docs-checks/20261002-tm002-chooser-baseline/receipt.json`；`tests/test_cases.json` SHA-256`8cc28281b55833ac2c4e5529419ec31b79f736c59c5da7d5764aabc49ab0a879`。当前0.2文档基线修订可供SOP-011固定程序绑定；新负例仍unexecuted，产品E2E与正式发行NOT_RUN。
