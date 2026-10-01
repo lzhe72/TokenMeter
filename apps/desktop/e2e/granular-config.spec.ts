@@ -10,10 +10,14 @@ type Context = {run_id:string;case_id:string;app_path:string;profile_path:string
   secondary_service_url:string|null;service_log_path:string;secondary_service_log_path?:string;
   service_control_url:string;service_control_token:string;secondary_control_url:string;secondary_control_token:string;
   update_url?:string|null;update_control_url?:string|null;update_control_token?:string|null;update_nonce?:string|null;
-  cdp_port?:number|null;expected_upgrade_build?:string};
+  cdp_port?:number|null;expected_app_version:string;expected_app_build:string;
+  expected_upgrade_version:string;expected_upgrade_build:string};
 const input=process.env.TM_E2E_CONTEXT, output=process.env.TM_E2E_CASE_OUTPUT;
 if(!input||!output) throw Error('Owned granular config context is missing');
 const c=JSON.parse(readFileSync(input,'utf8')) as Context;
+for(const key of ['expected_app_version','expected_app_build','expected_upgrade_version','expected_upgrade_build'] as const){
+  if(typeof c[key]!=='string'||!c[key])throw Error(`Owned granular config context lacks ${key}`);
+}
 const executable=join(c.app_path,'Contents/MacOS/TokenMeter');
 const events=join(output,'events.jsonl');
 let app:ElectronApplication|null=null, page:Page|null=null, tracing=false, traceNumber=0;
@@ -27,13 +31,17 @@ function evidence(step:number,action:string,expected:unknown,actual:unknown,sour
 function childEnv():Record<string,string> {
   return Object.fromEntries(Object.entries(process.env).filter((entry):entry is [string,string]=>entry[1]!==undefined).filter(([key])=>!key.startsWith('TM_E2E_')&&!key.startsWith('TM_INTERNAL_')&&!key.includes('SIGNING')&&!key.includes('TOKEN')));
 }
+function buildVersion(){const plist=join(c.app_path,'Contents/Info.plist');return {
+  version:execFileSync('/usr/bin/plutil',['-extract','CFBundleShortVersionString','raw',plist],{encoding:'utf8'}).trim(),
+  build:execFileSync('/usr/bin/plutil',['-extract','CFBundleVersion','raw',plist],{encoding:'utf8'}).trim()};}
 async function launch(diagnostic=false) {
   const args=[`--user-data-dir=${c.profile_path}`];
   if(diagnostic){if(!c.cdp_port)throw Error('Owned diagnostic CDP port is absent');args.push(`--diagnostic-cdp-port=${c.cdp_port}`);}
   app=await launchObserved({executablePath:executable,args,env:childEnv(),chromiumSandbox:true,timeout:60_000},
     {run_id:c.run_id,case_id:c.case_id,output:output!});
   runnerLaunches++;
-  page=await app.firstWindow(); await expect(page.getByTestId('app.build')).toBeVisible();
+  page=await app.firstWindow(); await expect(page.getByTestId('app.build')).toContainText(`build ${c.expected_app_build}`);
+  expect(buildVersion()).toEqual({version:c.expected_app_version,build:c.expected_app_build});
   await app.context().tracing.start({screenshots:true,snapshots:true,sources:false});tracing=true;
 }
 async function close() {
@@ -392,7 +400,8 @@ test('TC-TM001-CONFIG-06',async()=>{
   const newPid=await waitForAutonomousPid(oldPid,launchesAtHandoff);
   app=null;page=null;
   await reconnectAutonomous();
-  await expect(page!.getByTestId('app.build')).toContainText(`build ${full.expected_upgrade_build??'101'}`);
+  await expect(page!.getByTestId('app.build')).toContainText(`build ${full.expected_upgrade_build}`);
+  expect(buildVersion()).toEqual({version:full.expected_upgrade_version,build:full.expected_upgrade_build});
   const busy=['downloading','verifying','ready','installing'];
   const snapshots=phases.filter(row=>row.kind==='snapshot'&&busy.includes(row.phase));
   const allPhases=busy.every(phase=>snapshots.some(row=>row.phase===phase));

@@ -154,6 +154,56 @@ class LocalFixtureTests(unittest.TestCase):
             patcher = patch.object(runner, name, value, create=True)
             patcher.start(); self.addCleanup(patcher.stop)
 
+    def test_package_versions_are_bound_to_approved_release_config(self):
+        releases = (
+            ('v0.1.0-20260929T074814Z', '0.1.0', '100', '0.1.1', '101'),
+            ('v0.2.0-20261001T034118Z', '0.2.0', '200', '0.2.1', '201'),
+        )
+        for release_id, app_version, app_build, update_version, update_build in releases:
+            with self.subTest(release_id=release_id):
+                config = ROOT / 'releases' / release_id / 'local-release.json'
+                package = {'release_id': release_id, 'config_sha256': runner.digest(config),
+                           'distribution_profile': 'internal',
+                           'app': {'version': app_version, 'build': app_build,
+                                   'bundle_id': 'org.tokenmeter.TokenMeter'},
+                           'update_app': {'version': update_version, 'build': update_build,
+                                          'bundle_id': 'org.tokenmeter.TokenMeter'}}
+                approved = runner.approved_release_config(package)
+                self.assertEqual((approved['version'], approved['build'],
+                                  approved['upgrade_version'], approved['upgrade_build']),
+                                 (app_version, app_build, update_version, update_build))
+                for changed in (
+                    {**package, 'config_sha256': '0' * 64},
+                    {**package, 'app': {**package['app'], 'build': update_build}},
+                    {**package, 'update_app': {**package['update_app'], 'version': app_version}},
+                    {**package, 'release_id': release_id.replace('v', 'foreign/', 1)},
+                ):
+                    with self.assertRaises(runner.Failed):
+                        runner.approved_release_config(changed)
+
+    def test_copied_v02_app_requires_its_manifest_version_and_build(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            app = root / 'install' / 'TokenMeter.app'
+            package = {'app': {'tree_sha256': 'a' * 64,
+                               'designated_requirement': 'identifier "org.tokenmeter.TokenMeter"',
+                               'version': '0.2.0', 'build': '200',
+                               'bundle_id': 'org.tokenmeter.TokenMeter'}}
+            tree = SimpleNamespace(tree_sha256=lambda _: 'a' * 64)
+            details = {'CFBundleShortVersionString': '0.2.0', 'CFBundleVersion': '200',
+                       'CFBundleIdentifier': 'org.tokenmeter.TokenMeter'}
+            def command(argv, **_):
+                if argv[0] == 'ditto': app.mkdir(parents=True, exist_ok=True)
+                return subprocess.CompletedProcess(argv, 0,
+                    details[argv[2]] if argv[0] == 'plutil' else '', '')
+            with patch.object(runner, 'command', side_effect=command):
+                self.assertEqual(runner.copy_verified_app(root / 'source', app, package,
+                    tree, root / 'install.log'), app)
+                details['CFBundleVersion'] = '100'
+                with self.assertRaises(runner.Failed):
+                    runner.copy_verified_app(root / 'source', app, package,
+                        tree, root / 'install.log')
+
     def test_shipit_launchctl_unknown_status_does_not_mean_job_absent(self):
         absent = subprocess.CompletedProcess([], 113, '', 'Could not find service')
         unknown = subprocess.CompletedProcess([], 1, '', 'Permission denied')
@@ -317,20 +367,30 @@ class LocalFixtureTests(unittest.TestCase):
                 if worker: worker.join(5)
 
     def test_development_package_never_passes_formal_manifest_check(self):
-        with tempfile.TemporaryDirectory() as temp:
-            base = Path(temp)
-            dmg = base / 'candidate.dmg'; dmg.write_bytes(b'private synthetic DMG')
-            update = base / 'update.zip'; update.write_bytes(b'private synthetic ZIP')
-            manifest = base / 'package-manifest.json'
-            def item(path): return {'path':path.name,'sha256':runner.digest(path),'bytes':path.stat().st_size}
-            manifest.write_text(json.dumps({'schema_version':2,'scope':'development','candidate_sha':'a'*40,
-                'working_tree_dirty':True,'artifacts':{'dmg':item(dmg),'update_zip':item(update)},
-                'app':{'build':'100'},'update_app':{'build':'101'}}))
-            with patch.object(runner.platform,'system',return_value='Darwin'),patch.object(runner.platform,'machine',return_value='x86_64'),\
-                 patch.object(runner.platform,'mac_ver',return_value=('15.7.4',('', '', ''),'x86_64')):
-                with self.assertRaises(runner.Failed):
-                    runner.verify_host_and_manifest(manifest,dmg.resolve(),update.resolve(),'a'*40)
-                self.assertEqual(runner.verify_host_and_manifest(manifest,dmg.resolve(),update.resolve(),'a'*40,development=True)['scope'],'development')
+        for release, version, build, upgrade_version, upgrade_build in (
+            ('v0.1.0-20260929T074814Z', '0.1.0', '100', '0.1.1', '101'),
+            ('v0.2.0-20261001T034118Z', '0.2.0', '200', '0.2.1', '201'),
+        ):
+            with self.subTest(release=release), tempfile.TemporaryDirectory() as temp:
+                base = Path(temp)
+                dmg = base / 'candidate.dmg'; dmg.write_bytes(b'private synthetic DMG')
+                update = base / 'update.zip'; update.write_bytes(b'private synthetic ZIP')
+                manifest = base / 'package-manifest.json'
+                def item(path): return {'path':path.name,'sha256':runner.digest(path),'bytes':path.stat().st_size}
+                config = ROOT / 'releases' / release / 'local-release.json'
+                manifest.write_text(json.dumps({'schema_version':2,'scope':'development','candidate_sha':'a'*40,
+                    'working_tree_dirty':True,'release_id':release,'config_sha256':runner.digest(config),
+                    'distribution_profile':'internal',
+                    'artifacts':{'dmg':item(dmg),'update_zip':item(update)},
+                    'app':{'version':version,'build':build,'bundle_id':'org.tokenmeter.TokenMeter'},
+                    'update_app':{'version':upgrade_version,'build':upgrade_build,
+                                  'bundle_id':'org.tokenmeter.TokenMeter'}}))
+                with patch.object(runner.platform,'system',return_value='Darwin'),patch.object(runner.platform,'machine',return_value='x86_64'),\
+                     patch.object(runner.platform,'mac_ver',return_value=('15.7.4',('', '', ''),'x86_64')):
+                    with self.assertRaises(runner.Failed):
+                        runner.verify_host_and_manifest(manifest,dmg.resolve(),update.resolve(),'a'*40)
+                    self.assertEqual(runner.verify_host_and_manifest(manifest,dmg.resolve(),update.resolve(),'a'*40,
+                        development=True)['scope'],'development')
 
     def test_service_readiness_failure_closes_owned_listener_and_reader(self):
         class ExitedProcess:

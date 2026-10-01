@@ -9,13 +9,17 @@ type Context = {
   run_id: string; candidate_sha: string; case_id: string; app_path: string; profile_path: string;
   service_url: string; secondary_service_url: string | null; update_url: string | null;
   update_control_url: string | null; update_control_token: string | null; update_nonce: string | null;
-  cdp_port: number | null; expected_upgrade_build: string; expected_app_tree_sha256: string;
+  cdp_port: number | null; expected_app_version: string; expected_app_build: string;
+  expected_upgrade_version: string; expected_upgrade_build: string; expected_app_tree_sha256: string;
   expected_update_tree_sha256: string;
 };
 const input = process.env.TM_E2E_CONTEXT;
 const output = process.env.TM_E2E_CASE_OUTPUT;
 if (!input || !output) throw new Error('Owned case context is missing');
 const c = JSON.parse(readFileSync(input, 'utf8')) as Context;
+for (const key of ['expected_app_version', 'expected_app_build', 'expected_upgrade_version', 'expected_upgrade_build'] as const) {
+  if (typeof c[key] !== 'string' || !c[key]) throw new Error(`Owned case context lacks ${key}`);
+}
 const binary = join(c.app_path, 'Contents/MacOS/TokenMeter');
 const events = join(output, 'events.jsonl');
 let application: ElectronApplication | null = null;
@@ -54,9 +58,15 @@ async function launch(): Promise<void> {
   runnerLaunchCount += 1;
   event('runner_launch', 'process', runnerLaunchCount, runnerLaunchCount);
   page = await application.firstWindow();
-  await expect(page.getByTestId('app.build')).toBeVisible();
+  await expect(page.getByTestId('app.build')).toContainText(`build ${c.expected_app_build}`);
+  expect(bundleVersion()).toEqual({version:c.expected_app_version,build:c.expected_app_build});
   await application.context().tracing.start({ screenshots: true, snapshots: true, sources: false });
   tracing = true;
+}
+function bundleVersion(): {version:string;build:string} {
+  const plist=join(c.app_path,'Contents/Info.plist');
+  return {version:execFileSync('/usr/bin/plutil',['-extract','CFBundleShortVersionString','raw',plist],{encoding:'utf8'}).trim(),
+    build:execFileSync('/usr/bin/plutil',['-extract','CFBundleVersion','raw',plist],{encoding:'utf8'}).trim()};
 }
 async function close(): Promise<void> {
   if (application) {
@@ -387,8 +397,9 @@ test('E2E-TM001-004 four update refusals and native self-relaunch', async () => 
   const afterData = JSON.parse(readFileSync(runtimePath,'utf8')) as {profile_path:string;diagnostic_cdp_port:number};
   event('runtime_unchanged','filesystem',runtimeBefore,runtimeAfter);
   event('runtime_profile_after','filesystem',profileBefore,afterData.profile_path);
-  const actualBuild = execFileSync('/usr/bin/plutil',['-extract','CFBundleVersion','raw',join(c.app_path,'Contents/Info.plist')],{encoding:'utf8'}).trim();
-  event('valid_install','filesystem',c.expected_upgrade_build,actualBuild);
+  const installed=bundleVersion();
+  expect(installed.version).toBe(c.expected_upgrade_version);
+  event('valid_install','filesystem',c.expected_upgrade_build,installed.build);
   application = null; page = null;
   const endpoint = `http://127.0.0.1:${c.cdp_port}`;
   const deadline = Date.now()+30_000;
@@ -407,8 +418,8 @@ test('E2E-TM001-004 four update refusals and native self-relaunch', async () => 
   if (!page) throw new Error('Reconnected process has no real TokenMeter renderer');
   await expect(page.getByTestId('session.username')).toHaveText('test-alice',{timeout:30_000});
   await identity('identity_restored','test-alice');
-  await expect(page.getByTestId('app.build')).toContainText('build 101');
-  event('new_build','ui',true,(await uiText('app.build')).includes('build 101'),'app.build');
+  await expect(page.getByTestId('app.build')).toContainText(`build ${c.expected_upgrade_build}`);
+  event('new_build','ui',true,(await uiText('app.build')).includes(`build ${c.expected_upgrade_build}`),'app.build');
   await page.getByTestId('session.refresh').click();
   await expect(page.getByTestId('session.verified')).toBeVisible();
   await status('restarted_me',200,c.service_url,'GET','/v1/me',undefined,token);
@@ -433,7 +444,7 @@ test('E2E-TM001-004 four update refusals and native self-relaunch', async () => 
     process_open_files:'process-open-files.json',observed_at:new Date().toISOString()})+'\n',{mode:0o600});
   await capture('TM001-004-04-upgraded');
   writeFileSync(join(output!,'upgrade-result.json'),JSON.stringify({old_pid:oldPid,new_pid:newPid,
-    old_build:'100',new_build:'101',profile_before_after:{before:profileBefore,after:afterData.profile_path},me_status:200,
+    old_build:c.expected_app_build,new_build:installed.build,profile_before_after:{before:profileBefore,after:afterData.profile_path},me_status:200,
     runtime_sha256_before:runtimeBefore,runtime_sha256_after:runtimeAfter,profile_observed_in_lsof:profileUsed,
     default_profile_observed_in_lsof:defaultOpenPaths.length>0,
     all_open_file_count:opened.length,profile_open_file_count:ownedOpenPaths.length,

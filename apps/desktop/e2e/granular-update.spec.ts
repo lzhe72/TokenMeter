@@ -12,7 +12,8 @@ type Context = {
   service_url: string; service_log_path: string; update_url: string | null;
   update_control_url: string | null; update_control_token: string | null; update_nonce: string | null;
   forbidden_target_url?: string; forbidden_target_observations_url?: string; forbidden_target_token?: string;
-  cdp_port: number | null; expected_upgrade_build: string;
+  cdp_port: number | null; expected_app_version: string; expected_app_build: string;
+  expected_upgrade_version: string; expected_upgrade_build: string;
   expected_app_tree_sha256: string; expected_update_tree_sha256: string;
 };
 type RequestObservation = { stage: string; method: string; route: string; status: number;
@@ -42,6 +43,10 @@ function required<T>(value: T | null | undefined, name: string): T {
   if (value == null || value === '') throw new Error(`${name} has no owned runner fixture`);
   return value;
 }
+const expectedAppVersion = required(c.expected_app_version, 'expected_app_version');
+const expectedAppBuild = required(c.expected_app_build, 'expected_app_build');
+const expectedUpgradeVersion = required(c.expected_upgrade_version, 'expected_upgrade_version');
+const expectedUpgradeBuild = required(c.expected_upgrade_build, 'expected_upgrade_build');
 function sha256(bytes: Buffer | string): string { return createHash('sha256').update(bytes).digest('hex'); }
 function fileSha(path: string): string { return sha256(readFileSync(path)); }
 function originalTreeHash(): string {
@@ -73,7 +78,8 @@ async function launch(diagnostic = false): Promise<void> {
     chromiumSandbox: true, timeout: 60_000 }, {run_id: c.run_id, case_id: c.case_id, output: output!});
   runnerLaunches++;
   page = await app.firstWindow();
-  await expect(page.getByTestId('app.build')).toContainText('build 100');
+  await expect(page.getByTestId('app.build')).toContainText(`build ${expectedAppBuild}`);
+  expect(buildVersion()).toEqual({ version: expectedAppVersion, build: expectedAppBuild });
   await app.context().tracing.start({ screenshots: true, snapshots: true, sources: false });
   tracing = true;
 }
@@ -238,7 +244,7 @@ async function nativeUpgrade(): Promise<Upgrade> {
   const before = await observations();
   await page!.getByTestId('updates.check').click();
   await expect(page!.getByTestId('updates.install')).toBeVisible();
-  await expect(page!.getByTestId('updates.status')).toContainText('v0.1.1');
+  await expect(page!.getByTestId('updates.status')).toContainText(`v${expectedUpgradeVersion}`);
   await stopTrace(); // Squirrel will close the old renderer before Playwright can stop tracing.
   const launchesAtHandoff = runnerLaunches;
   const startedAt = new Date().toISOString();
@@ -299,10 +305,10 @@ test('TC-TM001-UPDATE-01', async () => {
   await page!.getByTestId('updates.check').click();
   await expect(page!.getByTestId('updates.install')).toBeVisible();
   const checked = await observations();
-  await step(3, '同一更新源改为build101后只点击检查更新', 'ui',
-    { versionOffered: true, build100: true, validMetadataRead: true, noArchive: true },
-    { versionOffered: (await page!.getByTestId('updates.status').textContent())?.includes('v0.1.1') === true,
-      build100: (await page!.getByTestId('app.build').textContent())?.includes('build 100') === true,
+  await step(3, '同一更新源提供已绑定升级版本后只点击检查更新', 'ui',
+    { versionOffered: true, originalBuild: true, validMetadataRead: true, noArchive: true },
+    { versionOffered: (await page!.getByTestId('updates.status').textContent())?.includes(`v${expectedUpgradeVersion}`) === true,
+      originalBuild: (await page!.getByTestId('app.build').textContent())?.includes(`build ${expectedAppBuild}`) === true,
       validMetadataRead: checked.slice(beforeCheck.length).some(row => row.stage === 'valid' && row.route === '/version.json' && row.status === 200),
       noArchive: checked.every(row => row.route !== '/update.zip') });
 
@@ -340,7 +346,7 @@ test('TC-TM001-UPDATE-02', async () => {
   await expect(page!.getByTestId('updates.status')).toContainText('update_source_rejected');
   const source = await observations();
   await step(1, '保存原App基线并点击检查非回环HTTP下载清单', 'ui',
-    { originalBuild: '100', sourceRejected: true, ownedTarget: true },
+    { originalBuild: expectedAppBuild, sourceRejected: true, ownedTarget: true },
     { originalBuild: buildVersion().build,
       sourceRejected: (await page!.getByTestId('updates.status').textContent())?.includes('update_source_rejected') === true,
       ownedTarget: meta.url === c.forbidden_target_url && new URL(meta.url).hostname !== '127.0.0.1' });
@@ -356,7 +362,7 @@ test('TC-TM001-UPDATE-02', async () => {
     { samePid: true, sameTree: true, oldBuild: true, sessionVerified: true, noTemporaryArchive: true },
     { samePid: JSON.stringify(ownedPids()) === JSON.stringify([oldPid]),
       sameTree: originalTreeHash() === oldTree && oldTree === c.expected_app_tree_sha256,
-      oldBuild: buildVersion().build === '100',
+      oldBuild: buildVersion().build === expectedAppBuild,
       sessionVerified: await me(savedToken()) === 200 && await page!.getByTestId('session.verified').isVisible(),
       noTemporaryArchive: temporaryDownloadEntries().length === 0 });
 });
@@ -388,7 +394,7 @@ test('TC-TM001-UPDATE-03', async () => {
     { targetReachable: true, targetProductRequests: 0, oldBuild: true, sameTree: true, noNativeArchive: true },
     { targetReachable: targetBefore.some(row => row.probe && row.route === '/probe'),
       targetProductRequests: targetAfter.filter(row => !row.probe).length,
-      oldBuild: buildVersion().build === '100',
+      oldBuild: buildVersion().build === expectedAppBuild,
       sameTree: originalTreeHash() === oldTree && oldTree === c.expected_app_tree_sha256,
       noNativeArchive: temporaryDownloadEntries().length === 0 });
 
@@ -422,7 +428,7 @@ test('TC-TM001-UPDATE-03', async () => {
       firstHop302: multi.some(row => row.stage === 'redirect-multi' && row.route === '/redirect-first.zip' && row.status === 302),
       secondHop302: multi.some(row => row.stage === 'redirect-multi' && row.route === '/redirect.zip' && row.status === 302),
       deniedTargetRequests: finalTarget.filter(row => !row.probe).length,
-      oldAppUnchanged: buildVersion().build === '100' && originalTreeHash() === oldTree &&
+      oldAppUnchanged: buildVersion().build === expectedAppBuild && originalTreeHash() === oldTree &&
         JSON.stringify(ownedPids()) === JSON.stringify([oldPid]) });
 });
 
@@ -449,16 +455,16 @@ test('TC-TM001-UPDATE-04', async () => {
       completeBytes: archive?.bytes_sent === meta.bytes && meta.bytes > 0,
       matchingSha: archive?.body_sha256 === meta.sha256 && /^[a-f0-9]{64}$/.test(meta.sha256) });
   await step(2, '观察Ed25519拒绝与安装包内固定公钥', 'ui',
-    { signatureRejected: true, keyUnchanged: true, build100: true },
+    { signatureRejected: true, keyUnchanged: true, originalBuild: true },
     { signatureRejected: (await page!.getByTestId('updates.status').textContent())?.includes('update_signature_rejected') === true,
       keyUnchanged: buildConfig().update_public_key === originalConfig.update_public_key,
-      build100: (await page!.getByTestId('app.build').textContent())?.includes('build 100') === true });
+      originalBuild: (await page!.getByTestId('app.build').textContent())?.includes(`build ${expectedAppBuild}`) === true });
   await step(3, '拒绝后核对无Squirrel替换与原App、会话不变', 'process',
     { samePid: true, sameTree: true, oldBuild: true, verifiedSession: true,
       observerBeforeEntry: true, nativeHandoffCount: 0 },
     { samePid: JSON.stringify(ownedPids()) === JSON.stringify([oldPid]),
       sameTree: originalTreeHash() === oldTree && oldTree === c.expected_app_tree_sha256,
-      oldBuild: buildVersion().build === '100',
+      oldBuild: buildVersion().build === expectedAppBuild,
       verifiedSession: await me(savedToken()) === 200 && await page!.getByTestId('session.verified').isVisible(),
       observerBeforeEntry: mainObservations(output!)[0]?.kind === 'installed-before-entry' &&
         mainObservations(output!)[0]?.pid === oldPid,
@@ -466,7 +472,7 @@ test('TC-TM001-UPDATE-04', async () => {
   await step(4, '保留源摘要与请求证据并核对临时下载已清理', 'filesystem',
     { temporaryDownloads: 0, noHigherApp: true, sourceEvidence: true, noPrivateKeyInEvents: true },
     { temporaryDownloads: temporaryDownloadEntries().length,
-      noHigherApp: buildVersion().build === '100',
+      noHigherApp: buildVersion().build === expectedAppBuild,
       sourceEvidence: archive?.body_sha256 === meta.sha256 && archive?.bytes_sent === meta.bytes,
       noPrivateKeyInEvents: !readFileSync(eventPath, 'utf8').includes('PRIVATE KEY') });
 });
@@ -488,16 +494,16 @@ test('TC-TM001-UPDATE-06', async () => {
     { metadataRead: product.metadata.length >= 1,
       completeArchive: product.archive.length === 1 && archive?.bytes_sent === upgrade.meta.bytes,
       matchingSha: archive?.body_sha256 === upgrade.meta.sha256,
-      validVersion: upgrade.meta.version === '0.1.1' && upgrade.meta.build === c.expected_upgrade_build,
+      validVersion: upgrade.meta.version === expectedUpgradeVersion && upgrade.meta.build === expectedUpgradeBuild,
       verifiedPhase: phaseText.includes('正在验证更新签名') || phaseText.includes('更新验证完成') || phaseText.includes('正在安装并重新启动'),
-      nativeResult: installed.build === c.expected_upgrade_build && actualTree === c.expected_update_tree_sha256 });
+      nativeResult: installed.build === expectedUpgradeBuild && actualTree === c.expected_update_tree_sha256 });
   await step(2, '只观察Squirrel自主退出旧PID并产生唯一新PID', 'process',
     { oldExited: true, oneNewPid: true, noTestRelaunch: true },
     { oldExited: !ownedPids().includes(upgrade.oldPid),
       oneNewPid: JSON.stringify(ownedPids()) === JSON.stringify([upgrade.newPid]) && upgrade.newPid !== upgrade.oldPid,
       noTestRelaunch: runnerLaunches === upgrade.launchesAtHandoff });
   await step(3, '外部核对owned安装路径、Info版本、实际App树与签名配置', 'filesystem',
-    { sameOwnedPath: true, version: '0.1.1', build: c.expected_upgrade_build,
+    { sameOwnedPath: true, version: expectedUpgradeVersion, build: expectedUpgradeBuild,
       installedTree: true, sameBundle: true, sameUpdateKey: true, oldTreeCorrect: true },
     { sameOwnedPath: ownedPids().length === 1 && existsSync(binary),
       version: installed.version, build: installed.build,
@@ -505,10 +511,10 @@ test('TC-TM001-UPDATE-06', async () => {
       sameBundle: actualConfig.bundle_id === oldConfig.bundle_id && actualConfig.bundle_id.length > 0,
       sameUpdateKey: actualConfig.update_public_key === oldConfig.update_public_key && actualConfig.update_public_key.length > 0,
       oldTreeCorrect: oldTree === c.expected_app_tree_sha256 });
-  await expect(page!.getByTestId('app.build')).toContainText('build 101');
+  await expect(page!.getByTestId('app.build')).toContainText(`build ${expectedUpgradeBuild}`);
   await step(4, '只重连已有新进程并读取真实UI版本', 'ui',
-    { displayed101: true, runningOwnedPid: true, noTestRelaunch: true },
-    { displayed101: (await page!.getByTestId('app.build').textContent())?.includes('build 101') === true,
+    { updatedBuild: true, runningOwnedPid: true, noTestRelaunch: true },
+    { updatedBuild: (await page!.getByTestId('app.build').textContent())?.includes(`build ${expectedUpgradeBuild}`) === true,
       runningOwnedPid: ownedPids()[0] === upgrade.newPid,
       noTestRelaunch: runnerLaunches === upgrade.launchesAtHandoff });
   await step(5, '核对同一源请求、完整包、旧新进程和安装时间线', 'process',
@@ -522,7 +528,7 @@ test('TC-TM001-UPDATE-06', async () => {
       nativeCheckObserved: mainObservations(output!).some(row => row.kind === 'native-updater' && row.method === 'checkForUpdates'),
       nativeInstallObserved: mainObservations(output!).some(row => row.kind === 'native-updater' && row.method === 'quitAndInstall') });
   writeFileSync(join(output!, 'upgrade-result.json'), JSON.stringify({ run_id: c.run_id, case_id: c.case_id,
-    old_pid: upgrade.oldPid, new_pid: upgrade.newPid, old_build: '100', new_build: installed.build,
+    old_pid: upgrade.oldPid, new_pid: upgrade.newPid, old_build: expectedAppBuild, new_build: installed.build,
     old_tree_sha256: oldTree, new_tree_sha256: actualTree, source_request_count: product.metadata.length,
     source_archive_count: product.archive.length, runner_launches_after_handoff: runnerLaunches - upgrade.launchesAtHandoff }, null, 2) + '\n', { mode: 0o600 });
 });
@@ -625,7 +631,7 @@ test('TC-TM001-UPDATE-08', async()=>{
   const target=decodeURIComponent(new URL(state.targetBundleURL).pathname).replace(/\/$/,'');
   await step(3,'四阶段结束后真实ShipIt目标精确归属本轮安装','filesystem',
     {ownerMatches:true,targetMatches:true,upgraded:true},
-    {ownerMatches:marker.run_id===c.run_id,targetMatches:target===c.app_path,upgraded:buildVersion().build==='101'});
+    {ownerMatches:marker.run_id===c.run_id,targetMatches:target===c.app_path,upgraded:buildVersion().build===expectedUpgradeBuild});
   // Steps 4 and 5 are recorded by the runner after terminating and cleaning the
   // very process executing this case. They cannot be certified from inside it.
 });
