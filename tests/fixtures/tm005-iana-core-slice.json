@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "fixture_id": "tm005-iana-day-v1",
+  "scope": "pure_iana_calendar_to_utc_half_open_bounds",
+  "valid_days": [
+    {"timezone": "Asia/Shanghai", "local_day": "2026-09-29", "start_utc": "2026-09-28T16:00:00Z", "end_exclusive_utc": "2026-09-29T16:00:00Z", "duration_hours": 24},
+    {"timezone": "UTC", "local_day": "2026-09-29", "start_utc": "2026-09-29T00:00:00Z", "end_exclusive_utc": "2026-09-30T00:00:00Z", "duration_hours": 24},
+    {"timezone": "America/New_York", "local_day": "2026-03-08", "start_utc": "2026-03-08T05:00:00Z", "end_exclusive_utc": "2026-03-09T04:00:00Z", "duration_hours": 23},
+    {"timezone": "America/New_York", "local_day": "2026-11-01", "start_utc": "2026-11-01T04:00:00Z", "end_exclusive_utc": "2026-11-02T05:00:00Z", "duration_hours": 25}
+  ],
+  "boundary_events": [
+    {"timezone": "America/New_York", "local_day": "2026-03-08", "before": "2026-03-08T04:59:59Z", "at_start": "2026-03-08T05:00:00Z", "before_end": "2026-03-09T03:59:59Z", "at_end": "2026-03-09T04:00:00Z"},
+    {"timezone": "America/New_York", "local_day": "2026-11-01", "before": "2026-11-01T03:59:59Z", "at_start": "2026-11-01T04:00:00Z", "before_end": "2026-11-02T04:59:59Z", "at_end": "2026-11-02T05:00:00Z"}
+  ],
+  "invalid_inputs": [
+    {"timezone": "Mars/Olympus_Mons", "local_day": "2026-09-29", "error": "invalid_timezone"},
+    {"timezone": "America/New_York", "local_day": "2026-02-30", "error": "invalid_local_day"},
+    {"timezone": "UTC", "local_day": "2026-9-29", "error": "invalid_local_day"}
+  ],
+  "product_time_window_proven": false,
+  "privacy": "No app, database, native log, system clock change, or product coverage assertion."
+}

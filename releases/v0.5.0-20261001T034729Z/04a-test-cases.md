@@ -346,3 +346,24 @@
 1. 两来源complete且无事件/诊断，断言 `complete/known0/total0`；清空事件但不给覆盖事实，断言不得自行推为complete。
 2. 一来源missing且无可信事件，断言 `missing/known0/total null`；一来源missing且可信110，断言 `partial/known110/total null`。
 3. 两来源complete、有可信110并有未知诊断，断言 `partial/known110/total null`；仅未知诊断无可信事件，断言 `unknown/known0/total null`。不读真实来源、不生成覆盖证明，产品`STATE-02/04/06`仍BLOCKED。
+
+## 日期与双来源物理快照辅助TC
+
+这两条新辅助用例各自独立：`CORE-04`只调用IANA当地日转换纯函数；`CORE-05`只查询本例拥有的合成双来源SQLite。它们的输入与逐步预期分别由[日期fixture](../../tests/fixtures/tm005-iana-core-slice.json)和[快照fixture](../../tests/fixtures/tm005-sqlite-snapshot-slice.json)固定，程序绑定当前为`null`、执行`unexecuted`。不得将纯日期函数或SQL种子结果移作安装App/原生日志产品TC的PASS。
+
+### TC-TM005-CORE-04 · IANA当地日半开UTC界
+
+**TASK：** `TASK-TM005-RANGE-QUERY`；**AC：** `AC-TM005-001`；**类型：** 辅助模块。**输入：** fixture的上海、UTC和纽约春/秋四个当地日，以及三个无效时区/日期。每一步从原fixture只读输入调用同一纯转换入口，不调整系统时钟；无数据库操作，结束丢弃本例内存对象并保存模块报告。
+
+1. 分别转换`Asia/Shanghai`和`UTC`的2026-09-29：前者`[2026-09-28T16:00:00Z,2026-09-29T16:00:00Z)`，后者`[2026-09-29T00:00:00Z,2026-09-30T00:00:00Z)`，均24小时；时区变化不得改写传入事件UTC时刻。
+2. 转换`America/New_York`的2026-03-08与2026-11-01：春日`[2026-03-08T05:00:00Z,2026-03-09T04:00:00Z)`恰23小时，秋日`[2026-11-01T04:00:00Z,2026-11-02T05:00:00Z)`恰25小时。每个fixture的`before`排除、`at_start`和`before_end`纳入、`at_end`排除；不能将当地日固定加24小时。
+3. 非法IANA区`Mars/Olympus_Mons`给`invalid_timezone`，不存在的`2026-02-30`和非规范`2026-9-29`给`invalid_local_day`，不输出可查询的默认UTC范围或成功零。原产品`RANGE-07/11`仍需原生时间数据、App界面、固定时钟/导入窗及安装包E2E。
+
+### TC-TM005-CORE-05 · 双来源隔离SQLite同窗只读快照
+
+**TASK：** `TASK-TM005-EVENT-CONTRACT`、`TASK-TM005-RANGE-QUERY`；**AC：** `AC-TM005-001/002`；**类型：** 辅助模块。**输入：** fixture A/B为当前合成主体的Codex100/10与Claude Code200/20，C为另一主体，D在下界之前，E恰在排除上界，F仅供第二快照；所有记录只由本例固定准备程序经TM-003`UsageStore.commitBatch`写入本例0700目录/0600 SQLite，启用WAL以允许并发读快照。读端以当前主体和fixture给定UTC半开界查询实际物理`usage_event`；不解析厂商日志、不调用App/服务，不从`coverage`表推断任意空日完整。每故障变体重建自有空库，关闭连接后核对owner marker并只清理本例目录；保留原始SQL结果和模块报告。
+
+1. 固定准备程序插入A–E并只读核对当前主体四事件与另一主体C；以`BEGIN`建立读事务，第一次查询选出的标签只为A/B，调用2、input300/output30/total330。C、D、E分别因主体或半开界排除，且查询过程零写入。
+2. 在**同一读事务**依次取来源汇总`codex=110,claude_code=220`、模型分组`unknown_model=110,sonnet-test=220`、明细A/B和逐日点330；缓存读已知20但B为null，须同时返回未知行数1，缓存写/推理未知同理不得`COALESCE`成完整零或另加到总量。所有视图来自同一事件集合和UTC窗口，只返回HMAC键、数值和受限模型标识。
+3. 第一读事务取得初始快照后，另一连接按固定准备程序提交F50/5；第一事务的后续来源/模型/明细/逐日仍为A/B、330。结束后新开读事务才见A/B/F三调用、input350/output35/total385、`codex=165,claude_code=220`。若环境无法让WAL并发提交，记录BLOCKED而不是修改一致性预期。
+4. 对同库另查一个无事件当地日，既有`coverage`仅有`missing_before/scan_incomplete/last_scan_at_utc`，不能据空集合或本例种子声称双来源连续完整覆盖；返回无覆盖证明/未知而非产品已确认零。只读核对库/WAL与输出无合成原生ID、路径、正文或秘密；本例SQL种子不作为产品`STATE-02/04`的原生日志/真实授权旁证，产品`CONTRACT/RANGE/MODEL`亦未通过。

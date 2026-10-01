@@ -52,7 +52,7 @@ UI 候选预览只在选择后的显式预览或确认采集后的显式刷新�
 
 1. **授权模型已定。** 用户选择非 MAS 本地 DMG 中的真实 macOS 原生目录面板、App 内明确同意与主进程目录 allowlist；App 撤销或访问失效后停读，重新经面板选择并确认。产品 E2E 必须驱动真实面板、审计实际来源访问与停止；不得把它称作 App Sandbox 的逐目录 security-scoped grant 或 TCC 撤销。此决定已在[本版需求](01-requirements.md#已确认的授权模型与本地存储边界)、产品验收定义及 SOP-002/004/006 同步。
 2. **持久 locator 方案与隐私规范已定。** 用户要求 App 跨重启保存所选目录；主进程以 Electron `safeStorage.encryptStringAsync` 将规范化路径加密，密文仅存当前用户 0700/0600 的 `sources/` 记录。系统密钥不可用、解密失败或旧格式不兼容均进入 `needs_reselect`，不回退明文；撤销即删除密文。此 locator 不授予 OS 沙盒权限，绝不进入同步字段或原始证据。SOP 会话已按 SOP-000 将有限私有存储例外和隔离回归前的密钥项证据门槛写入规范；仍须以同一最终签名 DMG 验证异步密钥提供者、首次调用前测试项不存在、签名访问边界、正式项隔离及升级后解密行为。
-3. **逐条设计已形成，机器同步与程序待完成。** [详细用例](../../docs/testing/cases/02-TM-002-permissions.md)已写 28 条父 TC 与 35 个稳定变体，其中 20 条父 TC 属安装后产品 E2E、8 条为辅助检查；`tests/test_cases.json`、`TEST_CASES.md`、版本 manifest 和总表已与该集合逐项回读；SOP-006/008 已复核每个 TC 的输入、预期、SQL/不适用理由、重置和逐步证据计划。`program_bindings_status=planned` 表示 SOP-011 固定程序尚不存在，不能声称可执行或产品通过；设计基线可在程序实现前形成。
+3. **逐条设计已形成，机器同步与程序待完成。** [详细用例](../../docs/testing/cases/02-TM-002-permissions.md)已写 28 条父 TC 与 36 个稳定变体，其中 20 条父 TC 属安装后产品 E2E、8 条为辅助检查；`tests/test_cases.json`、`TEST_CASES.md`、版本 manifest 和总表已与该集合逐项回读；SOP-006/008 已复核每个 TC 的输入、预期、SQL/不适用理由、重置和逐步证据计划。`program_bindings_status=planned` 表示 SOP-011 固定程序尚不存在，不能声称可执行或产品通过；设计基线可在程序实现前形成。
 
 ## SOP-005：分阶段实施顺序
 
@@ -79,7 +79,7 @@ DATA、CATALOG、RUNNER 的设计可并行，但实际业务红测要等可运�
 - `TM-002` 需求分支负责本版 `releases/v0.2.0-20261001T034118Z/`、来源模块、其 UI/IPC 与本版 fixture/TC；更改 TM-001 共享 `index.ts`、`accounts.ts`、`types.ts`、preload 或本机门禁前先基于其稳定提交核对接口和原始测试。并行工作只分配不同文件，合入者处理共享文件冲突并重跑绑定候选。当前文件分工是计划，不表示这些产品代码已实现。
 - 给 `TM-003/004` 的交接合同是：经 `/v1/me` 验证的身份键、确认且允许采集的来源 ID、主进程内部分页候选与只读文件能力、穷尽后才完整的覆盖状态、失效与重新选择通知；不交出持久 locator、renderer 任意路径入口或服务端上传能力。下游在固定合同和本需求稳定源码提交前不得依赖本工作树快照，也不得把 UI 的 1000 项预览上限当作完整采集上限。本版选定非 MAS 原生面板与 App 受限读取，后续版本若迁移沙盒须独立设计更新器和打包。
 - `program_bindings_status` 目前为 `planned`，`test_programs=[]`、`test_data_program=null`；只有固定 TC、数据程序、真实 runner 路径存在且可按 ID 启动时才更新为 `ready`，`ready` 仍不表示测试 PASS。主表、功能矩阵、`TEST_CASES.md`、`tests/acceptance.json`、`docs/catalog.json`、Changelog 和版本 manifest 在相应源事实变化时同轮更新并回读；此文档不能代替它们。
-- 恢复顺序：读 [状态页](../../docs/status.md)与 [06-iteration-record](06-iteration-record.md) 的最新原始证据 → 检查本分支/上游 SHA、工作树及已确定授权边界 → 核对 28 条父 TC、35 个变体与机器清单/总表 → `python3 scripts/check_docs.py --mode structure` → 全部计划完整后由 SOP-008 执行 baseline/质量检查 → 依阶段准备数据/红测/实现/完整回归。当前仅有设计基线，未执行本版产品 E2E、DMG 或发布。
+- 恢复顺序：读 [状态页](../../docs/status.md)与 [06-iteration-record](06-iteration-record.md) 的最新原始证据 → 检查本分支/上游 SHA、工作树及已确定授权边界 → 核对 28 条父 TC、36 个变体与机器清单/总表 → `python3 scripts/check_docs.py --mode structure` → 全部计划完整后由 SOP-008 执行 baseline/质量检查 → 依阶段准备数据/红测/实现/完整回归。当前仅有设计基线，未执行本版产品 E2E、DMG 或发布。
 
 ## 退出条件
 

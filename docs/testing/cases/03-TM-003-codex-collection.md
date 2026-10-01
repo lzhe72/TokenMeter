@@ -227,6 +227,19 @@
 
 **DB与重置：** 所有事件只经正式模块同步入口写测试拥有的SQLite；只读核对按`(principal_key,source,source_event_key)`唯一三行、总量、`source_cursor`偏移及prefixMAC、`coverage`缺口/完成状态、重置诊断，不直接造数。步骤4同长度/同mtime改写专门证明只凭mtime/size或可变快照digest均不能代替已提交前缀MAC；步骤2/3反证普通追加不是历史改写。结束仅清理本例owner根/库。TM-002能力、真实授权、App及产品`SCAN-02/03`仍BLOCKED。
 
+### TC-TM003-CORE-06 · 多文件代际一次提交与全回滚
+
+**TASK：** `TASK-TM003-SCAN`、`TASK-TM003-STORE`。**AC：** `AC-TM003-001`, `AC-TM003-003`。**类型：** `source_check`。**输入：** 固定[tm003-core-generation.json](../../../tests/fixtures/tm003-core-generation.json)引用同源原始行：合成file-a=`header+A`与file-b=`header+B`各410字节，分别SHA预置；两页属于同一generation，第1页`complete=false`只交file-a，末页`complete=true`交file-b。仅使用本例已打开合成句柄/假scan capability、固定公开key1、owner 0700根/0600空SQLite。两个文件都先有可信A/B的解析候选，但不能逐文件提交；每次独立试验从新空库/代际开始。
+
+| 步骤 | 固定动作 | 每步预期、DB只读判据 |
+| --- | --- | --- |
+| 1 | 读取第1页file-a并验证完整LF、来源版本、字节SHA，但让末页尚未到达；检查库和暂存态。 | 模块可暂存A=100/10/cached20，`commitScanBatch`调用0次；`usage_event/source_cursor/collection_diagnostic/coverage`四表均无本代际行，不能把`complete=false`宣称历史完整。暂存只保留在本例内存，取消即清空。 |
+| 2 | 从新空库重建同一两页并验证两个文件正文稳定，末页`complete=true`；仅在本例库安装`source_cursor`第二次INSERT时`RAISE(ABORT,'second_cursor_fail')`触发器，guard通过后调用一次同步`commitScanBatch`。 | 批次明确失败；事务回滚两个事件、两个游标、诊断、覆盖与首次密钥标记，五处本代际行/标记均为0/不存在；关闭重开库仍全空，不能留下第一文件A或`scan_incomplete=0`。故障注入只在owner库，删除触发器后再试。 |
+| 3 | 再从新空库生成完整稳定两页；在file-b正文SHA校验后、guard/事务前由假capability发出撤权或cancel，并请求结束扫描。 | guard拒绝或取消，`cancelScan`被调用，`commitScanBatch`调用0次；A/B暂存被清空，事件/两个游标/诊断/覆盖/密钥标记均未提交。此模拟仅验证模块边界，不宣称TM-002真实OS授权。 |
+| 4 | 另起新空库/代际，保持两文件字节/身份不变，两页均完成，末页`complete=true`、正文复核和guard均通过；同步提交一次，再重启同库重扫同一代际。 | 只新增A/B两条，`(COUNT,input,output,cached,total)=(2,300,30,60,330)`；file-a/file-b各一游标410及对应prefixMAC，`coverage.scan_incomplete=0`仅此时出现；重启重扫不重复，`commitScanBatch`成功一次，没有原始路径/正文/密钥输出。 |
+
+**DB与重置：** 每种失败/成功路径各用新owner库，绝不直接SQL造事件。步骤2允许仅在本例库创建失败触发器，步骤3仅注入假能力失权，均按owner清理；只读核对`usage_event`唯一键/聚合、`source_cursor`两行和偏移、`collection_diagnostic`、`coverage`及`identity_key_state`。原始run/失败和清理证据保留。真正跨页TM-002能力、已授权root、App/IPC/服务与产品`COVERAGE-OVERFLOW-01/SCAN/STORE`仍需独立E2E。
+
 ## 当前执行合同
 
 每个 TC 的输入、步骤和 expected 已在此固定；实现时只能把它们绑定到可重复的代码并补充来源版本、具体文件 SHA/SQL 与稳定选择器，不得为适配已有代码改弱独立预期。`AC-TM003-001` 至 `004`、四个 E2E 组和全部具体 TC 双向保持。数据与程序未实现时，`tests/feature_matrix.json` 的目标仍为 planned、`tests/datasets.json` 的 `codex_raw` 仍为 planned，产品 E2E 的实际结论只能是 BLOCKED；完成文档结构或单元测试不能改变这一事实。

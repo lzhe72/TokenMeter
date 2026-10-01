@@ -96,3 +96,11 @@ TM-002 开发会话后续交接：0.2 实现工作树完整治理 460/460 PASS�
 ## 2026-10-02 · SECURITY-01三条路径输入纠错
 
 TM-002开发会话复核发现原`TC-TM002-SECURITY-01#ABSOLUTE/#FILE_URL/#DOTDOT`只写“向业务IPC提交路径”，没有method/字段/值/错误码；`chooseSource({tool,rootPath})`会忽略额外`rootPath`并触发选择器，不能用其证明安全拒绝。文档会话据真实`tokenmeter:invoke`与`SourceAccess.preview`合同，把三变体固定为`previewSource({selectionId:<B绝对路径/file URL/../B/b.jsonl>})`，测试拥有短根`R=/tmp/t2-<8位十六进制>`，输入长度≤64；预期snapshot`error=invalid_selection`、pending/confirmed不变、B的metadata/open/read=0。原四个恶意参数变体及三竞态变体均保留，没有把草稿行为或程序结果写成产品PASS。同步详细用例、机器目录、04计划、TEST_CASES和根Excel；严格基线与相关固定程序回归须在整合候选重核，产品E2E仍受原有AX/账号与Keychain前置阻断。
+
+## 2026-10-02 · chooser见证负例与SECURITY profile纠错
+
+开发会话提交具体复核负例ID`TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS`：从完整合成报告副本只删`picker-01.json.chooser_confirm_button`，重算该单项旁证摘要，仍保留原生面板事件、步骤及其它报告字段；固定独立复核须非零退出/FAIL并指出`native picker event`不可信，通用弹窗见证不能补证。它作为第七稳定变体加入EVIDENCE-01，本版仍28父TC，变体由35增至36；仅是设计基线补强，不是已运行产品TC。另因SourceStore私有目录拒绝world-writable `/tmp` 祖先，SECURITY-01继续以短R放A/B攻击文件，但profile改在当前用户realpath化的独占0700私有临时目录；三路径变体仍经生产`previewSource.selectionId`预期`invalid_selection`，不改变拒绝判据。机器用例、详细文档、04测试计划、TEST_CASES及根总表同轮同步；SOP-008对整合候选重核后才能按新变体运行。
+
+SOP-008在干净输入提交`0c4f2604657484ae29cc601b6246bbc232e49450`（tree`70cbd4af0698900035209635ad010fa0dc5545f9`）对上述修订重核：structure、当前0.2 baseline、quality、用例227父/721步、总表11 Sheet/227父/42全局变体/269行/16批次、治理477/477均PASS，工作树clean。逐输入SHA、命令日志和第七变体/私有profile语义核对在`.local/docs-checks/20261002-tm002-chooser-baseline/receipt.json`；`tests/test_cases.json` SHA-256`8cc28281b55833ac2c4e5529419ec31b79f736c59c5da7d5764aabc49ab0a879`。当前0.2文档基线修订可供SOP-011固定程序绑定；新负例仍unexecuted，产品E2E与正式发行NOT_RUN。
+
+代码会话在`63fe465cf00ed64620da0ef8e8b30625f0c1ddbc`（tree`3f684df7d0e50d004bf95d27a2b030210dfd4e75`）交接固定治理`EVIDENCE-01`七变体7/7、生产IPC seam下`SECURITY-01`三路径3/3，桌面测试77/77、治理485/485、服务pytest55/55及构建PASS的原始`.local/ci/tm002-final/`日志。SECURITY首次及第一次复核的`unsafe_storage`失败日志保留，改为独立私有profile后第二次定向3/3；不得把它表述为产品App E2E重试取绿。代码尚未与本文件文档候选形成同一被测tree，模块/治理独立结果Excel及总表批次索引待固定导出原件，TM-002真实OS授权/Keychain/App产品E2E仍BLOCKED，正式发行NOT_RUN。
