@@ -1,9 +1,44 @@
 import { constants, closeSync, existsSync, lstatSync, openSync } from 'node:fs';
 import { dirname } from 'node:path';
+import {createHmac, timingSafeEqual} from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { privateDirectory } from '../storage.ts';
 import type { CodexUsageEvent } from './codex-format.ts';
 import { sourceEventKey, sourceScopeKey } from './usage-identity.ts';
+
+export type UsageSource = 'codex' | 'claude_code';
+export type NormalizedUsageEvent = {
+  source: UsageSource; providerCallScope: 'provider-response' | 'provider-message';
+  canonicalCallId: string; sessionId: string; turnId: string;
+  occurredAtUtc: string; sourceVersion: string; modelId: string | null;
+  usage: CodexUsageEvent['usage'];
+};
+export type UsageBatch = {
+  principalKey: string; secret: Buffer; source: UsageSource; sourceKey: string; rootKey: string;
+  fileIdentity: string; committedByteOffset: number; prefixMac: string;
+  events: Array<CodexUsageEvent | NormalizedUsageEvent>;
+  diagnostics: Array<{code: string}>;
+  coverage: {missingBefore: boolean; scanIncomplete: boolean};
+  guard?: () => void;
+};
+export type UsageCursor = {fileIdentity: string; committedByteOffset: number; prefixMac: string};
+
+function marker(secret: Buffer): string {
+  if (!Buffer.isBuffer(secret) || secret.length !== 32) throw new Error('identity_secret_unavailable');
+  return createHmac('sha256', secret).update('usage-identity-key-v1').digest('hex');
+}
+function hex64(value: string, code: string): void {
+  if (typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value)) throw new Error(code);
+}
+function safeCode(value: string): void {
+  if (typeof value !== 'string' || !/^[a-z_]{3,60}$/.test(value)) throw new Error('invalid_diagnostic');
+}
+function normalized(event: CodexUsageEvent | NormalizedUsageEvent): NormalizedUsageEvent {
+  if ('canonicalCallId' in event) return event;
+  return {source: 'codex', providerCallScope: 'provider-response', canonicalCallId: event.responseId,
+    sessionId: event.sessionId, turnId: event.turnId, occurredAtUtc: event.occurredAtUtc,
+    sourceVersion: event.sourceVersion, modelId: event.modelId, usage: event.usage};
+}
 
 function assertPrivateFile(path: string): void {
   const stat = lstatSync(path);
@@ -42,7 +77,120 @@ export class UsageStore {
         PRIMARY KEY(principal_key, source, source_event_key));
       CREATE TABLE IF NOT EXISTS collection_diagnostic (
         id INTEGER PRIMARY KEY, principal_key TEXT NOT NULL, source_key TEXT NOT NULL,
-        code TEXT NOT NULL, occurred_at_utc TEXT NOT NULL, count INTEGER NOT NULL CHECK(count > 0));`);
+        code TEXT NOT NULL, occurred_at_utc TEXT NOT NULL, count INTEGER NOT NULL CHECK(count > 0));
+      CREATE TABLE IF NOT EXISTS source_cursor (
+        principal_key TEXT NOT NULL, source_key TEXT NOT NULL, root_key TEXT NOT NULL,
+        file_identity TEXT NOT NULL, committed_byte_offset INTEGER NOT NULL CHECK(committed_byte_offset >= 0),
+        prefix_mac TEXT NOT NULL, updated_at_utc TEXT NOT NULL,
+        PRIMARY KEY(principal_key, source_key));
+      CREATE TABLE IF NOT EXISTS coverage (
+        principal_key TEXT NOT NULL, root_key TEXT NOT NULL,
+        missing_before INTEGER NOT NULL CHECK(missing_before IN (0,1)),
+        scan_incomplete INTEGER NOT NULL CHECK(scan_incomplete IN (0,1)),
+        last_scan_at_utc TEXT NOT NULL,
+        PRIMARY KEY(principal_key, root_key));
+      CREATE TABLE IF NOT EXISTS identity_key_state (
+        id INTEGER PRIMARY KEY CHECK(id = 1), key_marker TEXT NOT NULL,
+        identity_scheme_version INTEGER NOT NULL CHECK(identity_scheme_version = 1));`);
+  }
+
+  private checkMarker(secret: Buffer, create: boolean): void {
+    const wanted = marker(secret);
+    const row = this.db.prepare('SELECT key_marker FROM identity_key_state WHERE id = 1').get();
+    if (row) {
+      const actual = String(row.key_marker);
+      if (!/^[a-f0-9]{64}$/.test(actual) || !timingSafeEqual(Buffer.from(actual, 'hex'), Buffer.from(wanted, 'hex')))
+        throw new Error('identity_secret_mismatch');
+      return;
+    }
+    const existing = this.db.prepare('SELECT (SELECT COUNT(*) FROM usage_event) AS events, (SELECT COUNT(*) FROM source_cursor) AS cursors').get()!;
+    if (Number(existing.events) || Number(existing.cursors)) throw new Error('identity_secret_unavailable');
+    if (create) this.db.prepare('INSERT INTO identity_key_state(id,key_marker,identity_scheme_version) VALUES (1,?,1)')
+      .run(wanted);
+  }
+
+  loadCursor(principalKey: string, sourceKey: string, secret: Buffer): UsageCursor | null {
+    hexKey(principalKey); hex64(sourceKey, 'invalid_source_key'); this.checkMarker(secret, false);
+    const row = this.db.prepare(`SELECT file_identity, committed_byte_offset, prefix_mac
+      FROM source_cursor WHERE principal_key = ? AND source_key = ?`).get(principalKey, sourceKey);
+    return row ? {fileIdentity: String(row.file_identity), committedByteOffset: Number(row.committed_byte_offset),
+      prefixMac: String(row.prefix_mac)} : null;
+  }
+
+  /** Synchronous by design: an authorization guard can run immediately before COMMIT. */
+  commitBatch(batch: UsageBatch): {inserted: number; duplicate: number; conflict: number} {
+    const {principalKey, secret, source, sourceKey, rootKey, fileIdentity, committedByteOffset, prefixMac} = batch;
+    hexKey(principalKey); hex64(sourceKey, 'invalid_source_key'); hex64(rootKey, 'invalid_root_key');
+    hex64(fileIdentity, 'invalid_file_identity'); hex64(prefixMac, 'invalid_prefix_mac');
+    if (source !== 'codex' && source !== 'claude_code') throw new Error('unsupported_source');
+    if (!Number.isSafeInteger(committedByteOffset) || committedByteOffset < 0 ||
+        !Array.isArray(batch.events) || !Array.isArray(batch.diagnostics) ||
+        typeof batch.coverage?.missingBefore !== 'boolean' || typeof batch.coverage?.scanIncomplete !== 'boolean')
+      throw new Error('invalid_usage_batch');
+    const now = new Date().toISOString();
+    const result = {inserted: 0, duplicate: 0, conflict: 0};
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      this.checkMarker(secret, true);
+      for (const value of batch.events) {
+        const event = normalized(value);
+        if (event.source !== source || (source === 'codex' && event.providerCallScope !== 'provider-response') ||
+            (source === 'claude_code' && event.providerCallScope !== 'provider-message')) throw new Error('invalid_usage_event');
+        const key = sourceEventKey(secret, source, event.providerCallScope, event.canonicalCallId);
+        const scope = sourceScopeKey(secret, source, event.sessionId, event.turnId);
+        const session = sourceScopeKey(secret, source, event.sessionId, 'session');
+        const usage = event.usage;
+        const existing = this.db.prepare(`SELECT source_scope_key, model_id, input_tokens, output_tokens,
+          cached_input_tokens, cache_write_input_tokens, reasoning_output_tokens
+          FROM usage_event WHERE principal_key=? AND source=? AND source_event_key=?`)
+          .get(principalKey, source, key);
+        if (existing) {
+          const same = existing.model_id === event.modelId && existing.input_tokens === usage.inputTokens &&
+            existing.output_tokens === usage.outputTokens && existing.cached_input_tokens === usage.cachedInputTokens &&
+            existing.cache_write_input_tokens === usage.cacheWriteInputTokens &&
+            existing.reasoning_output_tokens === usage.reasoningOutputTokens;
+          if (same) result.duplicate++;
+          else {
+            result.conflict++;
+            this.db.prepare(`INSERT INTO collection_diagnostic
+              (principal_key, source_key, code, occurred_at_utc, count) VALUES (?,?,?,?,1)`)
+              .run(principalKey, sourceKey, 'identity_conflict', now);
+          }
+          continue;
+        }
+        this.db.prepare(`INSERT INTO usage_event
+          (principal_key,source,source_event_key,source_scope_key,session_key,occurred_at_utc,
+           model_id,input_tokens,output_tokens,cached_input_tokens,cache_write_input_tokens,
+           reasoning_output_tokens,source_version,identity_scheme_version,created_at_utc)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1,?)`).run(principalKey, source, key, scope, session,
+          event.occurredAtUtc, event.modelId, usage.inputTokens, usage.outputTokens,
+          usage.cachedInputTokens, usage.cacheWriteInputTokens, usage.reasoningOutputTokens,
+          event.sourceVersion, now);
+        result.inserted++;
+      }
+      for (const diagnostic of batch.diagnostics) {
+        safeCode(diagnostic.code);
+        this.db.prepare(`INSERT INTO collection_diagnostic
+          (principal_key,source_key,code,occurred_at_utc,count) VALUES (?,?,?,?,1)`)
+          .run(principalKey, sourceKey, diagnostic.code, now);
+      }
+      this.db.prepare(`INSERT INTO source_cursor
+        (principal_key,source_key,root_key,file_identity,committed_byte_offset,prefix_mac,updated_at_utc)
+        VALUES (?,?,?,?,?,?,?) ON CONFLICT(principal_key,source_key) DO UPDATE SET
+        root_key=excluded.root_key,file_identity=excluded.file_identity,
+        committed_byte_offset=excluded.committed_byte_offset,prefix_mac=excluded.prefix_mac,
+        updated_at_utc=excluded.updated_at_utc`).run(principalKey, sourceKey, rootKey,
+          fileIdentity, committedByteOffset, prefixMac, now);
+      this.db.prepare(`INSERT INTO coverage (principal_key,root_key,missing_before,scan_incomplete,last_scan_at_utc)
+        VALUES (?,?,?,?,?) ON CONFLICT(principal_key,root_key) DO UPDATE SET
+        missing_before=MAX(coverage.missing_before,excluded.missing_before),
+        scan_incomplete=excluded.scan_incomplete,last_scan_at_utc=excluded.last_scan_at_utc`)
+        .run(principalKey, rootKey, batch.coverage.missingBefore ? 1 : 0,
+          batch.coverage.scanIncomplete ? 1 : 0, now);
+      batch.guard?.();
+      this.db.exec('COMMIT');
+      return result;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
 
   record(principalKey: string, secret: Buffer, event: CodexUsageEvent): 'inserted' | 'duplicate' | 'conflict' {
