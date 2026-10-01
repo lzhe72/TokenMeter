@@ -44,6 +44,12 @@ export class CredentialStore {
   write(token: string): void { if (!/^[A-Za-z0-9_-]{43}$/.test(token)) unsafe(); privateWrite(this.path, token); }
   clear(): void { if (privateRead(this.path) !== null) unlinkSync(this.path); }
 }
+export function keychainApplicationName(profilePath: string, defaultPath: string): string {
+  if (!isAbsolute(profilePath) || normalize(profilePath) !== profilePath ||
+      !isAbsolute(defaultPath) || normalize(defaultPath) !== defaultPath) unsafe();
+  return profilePath === defaultPath ? 'TokenMeter' :
+    `TokenMeter-Test-${createHash('sha256').update(profilePath).digest('hex').slice(0, 24)}`;
+}
 export function resolveProfile({ appPath, defaultPath, argv }: {appPath: string; defaultPath: string; argv: string[]}): string {
   const path = resolve(appPath);
   const canonicalApp = existsSync(path) ? realpathSync(path) : join(realpathSync(dirname(path)), path.split('/').at(-1)!);
@@ -52,6 +58,9 @@ export function resolveProfile({ appPath, defaultPath, argv }: {appPath: string;
   if (options.length > 1 || (options.length && (!options[0] || !isAbsolute(options[0])))) unsafe();
   const ports = argv.filter(arg => arg.startsWith('--diagnostic-cdp-port=')).map(arg => arg.slice(22));
   if (ports.length > 1 || (ports.length && (!options.length || !/^[1-9][0-9]{3,4}$/.test(ports[0]) || +ports[0] > 65535 || +ports[0] < 1024))) unsafe();
+  const sourceAuditSwitch = '--diagnostic-source-audit-nonce=';
+  const auditNonces = argv.filter(arg => arg.startsWith(sourceAuditSwitch)).map(arg => arg.slice(sourceAuditSwitch.length));
+  if (auditNonces.length > 1 || (auditNonces.length && (!options.length || !/^[a-f0-9]{64}$/i.test(auditNonces[0])))) unsafe();
   const sidecar = join(dirname(canonicalApp), 'TokenMeter.runtime.json');
   const existing = privateRead(sidecar);
   if (existing !== null) {
@@ -59,11 +68,16 @@ export function resolveProfile({ appPath, defaultPath, argv }: {appPath: string;
     if (!data || data.schema_version !== 1 || data.app_path !== canonicalApp || typeof data.profile_path !== 'string') unsafe();
     if (data.diagnostic_cdp_port !== undefined && (!Number.isInteger(data.diagnostic_cdp_port) || Number(data.diagnostic_cdp_port) < 1024 || Number(data.diagnostic_cdp_port) > 65535)) unsafe();
     if (ports.length && Number(ports[0]) !== data.diagnostic_cdp_port) unsafe();
+    if (data.diagnostic_source_audit_nonce !== undefined &&
+        (typeof data.diagnostic_source_audit_nonce !== 'string' || !/^[a-f0-9]{64}$/i.test(data.diagnostic_source_audit_nonce))) unsafe();
+    if (auditNonces.length && auditNonces[0].toLowerCase() !== data.diagnostic_source_audit_nonce) unsafe();
     const profile = privateDirectory(data.profile_path);
     if (options.length && options[0] !== profile) unsafe();
     return profile;
   }
   const profile = privateDirectory(options[0] ?? defaultPath);
-  if (options.length) privateWrite(sidecar, JSON.stringify({ schema_version: 1, app_path: canonicalApp, profile_path: profile, ...(ports.length ? {diagnostic_cdp_port: Number(ports[0])} : {}) }));
+  if (options.length) privateWrite(sidecar, JSON.stringify({ schema_version: 1, app_path: canonicalApp, profile_path: profile,
+    ...(ports.length ? {diagnostic_cdp_port: Number(ports[0])} : {}),
+    ...(auditNonces.length ? {diagnostic_source_audit_nonce: auditNonces[0].toLowerCase()} : {}) }));
   return profile;
 }

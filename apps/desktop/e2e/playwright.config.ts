@@ -7,7 +7,7 @@ if (!output || !raw || !process.env.TM_E2E_CONTEXT) throw new Error('Missing own
 const spec = process.env.TM_E2E_SPEC ?? 'tm001.spec.ts';
 if (!['tm001.spec.ts', 'granular-login.spec.ts', 'granular-account.spec.ts',
       'granular-config.spec.ts', 'granular-update.spec.ts', 'granular-update-validation.spec.ts',
-      'granular-auxiliary.spec.ts'].includes(spec)) {
+      'granular-auxiliary.spec.ts', 'granular-permissions.spec.ts'].includes(spec)) {
   throw new Error('Unrecognized owned E2E spec');
 }
 
