@@ -29,7 +29,7 @@
 | schema/数据库引擎或数据纠错变化 | [016 数据迁移](SOP-016-database-migration.md) | 004、006；备份和隔离数据库 | 迁移、聚合核对、恢复证据 | 013/014 或 020 | baselined | 1 |
 | 验证最终安装包与升级；制作明确标识的本机预览 DMG | [017 安装包验证](SOP-017-package-validation.md) | 007、013/014；按本机internal profile核对最终包与实际平台 | 原始安装包与证据；`dmg/<release_id>/`中明确标为未发布的便捷副本 | 018；预览仅转 022 | baselined | 13 |
 | 正式 Tag 前判断确定候选是否可发布 | [018 发布门禁](SOP-018-release-gate.md) | 014、017；固定 SHA、profile 对应的最终产物与本机候选执行证据 | PASS 通行证或 FAIL/BLOCKED 记录 | 019；未通过回修复 | baselined | 11 |
-| 需求分支集成本地 master、统一推送远端及正式 tag | [019 Git 发布](SOP-019-git-release.md) | 已授权；分支适用检查通过；本地 master 最终树的产品门禁通过；远端保护可满足；正式发布另需 018 通行证 | 本地整合记录、远端 master 读回、版本 tag 与本地档案 | 源码转 022；正式发布转 020 | baselined | 7 |
+| 需求分支集成本地 master、统一推送远端及正式 tag | [019 Git 发布](SOP-019-git-release.md) | 已授权；分支适用检查通过；本地 master 最终树的产品门禁通过；远端保护可满足；正式发布另需 018 通行证 | 本地整合记录、远端 master 读回、版本 tag 与本地档案 | 源码转 022；正式发布转 020 | baselined | 8 |
 | 本地发行归档及提供可见安装包 | [020 部署分发](SOP-020-deployment.md) | 019；部署目标、权限与恢复预案 | `dmg/<release_id>/`正式DMG与原始归档、健康/版本核对 | 022；故障转 021 | baselined | 4 |
 | 发布/部署异常需要恢复 | [021 回退恢复](SOP-021-rollback.md) | 故障证据及已验证恢复预案 | 恢复验证、事件记录、新缺陷 | 015/022/023 | baselined | 1 |
 | 完成阶段、交接或归档版本 | [022 归档交接](SOP-022-archive-handoff.md) | 当前任务结果与未决事项 | 可追踪档案、状态、恢复入口 | 023 或接手步骤 | baselined | 4 |
@@ -56,7 +56,7 @@
 
 - 用户2026-09-30最终决定：Electron + Playwright；本机完成开发、构建、完整测试、打包和发布。Git保存代码、文档、版本编号及追踪；DMG、更新包、原始报告和通行证只在本地按版本存储，不创建GitHub Release或上传安装包。
 - 安装包的可见入口为仓库根目录`dmg/<release_id>/`。开发/候选包文件名明确标记`NOT-RELEASED`；只有018 PASS后，020才在该目录创建正式原名DMG。原件和证据仍按run与候选独立存储，不用便捷副本替换被测原件。
-- GitHub Actions完整测试仅在用户明确要求多环境时启动；不再由PR、push或默认发布触发。已有SwiftUI/XCUITest与CI结果属于历史实现/证据，不能替代Electron候选验收。
+- GitHub Actions完整测试仅在用户明确要求多环境时启动；2026-10-01已移除远端`master`旧Actions必需检查，保留PR、管理员执行及禁止强推/删除等保护。本机最终候选门禁仍须通过；已有SwiftUI/XCUITest与CI结果属于历史实现/证据，不能替代Electron候选验收。
 - 默认验收平台是当前真实本机macOS15 Intel。其他架构与系统只登记为未验证；构建成功不能作为跨平台通过。
 - 先定义计划和SOP，再建立程序。入口尚未实现时明确BLOCKED，不要求安装完整Xcode，不手填PASS，不为发布删六例或放宽断言。
 - 每次目标全部场景及此前已交付功能完整E2E。每个用例必须实际操作安装后的Electron App，使用真实服务和隔离SQLite；API/IPC mock与浏览器网页检查不能替代产品E2E。
