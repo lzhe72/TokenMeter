@@ -39,9 +39,8 @@ def expected_case_set(manifest: dict, detailed: str,
         errors.append("release manifest and product case set differ")
     if len(core_headings) != len(core):
         errors.append("duplicate CORE heading")
-    if core or traced_core:
-        if core != CORE_IDS or traced_core != CORE_IDS or len(traced) != 43:
-            errors.append("CORE auxiliary set must contain exactly three manifest and detailed cases")
+    if core != CORE_IDS or traced_core != CORE_IDS or len(traced) != 43:
+        errors.append("CORE auxiliary set must contain exactly three manifest and detailed cases")
     for variant in variants:
         if variant.split("#", 1)[0] not in parents:
             errors.append("variant has no parent: " + variant)

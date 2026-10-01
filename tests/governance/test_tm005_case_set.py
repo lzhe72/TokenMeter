@@ -20,7 +20,7 @@ class TM005CaseSetTests(unittest.TestCase):
         errors, parents, variants, core = CHECKER.expected_case_set(MANIFEST, DETAIL)
         self.assertEqual(errors, [])
         self.assertEqual((len(parents), len(variants)), (32, 6))
-        self.assertTrue(core == set() or core == CHECKER.CORE_IDS)
+        self.assertEqual(core, CHECKER.CORE_IDS)
 
     def test_dropped_variant_cannot_disappear_from_plan(self):
         altered = copy.deepcopy(MANIFEST)
@@ -43,21 +43,21 @@ class TM005CaseSetTests(unittest.TestCase):
 
     def test_core_three_are_separate_from_product_32(self):
         augmented = copy.deepcopy(MANIFEST)
-        titles = "\n".join(f"### {case} · 固定统计输入" for case in sorted(CHECKER.CORE_IDS))
-        detailed = DETAIL
-        if not any(row["test"].startswith("TC-TM005-CORE-") for row in augmented["traceability"]):
-            augmented["traceability"].extend({"test": case} for case in sorted(CHECKER.CORE_IDS))
-            detailed += "\n" + titles
-        errors, parents, variants, core = CHECKER.expected_case_set(augmented, detailed)
+        errors, parents, variants, core = CHECKER.expected_case_set(augmented, DETAIL)
         self.assertEqual(errors, [])
         self.assertEqual((len(parents), len(variants), len(core)), (32, 6, 3))
         incomplete = copy.deepcopy(augmented)
         incomplete["traceability"] = [row for row in incomplete["traceability"]
                                       if row["test"] != "TC-TM005-CORE-03"]
-        errors, _, _, _ = CHECKER.expected_case_set(incomplete, detailed)
+        errors, _, _, _ = CHECKER.expected_case_set(incomplete, DETAIL)
         self.assertIn("CORE auxiliary set must contain exactly three manifest and detailed cases", errors)
         errors, _, _, _ = CHECKER.expected_case_set(
-            augmented, detailed + "\n### TC-TM005-CORE-04 · 意外用例")
+            augmented, DETAIL + "\n### TC-TM005-CORE-04 · 意外用例")
+        self.assertIn("CORE auxiliary set must contain exactly three manifest and detailed cases", errors)
+        missing = copy.deepcopy(MANIFEST)
+        missing["traceability"] = [row for row in missing["traceability"]
+                                   if not row["test"].startswith("TC-TM005-CORE-")]
+        errors, _, _, _ = CHECKER.expected_case_set(missing, DETAIL)
         self.assertIn("CORE auxiliary set must contain exactly three manifest and detailed cases", errors)
 
     def test_registered_case_documents_must_match_files(self):
