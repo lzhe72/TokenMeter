@@ -2262,7 +2262,7 @@
       "distribution_profile": "internal",
       "asset_storage": "dmg/<release_id>/：仅门禁PASS后放正式原名包",
       "github_release": false,
-      "actual_state": "整版draft、未发布。原32条产品父TC、6稳定变体和两组摘要保留；新增3条纯统计CORE辅助TC，合成fixture与逐步预期已冻结，切片核对尚在进行。静态oracle不证明真实双来源采集或产品E2E；固定产品数据、SQLite/IPC、安装App逐TC绑定未完成，正式发行完整门禁NOT_RUN。",
+      "actual_state": "整版draft、未发布。原32条产品父TC、6稳定变体和两组摘要保留；纯统计CORE-01/02/03辅助TC在输入提交061c759后，经SOP-008内容核对及结构/治理457项PASS，独立切片development_slice_ready，程序绑定仍为空、模块实际运行unexecuted。静态oracle与切片就绪不证明真实双来源采集或产品E2E；固定产品数据、SQLite/IPC、安装App逐TC绑定未完成，正式发行完整门禁NOT_RUN。",
       "historical_evidence": "TM005语义oracle只验证规范化样例；0.4及此前稳定原包尚未形成，真实升级BLOCKED。",
       "source": "releases/v0.5.0-20261001T034729Z/00-manifest.json",
       "status_source": "releases/v0.5.0-20261001T034729Z/06-iteration-record.md",

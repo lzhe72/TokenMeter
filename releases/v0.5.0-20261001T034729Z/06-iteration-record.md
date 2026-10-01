@@ -1,5 +1,11 @@
 # TM-005 执行记录
 
+## 2026-10-02 · SOP-008 纯统计独立切片就绪
+
+对固定输入提交 `061c759a9dbe52e15a5fb06ca1b1451a61e65c55`（tree `44b201503b85f480d8d5d2e9ae3a031aa5002487`）逐项核对 `TC-TM005-CORE-01/02/03`：CORE-01 的A/B筛选、半开时界、主体隔离、330总数与非法值拒绝；CORE-02 的已知330、未知诊断后partial、仅诊断时unknown且总数为null；CORE-03 的complete/missing/partial/unknown声明式代数。三例均有固定合成输入、顺序步骤与逐步独立预期、无需产品DB的验证和重置方式。`TASK-TM005-EVENT-CONTRACT/RANGE-QUERY/COVERAGE` 的纯函数部分可独立实现；TM-003/004 原生日志、来源身份、授权、真实覆盖事实、SQLite、IPC和App均在此切片之外，相关未决决定不改变本切片已固定的合成输入预期。若上游合同将来改变该纯函数输入，撤销本判定并重新核对。
+
+收据 `.local/docs-checks/20261002-tm005-core-slice/receipt.json` 保存八份输入SHA-256、提交、逐项语义边界及命令日志：structure退出0，治理457/457退出0，工作簿回读退出0，diff检查退出0。独立切片判定 `development_slice_ready`；原32条产品父TC、6个变体继续draft/unexecuted且绑定null，三条CORE程序也尚未绑定/执行。0.5整版 `baseline` 与 `quality_gate check` **NOT_RUN**；模块运行、真实产品E2E、正式发行均 `NOT_RUN`。根项目总表本次回读为11 Sheet、222父TC、41变体、263用例行、13个旧历史批次，SHA-256 `4a596813f2fa99fd1473bbaacd743341f9d2ef01e3546f779327e41705b11e65`；这是固定输入与状态索引，不是产品测试报告。
+
 ## 2026-10-01 · 新仓库纯统计开发切片编制
 
 总控在新仓库 `/Users/lz/文档/git/TokenMeter` 恢复 TM-001 Electron 源码及当前0.2文档总表，原记录中“当前工作树缺 Electron 源码”只描述旧分支当时基点。TM-005开发会话在新分支交接纯静态 oracle 检查；它核对预先归一化的合成算术，不接原生日志、客户端SQLite、IPC或App，不授予产品TC PASS。文档会话按新SOP-008修订5，将 `TASK-TM005-EVENT-CONTRACT/RANGE-QUERY/COVERAGE` 的纯函数部分拆为 `CORE-01/02/03` 三条辅助模块TC，冻结 `tests/fixtures/tm005-core-slice.json` 的双来源可信合成事件、unknown诊断及声明式coverage状态代数。原32条产品父TC和6变体保持draft/unexecuted且绑定null；合成complete标签不证明真实连续空日覆盖。整版0.5 baseline、产品E2E和正式发行仍NOT_RUN/BLOCKED。
