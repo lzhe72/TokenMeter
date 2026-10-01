@@ -1,6 +1,6 @@
 # v0.1.0-20260929T074814Z — 实际发布记录
 
-按 SOP-018/019/020/022/024 维护。**当前状态：未发布；独立候选 `d2db551` 本机门禁 PASS 只属历史，本地 `master` `c2911bc` 首次最终包门禁 FAIL，未归档稳定原包，没有正式 Tag 或原名 DMG。** 发布目标与恢复条件见[发布预案](05-release-plan.md)，实际测试原件见[07测试结果](07-test-results.md)。
+按 SOP-018/019/020/022/024 维护。**当前状态：未发布；独立候选 `d2db551` 本机门禁 PASS 并有机器通行证，最终 `master` 整合树尚未重验、原件归档与正式分发未完成，没有正式 Tag 或原名 DMG。** 发布目标与恢复条件见[发布预案](05-release-plan.md)，实际测试原件见[07测试结果](07-test-results.md)。
 
 ## 当前发布资格（2026-10-01）
 
@@ -14,7 +14,7 @@
 | 本机正式门禁 | 独立 `d2db551` 门禁原件仍为历史 PASS；本地 `master` `c2911bc` 首次原件 `.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/gate.json` 为 FAIL、`release_eligible=false`，原始116项91 PASS/14 FAIL/11 BLOCKED。UPDATE-05 父项及13变体缺签名输入；须修复并对新候选完整重跑 |
 | 通行证、正式DMG和更新源 | 独立候选机器通行证已生成，SHA-256 `193bf39ca6bd2aed5a802f817ba5aa7bcfdaeeb442e272f1d843e381c941de53`；被测原 DMG SHA-256 `acc86a9f04ed19fe91f1b63481988d615f5d81680602eed1305b3896bb284492`。根 `dmg/<release_id>/` 目前仅有同摘要的 `CANDIDATE-NOT-RELEASED` 便捷副本；正式原名包、归档和稳定更新源尚未发布 |
 | Git版本 | 旧Swift实现的[PR#2](https://github.com/lzhe72/TokenMeter/pull/2)仅属历史。本地`master`里程碑 `c2911bc` 的首次最终包门禁 FAIL；后续须修复并固定新SHA/tree重跑，SOP-018 PASS 后才可SOP-020归档。全部目标版本稳定后再统一远端源码登记和Tag；本版正式Tag未创建 |
-| 用户查看入口 | 根目录[TokenMeter项目总表.xlsx](../../TokenMeter项目总表.xlsx)现汇总11个Sheet、137条父用例与35个变体（172行）及13条TM-001运行批次；最新 `c2911bc` FAIL 批次有独立结果 Excel，按被测SHA登记。TM-002在本树仍为未来草稿、未执行产品E2E；0.1当前未发布 |
+| 用户查看入口 | 根目录[TokenMeter项目总表.xlsx](../../TokenMeter项目总表.xlsx)现汇总11个Sheet、164条父用例与35个变体（199行）及13条TM-001运行批次；最新 `c2911bc` FAIL 批次有独立结果 Excel，按被测SHA登记。TM-002设计已基线、TM-003仍为草稿，两者未执行产品E2E；0.1当前仍未发布 |
 
 总表的用例状态和批次摘要不替代原始`result.json`、Playwright trace、SQLite、安装包及本机机器门禁。测试AI只能调用已固定程序并分析机器结果，不能临场手填PASS。
 

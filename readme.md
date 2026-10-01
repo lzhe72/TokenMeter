@@ -11,7 +11,7 @@ macOS 团队模型用量监控工具。产品目标是读取 Codex、Claude Code
 [TokenMeter项目总表.xlsx](TokenMeter项目总表.xlsx)按Sheet查看需求、功能、开发任务、用例汇总（输入、预期、DB操作、类型）、测试批次和发布版本。总表随Git版本维护；每次测试单独生成结果Excel，总表的“06测试批次”记录本机详细报告位置。
 
 - [根目录用例集合](TEST_CASES.md)
-- [当前版本全流程导航](releases/v0.1.0-20260929T074814Z/README.md)
+- [当前0.2设计基线](releases/v0.2.0-20261001T034118Z/00-manifest.json)、[TM-003草稿导航](releases/v0.3.0-20261001T034652Z/README.md)、[0.1历史全流程](releases/v0.1.0-20260929T074814Z/README.md)
 - [总表维护规范](docs/standards/project-workbook.md)
 
 ## 开发入口

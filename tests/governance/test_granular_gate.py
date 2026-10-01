@@ -28,6 +28,34 @@ AUX = {case["id"] for case in CURRENT if case["id"].startswith(granular_gate.res
 
 
 class GranularGateTests(unittest.TestCase):
+    def test_historical_variant_source_is_distinct_from_candidate_release(self):
+        target = "v0.2.0-20261001T034118Z"
+        catalog = deepcopy(CATALOG)
+        catalog["release_id"] = target
+        for case in catalog["cases"]:
+            if case.get("feature_id") == "TM-001":
+                case["release_id"] = LOGIN["release_id"]
+        self.assertEqual({case["release_id"] for case in catalog["cases"]
+                          if case.get("feature_id") == "TM-001"}, {LOGIN["release_id"]})
+        combined = granular_gate.combine_variants(LOGIN, UPDATE, target)
+        self.assertEqual(combined["release_id"], LOGIN["release_id"])
+        self.assertEqual(len(combined["variants"]), 38)
+        wrong_update = deepcopy(UPDATE)
+        wrong_update["release_id"] = target
+        with self.assertRaises(granular_gate.results.Invalid):
+            granular_gate.combine_variants(LOGIN, wrong_update, target)
+        future_login = deepcopy(LOGIN)
+        future_login["release_id"] = "v0.3.0-20261002T000000Z"
+        with self.assertRaises(granular_gate.results.Invalid):
+            granular_gate.combine_variants(future_login, None, target)
+        with tempfile.TemporaryDirectory() as temp:
+            wrong_source = {**combined, "release_id": target}
+            outcome = granular_gate.verify_candidate(
+                catalog, {"release_id": target}, run_root=Path(temp), plan={},
+                variants=wrong_source, fixture=True)
+            self.assertEqual(outcome["state"], "FAIL")
+            self.assertIn("TM-001 变体来源版本与父用例不一致", outcome["reasons"])
+
     def fixture(self, root: Path):
         now = datetime.now(timezone.utc) - timedelta(minutes=2)
         later = now + timedelta(minutes=1)

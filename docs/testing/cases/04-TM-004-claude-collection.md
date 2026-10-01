@@ -46,7 +46,7 @@
 
 **验收：** `AC-TM004-003`，支持版本结果准确；未知版本或缺字段明确降级，不能伪造零用量。
 
-**前置/数据：** 数据集 `claude_raw`；为每个拟声明支持版本准备原生样例及独立expected，例如完整调用100/10；另准备未知结构版本和缺usage的事件，后两者不用0填充。当前无已验证版本样例。
+**前置/数据：** 数据集 `claude_raw`；为每个拟声明支持版本准备原生样例及独立expected，例如完整调用100/10；另准备未知结构版本和缺usage的事件，后两者不用0填充。本机已有2.1.126隔离 CLI 生成的主/单层子代理/fork 原件，但未绑定本例完整正反样本和安装 App。
 
 **步骤：**
 
@@ -79,3 +79,87 @@
 ## 追踪与退出条件
 
 与[用例总索引](README.md)、[验收清单](../../../tests/acceptance.json)、[功能矩阵](../../../tests/feature_matrix.json)和[数据清单](../../../tests/datasets.json)使用相同稳定ID。各例列出的缺项全部落实为程序/数据/自动化绑定后才能进入完整实现；实际运行结果另存机器报告。一个子场景失败或未执行，不能把所在整例记PASS。
+
+## 本版细TC设计草稿
+
+适用 release_id：`v0.4.0-20261001T040433Z`；需求 `REQ-TM004`，功能 `TM-004`。以下细TC是本轮规划输入和独立判据，所有原始格式/SQL/自动化绑定待 TM-002/003 与有来源的 Claude raw 冻结前均为 `baseline_pending` / `BLOCKED`。预期数值不是已取得的厂商样本。每例前置均为：安装后真实 Electron App、隔离 `test-alice`/项目A、动态独占回环服务、每例新 profile/SQLite/日志目录；运行前由 SOP-010 固定程序生成，结束只清理取得所有权的资源，原始证据保留于本地0700批次目录。数据库观察只读，目标 schema 和确切 SQL 待 TM-003 接口提交后定版；不得临场写 SQL 直接造出统计成功。测试类型除 DATA/RELEASE 的治理检查外均为产品 E2E，执行 SOP-011/014。独立预期来源为[本轮需求](../../../releases/v0.4.0-20261001T040433Z/01-requirements.md)的 AC 和本文件既有四个 E2E 场景；自动化程序目前全部 `null`，实际执行全部未发生。
+
+### TC-TM004-SOURCE-01 · 授权根限定（TASK-TM004-SOURCE，AC-001，E2E-001）
+
+输入：用户经 TM-002 UI 只选择隔离项目A目录；目录内有 M=100/10 完整原始行，旁边未授权目录有 X=999/99。步骤：①选择但未确认，UI 显示待确认，事件表无新增；②确认授权并扫描，UI 显示1次 M、total110，SQLite只读见唯一M；③重扫，调用数仍1、total110；④检查 X 未被读取或入库。SQL：只读按来源/项目统计 M 行数与 token，总数1/110；检查 X 键不存在。重置：新目录/库，删除仅本次拥有对象。原始行字段与授权动作绑定待补。
+
+### TC-TM004-SOURCE-02 · 撤权和重新授权（TASK-TM004-SOURCE，AC-004，E2E-004）
+
+输入：已扫描 M=100/10、S=200/20；撤权期间子代理新增 N=50/5。步骤：①UI撤销目录，状态显示不可读且保留total330；②追加N并触发扫描，仍330且诊断为读取受阻；③UI重授并补扫，唯一 M/S/N、total385；④重启后重扫仍385。SQL：只读唯一键数3与 token总385，撤权阶段无N。重置同共用配方；TM-002失权模拟与子目录绑定待补。
+
+### TC-TM004-PARSER-01 · 主/子实际调用（TASK-TM004-PARSER，AC-001，E2E-001）
+
+输入：同一项目原始主M100/10与子S200/20，模型各自保留，父关系有原始证据。步骤：①写M并扫描，可信total110；②写S并扫描，可信input300/output30/total330；③重扫及重启，仍2次调用/330。SQL：只读两条唯一事件和模型/父项目归属；不读取正文。版本化raw和模型字段待补。
+
+### TC-TM004-PARSER-02 · 未知结构/缺字段（TASK-TM004-PARSER，AC-003，E2E-003）
+
+输入：已支持版本完整 M100/10、未知结构 U、JSONL 原始行真正缺 usage 的 Q。步骤：①加载M，可信total110；②加载U，可信仍110且出现未知结构诊断；③加载Q，可信仍110、缺usage诊断新增；④重扫/重启仍110，诊断可见且不显示 U/Q 为零调用。SQL：只读可信事件1条/110，诊断各1条；具体版本标识、缺字段schema和SQL待补。隔离负测中 API SSE 省略 usage 后 CLI 仍在原生 JSONL 写0/0，**不是** Q 的原生缺字段样本；Q 需另证来源或标明故障注入，不得把0/0回填解释成已知零。
+
+### TC-TM004-LINEAGE-01 · 子代理父项目（TASK-TM004-LINEAGE，AC-001，E2E-001）
+
+输入：项目A主M100/10、子S200/20，另有项目B同名会话标识但无父关系。步骤：①扫描主，A=110；②扫描子，A=330、B=0；③重复主引用子结果，A仍330；④查看归属，S标为子代理且使用原模型。SQL：只读S的父项目键为A、事件数2；原始父链线索缺失时不得假称通过。
+
+### TC-TM004-LINEAGE-02 · fork继承和ID改写（TASK-TM004-LINEAGE，AC-002，E2E-002）
+
+输入：原M100/10、fork复制或引用M但消息ID改写、fork新N50/5。步骤：①原M入账110；②导入可证明继承的fork历史，仍110；③追加N，total165且调用数2；④复制N片段及重启，仍165。若缺能证明继承的原始线索，步骤②/判据 `baseline_pending`，不得以数值相同伪造兼容。SQL：只读可信唯一调用2/165及继承诊断/关系；待schema确定。
+
+### TC-TM004-INCREMENTAL-01 · 半行完成（TASK-TM004-INCREMENTAL，AC-002，E2E-002）
+
+输入：已计M+N total165，P=20/2 原始JSONL行分成两次写入。步骤：①写P前半且无换行，扫描后仍165、读取游标未越过半行；②写余段和换行，扫描后total187、调用数3；③重扫和重启仍187。SQL：只读P只一条，可信事件3/187，游标处于完整行末；具体游标schema待补。
+
+### TC-TM004-INCREMENTAL-02 · 重复与事务恢复（TASK-TM004-INCREMENTAL，AC-002/004，E2E-002/004）
+
+输入：完整M100/10、重复相同片段及移动/复制文件；在扫描提交边界中断App。步骤：①M入账110；②复制/移动并重扫，仍110；③按固定故障程序在事务提交边界中断并重启，仍唯一M/110；④新增N50/5，total165。SQL：只读唯一键数2/165且游标一致；故障注入不得绕过产品事务。TM-003事务接口待补。
+
+### TC-TM004-DIAG-01 · 未知值不是零（TASK-TM004-DIAGNOSTIC，AC-003，E2E-003）
+
+输入：可信M100/10、U未知格式、Q的JSONL原始行缺usage，以及另有独立来源证明的有效零usage记录Z。步骤：①加载M，显示110；②加载U/Q，显示可信110和两个不同未覆盖提示；③仅在Z的真实有效性可证明时加载Z，零值记录可见但总量仍110；④重启，三种状态不混淆。SQL：只读可信M和已证实的Z，U/Q仅诊断，不以0写入；Z的原始有效性仍 `baseline_pending`。2.1.126 遇到畸形合成 API 缺usage会自己写0/0，不能拿该行充当Z；未经额外证据不能由0/0 raw推断上游已知零。
+
+### TC-TM004-DIAG-02 · 失权提示及隐私（TASK-TM004-DIAGNOSTIC，AC-004，E2E-004）
+
+输入：M已入账，撤权目录含合成 prompt、代码和密钥哨兵字符串。步骤：①撤权触发扫描，UI显示读取受阻而非零用量，保留110；②检查UI与本次服务请求/日志/SQLite均无哨兵及完整源路径；③重授恢复后提示消除且M不重计。SQL：只读事件1/110、诊断状态与仅白名单字段；隐私哨兵由固定生成器构造，不使用真实秘密。
+
+### TC-TM004-DATA-01 · 原始fixture和独立oracle（TASK-TM004-DATA，AC-001–004，E2E-003）
+
+输入：固定版本 CLI/公开来源、隔离 `CLAUDE_CONFIG_DIR`、固定合成任务；禁止访问真实 `~/.claude`。步骤：①固定程序记录版本、来源、raw文件SHA与父子/fork字段证据；②另一路独立定义 M/S/N/P usage 和期望 330/165/187/385；③重建数据并比对SHA、SQL初态仅合成账号与零用量；④清理本次来源目录。类型：数据/治理检查，不能算产品 E2E。本机安全探针已有2.1.126主/单层子代理/复制历史 fork 和双内容块原件与 SHA，见本机 `.local/ci/tm004-claude-2.1.126-research/evidence-manifest.json`、`followup-evidence-manifest.json`；该探针尚非仓库固定数据程序，M/S/N/P、改写ID、嵌套、重放、SQL和安装 App 绑定未齐，故本TC仍 BLOCKED。
+
+### TC-TM004-E2E-01 · 安装包真实链路（TASK-TM004-E2E，AC-001–004，E2E-001/004）
+
+输入：本版固定候选SHA、原DMG、TM-001–004完整必测TC清单。步骤：①从原DMG复制安装App并通过真实UI设置动态服务/授权；②调用仓库固定按TC编号的Playwright Electron程序，逐步断言UI、IPC后果和只读SQLite；③比较实际集合与冻结清单、零跳过/重试/失败；④生成原JSON/trace/独立Excel并核对清理。类型：产品执行器检查；无App、程序或包时 BLOCKED，不以网页/API替代。
+
+### TC-TM004-RELEASE-01 · 候选与证据一致（TASK-TM004-RELEASE，AC-001–004，E2E-004）
+
+输入：同一已提交SHA/tree、DMG摘要、完整TM-001–004结果。步骤：①机器重读候选及包摘要；②重读每个TC/变体原始结果和清理；③重读独立Excel源摘要；④仅全PASS时进入SOP-018并由总控SOP-019整合。类型：治理/发布检查，不能自身证明产品E2E。当前缺全部输入，BLOCKED。
+
+### TC-TM004-SOURCE-03 · 嵌套子代理目录（TASK-TM004-SOURCE，AC-001，E2E-001）
+
+输入：2.1.126 已安装二进制显示子代理路径可在 `subagents/` 下继续嵌套；确切层级与父链由待取得的原始样本决定。固定数据应含项目A主M100/10、一级子S200/20、嵌套子T=50/5，以及授权根外同名文件X=999/99。步骤：①经真实UI只授权隔离根并扫描，项目A可信total385/3次调用；②遍历嵌套层级并核对T父链，不读取X；③重启重扫，总量和归属不变；④父链缺失变体仅显示未归属诊断，不猜A。SQL：只读事件唯一键、父项目与总量3/385；缺链变体的T不得纳入A可信聚合。类型：产品E2E；实际raw层级、生成器与SQL为 `baseline_pending`，绑定 `null`。本机普通 Agent 子请求未暴露 Agent 工具，只证明该次探针未触发嵌套，不证明版本不支持；二进制路径代码也不能代替样本。
+
+### TC-TM004-PARSER-03 · 同一消息多内容块和 Agent 摘要（TASK-TM004-PARSER，AC-001，E2E-001）
+
+输入：同一次主调用M100/10拆为至少两个带相同 `message.id` 与 usage 的 assistant 内容块，另有 Agent 工具结果的 `totalTokens/usage` 摘要与子S200/20原始调用；本机独立结构探针已实际生成31/9双块，CLI 写两行相同 ID 和完整 usage，子代理19/6的父工具结果出现 `total_tokens: 25`。步骤：①只写M的两个块并扫描，UI/SQLite为1次调用、total110；②写S及父Agent结果，可信为M+S两次、total330；③重复块与摘要、重扫重启，仍330。SQL：只读源消息调用键2个/330，父Agent汇总不能额外成为第三次调用。类型：产品E2E；结构探针独立预期31+9=40而非80，M/S正式数据与安装App绑定仍 `baseline_pending`，绑定 `null`。
+
+### TC-TM004-LINEAGE-03 · forkedFrom 复制与改写 UUID（TASK-TM004-LINEAGE，AC-002，E2E-002）
+
+输入：已计M100/10；分别用2.1.126真实生成的 fork 复制记录（保留 UUID）和改写 UUID 记录，依据实际 raw 的跨文件调用身份/父链判定，不能假定两者都含 `forkedFrom`；再追加真正新N50/5。步骤：①M入账110；②逐个加入两个继承形态，均仍110并在诊断/关系中可追溯原M；③追加N，total165/2次；④重启重扫仍165。SQL：只读可信调用键2个、继承引用指向M。类型：产品E2E；本机原生 `--fork-session` 样本复制 UUID 与 usage 却不含 `forkedFrom`。`claude -p '/branch ...'` 返回不可用；受限交互探针在输入前退出，未生成改写 UUID 原件。该形态与识别 oracle 仍 `baseline_pending`，绑定 `null`。
+
+### TC-TM004-LINEAGE-04 · fork-context-ref 父链（TASK-TM004-LINEAGE，AC-002，E2E-002）
+
+输入：2.1.126真实子代理 fork 记录中带 `agentId,parentSessionId,parentLastUuid,contextLength`；父会话存在M100/10，子代理仅新增S200/20。步骤：①先扫描父M，可信110；②扫描引用及子S，可信330/2次而非440；③重扫/重启仍330；④只读核对父链引用能解析至M的已计键。SQL：只读M/S各一条及引用，total330。类型：产品E2E；静态代码提示字段，但普通 Agent、开启 `CLAUDE_CODE_FORK_SUBAGENT` 和隔离自定义继承配置三次子代理探针均未产出该记录，无法据此声明不存在；真实触发条件、带引用 raw 与父链 oracle 待补，绑定 `null`。
+
+### TC-TM004-LINEAGE-05 · 缺失或矛盾父链（TASK-TM004-LINEAGE，AC-002/003，E2E-002/003）
+
+输入：在上一例的合成同构目录中分别移除引用父文件、指向不存在的 `parentLastUuid`、或提供无 `forkedFrom` 但UUID改写的复制历史；这些是测试故障注入，不能标为厂商实际输出。步骤：①在完整父链下确认M110；②逐一制造缺失/矛盾，App显示未确定来源诊断，可信总量仍110、不能把不明副本计为新调用或有效零；③恢复可验证父链并重扫，若真实新增S200/20可独立识别则总量330；④重启总量保持且诊断随恢复更新。SQL：只读未确定记录与可信M/S计数，不能借SQL灌成功。类型：产品E2E；原始错误形态、可恢复规则、SQL及固定程序待版本化证据和TM-003接口确定，`baseline_pending`、绑定 `null`。
+
+### TC-TM004-SOURCE-04 · 预览截断后的可续扫覆盖（TASK-TM004-SOURCE，AC-001/004，E2E-001/004）
+
+输入：本例独占授权根，固定程序按 TM-002 已提交枚举顺序生成至少1025个普通 `.jsonl` 文件及足够目录项；前段有主M100/10，预览截断范围外且至少第五个256项采集页的深层 `subagents/` 文件有子S50/5，其余文件没有可计量调用。另备可控制的页间撤权/恢复点。步骤：①真实 UI 选择并确认根，1000文件预览显示被截断，不声称全量；②经 TM-002 草稿 `beginCandidateScan`/`nextCandidatePage` 取得至多256候选的第一页且 opaque continuation 未耗尽，UI 可显示已见M110，但 TM-003 `coverage.scan_incomplete=1`；③跨至少第五页继续至深层S，使用 `openCandidateReadOnly(candidateToken)` 读原始行；在另一次固定变体于页间撤权，下一页或打开须拒绝，`cancelScan` 后 `scan_incomplete=1`，重授后以新授权世代续扫；④全部页面 `complete=true` 且完整行提交后，可信 M+S 两调用、input150/output15/total165，`scan_incomplete=0` 才可显示本次覆盖完成；重启重扫总量不变。SQL：只读各来源事件键、聚合 `(2,150,15)`、游标及 `coverage.scan_incomplete`；中途必须为1。类型：产品E2E；API/页大小是 TM-002 草稿，最终排序/令牌/深度合同、原生深层子代理数据、SQL和绑定仍 `baseline_pending`，`automated_test=null`；不得把预览清单当完整扫描输入。
+
+### TC-TM004-INCREMENTAL-03 · 跨工具同 ID 与 Claude 复制历史（TASK-TM004-INCREMENTAL，AC-001/002，E2E-001/002）
+
+输入：同一合成主体、各自经 UI 授权的 Codex 与 Claude 隔离根。固定本地响应使 Codex 原生 `payload.response_id` 与 Claude 主 `assistant.message.id` 字面均为 `shared-call-01`，分别有 C=11/1 与 M=100/10；Claude 原生 `--fork-session` 复制M，再有独立 Agent 子调用S=200/20（新 message.id、与父同 sessionId 但带 agentId）。另以明确标记的衍生故障数据令同一 Claude message.id 出现矛盾101/10，该行不冒称 CLI 原件。步骤：①经安装 App 扫描C，可信1次/total12；②扫描M，可信2次/input111/output11/total122，跨工具同字面 ID 不冲突；③扫描 fork 复制M与 Agent S，可信3次/input311/output31/total342；④加入矛盾行并重扫/重启，可信仍3次/342，出现 `identity_conflict` 与覆盖不完整。SQL：只读同一 `principal_key` 下 `source=codex` 与 `source=claude_code` 各自事件数1/2、`source_event_key` 不同，Agent `source_scope_key` 与主来源可区分，复制M不多行，冲突不覆写原M；键与归属均不得存原生ID/完整路径。类型：产品E2E；`usage-identity-v1` 长度前缀/HMAC、TM-003 schema 和迁移、两工具原生同字面ID固定程序、安装 App/SQL绑定均待稳定实现，`baseline_pending`、`automated_test=null`。

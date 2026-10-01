@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from io import BytesIO
 from pathlib import Path
 import struct
@@ -61,6 +62,54 @@ def recorded_case(root: Path, run_id: str, case: dict, state: str, count: int | 
 
 
 class GranularResultTests(unittest.TestCase):
+    def test_export_rejects_mixed_historical_variant_manifests(self):
+        target = "v0.2.0-20261001T034118Z"
+        catalog = deepcopy(CATALOG)
+        catalog["release_id"] = target
+        for case in catalog["cases"]:
+            if case.get("feature_id") == "TM-001":
+                case["release_id"] = VARIANTS["release_id"]
+        wrong_update = {"release_id": target, "variants": []}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            report = root / "result.json"
+            cases = root / "catalog.json"
+            login = root / "login.json"
+            update = root / "update.json"
+            report.write_text(json.dumps({"run_id": "mixed-source-01", "release_id": target,
+                                          "state": "BLOCKED", "expected_cases": [], "tc_results": []}))
+            cases.write_text(json.dumps(catalog))
+            login.write_text(json.dumps(VARIANTS))
+            update.write_text(json.dumps(wrong_update))
+            with self.assertRaisesRegex(granular.Invalid, "Update variant manifest differs from the login source release"):
+                granular.export(report, root / "workbook", catalog_path=cases,
+                                variants_path=login, update_variants_path=update)
+
+    def test_historical_variants_require_parent_source_release(self):
+        target = "v0.2.0-20261001T034118Z"
+        catalog = deepcopy(CATALOG)
+        catalog["release_id"] = target
+        for case in catalog["cases"]:
+            if case.get("feature_id") == "TM-001":
+                case["release_id"] = VARIANTS["release_id"]
+        parent = next(case for case in CURRENT if case["id"] == "TC-TM001-LOGIN-17")
+        expected = [parent["id"], *(item["id"] for item in VARIANTS["variants"]
+                                    if item["parent_id"] == parent["id"])]
+        report = {"run_id": "cross-release-01", "release_id": target,
+                  "scope": "granular_targeted_probe", "state": "BLOCKED",
+                  "expected_cases": expected, "tc_results": []}
+        with tempfile.TemporaryDirectory() as temp:
+            model = granular.build_model(catalog, report, run_root=Path(temp), variants=VARIANTS)
+            self.assertEqual(model["release_id"], target)
+            self.assertEqual([item["id"] for item in model["variants"]], expected[1:])
+            wrong_variants = {**VARIANTS, "release_id": target}
+            with self.assertRaises(granular.Invalid):
+                granular.build_model(catalog, report, run_root=Path(temp), variants=wrong_variants)
+            wrong_catalog = deepcopy(catalog)
+            next(item for item in wrong_catalog["cases"] if item["id"] == parent["id"])["release_id"] = target
+            with self.assertRaises(granular.Invalid):
+                granular.build_model(wrong_catalog, report, run_root=Path(temp), variants=VARIANTS)
+
     def test_targeted_probe_lists_only_its_parent_and_keeps_rest_out_of_scope(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
