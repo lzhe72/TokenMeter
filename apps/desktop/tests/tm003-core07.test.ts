@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync} from 'node:fs';
+import {chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
@@ -105,7 +105,7 @@ function privacy(path: string): void {
 }
 
 test('TC-TM003-CORE-07 main collector stages every bounded page and aborts stale generations', async t => {
-  const owner = mkdtempSync(join(tmpdir(), 'tm003-core07-')); chmodSync(owner, 0o700);
+  const owner = realpathSync(mkdtempSync(join(tmpdir(), 'tm003-core07-'))); chmodSync(owner, 0o700);
   try {
     assert.deepEqual(payloads.map(value => value.length), [410, 410]);
     for (let i = 0; i < 2; i++)
