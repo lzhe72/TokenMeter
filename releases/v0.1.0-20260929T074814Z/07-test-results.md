@@ -153,6 +153,8 @@ UI-01修复后独立单例Excel为`.local/test-results/aux-ui01-local-343e54113b
 
 同包的`TASK-TM001-LOGIN-VALIDATION`另有run`local-5e076fa3d05b4d949877333a3b5339e0`：`LOGIN-05/06/07/09/17/18/19/20/21/22`十父例及17/18/19/22下12个固定变体，共22报告行PASS、36步、清理完成；其中4个父例由变体结果派生，18个是真实App执行。原报告SHA-256 `addde7aa03203f15ef8aa5b480714b5408024618c207a7032c1be9f8560085ea`，独立Excel SHA-256 `495242667704e4639a8a8389646afcfc96d28d79f991881df4d0bbef66f8669b`，verification回读PASS。`TASK-TM001-LOGIN-RATE`的`LOGIN-16`另一次run`local-09f2c4fd672848a9a68ba851a5d7b3c9`为一父例/三步真实App PASS、清理完成；原报告SHA-256 `f3793197707de6e877e80ad6e542a8131b8ccd226bd0ff7ca615fdffba34cbb2`，独立Excel SHA-256 `654629131838f9f937f4f0c6ed44e6ece9373792f9313ccd2dad368088ddb0c4`，verification回读PASS。四个登录任务在709d候选分别定向覆盖了22父例与12变体；TM-001其余功能、完整门禁及正式发行均不能由四批单独PASS推定。
 
+`TASK-TM001-CHANGE-PASSWORD`另一次`local-64cdbd1050d84763928c0b6a7f30e2c3`覆盖`PASSWORD-01..11`十一父例和09/11下六变体：17报告行PASS、32步、清理完成，其中15次真实App执行、两父例由变体派生。原报告SHA-256 `687c5b5ebaa6f2a2befd85fe794c0aa3d69b47b8d125e739f3cf2387503f2282`，独立Excel SHA-256 `bc69c4011029b3d25e2a3047a0e9272c77f1d8ec0a7b75d2c491753306250418`，verification回读PASS；独立审计`.local/ci/local-64cdbd1050d84763928c0b6a7f30e2c3-audit/audit.json` SHA-256 `3aa2f3aee06aab191f974899825e84dda3099583aa857fb435f63ac1248792fb`仅核`PASSWORD-05`并PASS，不是12项完整审计。该批只证明709d候选改密功能定向范围；其他TM-001功能、旧完整门禁与正式发行不变。
+
 [登录与改密01a](../../docs/testing/cases/01a-TM-001-login-scenarios.md)、[会话/管理/配置/升级01b](../../docs/testing/cases/01b-TM-001-session-admin-release-scenarios.md)、[交付检查01c](../../docs/testing/cases/01c-TM-001-delivery-checks.md)中的TC/变体均为本轮需求阶段基线修订。原代码先于这些精细条目存在，不能追认为先设计后开发已经完成。
 
 - `tests/test_cases.json`当前有78条本版TC：67条产品父TC具备逐编号Playwright程序，另11条交付、目录和门禁辅助TC具备固定程序并已在独立批次执行。其余31条属于后续功能规划，不能纳入本版通过数。

@@ -2,6 +2,9 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-001 709d候选`CHANGE-PASSWORD`独立真实App run`local-64cdbd1050d84763928c0b6a7f30e2c3`覆盖11父+6变体，17行/32步PASS、清理和Excel回读PASS；仅`PASSWORD-05`独立审计PASS，登记总表第25批次。其他TM-001功能、完整审计、旧c291完整门禁FAIL及正式发行NOT_RUN保持。
+
+
 TM-005代码候选`259cf768`的`CORE-04/05`两次独立`source_check`各1/1、三/四步、清理及独立Excel回读PASS，作为总表第23/24批次。代码同名远端功能分支已由push与GitHub API读回同SHA/tree；Git ls-remote曾因443不可达失败。测试程序尚未并入本文档树，机器目录绑定保持null；0.5产品TC、真实App/原生日志E2E和正式发行仍NOT_RUN。
 
 TM-001同一709d候选新增`LOGIN-VALIDATION`十父/十二变体22行36步与`LOGIN-RATE`单父三步两次真实App定向PASS，独立Excel均回读，分列总表第21/22批次。四批登录任务合计22父+12变体已按各自run通过；其余TM-001功能尚未验收，旧c291完整门禁FAIL与正式发行NOT_RUN。
