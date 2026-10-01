@@ -2,6 +2,8 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-005新增尚未运行的`CORE-04/05`固定辅助输入，分别为IANA日界/纽约23与25小时和合成双来源SQLite同窗只读快照；0.5原32条产品TC及6变体不缩减。根总表当前11 Sheet、232父TC、42变体、274用例行、18批次，SHA-256 `20c539a9ab8137ce4022f4e0bd2fb8b0d60ebd09c5929ab1cf4391a3cef0bc94`、回读PASS。TM-003当前coverage表不能证明任意历史当地日两来源连续完整覆盖，故TM-005产品`STATE-02/04`的真零判据和安装App E2E保持BLOCKED/NOT_RUN；新辅助切片的就绪只待干净输入提交与SOP-008收据。
+
 TM-003 `CORE-06`先在`408ebf8`固定红测的第二步失败，修复提交`eef956b`（tree`802e6c9`）的新run`tm003-core06-20261001T182500Z`为`source_check` 1/1、四步和清理PASS；报告SHA-256 `b6a2a8586ffbb14626858263638a7f13c690e3cf5503741bd2526cda3ea24e87`，独立结果Excel SHA-256 `4bfb058e0d0d9779a90ae61ebb207bdf0f8cec2dc6d55e813e33fcd4920f49a5`，verification回读PASS。原始红/绿报告与Excel均已复制到本工作树`.local/`，根总表登记第18批次；原27条产品TC及正式发行仍NOT_RUN。
 
 TM-004新增未执行的`TC-TM004-CORE-04/05`辅助设计：前者固定合成账号/授权源/提交端口的拒绝码、扫描中取消与隐私汇总；后者固定dev/ino来源摘要分域HMAC、三文件各自事件/诊断/游标、scope-only turn代号、异常modelId哨兵与一次SQLite事务。根总表已同步为11 Sheet、230父TC、42变体、272用例行、18批次，SHA-256 `7088db53f08bfd2391e7d93112bfa0995c7c38807eda261cb576f20dd6850525`、回读PASS；两条新辅助TC尚无程序绑定或实际运行。TM-004原20条产品TC、真实TM-002/003整合、安装App E2E和正式发行仍未通过；切片就绪判定以干净提交的SOP-008收据为准。

@@ -5,6 +5,8 @@
 
 纯统计开发切片另固定 `TC-TM005-CORE-01/02/03` 三条辅助模块TC，输入/独立预期由 [core fixture](../../tests/fixtures/tm005-core-slice.json) 与[04a逐步用例](04a-test-cases.md#无原生日志依赖的纯统计辅助tc)共同给出。只使用已可信的双来源合成事件和声明式覆盖事实，不调用授权、原生日志、产品数据库或App；相应TASK/TC可按SOP-008单独核对，原32条产品父TC及6变体继续draft/unexecuted。完整0.5 baseline、产品E2E和发行门禁未执行。
 
+新增独立`CORE-04/05`：日期模块使用[固定IANA日界](../../tests/fixtures/tm005-iana-core-slice.json)核对上海/UTC/纽约23与25小时半开界及无效输入；快照模块使用[合成SQLite数据](../../tests/fixtures/tm005-sqlite-snapshot-slice.json)经TM-003提交接口在本例私有库造数，仅按当前主体/双来源/固定UTC界做同事务只读统计，WAL另一连接提交前后分别核对330/385。两例的DB操作、重置、逐步独立预期与产品非目标见[04a](04a-test-cases.md#日期与双来源物理快照辅助tc)。程序绑定为null、实际未运行；不证明双来源原生日志采集、任意完整空日覆盖、IPC/UI或产品E2E。
+
 逐 TC 的输入、有序动作、逐步 UI/DB 预期、类型、数据与缺口见[04a 逐 TC 草案](04a-test-cases.md)。以下是任务级摘要；两处均属设计，程序未绑定。
 
 ## 独立输入与已知预期
@@ -67,4 +69,4 @@ TM-001 候选 `3467dc1` 虽已有 `scripts/run_test_case.py`、`scripts/granular
 | `TC-TM005-MODEL-02` | `TASK-TM005-UI`（依赖事件合同） | 模型字段真实未知 `null` 仍计入可信用量；未知模型110+已知模型220=330 | 原生缺模型 fixture、受限 IPC/SQL 与 UI 绑定 |
 | `TC-TM005-E2E-01` | `TASK-TM005-E2E` | 安装包逐 TC 执行、原始结果和清理完整，完整回归精确集合 | 固定程序与最终候选包 |
 
-以上产品部分仍为设计草案，尚不满足每步 UI/API/DB 预期和可执行绑定。原32条产品父TC、6个变体与新增3条辅助模块TC进入 `tests/test_cases.json`、根 `TEST_CASES.md` 及项目总表；`python3 scripts/check_tm005_bindings.py` 在TM-005开发分支的固定预检核对原产品集合并如实报告38个产品绑定缺失，不能把辅助模块绑定算作产品补齐。原稳定场景组 `E2E-TM005-001` 与 `E2E-TM005-002` 继续保留，且必须同时包含 Codex 和 Claude Code 的真实采集输入；待依赖 schema 稳定后补齐数据清单、逐项程序绑定和真实产品结果。执行状态一律 unexecuted；不得记录 PASS。
+以上产品部分仍为设计草案，尚不满足每步 UI/API/DB 预期和可执行绑定。原32条产品父TC、6个变体与新增5条辅助模块TC进入 `tests/test_cases.json`、根 `TEST_CASES.md` 及项目总表；`python3 scripts/check_tm005_bindings.py` 在TM-005开发分支的固定预检核对原产品集合并如实报告38个产品绑定缺失，不能把辅助模块绑定算作产品补齐。原稳定场景组 `E2E-TM005-001` 与 `E2E-TM005-002` 继续保留，且必须同时包含 Codex 和 Claude Code 的真实采集输入；待依赖 schema 稳定后补齐数据清单、逐项程序绑定和真实产品结果。新CORE程序同样未绑定/执行，不得记录 PASS。

@@ -4,9 +4,9 @@
 
 主要查看入口：[TokenMeter项目总表.xlsx](TokenMeter项目总表.xlsx)。本页提供 Git 可审查索引，详细前置、SQL、逐步观察面和缺项见机器清单及各来源文档。
 
-当前主目录共 **230 条父用例、42 条内嵌稳定变体、732 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
+当前主目录共 **232 条父用例、42 条内嵌稳定变体、739 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
 
-设计状态：baseline_pending 52、baselined 30、designed 78、draft 41、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
+设计状态：baseline_pending 52、baselined 30、designed 78、draft 43、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
 
 本页保存用例设计，不回填运行结果；每批次实际PASS/FAIL/BLOCKED见独立测试结果Excel。新增TC不能继承旧聚合场景的结果。
 
@@ -461,7 +461,7 @@
 | TM-004 / REQ-TM004 | [TC-TM004-CORE-05](docs/testing/cases/04-TM-004-claude-collection.md) · 多文件来源键与整代持久映射 | TASK-TM004-INCREMENTAL、TASK-TM004-LINEAGE | source_check | tests/fixtures/tm004-storage-port-slice.json；合成M100/10、S200/20、Q50/5，三文件HMAC/游标/诊断与隔离SQLite；异常model_id哨兵与invalid_model_id诊断 | 1. 计算三个文件来源键、根键及换源/追加/替换向量<br>2. 构造完整三文件generation并核对文件归属与turnId代号<br>3. 分别在新库注入第二游标写失败与guard撤权<br>4. 稳定末页通过guard后一次同步commitScanBatch并重扫 | 1. 64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名<br>2. a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交<br>3. 每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲<br>4. 唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识 | 准备：每故障子场景新建本例空SQLite；故障注入只在本例库设置第二游标写入RAISE(ABORT)<br>变更：成功一次事务新增三事件、三个游标、三诊断与根覆盖；失败和撤权零提交<br>核验：只读查询usage_event、source_cursor、collection_diagnostic、coverage的数量/键/数值；核对源键和scope HMAC向量及无原生标识；关闭并核对SQLite/WAL无合成prompt/路径哨兵 | draft / unexecuted<br>缺项：SOP-011固定存储适配程序与真实TM-002/003集成尚未绑定；原20条产品TC仍BLOCKED或未执行 |
 
 
-## TM-005 · 43 行
+## TM-005 · 45 行
 
 | 功能 / 需求 | 用例及详情 | 开发任务 | 类型 | 输入 | 操作步骤 | 独立预期 | DB 准备、变更与核验 | 设计 / 执行状态 |
 
@@ -552,6 +552,10 @@
 | TM-005 / REQ-TM005 | [TC-TM005-CORE-02](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 未知用量诊断不补零 | TASK-TM005-EVENT-CONTRACT、TASK-TM005-COVERAGE | source_check | fixture A/B及同范围Claude missing_usage诊断；双来源complete仅为模块合成覆盖假设 | 1. 先仅统计A/B<br>2. 加入诊断重新统计<br>3. 移除A/B仅保留诊断 | 1. 已知330，未知模型110保留，来源Codex110/Claude220<br>2. partial、known_tokens330、total_tokens=null；诊断不增调用或零Token<br>3. unknown、known_tokens0、total_tokens=null，不能写已确认零 | 准备：无产品DB写入；每例从新内存输入开始<br>变更：不适用；纯统计返回值与输入未变<br>核验：固定fixture摘要、事件筛选、各字段与状态逐步核对；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
 
 | TM-005 / REQ-TM005 | [TC-TM005-CORE-03](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 声明式覆盖状态代数 | TASK-TM005-COVERAGE | source_check | fixture五行coverage_algebra；complete仅为模块合成输入，product_coverage_proven=false | 1. 两来源complete且无事件、随后移除覆盖事实<br>2. 一来源missing，分别给空事件与可信110<br>3. 两来源complete，分别给可信110+未知诊断、仅未知诊断 | 1. 前者complete/known0/total0；后者不得自行推断complete<br>2. 空事件missing/known0/total null；可信110为partial/known110/total null<br>3. 前者partial/known110/total null；后者unknown/known0/total null | 准备：无产品DB写入；每例从新内存输入开始<br>变更：不适用；纯统计返回值与输入未变<br>核验：固定fixture摘要、事件筛选、各字段与状态逐步核对；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
+
+| TM-005 / REQ-TM005 | [TC-TM005-CORE-04](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · IANA当地日半开UTC界 | TASK-TM005-RANGE-QUERY | source_check | tests/fixtures/tm005-iana-core-slice.json；上海/UTC与纽约春秋四日、三种无效输入 | 1. 转换上海与UTC固定当地日<br>2. 转换纽约春秋DST当地日及四类边界时刻<br>3. 分别提交无效时区、无效日和非规范日期 | 1. 分别得到fixture固定24小时UTC半开界，传入事件UTC时刻不变<br>2. 春23小时/秋25小时；before/at_end排除，at_start/before_end纳入<br>3. invalid_timezone或invalid_local_day；无默认UTC范围/成功零 | 准备：无DB<br>变更：无DB或系统时间变化<br>核验：固定IANA各日UTC半开界、23/25小时、边界包含关系及错误码；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
+
+| TM-005 / REQ-TM005 | [TC-TM005-CORE-05](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 双来源隔离SQLite同窗只读快照 | TASK-TM005-EVENT-CONTRACT、TASK-TM005-RANGE-QUERY | source_check | tests/fixtures/tm005-sqlite-snapshot-slice.json；A/B双来源330、C异主体、D/E界外、F并发后新快照+55 | 1. 固定插入A–E并开启同一读事务<br>2. 在同一读事务取来源、模型、明细与逐日点<br>3. 另一连接提交F后复查旧快照，再开新快照<br>4. 查询空日及隐私边界 | 1. 选A/B两调用，input300/output30/total330；C/D/E分别被主体或半开界排除，查询零写<br>2. Codex110/Claude220；未知模型110/sonnet-test220；明细A/B和日点330；缓存读known20+unknown1，子项不加总<br>3. 旧事务各视图仍A/B和330；新事务A/B/F三调用、input350/output35/total385、Codex165/Claude220<br>4. 现有coverage不证明当地空日完整，不能报产品零；库/WAL/输出无原生ID、路径、正文或秘密 | 准备：固定准备程序仅在本例owner SQLite经UsageStore.commitBatch提交A–E；启用WAL并记录前态<br>变更：查询零写入；另一连接固定提交F后旧读事务仍330，新读事务385<br>核验：只读usage_event按主体/source/UTC半开界核对事件、来源/模型/明细/日点与子项未知数；coverage不能证明完整空日 | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
 
 
 ## TM-006 · 2 行

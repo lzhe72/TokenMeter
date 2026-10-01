@@ -2262,7 +2262,7 @@
       "distribution_profile": "internal",
       "asset_storage": "dmg/<release_id>/：仅门禁PASS后放正式原名包",
       "github_release": false,
-      "actual_state": "整版draft、未发布。原32条产品父TC、6稳定变体和两组摘要保留；纯统计CORE-01/02/03辅助TC在输入提交061c759后，经SOP-008内容核对及结构/治理457项PASS，独立切片development_slice_ready，程序绑定仍为空、模块实际运行unexecuted。静态oracle与切片就绪不证明真实双来源采集或产品E2E；固定产品数据、SQLite/IPC、安装App逐TC绑定未完成，正式发行完整门禁NOT_RUN。 独立代码提交6a0f6f的source_check CORE3/3、桌面29/29、build PASS，原件在TM005工作树.local/tm005-core-postcommit-20261001T162401Z；程序尚未进入本文档树、模块Excel导出/批次登记BLOCKED，产品E2E仍NOT_RUN。 CORE-01仅验证已给UTC半开界聚合，不验证IANA日期换算；该单独辅助TC待固定。",
+      "actual_state": "整版draft、未发布。原32条产品父TC、6稳定变体和两组摘要保留；纯统计CORE-01/02/03辅助TC在输入提交061c759后，经SOP-008内容核对及结构/治理457项PASS，独立切片development_slice_ready，程序绑定仍为空、模块实际运行unexecuted。静态oracle与切片就绪不证明真实双来源采集或产品E2E；固定产品数据、SQLite/IPC、安装App逐TC绑定未完成，正式发行完整门禁NOT_RUN。 独立代码提交6a0f6f的source_check CORE3/3、桌面29/29、build PASS，原件在TM005工作树.local/tm005-core-postcommit-20261001T162401Z；程序尚未进入本文档树、模块Excel导出/批次登记BLOCKED，产品E2E仍NOT_RUN。 CORE-01仅验证已给UTC半开界聚合，不验证IANA日期换算；该单独辅助TC待固定。 新增CORE04/05固定IANA当地日与合成双来源SQLite只读快照辅助TC，程序null/unexecuted；coverage表无连续空日证明，原32产品TC/6变体与发行仍BLOCKED/NOT_RUN。",
       "historical_evidence": "TM005语义oracle只验证规范化样例；0.4及此前稳定原包尚未形成，真实升级BLOCKED。",
       "source": "releases/v0.5.0-20261001T034729Z/00-manifest.json",
       "status_source": "releases/v0.5.0-20261001T034729Z/06-iteration-record.md",

@@ -1,5 +1,11 @@
 # TM-005 执行记录
 
+## 2026-10-02 · IANA与双来源SQLite辅助输入
+
+总控和TM-005开发会话要求在继续产品链路前先固定下一独立TASK/TC切片。文档会话按SOP-002–008、024增加`TC-TM005-CORE-04/05`：CORE04以固定上海/UTC/纽约春秋IANA当地日及无效输入验证UTC半开界、23/25小时和严格错误；CORE05使用TM-003已提交`UsageStore`接口只在本例隔离SQLite种入合成Codex/Claude事件，验证当前主体/半开UTC界、同一读事务中来源/模型/明细/日点一致，WAL另一连接提交前后旧快照330/新快照385。实际TM-003`coverage`表只有`missing_before/scan_incomplete/last_scan_at_utc`等字段，无法证明任意完整空日；该产品判据及原32父TC/6变体保留draft/BLOCKED。两条辅助TC程序绑定null、实际未运行，不使用原生日志或安装App。输入见03/03a/04/04a、两份新fixture、manifest与机器用例；干净输入提交及SOP-008收据待随后记录。
+
+编制检查`check_docs.py --mode structure`退出0（134份登记文档、1254链接）、用例目录232例/739步生成并回读、根Excel11 Sheet/232父+42变体/274行/18批次回读PASS，SHA-256 `20c539a9ab8137ce4022f4e0bd2fb8b0d60ebd09c5929ab1cf4391a3cef0bc94`。首次生成目录因新增说明把`E2E-TM005-001/002`来源标题各后移2行而FAIL，已将机器来源行由21/38更正为23/40并在新运行PASS；不改产品预期或旧结果。以上只是文档/总表一致性，不是模块或产品PASS。
+
 ## 2026-10-02 · CORE-01 UTC界输入纠错
 
 开发会话指出已提交纯统计实现由调用方直接传`start_utc/end_exclusive_utc`，原CORE-01“按当地日调用”措辞可能误导为同函数负责IANA换算。核对冻结fixture同时给出`timezone/local_day`与UTC界后，文档会话明确CORE-01只按固定UTC半开界筛选、输入主体及事件；`Asia/Shanghai`当地日到UTC、纽约春秋23/25小时日界另设固定辅助TC，不把现有模块3/3当日期转换PASS。原32条产品TC/6变体及RANGE-11真实App判据不变；03a、04a、机器目录和总表随本纠错重新核对，旧SOP-008切片收据只对应此前文本，新内容需新的切片收据。
