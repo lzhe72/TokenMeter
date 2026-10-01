@@ -295,5 +295,32 @@ export class UsageStore {
       .map(row => ({code: String(row.code), count: Number(row.count)}));
   }
 
+  /** Sanitized Codex state. A missing row stays unknown to the caller. */
+  codexState(principalKey: string, rootKey: string | null): {
+    usage: null | {calls: number; inputTokens: number; outputTokens: number; totalTokens: number;
+      cachedInput: {knownTokens: number; unknownRows: number}};
+    coverage: {complete: boolean; missingBefore: boolean; scanIncomplete: boolean};
+    diagnostics: Array<{code: string; count: number}>;
+  } {
+    hexKey(principalKey);
+    if (rootKey !== null) hex64(rootKey, 'invalid_root_key');
+    const row = this.db.prepare(`SELECT COUNT(*) calls, COALESCE(SUM(input_tokens),0) input,
+      COALESCE(SUM(output_tokens),0) output, COALESCE(SUM(cached_input_tokens),0) cached,
+      SUM(CASE WHEN cached_input_tokens IS NULL THEN 1 ELSE 0 END) unknown_cached
+      FROM usage_event WHERE principal_key=? AND source='codex'`).get(principalKey)!;
+    const calls = Number(row.calls), input = Number(row.input), output = Number(row.output);
+    const cached = Number(row.cached), unknown = Number(row.unknown_cached ?? 0);
+    if (![calls,input,output,cached,unknown,input + output].every(Number.isSafeInteger))
+      throw new Error('invalid_usage_database');
+    const coverage = rootKey === null ? undefined : this.db.prepare(`SELECT missing_before, scan_incomplete
+      FROM coverage WHERE principal_key=? AND root_key=?`).get(principalKey, rootKey);
+    const missingBefore = coverage ? Boolean(coverage.missing_before) : true;
+    const scanIncomplete = coverage ? Boolean(coverage.scan_incomplete) : true;
+    return {usage: calls ? {calls, inputTokens: input, outputTokens: output, totalTokens: input + output,
+      cachedInput: {knownTokens: cached, unknownRows: unknown}} : null,
+      coverage: {complete: !!coverage && !missingBefore && !scanIncomplete,
+        missingBefore, scanIncomplete}, diagnostics: this.diagnostics(principalKey)};
+  }
+
   close(): void { this.db.close(); }
 }
