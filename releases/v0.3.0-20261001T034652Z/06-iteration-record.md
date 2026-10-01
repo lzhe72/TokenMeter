@@ -101,3 +101,6 @@ SOP-008对干净输入提交`ba9c782da2cd24f909e26a22c77c506627a40a2f`（tree`cd
 下一独立输入`TC-TM003-CORE-06`仅冻结两文件同generation模块行为：fixture`tests/fixtures/tm003-core-generation.json`引用各410字节的header+A/header+B，第一页不完整不得落库；第二游标SQL故障使整代事件/多游标/覆盖回滚；第二文件后撤权发生在guard/事务前须取消且提交调用0次；只有两正文稳定、末页complete并通过guard才一次同步提交A/B总量330和两个游标。该输入尚待干净提交及SOP-008切片核对，程序绑定null、未执行，不代填产品SCAN/STORE/COVERAGE。
 
 SOP-008对干净输入提交`ff668d0de1fef3dfc162c0d2bc71825df6425511`（tree`207c76feb426e32159d07e69380c7afd23f2dce0`）单独核对`CORE-06`，收据`.local/docs-checks/20261002-tm003-core06-slice-ready/receipt.json`：structure、治理477/477、用例228父/725步、根Excel11 Sheet/228父/42变体/270行/17批次回读均PASS，工作树clean。fixture SHA-256`ad4b1ad8ec0a080650ea85bae9d6fc999a42f9950e6d69e3c900ec383d661d70`，机器用例SHA-256`59e8bbb67490649129f5f656444070ad19d15ab235f032dbdaa03476db8c03c1`；四步分别固定暂存不落库、第二游标SQL失败全回滚、假失权阻断guard与事务、完整稳定末页一次提交。仅此无真实授权依赖的模块切片判`development_slice_ready`，实际运行仍unexecuted、0.3整版draft、产品E2E/发行NOT_RUN。
+## 2026-10-02 · CORE-07主进程编排辅助输入
+
+在已运行`CORE-01`至`CORE-06`模块原件之外，新增尚未执行的`CORE-07`五步固定输入：已验证主体/已确认`sourceId`、TM-002真实形状的假分页/分块能力、两文件410字节及公开root/file HMAC向量、独立本例SQLite。合法路径必须把每个文件读到声明size、页末`complete=true`及同步`commitGuard`后一次提交；提前EOF/读异常、注入暂存预算超限、撤权和主体切换均零提交并关闭scan。当前`CodexGeneration.stage`收完整Buffer，1024字节预算仅是辅助故障注入；任意大产品日志处理和真实TM-002/App/IPC/Keychain E2E仍未证明。程序绑定null、实际unexecuted，SOP-008只对本切片另做核对，整版0.3及正式发行状态不变。
