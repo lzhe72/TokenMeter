@@ -22,6 +22,9 @@ export type UsageBatch = {
   guard?: () => void;
 };
 export type UsageCursor = {fileIdentity: string; committedByteOffset: number; prefixMac: string};
+export type UsageScanBatch = Pick<UsageBatch, 'principalKey'|'secret'|'source'|'rootKey'|'coverage'|'guard'> & {
+  files: Array<Pick<UsageBatch, 'sourceKey'|'fileIdentity'|'committedByteOffset'|'prefixMac'|'events'|'diagnostics'>>;
+};
 
 function marker(secret: Buffer): string {
   if (!Buffer.isBuffer(secret) || secret.length !== 32) throw new Error('identity_secret_unavailable');
@@ -53,6 +56,7 @@ function hexKey(value: string): void {
 
 export class UsageStore {
   private readonly db: DatabaseSync;
+  private inScanBatch = false;
 
   constructor(path: string) {
     privateDirectory(dirname(path));
@@ -129,7 +133,7 @@ export class UsageStore {
       throw new Error('invalid_usage_batch');
     const now = new Date().toISOString();
     const result = {inserted: 0, duplicate: 0, conflict: 0};
-    this.db.exec('BEGIN IMMEDIATE');
+    if (!this.inScanBatch) this.db.exec('BEGIN IMMEDIATE');
     try {
       this.checkMarker(secret, true);
       for (const value of batch.events) {
@@ -188,9 +192,34 @@ export class UsageStore {
         .run(principalKey, rootKey, batch.coverage.missingBefore ? 1 : 0,
           batch.coverage.scanIncomplete ? 1 : 0, now);
       batch.guard?.();
+      if (!this.inScanBatch) this.db.exec('COMMIT');
+      return result;
+    } catch (error) { if (!this.inScanBatch) this.db.exec('ROLLBACK'); throw error; }
+  }
+
+  /** One generation is one SQLite transaction, including every file cursor and coverage. */
+  commitScanBatch(batch: UsageScanBatch): {inserted: number; duplicate: number; conflict: number} {
+    if (this.inScanBatch || !Array.isArray(batch.files) || batch.files.length === 0 ||
+        new Set(batch.files.map(file => file.sourceKey)).size !== batch.files.length)
+      throw new Error('invalid_scan_batch');
+    const result = {inserted: 0, duplicate: 0, conflict: 0};
+    this.db.exec('BEGIN IMMEDIATE');
+    this.inScanBatch = true;
+    try {
+      for (const file of batch.files) {
+        const current = this.commitBatch({principalKey: batch.principalKey, secret: batch.secret,
+          source: batch.source, rootKey: batch.rootKey, coverage: batch.coverage,
+          sourceKey: file.sourceKey, fileIdentity: file.fileIdentity,
+          committedByteOffset: file.committedByteOffset, prefixMac: file.prefixMac,
+          events: file.events, diagnostics: file.diagnostics});
+        result.inserted += current.inserted; result.duplicate += current.duplicate;
+        result.conflict += current.conflict;
+      }
+      batch.guard?.();
       this.db.exec('COMMIT');
       return result;
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+    finally { this.inScanBatch = false; }
   }
 
   record(principalKey: string, secret: Buffer, event: CodexUsageEvent): 'inserted' | 'duplicate' | 'conflict' {
