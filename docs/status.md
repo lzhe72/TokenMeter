@@ -2,6 +2,8 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-004 CORE01–05固定TAP程序已随本地master进入文档树，三套source_check suite及五条机器绑定/总表候选输入已同步；正式逐TC运行/独立Excel尚未生成，原20产品TC与发行仍NOT_RUN。
+
 本地master新纳入的TM-004 fixture README已由文档会话登记`DOC-FIXTURE-TM004-README`并从0.4测试计划链接；仅修复整合树“未登记Markdown”结构阻断，不改变测试或产品状态。
 
 TM-001 709d候选的CONFIG六父、UPDATE-01..04四父、UPDATE-06..08三父分别在三次真实App定向run中PASS，共57步，独立Excel/verification及所列独立审计均回读，登记总表第29–31批次。UPDATE-05另见第16批次；旧完整门禁FAIL与正式发行NOT_RUN保留。

@@ -1,5 +1,10 @@
 # v0.4.0-20261001T040433Z — 执行记录与交接
 
+## 2026-10-02 · CORE-01～05固定source_check绑定
+
+总控已把TM-004固定TAP代码`3cb7675`合入本地master`e7189ea`。文档会话在同树`tests/source_check_suites.json`注册`tm004-core`（CORE01–03、owner根）、`tm004-core04`（CORE04、纯内存清理）、`tm004-core05`（CORE05、owner根），机器用例逐项绑定程序、精确测试名、清理和独立命令；根总表同步为候选输入。分散开发日志仍保留，但本绑定候选固定run和独立Excel尚未生成，五条执行状态仍unexecuted；原20产品TC、完整App/IPC与正式发行NOT_RUN。
+
+
 ## 2026-10-02 · 主进程触发端口辅助TC输入
 
 **更正后续设计输入：** 早期reader记录称TM-002候选`fileIdentityDigest`含size/mtime，已由TM-002提交`63fe465cf00ed64620da0ef8e8b30625f0c1ddbc`的C helper源码反证：`tm002-file-id-v1`只编码根dev/ino与文件dev/ino，普通追加不改摘要。旧句作为当时判断保留；当前02/03、详细CORE-02及机器预期改为稳定摘要+keyed prefixMAC。TM-003 `eef956b`现有`commitScanBatch`合同要求每文件独立64hex`sourceKey`、`fileIdentity`、事件/诊断/游标与独立`rootKey`，整代一次同步事务；下一辅助TC将固定这层映射及只作scope的Claude`turnId`代号，产品权限和App验收仍另测。
