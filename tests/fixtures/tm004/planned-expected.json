@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "kind": "synthetic_planned_oracle_not_native_cli_output",
+  "source_template": "tests/fixtures/tm004/native-2.1.126-projection",
+  "scenarios": {
+    "main_only": {
+      "calls": 1,
+      "input_tokens": 100,
+      "output_tokens": 10,
+      "total_tokens": 110
+    },
+    "main_and_sub": {
+      "calls": 2,
+      "input_tokens": 300,
+      "output_tokens": 30,
+      "total_tokens": 330
+    },
+    "main_and_fork_new": {
+      "calls": 2,
+      "input_tokens": 150,
+      "output_tokens": 15,
+      "total_tokens": 165,
+      "copied_main_counted_once": true
+    },
+    "fork_partial_p": {
+      "calls": 2,
+      "input_tokens": 150,
+      "output_tokens": 15,
+      "total_tokens": 165,
+      "incomplete_tail": true
+    },
+    "fork_completed_p": {
+      "calls": 3,
+      "input_tokens": 170,
+      "output_tokens": 17,
+      "total_tokens": 187
+    },
+    "sub_new_after_regrant": {
+      "calls": 3,
+      "input_tokens": 350,
+      "output_tokens": 35,
+      "total_tokens": 385
+    },
+    "cross_tool_same_literal_id": {
+      "calls": 2,
+      "input_tokens": 111,
+      "output_tokens": 11,
+      "total_tokens": 122,
+      "sources": [
+        "codex",
+        "claude_code"
+      ]
+    },
+    "cross_tool_plus_sub": {
+      "calls": 3,
+      "input_tokens": 311,
+      "output_tokens": 31,
+      "total_tokens": 342
+    }
+  },
+  "limitations": [
+    "These numbers are requirement oracles, not readings from Claude CLI or the product.",
+    "No product SQLite readback SQL exists until TM-003 schema is stable.",
+    "The fixed TM-001 gate does not run these TM-004 cases."
+  ]
+}

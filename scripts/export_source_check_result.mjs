@@ -110,7 +110,9 @@ for (const line of tap.split(/\r?\n/)) {
     steps.get(entry.case_id).set(entry.step, entry.actual);
   } else if (entry.kind === 'cleanup' &&
       ((suite.reset_kind === 'owned_root' && entry.owned_root_removed === true && entry.memory_reset_complete === undefined) ||
-       (suite.reset_kind === 'memory_only' && entry.memory_reset_complete === true && entry.owned_root_removed === undefined))) {
+       (suite.reset_kind === 'memory_only' && entry.owned_root_removed === undefined &&
+        (entry.memory_reset_complete === true ||
+         (entry.resource_scope === 'memory_only' && entry.external_resources_created === false))))) {
     if (cleanup.has(entry.case_id)) throw new Error('TAP has duplicate cleanup');
     cleanup.add(entry.case_id);
   } else throw new Error('TAP has invalid diagnostic');
