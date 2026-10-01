@@ -190,3 +190,15 @@
 1. 对三条完整LF行一次读取：仅2.1.126合法assistant生成一条13/7=20可信调用；非法UTF-8给`invalid_utf8`一次、未知版本给`unsupported_version`一次，两行均不产生零Token或伪调用。
 2. 游标推进到三条完整LF末并给出前缀MAC，`scanIncomplete=false`；再次读取无新调用。检查返回/诊断只含代码、数量、键和用量，不含合成文件路径、原始文本或秘密。
 3. 在尾部追加不含LF的非法UTF-8片段：游标仍停在上一完整LF，`scanIncomplete=true`；补齐LF后才按固定诊断推进。无产品DB写入；产品`PARSER-02`需真实来源与安装App E2E另测。
+
+## 主进程触发的隔离辅助切片
+
+固定输入为[触发端口合成fixture](../../../tests/fixtures/tm004-trigger-core-slice.json)。仅以注入的账号快照、TM-002候选扫描端口和TM-003提交端口验证主进程编排；端口调用、取消、守卫和返回字段须由固定程序逐步断言。每个负例从全新内存状态开始，不访问真实账号、Keychain、日志、SQLite、服务、IPC、renderer或安装App；DB操作不适用，合成提交端口只记录调用次数及数值。程序绑定尚未建立，本切片不赋予原20条产品TC通过状态。
+
+### TC-TM004-CORE-04 · 授权主体与扫描事务触发
+
+**TASK：** `TASK-TM004-SOURCE`、`TASK-TM004-INCREMENTAL`；**AC：** `AC-TM004-001/004`；**类型：** 辅助模块。**输入：** fixture中的UUID `source_id`、已验证且启用/无需改密的合成主体、M=100/10完整候选；同fixture的额外路径字段、错误账号/来源及屏障事件。每一子变体重置假端口计数与候选缓冲。
+
+1. 仅允许请求携带`sourceId`。分别提交含`rootPath`、含`relativeName`的请求，未验证/停用/强制改密主体、格式错误或不属于主体的`sourceId`、以及开始前已取消的请求：返回明确拒绝码；`beginCandidateScan=0`、`commitSync=0`，不把拒绝映射成成功零用量。对有效请求才允许由主进程从假账号快照与授权源端口取得候选；调用方不能提供任意文件路径或替换账号身份。
+2. 有效请求在假`beginCandidateScan`之后、提交守卫之前停于固定屏障，分别发生账号切换、授权撤销与取消：`cancelScan`被调用，守卫拒绝或在守卫前终止，`commitSync=0`；缓冲调用、游标和诊断均不可从返回值暴露。每个事件从新状态重演，不复用已撤销世代。
+3. 重新建立健康合成主体与授权世代，扫描完整M一次，守卫成功且同步提交端口恰调用一次；返回汇总`call_count=1,input=100,output=10,total=110,scan_incomplete=false`及允许的诊断码/计数。序列化返回不得出现fixture的合成路径、prompt/key哨兵、原生会话/Agent/调用ID、行正文或秘密。该端口测试没有真实SQLite提交、授权来源、UI/IPC或产品E2E；这些仍由`SOURCE-01/02/04`、`INCREMENTAL-01/02/03`及`E2E-01`验证。

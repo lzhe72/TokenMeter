@@ -16,3 +16,5 @@
 依赖顺序：TM-001稳定已提交 Electron 基线 → TM-002授权接口 → TM-003规范事件/SQLite/诊断 → 有来源的 Claude raw 证据 → 设计基线 → 数据与红测 → 实现 → 完整 E2E → 包/门禁。当前仅本版独立规划可推进；依赖任务状态 BLOCKED。各 TASK 的具体失败、权限和边界组合由 [测试计划](04-test-plan.md)逐条规定，不能用四个 E2E 汇总 ID 替代细TC。
 
 `TASK-TM004-INCREMENTAL` 与 `TASK-TM004-PARSER` 另拆出已打开只读文件句柄的辅助开发切片 `TC-TM004-CORE-01/02/03`。它只验证LF提交、带密钥的前缀校验、重扫、限额与损坏行诊断，固定输入见[reader合成fixture](../../tests/fixtures/tm004-reader-core-slice.json)；TM-002授权、TM-003原子事件+SQLite游标、源文件身份、账号/覆盖及原20条产品TC仍为独立依赖。TM-002当前`fileIdentityDigest`包含size/mtime，正常追加就变化，不能直接作为稳定游标身份；产品接入需另核对稳定匿名身份和前缀MAC口径。此切片不拆除或降级原产品目标。
+
+`TASK-TM004-SOURCE` 与 `TASK-TM004-INCREMENTAL` 再拆出主进程触发端口辅助 `TC-TM004-CORE-04`：以[合成端口fixture](../../tests/fixtures/tm004-trigger-core-slice.json)固定仅`sourceId`请求、账号/来源拒绝、异步扫描期间换账号/撤权/取消、同步提交前守卫，以及成功汇总的隐私白名单。此例只验证注入假端口的调用顺序和返回，不验证真实TM-002授权、TM-003 SQLite、IPC/App或20条产品TC。

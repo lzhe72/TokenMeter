@@ -1,5 +1,11 @@
 # v0.4.0-20261001T040433Z — 执行记录与交接
 
+## 2026-10-02 · 主进程触发端口辅助TC输入
+
+收到开发会话关于主进程触发、账号/授权世代守卫和同步提交边界的交接，文档会话按SOP-024、SOP-002–008新增`TC-TM004-CORE-04`。固定合成fixture只含UUID来源、假已验证主体、M100/10、路径注入反例、未验证/停用/强制改密和来源不匹配反例，以及扫描中换账号/撤权/取消屏障；三步分别要求扫描前拒绝且零端口调用、屏障取消且零提交、健康场景一次同步提交并只返回1/100/10/110与覆盖状态。每个负例重置假端口，不访问真实TM-002、TM-003 SQLite、App或用户日志。原20条产品TC和四组E2E摘要保持draft/unexecuted；程序绑定为空，本新增辅助TC亦未运行，正式发行NOT_RUN。
+
+输入见`tests/fixtures/tm004-trigger-core-slice.json`、详细用例、02任务、03设计、04计划、manifest、`tests/test_cases.json`与根总表。输入提交和SOP-008切片收据将在干净提交后追加；编制期`structure`退出0、机器用例目录229例/728步生成并回读、总表229父+42变体/17批次回读PASS，SHA-256 `c9ff24fd752a2d9a533c149843a994553163142e566d6fe0d20657b7f36649ba`。这些检查不表示程序或产品通过。
+
 ## 2026-10-02 · 已打开句柄reader辅助TC编制
 
 SOP-008独立切片核对以输入提交`fea41fe494d655d279470b5032d87cdb10b57689`及后续SOP同步干净候选`ebbcfd01062939ca872f9f2f2ffba269158d894f`为准，收据`.local/docs-checks/20261002-tm004-reader-slice-final/receipt.json`：structure退出0、治理477/477退出0、用例目录225父/712步CURRENT、总表11 Sheet/225父/41变体/266行/13旧批次回读PASS、工作树clean。逐TC语义核对分别覆盖LF半行及754字节限额、keyed prefixMAC及同长度/mtime改写、非法UTF8/未知版本和无产品DB的重置；只对`CORE-01/02/03`与`TASK-TM004-INCREMENTAL/PARSER`已打开句柄纯模块部分判`development_slice_ready`。原20产品TC、四组摘要、TM-002授权与稳定产品文件身份、TM-003事务及App E2E继续draft/BLOCKED；0.4整版baseline、模块在本树实际运行、产品E2E、正式发行均NOT_RUN。

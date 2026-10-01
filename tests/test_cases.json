@@ -19245,6 +19245,75 @@
         "heading": "TC-TM004-CORE-03 · 损坏完整行与未知结构"
       },
       "overall_expected": "1. 读三条完整LF行；仅合法2.1.126一条调用13/7=20；invalid_utf8及unsupported_version各一次\n2. 核对游标、重复读取及隐私；游标到三行LF末，MAC匹配且完成；重复读取0；输出无路径、正文、秘密\n3. 追加无LF坏字节再补LF；未补LF前偏移不动且未完成；补LF后仅诊断推进，无伪调用"
+    },
+    {
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "type": "source_check",
+      "preconditions": "仅合成fixture及注入假账号快照、TM-002候选扫描端口、TM-003同步提交端口；每个负例重置内存状态；不访问真实账号、Keychain、日志、SQLite、服务、IPC或App。",
+      "db_operations": {
+        "prepare": "无产品DB；每子变体新建假端口与计数器",
+        "expected_changes": "无SQLite；只观察假同步提交次数及数值",
+        "verification": "逐步断言扫描、取消、守卫、提交次数与返回白名单；无SQL",
+        "read_only_checks": []
+      },
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "missing": [
+        "SOP-011固定模块程序尚未绑定；真实TM-002/003与原20条产品TC仍BLOCKED或未执行"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "丢弃本子变体拥有的假端口/候选缓冲；保留原始模块报告，不清理非本例资源。",
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-013"
+      ],
+      "id": "TC-TM004-CORE-04",
+      "title": "授权主体与扫描事务触发",
+      "task_ids": [
+        "TASK-TM004-SOURCE",
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-004"
+      ],
+      "input": "tests/fixtures/tm004-trigger-core-slice.json；固定UUID、M=100/10、无效路径/主体/来源、三种屏障事件",
+      "steps": [
+        {
+          "step": 1,
+          "action": "拒绝路径字段、无效主体/来源和预先取消的请求",
+          "expected_ui": "不适用；纯主进程端口模块",
+          "expected_api_db": "不适用；无真实API或产品DB",
+          "expected": "明确拒绝；beginCandidateScan=0，commitSync=0，无成功零值"
+        },
+        {
+          "step": 2,
+          "action": "扫描开始后在固定屏障分别换账号、撤权和取消",
+          "expected_ui": "不适用；纯主进程端口模块",
+          "expected_api_db": "不适用；无真实API或产品DB",
+          "expected": "每次cancelScan被调用；commitSync=0；缓冲数据不外露"
+        },
+        {
+          "step": 3,
+          "action": "健康主体和授权世代扫描完整M并通过提交守卫",
+          "expected_ui": "不适用；纯主进程端口模块",
+          "expected_api_db": "不适用；无真实API或产品DB",
+          "expected": "commitSync恰一次；返回1次调用、100/10/110、覆盖完整；无私密哨兵/原生标识"
+        }
+      ],
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "line": 198,
+        "heading": "TC-TM004-CORE-04 · 授权主体与扫描事务触发"
+      },
+      "overall_expected": "1. 拒绝路径字段、无效主体/来源和预先取消的请求；明确拒绝；beginCandidateScan=0，commitSync=0，无成功零值\n2. 扫描开始后在固定屏障分别换账号、撤权和取消；每次cancelScan被调用；commitSync=0；缓冲数据不外露\n3. 健康主体和授权世代扫描完整M并通过提交守卫；commitSync恰一次；返回1次调用、100/10/110、覆盖完整；无私密哨兵/原生标识"
     }
   ]
 }
