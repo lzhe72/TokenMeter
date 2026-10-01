@@ -126,7 +126,7 @@
 
 ### TC-TM004-DATA-01 · 原始fixture和独立oracle（TASK-TM004-DATA，AC-001–004，E2E-003）
 
-输入：固定版本 CLI/公开来源、隔离 `CLAUDE_CONFIG_DIR`、固定合成任务；禁止访问真实 `~/.claude`。步骤：①固定程序记录版本、来源、raw文件SHA与父子/fork字段证据；②另一路独立定义 M/S/N/P usage 和期望 330/165/187/385；③重建数据并比对SHA、SQL初态仅合成账号与零用量；④清理本次来源目录。类型：数据/治理检查，不能算产品 E2E。本机安全探针已有2.1.126主/单层子代理/复制历史 fork 和双内容块原件与 SHA，见本机 `.local/ci/tm004-claude-2.1.126-research/evidence-manifest.json`、`followup-evidence-manifest.json`；已有[仓库固定的脱敏投影与独立预期](../../../tests/fixtures/tm004/README.md)及来源摘要核对程序，但它不是字节级原件或完整产品数据程序；M/S/N/P、改写ID、嵌套、重放、SQL和安装 App 绑定未齐，故本TC仍 BLOCKED。
+输入：固定版本 CLI/公开来源、隔离 `CLAUDE_CONFIG_DIR`、固定合成任务；禁止访问真实 `~/.claude`。步骤：①固定程序记录版本、来源、raw文件SHA与父子/fork字段证据；②另一路独立定义 M/S/N/P usage 和期望 330/165/187/385；③重建数据并比对SHA、SQL初态仅合成账号与零用量；④清理本次来源目录。类型：数据/治理检查，不能算产品 E2E。本机安全探针已有2.1.126主/单层子代理/复制历史 fork 和双内容块原件与 SHA，见本机 `.local/ci/tm004-claude-2.1.126-research/evidence-manifest.json`、`followup-evidence-manifest.json`；已有[仓库固定的脱敏投影与独立预期](../../../tests/fixtures/tm004/README.md)及来源摘要核对程序，但它不是字节级原件或完整产品数据程序；M/S/N/P 已有[明确标为合成的固定数据与独立预期](../../../tests/fixtures/tm004/planned-expected.json)，但其原生来源、改写ID、嵌套、重放、SQL和安装 App 绑定未齐，故本TC仍 BLOCKED。
 
 ### TC-TM004-E2E-01 · 安装包真实链路（TASK-TM004-E2E，AC-001–004，E2E-001/004）
 

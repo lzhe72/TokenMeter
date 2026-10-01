@@ -55,7 +55,7 @@
     },
     {
       "id": "claude_raw",
-      "description": "完整 TM-004 产品数据仍 planned；已另有2.1.126隔离CLI原件的脱敏结构投影与独立预期，不能代替原始日志、缺失变体、SQL及安装App绑定",
+      "description": "完整 TM-004 产品数据仍 planned；已有2.1.126隔离CLI原件的脱敏结构投影、合成M/S/N/P与故障注入及独立预期，不能代替原生全变体、SQL和安装App绑定",
       "status": "planned",
       "generator": null,
       "capabilities": []

@@ -15,7 +15,7 @@
 
 ## 已固化的窄范围来源投影
 
-[TM-004 探针派生数据](../../tests/fixtures/tm004/README.md)保留六份2.1.126隔离 CLI 原件的脱敏结构投影、每份原件/投影摘要及独立 expected；`scripts/tm004_fixture.py` 可验证本机原件与投影、生成并精确清理本轮私有副本。主+fork 的独立预期是2次/40，Agent 父+子3次/77，双块1次/40；畸形缺usage探针产出的0/0不证明有效零。这是 SOP-002/004 的来源调查输入，尚非 `claude_raw` 完整产品数据程序，也未绑定任何安装 App TC；源格式投影不等于字节级原件。M/S/N/P 的规划数字、改写 UUID、`fork-context-ref`、嵌套子代理、有效零、半行与 SQL 仍缺，SOP-008基线保持阻断。
+[TM-004 探针派生数据](../../tests/fixtures/tm004/README.md)保留六份2.1.126隔离 CLI 原件的脱敏结构投影、每份原件/投影摘要及独立 expected；`scripts/tm004_fixture.py` 可验证本机原件与投影、生成并精确清理本轮私有副本。主+fork 的独立预期是2次/40，Agent 父+子3次/77，双块1次/40；畸形缺usage探针产出的0/0不证明有效零。这是 SOP-002/004 的来源调查输入，尚非 `claude_raw` 完整产品数据程序，也未绑定任何安装 App TC；源格式投影不等于字节级原件。M/S/N/P 规划数字现另有明确标为合成的 `planned-*.jsonl` 与[固定预期](../../tests/fixtures/tm004/planned-expected.json)，可在私有本轮根确定性重建；它们没有原生来源证明。改写 UUID、`fork-context-ref`、嵌套子代理、有效零、半行与 SQL 仍缺，SOP-008基线保持阻断。
 
 ## 数据、账号、SQL和重置
 

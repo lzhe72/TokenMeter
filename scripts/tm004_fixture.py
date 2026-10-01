@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -117,6 +118,59 @@ def synthetic_faults() -> dict[str, bytes]:
     }
 
 
+def synthetic_planned() -> dict[str, bytes]:
+    """Materialize M/S/N/P requirement numbers as synthetic, projected JSONL."""
+    def assistants(name: str) -> list[dict]:
+        return [json.loads(line) for line in (SOURCE / name).read_bytes().splitlines()
+                if json.loads(line).get("type") == "assistant"]
+
+    def set_call(row: dict, uid: str, message_id: str, session: str,
+                 input_tokens: int, output_tokens: int) -> dict:
+        result = copy.deepcopy(row)
+        result["uuid"] = uid
+        result["sessionId"] = session
+        result["message"]["id"] = message_id
+        result["message"]["usage"]["input_tokens"] = input_tokens
+        result["message"]["usage"]["output_tokens"] = output_tokens
+        result["timestamp"] = "2026-10-01T00:00:00.000Z"
+        return result
+
+    main_session = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+    fork_session = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+    m = set_call(assistants("raw-main.jsonl")[0],
+                 "11111111-1111-4111-8111-111111111111", "msg_tm004_plan_m_001",
+                 main_session, 100, 10)
+    s = set_call(assistants("raw-agent-sub.jsonl")[0],
+                 "22222222-2222-4222-8222-222222222222", "msg_tm004_plan_s_001",
+                 main_session, 200, 20)
+    s["agentId"] = "tm004-synthetic-agent-s"
+    s["parentUuid"] = m["uuid"]
+    inherited = copy.deepcopy(m)
+    inherited["sessionId"] = fork_session
+    n = set_call(assistants("raw-fork.jsonl")[-1],
+                 "33333333-3333-4333-8333-333333333333", "msg_tm004_plan_n_001",
+                 fork_session, 50, 5)
+    n["parentUuid"] = inherited["uuid"]
+    p = set_call(assistants("raw-fork.jsonl")[-1],
+                 "44444444-4444-4444-8444-444444444444", "msg_tm004_plan_p_001",
+                 fork_session, 20, 2)
+    p["parentUuid"] = n["uuid"]
+    s_next = set_call(assistants("raw-agent-sub.jsonl")[0],
+                      "55555555-5555-4555-8555-555555555555", "msg_tm004_plan_s_next_001",
+                      main_session, 50, 5)
+    s_next["agentId"] = s["agentId"]
+    s_next["parentUuid"] = s["uuid"]
+    encode = lambda row: (json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    before_p = encode(inherited) + encode(n) + encode(p)[: len(encode(p)) // 2]
+    return {
+        "planned-main.jsonl": encode(m),
+        "planned-sub.jsonl": encode(s),
+        "planned-fork-before-p.jsonl": before_p,
+        "planned-fork-after-p.jsonl": encode(inherited) + encode(n) + encode(p),
+        "planned-sub-after-regrant.jsonl": encode(s) + encode(s_next),
+    }
+
+
 def ordinary_owned_directory(path: Path, create: bool) -> None:
     if not path.exists() and create:
         path.mkdir(mode=0o700)
@@ -151,6 +205,8 @@ def generate(run_id: str) -> Path:
     contents = {name: (SOURCE / name).read_bytes() for name in data["files"]}
     contents["expected.json"] = (SOURCE / "provenance-and-expected.json").read_bytes()
     contents.update(synthetic_faults())
+    contents["planned-expected.json"] = (SOURCE.parent / "planned-expected.json").read_bytes()
+    contents.update(synthetic_planned())
     for name, blob in contents.items():
         write_exclusive(target / name, blob)
     owner = {"format": "tm004-probe-v1", "run_id": run_id,

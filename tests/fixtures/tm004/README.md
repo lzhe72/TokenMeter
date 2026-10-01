@@ -16,6 +16,8 @@ python3 scripts/tm004_fixture.py reset --run-id demo
 
 生成器另从 `raw-main` 投影确定性地产生四份**合成故障注入**：`fault-partial-before/after.jsonl` 分别是半行与补全行（独立预期0→一次20）；`fault-conflict.jsonl` 用同一调用 ID 但14/7制造冲突（可信仍20，诊断1）；`fault-missing-field.jsonl` 真正删去 usage（可信0，缺字段诊断1）。这些文件不属于 Claude CLI 输出，不能作为供应商格式或有效零的证据。确切预期固定在同一 JSON 中，生成程序不从产品统计结果推算预期。
 
+生成器还按[固定规划预期](planned-expected.json)输出 `planned-*.jsonl`：M100/10、子S200/20、fork复制M与新增N50/5、半写入后补全P20/2，以及重新授权后新增的子调用50/5。独立阶段总量为110、330、165、187、385；跨工具同字面ID的122/342只固定预期，尚无相应 Codex 原生联合数据。所有 `planned-*` 均为基于投影的合成数据，未由 Claude CLI 产生，父链和跨工具身份仍须 TM-002/003 及真实安装 App 验证。
+
 | 投影场景 | 独立预期 | 证据边界 |
 | --- | --- | --- |
 | `raw-main` | 一次调用13/7，total20 | 隔离 CLI 原生用量字段的脱敏投影 |

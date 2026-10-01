@@ -104,3 +104,13 @@
 
 尝试 SOP-008 严格基线的原件 `baseline-02.log` 与 `quality-02.log` 均退出1，仅机器报 TM-004 细用例文档仍为draft；语义核对还存在未取得的改写UUID、`fork-context-ref`、嵌套Agent和有效零原件，TM-002/003稳定接口及真实SQL未到，20条TC未进最终机器清单/总表，故不得将文档改为baselined。当前 `claude_raw` 仍 planned，派生投影只是来源调查/基础数据输入；没有 TM-003 真实schema前不编造产品SQL。现有 `granular_e2e.py` 只接受 `TC-TM001-...` 并固定78父TC，`local_gate.py` 固定78父/38变体/6补充；TM-004逐TC Playwright、完整已交付双来源集合、结果Excel与独立门禁重算均未绑定，旧 TM-001 通行不能代替。共享跨版本 exporter 修复由总控工作流推进，本版保留稳定ID与20条详细TC，不删不改预期来通过检查。
 为避免 `releases/current.json` 仍指 TM-001 时只检查到其当前合同，又在本独立工作树临时将该指针置为 TM-004，分别执行目标版本 `check_docs.py --mode baseline` 与 `quality_gate.py check`，随即在 `finally` 恢复原字节并核对。原件 `.local/ci/tm004-projection/target-release-baseline-receipt.json` 与两份日志记录两命令均退出1、各13条错误，仅为本版01–06及细TC仍draft的严格基线要求；该复核不是基线PASS，也未改变提交的 current 指针。原 `baseline-02/quality-02` 是保留 TM-001 current 时的运行，各只报细TC draft，不能代表 TM-004 全部版本档案已基线。
+
+
+## 2026-10-01：M/S/N/P 合成场景及共享导出器进度（SOP-006/010/024）
+
+总控通报共享跨版本用例导出器修复已形成独立提交 `f7b83ed`，能接受多段/数字TC ID和逐行release/TASK，TM-002将先核对接入；此提交未整合到本 TM-004 分支，也不改变20条TC的 draft/未绑定状态。当前无需削弱稳定编号，待本版数据与详细用例达到基线后再由总控接入根清单/总表。
+
+本版研究数据工具扩展为按固定结构投影产生 M100/10、子S200/20、fork复制M与新增N50/5、半写入后补全P20/2和重授新增子调用50/5。独立机器预期 `tests/fixtures/tm004/planned-expected.json` 在生成器外预先固定110/330/165/187/385，以及跨工具同字面ID时122/342；后两项目前仅有预期，没有 Codex/Claude 联合原生样本。所有 `planned-*.jsonl` 明确为合成派生数据，不冒称2.1.126 CLI 原件，不能解除改写UUID、父链、SQL、目录授权及App绑定的阻断。
+
+本轮原件 `.local/ci/tm004-planned/receipt.json` 记录显式研究根来源核对、私有生成、验证、精确清理均退出0；治理429项通过、结构检查PASS（109文档/934链接）、diff检查退出0。仅使用本工作树拥有的私有目录与合成账号，不访问用户真实日志或生产库。没有 TM-003 稳定schema时不写猜测的产品SQL；SOP-008完整基线、TM-004逐TC Playwright和最终DMG产品E2E仍 BLOCKED。
+本次合成数据修订后又临时将 current 指向 TM-004 运行目标版本严格检查，并在 `finally` 恢复原字节。原件 `.local/ci/tm004-planned/target-baseline-receipt.json`、`target-baseline.log`、`target-quality.log`：两项均退出1，各13条 draft 基线错误；不改变前述阻断，也没有以合成数据取得基线。

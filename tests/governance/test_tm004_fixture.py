@@ -37,6 +37,18 @@ class TM004FixtureTests(unittest.TestCase):
             self.assertEqual(conflict["message"]["usage"]["input_tokens"], 14)
             missing = json.loads((target / "fault-missing-field.jsonl").read_text())
             self.assertNotIn("usage", missing["message"])
+            planned = json.loads((target / "planned-expected.json").read_text())
+            self.assertEqual(planned["scenarios"]["fork_completed_p"]["total_tokens"], 187)
+            self.assertEqual(planned["scenarios"]["sub_new_after_regrant"]["total_tokens"], 385)
+            main = json.loads((target / "planned-main.jsonl").read_text())
+            fork = [json.loads(line) for line in
+                    (target / "planned-fork-after-p.jsonl").read_text().splitlines()]
+            self.assertEqual(main["message"]["id"], fork[0]["message"]["id"])
+            self.assertEqual(main["uuid"], fork[0]["uuid"])
+            self.assertNotEqual(main["sessionId"], fork[0]["sessionId"])
+            self.assertEqual([item["message"]["usage"]["input_tokens"] for item in fork],
+                             [100, 50, 20])
+            self.assertFalse((target / "planned-fork-before-p.jsonl").read_bytes().endswith(b"\n"))
             with self.assertRaises(FileExistsError):
                 FIXTURE.generate(run_id)
             extra = target / "unknown-file"
