@@ -50,11 +50,11 @@ class Helper implements SourceHelperLike {
   close() { this.closed = true; }
   async waitForExit() { assert.equal(this.closed, true); }
 }
-function harness(root: string) {
-  const sourceRoot = join(root, 'source'); mkdirSync(sourceRoot, {mode: 0o700});
+function harness(root: string, initialIdIndex = 0) {
+  const sourceRoot = join(root, 'source'); mkdirSync(sourceRoot, {mode: 0o700, recursive: true});
   let identity: SourceAccessIdentity = {origin: fixture.identities[0].origin,
     accountId: fixture.identities[0].account_id, verified: true, epoch: 1};
-  let nextId = 0; const counts = {begin: 0, read: 0, commit: 0};
+  let nextId = initialIdIndex; const counts = {begin: 0, read: 0, commit: 0};
   let nextFinalRead: (() => void) | null = null;
   const cipher = {isAsyncEncryptionAvailable: async () => true,
     encryptStringAsync: async (v: string) => Buffer.from(`cipher:${v}`),
@@ -62,7 +62,7 @@ function harness(root: string) {
   const access = new SourceAccess({store: new SourceStore(root, cipher), getIdentity: () => identity,
     chooseDirectory: async () => ({canceled: false, rootPath: sourceRoot}),
     openHelper: async (_path, options) => { assert.deepEqual(options?.expectedRoot ?? {dev:'17',ino:'29'}, {dev:'17',ino:'29'});
-      const h = new Helper(counts); h.onFinalRead = nextFinalRead; helpers.push(h); return h; },
+      const h = new Helper(counts); h.onFinalRead = nextFinalRead; nextFinalRead = null; helpers.push(h); return h; },
     createSourceId: () => sourceIds[nextId++], onChange: () => {}});
   const helpers: Helper[] = [];
   const profile = openUsageProfile(root, {cipher: {isEncryptionAvailable: () => true,
@@ -85,7 +85,7 @@ function harness(root: string) {
 test('TC-TM003-CORE-09 confirmed SourceAccess scans atomically by principal', async t => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'tm003-core09-'))); chmodSync(root, 0o700);
   try {
-    const h = harness(root), path = join(root, fixture.sqlite_file);
+    let h = harness(root); const path = join(root, fixture.sqlite_file);
     try {
       await assert.rejects(runCodexCollection(fixture.unconfirmed_source_id, h.runtime), /source_access_denied/);
       assert.deepEqual([h.counts.begin, h.counts.read, h.counts.commit, dbState(path).rows.length], [0,0,0,0]);
@@ -101,22 +101,26 @@ test('TC-TM003-CORE-09 confirmed SourceAccess scans atomically by principal', as
         Number(first.selected?.output), Number(first.selected?.cached)], [1,2,300,30,60]);
       assert.deepEqual(first.cursors.map(row => Number(row.committed_byte_offset)).sort(), [410,410]);
       assert.deepEqual(first.coverage.map(row => Number(row.scan_incomplete)), [0]);
+      h.close(); h = harness(root, 1); await h.access.syncIdentity();
+      assert.equal(h.access.snapshot().codex.confirmed?.sourceId, source);
       await runCodexCollection(source, h.runtime);
       assert.equal(Number(dbState(path, principal).selected?.n), 2);
-      assert.equal(h.counts.commit, 2);
+      assert.equal(h.counts.commit, 1);
       const bytes = readFileSync(path).toString('utf8');
       for (const forbidden of [source, ...collector.files.map((f: {file_identity_digest: string}) => f.file_identity_digest),
         '/Users/private/source-a.jsonl']) assert.equal(bytes.includes(forbidden), false);
       step(t, 2, {events: 2, input: 300, output: 30, cached: 60, total: 330,
-        cursor_offsets: [410,410], coverage_complete: true, replay_events: 2, commit_calls: h.counts.commit});
+        cursor_offsets: [410,410], coverage_complete: true, replay_events: 2, commit_calls: 2,
+        source_and_profile_reopened: true});
 
       let revoked: Promise<void> | null = null;
       // Trigger revocation from the owned helper after the second file's final chunk.
       h.armFinalRead(() => { revoked = h.access.revoke(source); });
       const pending = runCodexCollection(source, h.runtime);
-      await assert.rejects(pending, /source_operation_stale|source_access_denied|invalid_scan/);
+      await assert.rejects(pending, (error: unknown) =>
+        ['source_operation_stale', 'source_access_denied', 'invalid_scan'].includes((error as {code?: string})?.code ?? ''));
       if (revoked) await revoked;
-      assert.equal(h.counts.commit, 2);
+      assert.equal(h.counts.commit, 1);
       const after = dbState(path, principal);
       assert.deepEqual(after.coverage, first.coverage);
       assert.equal(Number(after.selected?.n), 2);
