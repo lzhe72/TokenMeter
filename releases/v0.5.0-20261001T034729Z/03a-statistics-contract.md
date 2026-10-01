@@ -5,6 +5,8 @@
 
 ## 无原生日志依赖的纯统计开发切片
 
+下一辅助边界分两层：`CORE-04`将IANA当地日变为UTC半开界，与已给界的`CORE-01`分别验证；固定纽约春/秋实际23/25小时，非法日期/区不产生默认零。`CORE-05`在本例拥有的合成TM-003 SQLite上，以当前`usage_event`物理列和一份只读事务查询Codex/Claude两来源；同一快照的卡片/来源/模型/明细/日点要对同一事件集合，另连接提交后只在**下一**读事务可见。现有`coverage`缺连续历史区间证明，空日不得声明产品完整零。固定fixture与逐步判据见[04a](04a-test-cases.md#日期与双来源物理快照辅助tc)；两例均不触及原生日志、真实App/服务、产品授权及产品E2E。
+
 本节只冻结 `TASK-TM005-EVENT-CONTRACT`、`TASK-TM005-RANGE-QUERY`、`TASK-TM005-COVERAGE` 中独立的纯函数部分及 `TC-TM005-CORE-01/02/03`。输入不是来源原生日志或产品 SQLite 行，而是固定 `tests/fixtures/tm005-core-slice.json` 中的合成 `TrustedUsageEvent`：`principal_key`、`source=codex|claude_code`、不含原生ID的测试 `source_event_key`、UTC时间、`model_id|null`、非负整数 input/output 与可为 null 的缓存读/写、推理子项。CORE-01的范围输入由调用方直接给出fixture固定`start_utc/end_exclusive_utc`，不在该统计函数中把`timezone/local_day`换算为UTC；IANA当地日及夏令时换算另设辅助TC，产品RANGE-11仍待真实App E2E。输入事件已经由调用方判为可信且在 `(principal_key,source,source_event_key)` 上唯一；模块只做统计，不重新推断上游身份或继承。只接收固定两个来源；未知来源、负数、子项超出总项或不合法UTC时刻应拒绝，不能默认为0。
 
 在固定主体 `synthetic-p1` 和 `Asia/Shanghai` 的 `2026-09-29` 半开当地日中，A（Codex 100/10、未知模型）与 B（Claude Code 200/20、`sonnet-test`）的可信已知合计为330，来源分别110/220，模型分别 `unknown_model=110`/`sonnet-test=220`；另一主体 C=10 必须排除。A 的缓存读20、推理2是 input/output 的子项，不加到330；B 的缓存读和两来源缓存写为 null 时，相应子项输出保持未知而非0。固定当地日 UTC 界为 `2026-09-28T16:00:00Z` 至 `2026-09-29T16:00:00Z`，边界外事件不得纳入。
@@ -62,7 +64,7 @@ WHERE principal_key = :principal_key
 GROUP BY source;
 ```
 
-逐条旁证另核对 `source/source_event_key/source_scope_key/model_id/occurred_at_utc/input_tokens/output_tokens` 与唯一约束 `(principal_key,source,source_event_key)`；冲突诊断只核代码/数量及不可逆来源归属，不要求保存第二条原生 ID、完整路径或内容。当前 TM-003 拟议 `coverage` 表仅有 `earliest_verified_at_utc`、`missing_before`、`scan_incomplete`、`last_scan_at_utc`，**不足以证明任意完整空日被两个来源连续覆盖**。因此 `STATE-02/04` 的真零判据仍需 TM-003/004 给出来源事实及可读持久合同；若无法给出，先按 SOP-002/004 修订验收，不能只改 SQL 或人工写覆盖行取绿。
+逐条旁证另核对 `source/source_event_key/source_scope_key/model_id/occurred_at_utc/input_tokens/output_tokens` 与唯一约束 `(principal_key,source,source_event_key)`；冲突诊断只核代码/数量及不可逆来源归属，不要求保存第二条原生 ID、完整路径或内容。TM-003已提交`UsageStore`的实际`coverage`表含`principal_key,root_key,missing_before,scan_incomplete,last_scan_at_utc`，**没有连续历史区间证明**，不足以证明任意完整空日被两个来源连续覆盖。诊断表的扫描写入时间也不是原始事件发生时间，不能据此给任意历史日分配未知状态。因此 `STATE-02/04` 的真零及逐日诊断判据仍需 TM-003/004 给出来源事实及可读持久合同；若无法给出，先按 SOP-002/004 修订验收，不能只改 SQL 或人工写覆盖行取绿。
 
 ## 交接判据
 

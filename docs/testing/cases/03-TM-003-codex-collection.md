@@ -240,6 +240,20 @@
 
 **DB与重置：** 每种失败/成功路径各用新owner库，绝不直接SQL造事件。步骤2允许仅在本例库创建失败触发器，步骤3仅注入假能力失权，均按owner清理；只读核对`usage_event`唯一键/聚合、`source_cursor`两行和偏移、`collection_diagnostic`、`coverage`及`identity_key_state`。原始run/失败和清理证据保留。真正跨页TM-002能力、已授权root、App/IPC/服务与产品`COVERAGE-OVERFLOW-01/SCAN/STORE`仍需独立E2E。
 
+### TC-TM003-CORE-07 · 主进程采集编排与能力失效
+
+**TASK：** `TASK-TM003-SCAN`、`TASK-TM003-STORE`。**AC：** `AC-TM003-001/003`。**类型：** `source_check`。**输入：** [固定主进程fixture](../../../tests/fixtures/tm003-main-collector-slice.json)引用CORE-06两份各410字节的原始行，公开测试密钥、已验证主体与已确认`sourceId`；假的TM-002 `SourceAccess`只暴露正式`beginCandidateScan`、`nextCandidatePage`、`readCandidateChunk`、`commitGuard`、`cancelScan`端口，存储则用本例0700根/0600 SQLite和真实`UsageStore`。每条故障路径独立重建空库，仅读核`usage_event/source_cursor/collection_diagnostic/coverage`；结束按owner清理并保留原始模块报告。输入在实现前固定，程序绑定`null`、执行`unexecuted`。
+
+| 步骤 | 固定动作 | 独立预期及DB检查 |
+| --- | --- | --- |
+| 1 | 分别用非本主体来源ID、未验证主体、已确认但`collectAllowed=false`的假端口调用`collectCodex(sourceId)`。 | 进入扫描前明确拒绝，`beginCandidateScan/commitScanBatch`均0次，库中无本代际行；renderer不能传路径、账号或密钥替代`sourceId`。每变体为独立新库，拒绝不冒充已确认零。 |
+| 2 | 合法主体/来源下读取第一页file-a（`complete=false`），按假端口最多每次返128字节读满410并比对SHA；未见末页时只读库。再读末页file-b（`complete=true`），也循环读满并比对；以公开密钥和fixture字段求root/file HMAC键，取同步`commitGuard`，执行一次整代提交，最后`cancelScan`。 | 首页面库四表无本代际行。两文件完整稳定、守卫通过后才有A/B两事件、input300/output30/cached60/total330、两游标各410、`scan_incomplete=0`；`commitScanBatch`恰1次、结束关闭scan。HMAC键精确等于fixture向量；usage库/WAL/结果不含相对路径、原生ID、私密哨兵或密钥。 |
+| 3 | 从新库逐个注入file-b提前EOF、读异常，以及元数据为1025字节但本例暂存预算1024字节；每次都已暂存file-a后才触发。 | 三次均取消scan、丢弃整代、提交0次；四表无本代际行且不显示完整覆盖。单次`readCandidateChunk`请求≤65536字节；提前EOF不得拼接不完整正文，预算超限在分配完整Buffer前拒绝，不能截断为1024字节再提交。1024只是本模块的注入预算，产品任意大文件处理合同仍待流式/有界方案与真实E2E。 |
+| 4 | 两份正文已读满、末页`complete=true`后，分别在`commitGuard`前模拟撤权和主体切换。 | 每次守卫拒绝、`cancelScan`恰1次、同步提交0次，A/B、游标、覆盖均不存在；旧主体的暂存不得转到新主体。此步仅是假能力故障，不证明真实OS授权或Keychain隔离。 |
+| 5 | 对步骤2成功库重启同一模块，以同主体/来源/文件身份重扫同代际。 | 稳定HMAC来源键和事件身份不变，A/B各一、total330、两个游标仍410，无重复计数或原始路径落库；本轮扫描仍须完整读取、守卫和关闭。 |
+
+**切片边界：** 当前`CodexGeneration.stage`接收完整Buffer，本辅助例只验证固定小文件和预算超限安全失败；不能据此称真实大日志可完整采集。产品`SOURCE/SCAN/STORE`的真实主进程、IPC、已安装App、TM-002系统能力与Keychain生命周期仍须独立固定TC和原件；不把模块5步PASS移作产品PASS。
+
 ## 当前执行合同
 
 每个 TC 的输入、步骤和 expected 已在此固定；实现时只能把它们绑定到可重复的代码并补充来源版本、具体文件 SHA/SQL 与稳定选择器，不得为适配已有代码改弱独立预期。`AC-TM003-001` 至 `004`、四个 E2E 组和全部具体 TC 双向保持。数据与程序未实现时，`tests/feature_matrix.json` 的目标仍为 planned、`tests/datasets.json` 的 `codex_raw` 仍为 planned，产品 E2E 的实际结论只能是 BLOCKED；完成文档结构或单元测试不能改变这一事实。

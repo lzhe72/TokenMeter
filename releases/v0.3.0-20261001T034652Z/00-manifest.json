@@ -279,6 +279,13 @@
       "task": "TASK-TM003-SCAN",
       "test": "TC-TM003-CORE-06",
       "description": "两文件同generation末页完成后一次事务提交、第二游标失败或撤权全回滚"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-CORE-07",
+      "description": "主进程假来源能力跨页/分块采集、守卫失效与整代提交；仅source_check"
     }
   ],
   "program_bindings_status": "planned",

@@ -1,5 +1,9 @@
 # REQ-TM003 · 执行记录与交接
 
+## 2026-10-02 · CORE-06 多文件generation固定模块回归
+
+固定输入先于实现提交`ff668d0de1fef3dfc162c0d2bc71825df6425511`、SOP-008收据`.local/docs-checks/20261002-tm003-core06-slice-ready/receipt.json`。开发会话的测试提交`408ebf8684bd27c555bee6730dc1953f4d3ae51f`（tree`0702b941b10dd072aacb1aaccf6e2418eba33df3`）原始红测`.local/source-check-runs/tm003-core06-red-20261001T182000Z/report.json`为FAIL：第一步仅暂存通过，第二步因整代事务尚未实现而失败；原件保留。修复提交`eef956b877ebe60f53e605db861f738533837f8b`（tree`802e6c9fd461ed50ce31b06b477da4ef34a1a964`）新固定run`tm003-core06-20261001T182500Z`报告`source_check` 1/1、四步、清理PASS；分别实测末页前不提交、第二游标故障整代回滚、撤权零提交、两文件一次事务提交后重扫不重复。报告SHA-256 `b6a2a8586ffbb14626858263638a7f13c690e3cf5503741bd2526cda3ea24e87`；独立Excel SHA-256 `4bfb058e0d0d9779a90ae61ebb207bdf0f8cec2dc6d55e813e33fcd4920f49a5`，verification为PASS，根总表以被测SHA登记第18批次。原始报告、TAP与Excel见本工作树同run的`.local/source-check-runs/`、`.local/test-results/`。开发会话另报告桌面32/32、build/typecheck PASS，未移作本树完整构建结论。该模块结果不证明TM-002真实授权或安装App，原27条产品TC、正式发行NOT_RUN。
+
 **release_id：** `v0.3.0-20261001T034652Z`　**状态：** draft；当前无产品 PASS、无发布资格。
 
 ## 2026-10-01 · 无授权模块切片编制
@@ -95,3 +99,10 @@ SOP-008对干净输入提交`ba9c782da2cd24f909e26a22c77c506627a40a2f`（tree`cd
 开发会话在干净代码候选`9efc6fa9d8523f30dfc20f4cfb8282cc54f18dd0`（tree`c06841b2ae70a3cc3ef04513a22984dafc6cf499`）执行不可覆盖`source_check`批次`tm003-core45-20261001T175000Z`，固定CORE-04/05共2/2、九步、两例owner清理PASS；原始报告SHA-256`f53138155448e9b64001465c62a243144bed48b856c37abf1ef2773624bf4b3d`，独立Excel SHA-256`2d503782486ef2b0b850e89b01b3ea22bb72ced7ef950a43d09052ce0b451a69`，`verification.json`回读PASS。本轮文档以被测SHA登记第17模块批次，不改被测候选；原27产品TC、App/IPC/服务E2E及正式发行均NOT_RUN。
 
 下一独立输入`TC-TM003-CORE-06`仅冻结两文件同generation模块行为：fixture`tests/fixtures/tm003-core-generation.json`引用各410字节的header+A/header+B，第一页不完整不得落库；第二游标SQL故障使整代事件/多游标/覆盖回滚；第二文件后撤权发生在guard/事务前须取消且提交调用0次；只有两正文稳定、末页complete并通过guard才一次同步提交A/B总量330和两个游标。该输入尚待干净提交及SOP-008切片核对，程序绑定null、未执行，不代填产品SCAN/STORE/COVERAGE。
+
+SOP-008对干净输入提交`ff668d0de1fef3dfc162c0d2bc71825df6425511`（tree`207c76feb426e32159d07e69380c7afd23f2dce0`）单独核对`CORE-06`，收据`.local/docs-checks/20261002-tm003-core06-slice-ready/receipt.json`：structure、治理477/477、用例228父/725步、根Excel11 Sheet/228父/42变体/270行/17批次回读均PASS，工作树clean。fixture SHA-256`ad4b1ad8ec0a080650ea85bae9d6fc999a42f9950e6d69e3c900ec383d661d70`，机器用例SHA-256`59e8bbb67490649129f5f656444070ad19d15ab235f032dbdaa03476db8c03c1`；四步分别固定暂存不落库、第二游标SQL失败全回滚、假失权阻断guard与事务、完整稳定末页一次提交。仅此无真实授权依赖的模块切片判`development_slice_ready`，实际运行仍unexecuted、0.3整版draft、产品E2E/发行NOT_RUN。
+## 2026-10-02 · CORE-07主进程编排辅助输入
+
+在已运行`CORE-01`至`CORE-06`模块原件之外，新增尚未执行的`CORE-07`五步固定输入：已验证主体/已确认`sourceId`、TM-002真实形状的假分页/分块能力、两文件410字节及公开root/file HMAC向量、独立本例SQLite。合法路径必须把每个文件读到声明size、页末`complete=true`及同步`commitGuard`后一次提交；提前EOF/读异常、注入暂存预算超限、撤权和主体切换均零提交并关闭scan。当前`CodexGeneration.stage`收完整Buffer，1024字节预算仅是辅助故障注入；任意大产品日志处理和真实TM-002/App/IPC/Keychain E2E仍未证明。程序绑定null、实际unexecuted，SOP-008只对本切片另做核对，整版0.3及正式发行状态不变。
+
+干净输入提交`a3e99dafa8948cdf91d733c374d25a132dc60df2`（tree`8c87e094e037caca1057a954244681f10855e305`）的SOP-008收据`.local/docs-checks/20261002-tm003-core07-slice/receipt.json`判仅`CORE-07`为`development_slice_ready`：structure PASS、治理477/477、机器目录233父/744步、总表233父+42变体/20批次回读PASS（SHA-256 `2ce91c32397a2be9bf668e312a7181f63dbc099f6b37e743789fd80b6a332549`），diff检查无错误。该结论只准其固定辅助红测/实现；程序和产品结果仍未运行，整版严格基线/quality及正式门禁NOT_RUN。

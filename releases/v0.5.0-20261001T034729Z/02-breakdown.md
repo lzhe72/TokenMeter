@@ -16,6 +16,8 @@
 
 各任务的稳定验收用例入口为[04a 逐 TC 草案](04a-test-cases.md)，其中原32条产品例均须真实安装包执行：`EVENT-CONTRACT` 对应 `CONTRACT-01` 至 `10`（`10-USAGE/MODEL` 分行）；`RANGE-QUERY` 对应 `RANGE-01` 至 `11`（`10-START-EMPTY/END-EMPTY`、`11-SPRING/FALL` 分行）；`COVERAGE` 对应 `STATE-01` 至 `06`；`UI` 对应 `MODEL-01/02` 与范围/状态的界面断言；`DATA` 对应 `DATA-01/02`；`E2E` 对应 `E2E-01` 和 `E2E-TM005-001/002` 两组。另有 `CORE-01/02/03` 三条辅助模块TC，分别归 `EVENT-CONTRACT`/`RANGE-QUERY`、`EVENT-CONTRACT`/`COVERAGE`、`COVERAGE`，只以受控合成标准事件与声明式覆盖事实验证纯统计函数；它们不验原生日志、授权、数据库或App，也不代替原32条产品例。TC 编号、TASK 和 REQ 的机器追踪列于本版 manifest；未绑定程序的用例仍为计划，不能以编号存在证明验收。
 
+`CORE-04`进一步属于`TASK-TM005-RANGE-QUERY`的IANA当地日纯模块，固定上海/UTC/纽约23与25小时边界；`CORE-05`属于`TASK-TM005-EVENT-CONTRACT/RANGE-QUERY`的合成双来源隔离SQLite同窗只读快照，固定主体/来源/UTC筛选与WAL并发一致性。两例仍是辅助`source_check`，无真实采集/App或完整空日证明，原32条产品父TC及6变体保持原范围。
+
 ## 顺序及边界
 
 双来源范围已确定。先完成 TM-003/004 的采集合同，再完成事件与覆盖设计、逐 TASK 的 TC 和独立数据预期，形成文档基线；随后按照 SOP-009→010→011→012→013→014 开发和验证。当前任务仅完成草案，不把尚未交付的依赖标为已交付。

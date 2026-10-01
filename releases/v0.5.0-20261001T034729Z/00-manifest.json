@@ -278,6 +278,27 @@
       "task": "TASK-TM005-COVERAGE",
       "test": "TC-TM005-CORE-03",
       "description": "声明式覆盖状态代数（纯统计辅助模块，不代替产品TC）"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-CORE-04",
+      "description": "IANA当地日UTC半开界纯模块；不替代产品TC"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CORE-05",
+      "description": "合成双来源SQLite同窗只读快照模块；不替代产品TC"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-CORE-05",
+      "description": "合成双来源SQLite同窗只读快照模块；不替代产品TC"
     }
   ],
   "program_bindings_status": "planned",
