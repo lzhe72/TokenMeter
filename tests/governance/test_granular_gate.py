@@ -30,6 +30,7 @@ AUX = {case["id"] for case in CURRENT if case["id"].startswith(granular_gate.res
 class GranularGateTests(unittest.TestCase):
     def test_historical_variant_source_is_distinct_from_candidate_release(self):
         target = "v0.2.0-20261001T034118Z"
+        self.assertEqual(granular_gate.results.tm001_case_release(CATALOG), LOGIN["release_id"])
         catalog = deepcopy(CATALOG)
         catalog["release_id"] = target
         for case in catalog["cases"]:
@@ -40,6 +41,12 @@ class GranularGateTests(unittest.TestCase):
         combined = granular_gate.combine_variants(LOGIN, UPDATE, target)
         self.assertEqual(combined["release_id"], LOGIN["release_id"])
         self.assertEqual(len(combined["variants"]), 38)
+        rewritten = deepcopy(catalog)
+        for case in rewritten["cases"]:
+            if case.get("feature_id") == "TM-001":
+                case["release_id"] = target
+        with self.assertRaises(granular_gate.results.Invalid):
+            granular_gate.results.tm001_case_release(rewritten)
         wrong_update = deepcopy(UPDATE)
         wrong_update["release_id"] = target
         with self.assertRaises(granular_gate.results.Invalid):

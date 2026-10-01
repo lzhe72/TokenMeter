@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { Snapshot } from '../../shared/types';
+import type { Snapshot, SourceAccessSnapshot, SourceTool } from '../../shared/types';
 import './style.css';
 import appIcon from '../../../resources/TokenMeter.svg';
 
@@ -9,10 +9,181 @@ const describe = (code: string) => messages[code] ? `${messages[code]}（${code}
 Object.assign(messages, {update_download_failed:'无法获取更新，请检查更新服务是否已启动', update_source_rejected:'更新地址无效，仅支持 HTTPS 或本机回环 HTTP', update_transport_rejected:'更新请求被转向不允许的地址，已停止', update_signature_rejected:'更新签名验证失败，已停止安装', update_integrity_failed:'更新文件不完整，请重新下载', update_bundle_invalid:'更新应用验证失败，已停止安装', update_native_failed:'系统未能完成更新，请稍后重试', update_metadata_invalid:'更新清单格式不正确', update_cancelled:'更新已取消', update_unavailable:'当前没有可安装的更新'});
 const roleName = (role: string) => role === 'admin' ? '管理员' : '成员';
 const auditNames: Record<string,string> = {account_provisioned:'预置账号', password_changed:'更改密码', password_reset:'重置密码', account_disabled:'停用账号', account_enabled:'启用账号', login:'登录', logout:'退出登录'};
+const sourceNames: Record<SourceTool, string> = {codex: 'Codex', claude_code: 'Claude Code'};
+const sourceMessages: Record<string, string> = {
+  access_denied: '无法访问已选目录，请重新选择', root_changed: '已选目录发生变化，请重新选择',
+  tree_changed: '目录内容在读取时发生变化，请重新预览', unsafe_root: '已选目录不安全，请重新选择',
+  source_unavailable: '来源暂不可用，请重新选择', source_key_unavailable: '本机密钥暂不可用，来源已停止读取',
+  source_invalidation_failed: '来源停读状态未能安全保存，请检查后重新选择',
+  source_access_denied: '当前来源不允许读取', source_operation_stale: '来源状态已变化，请重试',
+  invalid_session: '请先验证团队身份', invalid_source_tool: '工具类型无效', invalid_selection: '目录选择已失效，请重新选择',
+  picker_failed: '系统目录选择器未能完成操作', invalid_source_consent: '请选择采集与未来同步意愿',
+  operation_busy: '来源操作正在进行，请稍后重试', operation_failed: '来源操作未完成，请重试'
+};
+const sourceLimitNames: Record<string, string> = {
+  candidate_limit: '候选文件达到 1000 个上限', entry_limit: '已检查目录项达到 5000 个上限',
+  depth_limit: '目录深度超过 8 层', time_limit: '预览达到 2 秒上限',
+  tree_changed: '目录在预览时发生变化', io_error: '读取目录时发生错误'
+};
+function safeSourceCode(value: string | null | undefined): string | null {
+  return value && /^[a-z_]{3,60}$/.test(value) ? value : null;
+}
+function sourceDate(value: number): string {
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? '' : date.toISOString();
+}
 function Modal({title, children, onDismiss}: {title: string; children: React.ReactNode; onDismiss: () => void}) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => { const element = dialog.current!; const previous = document.activeElement as HTMLElement | null; element.showModal(); return () => {element.close(); previous?.focus();}; }, []);
   return <dialog ref={dialog} className="dialog" aria-label={title} onCancel={event => {event.preventDefault(); onDismiss();}}>{children}</dialog>;
+}
+function SourceCard({tool, view, ready, busy, sourceError, onSnapshot}: {
+  tool: SourceTool; view: SourceAccessSnapshot[SourceTool]; ready: boolean; busy: boolean;
+  sourceError: string | null; onSnapshot: (value: Snapshot) => void;
+}) {
+  const [working, setWorking] = useState(false);
+  const [localCode, setLocalCode] = useState<string | null>(null);
+  const [pendingChoice, setPendingChoice] = useState({selectionId: '', collectAllowed: false, syncIntent: false});
+  const [confirmedChoice, setConfirmedChoice] = useState({sourceId: '', collectAllowed: false, syncIntent: false});
+  const [previewedSelection, setPreviewedSelection] = useState<string | null>(null);
+  const [refreshedSource, setRefreshedSource] = useState<string | null>(null);
+  const [revokePrompt, setRevokePrompt] = useState(false);
+  const pending = view.pending;
+  const confirmed = view.confirmed;
+  const locked = !ready || busy || working;
+  const state = pending ? 'pending' : confirmed?.status ?? 'none';
+  const pendingConsent = pendingChoice.selectionId === pending?.selectionId ? pendingChoice :
+    {selectionId: pending?.selectionId ?? '', collectAllowed: false, syncIntent: false};
+  const confirmedConsent = confirmedChoice.sourceId === confirmed?.sourceId ? confirmedChoice :
+    {sourceId: confirmed?.sourceId ?? '', collectAllowed: confirmed?.collectAllowed ?? false,
+      syncIntent: confirmed?.syncIntent ?? false};
+  const canRefresh = !locked && !pending && confirmed?.status === 'confirmed_enabled';
+  const currentCandidates = pending ?
+    (previewedSelection === pending.selectionId ? pending.candidates : null) :
+    (confirmed?.status === 'confirmed_enabled' && refreshedSource === confirmed.sourceId ? view.candidates : null);
+  const incomplete = pending ? pending.incomplete : view.incomplete;
+  const reason = pending ? pending.reason : view.reason;
+  const errorCode = safeSourceCode(sourceError ?? localCode ??
+    (confirmed?.status === 'needs_reselect' ? confirmed.reason : null));
+  useEffect(() => {
+    setPendingChoice({selectionId: pending?.selectionId ?? '', collectAllowed: false, syncIntent: false});
+    setPreviewedSelection(null);
+  }, [pending?.selectionId]);
+  useEffect(() => {
+    setConfirmedChoice({sourceId: confirmed?.sourceId ?? '', collectAllowed: confirmed?.collectAllowed ?? false,
+      syncIntent: confirmed?.syncIntent ?? false});
+  }, [confirmed?.sourceId, confirmed?.collectAllowed, confirmed?.syncIntent]);
+  useEffect(() => { if (confirmed?.status !== 'confirmed_enabled') setRefreshedSource(null); }, [confirmed?.status, confirmed?.sourceId]);
+  useEffect(() => { if (!confirmed) setRevokePrompt(false); }, [confirmed?.sourceId]);
+  const run = async (call: () => Promise<Snapshot>): Promise<Snapshot | null> => {
+    setWorking(true); setLocalCode(null);
+    try {
+      const result = await call();
+      onSnapshot(result);
+      setLocalCode(safeSourceCode(result.sourceErrors?.[tool]));
+      return result;
+    } catch {
+      setLocalCode('operation_failed');
+      return null;
+    } finally { setWorking(false); }
+  };
+  const saveConsent = async (collectAllowed: boolean, syncIntent: boolean) => {
+    if (!confirmed || confirmed.status === 'needs_reselect' || locked) return;
+    const sourceId = confirmed.sourceId;
+    setConfirmedChoice({sourceId, collectAllowed, syncIntent});
+    setRefreshedSource(null);
+    const result = await run(() => window.tokenmeter.updateSourceConsent({sourceId, collectAllowed, syncIntent}));
+    const actual = result?.sources[tool].confirmed;
+    setConfirmedChoice({sourceId: actual?.sourceId ?? sourceId,
+      collectAllowed: actual?.collectAllowed ?? confirmed.collectAllowed,
+      syncIntent: actual?.syncIntent ?? confirmed.syncIntent});
+  };
+  const statusLabel = pending ? '已选择目录，等待预览和确认' :
+    confirmed?.status === 'confirmed_enabled' ? '已确认，允许采集' :
+    confirmed?.status === 'confirmed_paused' ? '已确认，采集已暂停' :
+    confirmed?.status === 'needs_reselect' ? '来源失效，需要重新选择' : '尚未选择来源';
+  return <section className="source-card" aria-labelledby={`source-heading-${tool}`}>
+    <div className="section-title split"><div><h3 id={`source-heading-${tool}`}>{sourceNames[tool]}</h3>
+      <p data-testid={`source.status.${tool}`} data-state={state} role="status">{working && !pending ? '正在处理来源… · ' : ''}{statusLabel}</p></div>
+      <button data-testid={`source.choose.${tool}`} disabled={locked} onClick={() => { void run(() => window.tokenmeter.chooseSource({tool})); }}>
+        {confirmed ? '更换目录…' : '选择目录…'}
+      </button></div>
+    {confirmed && <div className="source-confirmed" data-testid={`source.confirmed.${tool}`}>
+      <p>{confirmed.status === 'needs_reselect' ? '已停止读取。重新选择并确认目录后才能恢复。' :
+        `采集${confirmed.collectAllowed ? '已开启' : '已暂停'}；未来同步意愿${confirmed.syncIntent ? '已开启' : '已关闭'}。`}</p>
+    </div>}
+    {pending && <div className="source-pending" data-testid={`source.pending.${tool}`}>
+      <p>待确认目录：<strong>{pending.label}</strong>。选择目录本身不会开始采集。</p>
+      <button data-testid={`source.preview.${tool}`} disabled={locked} onClick={() => {
+        const selectionId = pending.selectionId;
+        void run(() => window.tokenmeter.previewSource({selectionId})).then(result => {
+          if (result && !result.sourceErrors[tool] && result.sources[tool].pending?.selectionId === selectionId)
+            setPreviewedSelection(selectionId);
+        });
+      }}>预览候选文件</button>
+    </div>}
+    {currentCandidates && <div className="source-candidates">
+      <p data-testid={`source.completeness.${tool}`} data-complete={String(!incomplete)} data-reason={incomplete ? reason ?? 'io_error' : ''}>
+        {incomplete ? `预览不完整：${sourceLimitNames[reason ?? ''] ?? '需要重新检查目录'}` :
+          `候选文件 ${currentCandidates.length} 个 · 已检查当前预览范围`}
+      </p>
+      {currentCandidates.length > 0 && <ul aria-label={`${sourceNames[tool]} 候选文件`}>{currentCandidates.map(item => {
+        const mtime = sourceDate(item.mtimeMs);
+        return <li key={item.relativeName}
+          data-testid={`source.candidate.${tool}`} data-relative-name={item.relativeName}
+          data-size-bytes={item.size} data-mtime-utc={mtime}>
+          <span className="source-candidate-name">{item.relativeName}</span>
+          <span>{item.size} B</span><time dateTime={mtime}>{mtime || '修改时间未知'}</time>
+        </li>;
+      })}</ul>}
+      {currentCandidates.length === 0 && !incomplete && <p>当前预览范围内没有符合条件的 .jsonl 文件；仍可确认目录，等待今后的日志。</p>}
+    </div>}
+    {pending ? <div className="source-consent">
+      <label className="checkbox"><input type="checkbox" data-testid={`source.collect.${tool}`}
+        checked={pendingConsent.collectAllowed} disabled={locked}
+        onChange={event => setPendingChoice({...pendingConsent, collectAllowed: event.target.checked})}/>允许从此目录采集</label>
+      <label className="checkbox"><input type="checkbox" data-testid={`source.sync.${tool}`}
+        checked={pendingConsent.syncIntent} disabled={locked}
+        onChange={event => setPendingChoice({...pendingConsent, syncIntent: event.target.checked})}/>愿意在未来功能中同步用量</label>
+      <p>同步功能尚未启用，此意愿不会立即上传数据。</p>
+      <button className="primary" data-testid={`source.confirm.${tool}`} disabled={locked} onClick={() => {
+        void run(() => window.tokenmeter.confirmSource({selectionId: pending.selectionId,
+          collectAllowed: pendingConsent.collectAllowed, syncIntent: pendingConsent.syncIntent}));
+      }}>确认来源与意愿</button>
+    </div> : confirmed && confirmed.status !== 'needs_reselect' ? <div className="source-consent">
+      <label className="checkbox"><input type="checkbox" data-testid={`source.collect.${tool}`}
+        checked={confirmedConsent.collectAllowed} disabled={locked}
+        onChange={event => { void saveConsent(event.target.checked, confirmedConsent.syncIntent); }}/>
+        允许从此目录采集</label>
+      <label className="checkbox"><input type="checkbox" data-testid={`source.sync.${tool}`}
+        checked={confirmedConsent.syncIntent} disabled={locked}
+        onChange={event => { void saveConsent(confirmedConsent.collectAllowed, event.target.checked); }}/>
+        愿意在未来功能中同步用量</label>
+    </div> : null}
+    <div className="source-actions">
+      <button data-testid={`source.refresh.${tool}`} disabled={!canRefresh} onClick={() => {
+        if (!confirmed) return;
+        const sourceId = confirmed.sourceId;
+        void run(() => window.tokenmeter.refreshSource({sourceId})).then(result => {
+          const current = result?.sources[tool];
+          if (current?.confirmed?.sourceId === sourceId &&
+              (!result?.sourceErrors[tool] || current.incomplete)) setRefreshedSource(sourceId);
+        });
+      }}>刷新候选</button>
+      {confirmed && <button data-testid={`source.revoke.${tool}`} disabled={locked} onClick={() => setRevokePrompt(true)}>撤销来源…</button>}
+    </div>
+    {errorCode && <p className="error" role="alert" data-testid={`source.error.${tool}`} data-code={errorCode}>
+      {sourceMessages[errorCode] ?? '来源操作未完成，请重试'}
+    </p>}
+    {revokePrompt && confirmed && <Modal title={`撤销 ${sourceNames[tool]} 来源`} onDismiss={() => setRevokePrompt(false)}>
+      <h2>撤销 {sourceNames[tool]} 来源？</h2><p>撤销后立即停止读取并删除此来源的本机记录。要恢复采集，需要重新选择并确认目录。</p>
+      <div className="dialog-actions"><span/><button data-testid={`source.revoke.cancel.${tool}`} onClick={() => setRevokePrompt(false)}>取消</button>
+        <button className="primary" data-testid={`source.revoke.confirm.${tool}`} disabled={locked} onClick={async () => {
+          const result = await run(() => window.tokenmeter.revokeSource({sourceId: confirmed.sourceId}));
+          if (result && !result.sourceErrors?.[tool]) setRevokePrompt(false);
+        }}>确认撤销</button></div>
+    </Modal>}
+  </section>;
 }
 function App() {
   const [state, setState] = useState<Snapshot | null>(null);
@@ -61,6 +232,14 @@ function App() {
           {s.users.length > 0 && <table><thead><tr><th>账号</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody>{s.users.map(user => <tr key={user.id}><td>{user.username}</td><td>{roleName(user.role)}</td><td data-testid={`admin.state.${user.username}`}>{user.is_active ? '已启用' : '已停用'}{user.must_change_password ? ' · 待改密' : ''}</td><td className="table-actions"><button data-testid={`admin.${user.is_active ? 'disable' : 'enable'}.${user.username}`} disabled={s.busy} onClick={() => apply(window.tokenmeter.manageUser({userId: user.id, action: user.is_active ? 'disable' : 'enable'}))}>{user.is_active ? '停用' : '启用'}</button><button data-testid={`admin.reset.${user.username}`} disabled={s.busy} onClick={() => { setResetID(user.id); setTemporary(''); }}>重置密码</button></td></tr>)}</tbody></table>}
           <div className="audit-head"><h3>操作记录</h3><button data-testid="admin.audit" disabled={s.busy} onClick={() => apply(window.tokenmeter.listAudit())}>加载审计</button></div><div className="audit-list">{s.audit.map(item => <div className="audit-row" key={item.id}><strong data-testid={`audit.action.${item.action}`}>{auditNames[item.action] ?? '账号操作'}</strong><span title={item.actor_id ?? 'system'} data-testid={`audit.actor.${item.action}.${item.actor_id ?? 'system'}`}>操作人：{accountName(item.actor_id)}</span><span title={item.target_id ?? 'none'} data-testid={`audit.target.${item.action}.${item.target_id ?? 'none'}`}>对象：{item.target_id ? accountName(item.target_id) : '无'}</span><time dateTime={item.occurred_at}>{new Date(item.occurred_at).toLocaleString('zh-CN', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'})}</time></div>)}</div>
         </section>}
+        {!s.account.must_change_password && s.identityVerified && s.sourcesReady &&
+          <section className="card sources" aria-labelledby="sources-heading">
+            <div className="section-title"><h2 id="sources-heading">本机日志来源</h2>
+              <p>为每个工具选择已有日志目录。仅在你确认后，App 才会保存来源和采集意愿。</p></div>
+            <div className="source-list">{(['codex', 'claude_code'] as const).map(tool =>
+              <SourceCard key={tool} tool={tool} view={s.sources[tool]} ready={s.sourcesReady}
+                busy={s.busy} sourceError={s.sourceErrors[tool]} onSnapshot={setState}/>)}</div>
+          </section>}
       </>}
       <section className="card update"><div><h2>软件更新</h2><p role="status" data-testid="updates.status">{s.updates.errorCode ? describe(s.updates.errorCode) : s.updates.status}{s.updates.availableVersion ? ` · v${s.updates.availableVersion}` : ''}</p></div><div className="actions"><button data-testid="updates.check" disabled={!s.updates.canCheck} onClick={() => apply(window.tokenmeter.checkUpdates())}>检查更新</button>{s.updates.phase === 'available' && <button className="primary" data-testid="updates.install" onClick={() => apply(window.tokenmeter.installUpdate())}>安装并重启</button>}{['downloading', 'verifying'].includes(s.updates.phase) && <button data-testid="updates.cancel" onClick={() => apply(window.tokenmeter.cancelUpdate())}>取消</button>}</div></section>
       {configuration && <Modal title="服务配置" onDismiss={() => setConfiguration(false)}>

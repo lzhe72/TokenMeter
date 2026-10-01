@@ -35,6 +35,7 @@ NODE = Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/n
 RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
 SHA = re.compile(r"[a-f0-9]{64}\Z")
 STATES = {"PASS", "FAIL", "BLOCKED"}
+TM001_RELEASE_ID = "v0.1.0-20260929T074814Z"
 AUX_PREFIXES = ("TC-TM001-UI-", "TC-TM001-CATALOG-", "TC-TM001-RECORDS-", "TC-TM001-GATE-")
 SPEC_BY_GROUP = {"LOGIN": "granular-login.spec.ts", "PASSWORD": "granular-login.spec.ts",
                  "SESSION": "granular-account.spec.ts", "ADMIN": "granular-account.spec.ts",
@@ -48,6 +49,24 @@ class Invalid(ValueError):
 
 class Blocked(Invalid):
     """A required export runtime or input is unavailable."""
+
+
+def tm001_case_release(catalog: dict) -> str:
+    """Read the frozen TM-001 source release from explicit case ownership."""
+    cases = catalog.get("cases")
+    if not isinstance(cases, list):
+        raise Invalid("Test catalog has no cases list")
+    releases = []
+    for case in cases:
+        if not isinstance(case, dict) or case.get("feature_id") != "TM-001":
+            continue
+        release = case.get("release_id")
+        if not isinstance(release, str) or not release:
+            raise Invalid("TM-001 cases differ from their fixed explicit release")
+        releases.append(release)
+    if not releases or len(set(releases)) != 1 or releases[0] != TM001_RELEASE_ID:
+        raise Invalid("TM-001 cases differ from their fixed explicit release")
+    return releases[0]
 
 
 def sha(data: bytes) -> str:
@@ -284,6 +303,85 @@ def verify_existing_export(output_dir: Path, model: dict) -> dict:
                 or b"HYPERLINK is not implemented" in package.read("xl/worksheets/sheet8.xml")):
             raise Invalid("Existing workbook evidence links are not valid")
     return receipt
+
+
+def excel_receipt_path(report_path: Path, output_dir: Path) -> Path:
+    """Preserve the first export receipt when a later review uses new inputs."""
+    primary = report_path.parent / "excel-export.json"
+    if not primary.exists() and not primary.is_symlink():
+        return primary
+    existing, _ = read_json(primary)
+    if existing.get("output") == str(output_dir):
+        return primary
+    return report_path.parent / f"excel-export-{sha(str(output_dir).encode('utf-8'))[:16]}.json"
+
+
+def save_excel_receipt(path: Path, value: dict) -> dict:
+    if path.exists() or path.is_symlink():
+        if json.loads(read_file(path)) != value:
+            raise Invalid("Existing Excel receipt differs from this export attempt")
+        return value
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+        json.dump(value, stream, ensure_ascii=False, indent=2, sort_keys=True)
+        stream.write("\n")
+    return value
+
+
+def persist_excel_export_receipt(report_path: Path, output_dir: Path, receipt: dict) -> dict:
+    """Bind the immutable product report to this independently verified XLSX."""
+    report_path, output_dir = safe_path(report_path), safe_path(output_dir)
+    report_bytes = read_file(report_path)
+    report = json.loads(report_bytes)
+    verification_bytes = read_file(output_dir / "verification.json")
+    if json.loads(verification_bytes) != receipt:
+        raise Invalid("Granular export verification changed before receipt")
+    model_bytes = read_file(output_dir / "granular-source.json")
+    model = json.loads(model_bytes)
+    if (receipt.get("state") != "PASS" or receipt.get("run_id") != report.get("run_id")
+            or receipt.get("product_state") != report.get("state")
+            or receipt.get("source_model_sha256") != sha(model_bytes)
+            or model.get("source_hashes", {}).get(display_path(report_path)) != sha(report_bytes)):
+        raise Invalid("Granular export is not bound to this product report")
+    workbook_entry = receipt.get("workbook")
+    if not isinstance(workbook_entry, dict):
+        raise Invalid("Granular export has no workbook")
+    workbook_path = safe_path(output_dir / workbook_entry.get("path", ""))
+    if workbook_path.parent != output_dir or workbook_path.suffix != ".xlsx":
+        raise Invalid("Granular workbook path is invalid")
+    workbook_bytes = read_file(workbook_path)
+    if (len(workbook_bytes) != workbook_entry.get("bytes")
+            or sha(workbook_bytes) != workbook_entry.get("sha256")):
+        raise Invalid("Granular workbook differs from verified export")
+    receipt_path = excel_receipt_path(report_path, output_dir)
+    result = {"schema_version": 1, "scope": "test_result_excel_export", "state": "PASS",
+              "run_id": report["run_id"], "product_state": report["state"],
+              "report_path": str(report_path), "report_sha256": sha(report_bytes),
+              "output": str(output_dir), "receipt_path": str(receipt_path),
+              "verification": {"path": str(output_dir / "verification.json"),
+                               "sha256": sha(verification_bytes), "bytes": len(verification_bytes)},
+              "workbook": {"path": str(workbook_path),
+                           "sha256": sha(workbook_bytes), "bytes": len(workbook_bytes)}}
+    return save_excel_receipt(receipt_path, result)
+
+
+def persist_excel_export_failure(report_path: Path, output_dir: Path,
+                                 state: str, error: Exception) -> dict:
+    """Keep an export failure separate from the unchanged product conclusion."""
+    report_path, output_dir = safe_path(report_path), safe_path(output_dir)
+    report_bytes = read_file(report_path)
+    report = json.loads(report_bytes)
+    if (state not in ("FAIL", "BLOCKED") or not isinstance(report, dict)
+            or not isinstance(report.get("run_id"), str)
+            or report.get("state") not in STATES):
+        raise Invalid("Cannot bind failed Excel export to a product report")
+    receipt_path = excel_receipt_path(report_path, output_dir)
+    result = {"schema_version": 1, "scope": "test_result_excel_export", "state": state,
+              "run_id": report["run_id"], "product_state": report["state"],
+              "report_path": str(report_path), "report_sha256": sha(report_bytes),
+              "output": str(output_dir), "receipt_path": str(receipt_path),
+              "error": str(error)}
+    return save_excel_receipt(receipt_path, result)
 
 
 def _short(value: object) -> str:
@@ -699,8 +797,10 @@ def build_model(catalog: dict, report: dict, *, run_root: Path, checks: dict | N
     run_id = report.get("run_id")
     if not isinstance(run_id, str) or not RUN_ID.fullmatch(run_id) or report.get("state") not in STATES:
         raise Invalid("Product report lacks a safe run ID or actual state")
-    if catalog.get("release_id") != report.get("release_id") or not isinstance(catalog.get("cases"), list):
-        raise Invalid("Test catalog release differs from this run")
+    catalog_release = catalog.get("release_id")
+    if (not isinstance(catalog_release, str) or not catalog_release
+            or not isinstance(catalog.get("cases"), list)):
+        raise Invalid("Test catalog release or cases are invalid")
     all_cases = catalog["cases"]
     ids = [case.get("id") for case in all_cases if isinstance(case, dict)]
     if len(ids) != len(all_cases) or len(ids) != len(set(ids)):
@@ -709,11 +809,11 @@ def build_model(catalog: dict, report: dict, *, run_root: Path, checks: dict | N
     future = [case for case in all_cases if case.get("feature_id") != "TM-001"]
     if not all_current:
         raise Invalid("No TM-001 detailed cases in the catalog")
-    source_releases = [case.get("release_id", catalog["release_id"]) for case in all_current]
-    if (any(not isinstance(value, str) or not value for value in source_releases)
-            or len(set(source_releases)) != 1):
-        raise Invalid("TM-001 parent cases have mixed or invalid source releases")
-    source_release = source_releases[0]
+    source_release = tm001_case_release(catalog)
+    # A frozen integrated catalog can advance to the next release while its
+    # historical TM-001 cases still identify the original source release.
+    if report.get("release_id") not in (catalog_release, source_release):
+        raise Invalid("Test catalog release differs from this run")
     current_map = {case["id"]: case for case in all_current}
     variant_list = variants.get("variants", []) if variants is not None else []
     if variants is not None and (not isinstance(variant_list, list)
@@ -1190,13 +1290,24 @@ def main(argv: list[str] | None = None) -> int:
         receipt = export(args.report, args.output, args.checks, args.cases, args.aggregate_report,
                          args.variants, args.aux_report, args.update_variants, args.audit_report,
                          args.parent_report)
+        persist_excel_export_receipt(args.report, args.output, receipt)
         print(json.dumps(receipt, ensure_ascii=False))
         return 0
     except (Blocked, FileNotFoundError, PermissionError, subprocess.TimeoutExpired) as error:
-        print(json.dumps({"state": "BLOCKED", "error": str(error)}, ensure_ascii=False), file=sys.stderr)
+        diagnostic = {"state": "BLOCKED", "error": str(error)}
+        try:
+            diagnostic["receipt"] = persist_excel_export_failure(args.report, args.output, "BLOCKED", error)["receipt_path"]
+        except (Invalid, OSError, ValueError, TypeError, KeyError) as receipt_error:
+            diagnostic["receipt_error"] = str(receipt_error)
+        print(json.dumps(diagnostic, ensure_ascii=False), file=sys.stderr)
         return 2
     except (Invalid, OSError, ValueError, TypeError, KeyError, zipfile.BadZipFile) as error:
-        print(json.dumps({"state": "FAIL", "error": str(error)}, ensure_ascii=False), file=sys.stderr)
+        diagnostic = {"state": "FAIL", "error": str(error)}
+        try:
+            diagnostic["receipt"] = persist_excel_export_failure(args.report, args.output, "FAIL", error)["receipt_path"]
+        except (Invalid, OSError, ValueError, TypeError, KeyError) as receipt_error:
+            diagnostic["receipt_error"] = str(receipt_error)
+        print(json.dumps(diagnostic, ensure_ascii=False), file=sys.stderr)
         return 1
 
 

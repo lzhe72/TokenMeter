@@ -1,7 +1,7 @@
 {
   "name": "tokenmeter",
   "productName": "TokenMeter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Team model usage and account desktop client",
   "author": "TokenMeter",
   "private": true,
@@ -13,7 +13,11 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
-  "dependencies": {"react": "19.3.0", "react-dom": "19.3.0", "yauzl": "3.4.0"},
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "yauzl": "3.4.0"
+  },
   "devDependencies": {
     "@electron/osx-sign": "2.7.1",
     "@playwright/test": "1.63.0",
