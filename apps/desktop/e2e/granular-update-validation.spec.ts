@@ -13,6 +13,8 @@ type Context = {
   validation_fixture_control_url:string; validation_fixture_control_token:string;
   validation_variant:string; validation_fixture_manifest_path:string;
   owned_sentinel_path:string; package_manifest_path:string;
+  expected_app_version:string; expected_app_build:string;
+  expected_upgrade_version:string; expected_upgrade_build:string;
 };
 type Observation = {stage:string; route:string; method:string; status:number;
   bytes_sent:number; declared_bytes?:number; body_sha256:string; time:string};
@@ -21,7 +23,7 @@ type FixtureManifest = {variant_id:string; archive_sha256:string; archive_bytes:
   ed25519_signature_present:boolean; sentinel_sha256:string; source_nonce:string;
   code_signature_verified?:boolean; candidate_requirement_rejected?:boolean;
   certificate_matches_candidate?:boolean|null};
-type PackageManifest = {app:{tree_sha256:string}; update_app:{version:string; build:string};
+type PackageManifest = {app:{version:string; build:string; tree_sha256:string}; update_app:{version:string; build:string};
   artifacts:{update_zip:{bytes:number; sha256:string}}};
 const contextPath=process.env.TM_E2E_CONTEXT;
 const output=process.env.TM_E2E_CASE_OUTPUT;
@@ -38,6 +40,19 @@ test.setTimeout(420_000);
 function required<T>(value:T|null|undefined,label:string):T {
   if (value==null || value==='') throw new Error(`${label} has no owned runner fixture`);
   return value;
+}
+const expectedAppVersion=required(c.expected_app_version,'expected_app_version');
+const expectedAppBuild=required(c.expected_app_build,'expected_app_build');
+const expectedUpgradeVersion=required(c.expected_upgrade_version,'expected_upgrade_version');
+const expectedUpgradeBuild=required(c.expected_upgrade_build,'expected_upgrade_build');
+function nextPatch(version:string):string {
+  const match=/^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+  if(!match)throw new Error('Approved update version is not a three-part version');
+  return `${match[1]}.${match[2]}.${Number(match[3])+1}`;
+}
+function nextBuild(build:string):string {
+  if(!/^[1-9]\d*$/.test(build))throw new Error('Approved update build is not a positive integer');
+  return String(Number(build)+1);
 }
 function digest(input:Buffer|string):string {return createHash('sha256').update(input).digest('hex');}
 function digestFile(path:string):string {return digest(readFileSync(path));}
@@ -88,7 +103,8 @@ async function launch():Promise<void> {
     env:childEnvironment(),chromiumSandbox:true,timeout:60_000},
     {run_id:c.run_id,case_id:c.case_id,output:output!});
   page=await app.firstWindow();
-  await expect(page.getByTestId('app.build')).toContainText('build 100');
+  await expect(page.getByTestId('app.build')).toContainText(`build ${expectedAppBuild}`);
+  expect(build()).toBe(expectedAppBuild);
   await app.context().tracing.start({screenshots:true,snapshots:true,sources:false});
   tracing=true;
 }
@@ -169,6 +185,10 @@ for (const selected of variants) {
     const fixture=JSON.parse(readFileSync(required(c.validation_fixture_manifest_path,
       'validation_fixture_manifest_path'),'utf8')) as FixtureManifest;
     const packageInfo=JSON.parse(readFileSync(c.package_manifest_path,'utf8')) as PackageManifest;
+    expect({appVersion:packageInfo.app.version,appBuild:String(packageInfo.app.build),
+      upgradeVersion:packageInfo.update_app.version,upgradeBuild:String(packageInfo.update_app.build)}).toEqual({
+      appVersion:expectedAppVersion,appBuild:expectedAppBuild,
+      upgradeVersion:expectedUpgradeVersion,upgradeBuild:expectedUpgradeBuild});
     if (fixture.variant_id!==c.case_id||fixture.ed25519_signature_present!==true)
       throw new Error('Negative fixture manifest does not bind this case');
     if (selected.id==='BUNDLE_ID'&&fixture.code_signature_verified!==true)
@@ -197,10 +217,10 @@ for (const selected of variants) {
     const actualArchive=downloads[0];
     const status=(await page!.getByTestId('updates.status').textContent())??'';
     const advertisedMismatch=selected.id==='INFO_VERSION'
-      ? fixture.metadata_version!==packageInfo.update_app.version
+      ? fixture.metadata_version===nextPatch(expectedUpgradeVersion)&&fixture.metadata_build===expectedUpgradeBuild
       : selected.id==='INFO_BUILD'
-        ? fixture.metadata_build!==String(packageInfo.update_app.build)
-        : true;
+        ? fixture.metadata_build===nextBuild(expectedUpgradeBuild)&&fixture.metadata_version===expectedUpgradeVersion
+        : fixture.metadata_version===expectedUpgradeVersion&&fixture.metadata_build===expectedUpgradeBuild;
     const identityLayerReached=selected.step!==3||selected.id==='BUNDLE_ID'
       ? true
       : fixture.code_signature_verified===true&&fixture.candidate_requirement_rejected===true;
@@ -226,13 +246,13 @@ for (const selected of variants) {
     const afterTree=originalTree();
     const observed=mainObservations(output!);
     await step(5,'Compare original installed App, running PID, isolated DB, update scratch and external sentinel','process',
-      {samePid:true,sameTree:true,originalPackage:true,build100:true,dbUnchanged:true,
+      {samePid:true,sameTree:true,originalPackage:true,originalBuild:true,dbUnchanged:true,
         sentinelUnchanged:true,noUpdateScratch:true,noNativeReplacement:true,
         observerBeforeEntry:true,nativeHandoffCount:0},
       {samePid:JSON.stringify(ownedPids())===JSON.stringify([beforePid]),
         sameTree:afterTree===beforeTree,
         originalPackage:beforeTree===packageInfo.app.tree_sha256,
-        build100:build()==='100',dbUnchanged:dbState()===beforeDb,
+        originalBuild:build()===expectedAppBuild,dbUnchanged:dbState()===beforeDb,
         sentinelUnchanged:digestFile(c.owned_sentinel_path)===beforeSentinel&&beforeSentinel===fixture.sentinel_sha256,
         noUpdateScratch:tempDownloads().length===0,
         noNativeReplacement:app?.process().pid===beforePid&&!app?.process().killed,

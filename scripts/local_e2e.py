@@ -108,6 +108,37 @@ def command(argv: list[str], *, timeout=120, cwd=ROOT, log: Path | None = None) 
     return result
 
 
+def approved_release_config(package: dict) -> dict:
+    """Bind package versions to the source-controlled config for this release."""
+    release_id = package.get("release_id")
+    if not isinstance(release_id, str) or not re.fullmatch(r"v\d+\.\d+\.\d+-\d{8}T\d{6}Z", release_id):
+        raise Failed("Package release ID is invalid")
+    config_path = ROOT / "releases" / release_id / "local-release.json"
+    if config_path.is_symlink() or not config_path.is_file():
+        raise Blocked("Approved local release config is absent")
+    if digest(config_path) != package.get("config_sha256"):
+        raise Failed("Package release config digest differs from source")
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise Failed("Approved local release config is unreadable") from exc
+    builder = module("local_e2e_package", "scripts/local_package.py")
+    try:
+        builder.validate_config(config)
+    except builder.PackageError as exc:
+        raise Failed("Approved local release config is invalid") from exc
+    if config["release_id"] != release_id or package.get("distribution_profile") != config["distribution_profile"]:
+        raise Failed("Package release identity differs from approved config")
+    for asset, version_key, build_key in (("app", "version", "build"),
+                                          ("update_app", "upgrade_version", "upgrade_build")):
+        details = package.get(asset)
+        if (not isinstance(details, dict) or details.get("version") != config[version_key]
+                or str(details.get("build")) != config[build_key]
+                or details.get("bundle_id") != config["bundle_id"]):
+            raise Failed(f"Package {asset} version or build differs from approved config")
+    return config
+
+
 def verify_host_and_manifest(manifest_path: Path, dmg: Path, update_zip: Path, candidate_sha: str,
                              *, development: bool = False) -> dict:
     if platform.system() != "Darwin" or platform.machine() != "x86_64" or not platform.mac_ver()[0].startswith("15."):
@@ -127,8 +158,7 @@ def verify_host_and_manifest(manifest_path: Path, dmg: Path, update_zip: Path, c
         raise Failed("DMG differs from manifest")
     if checked_file(manifest_path.parent, package["artifacts"]["update_zip"]).resolve() != update_zip.resolve():
         raise Failed("Upgrade ZIP differs from manifest")
-    if str(package["app"]["build"]) != "100" or str(package["update_app"]["build"]) != "101":
-        raise Failed("Wrong candidate or upgrade build")
+    approved_release_config(package)
     return package
 
 
@@ -179,8 +209,11 @@ def copy_verified_app(source: Path, destination: Path, package: dict, tree_tool,
         raise Failed("Missing signed App designated requirement")
     command(["codesign", "--verify", "--deep", "--strict", "-R", "=" + requirement, str(destination)], log=log)
     plist = destination / "Contents/Info.plist"
-    if command(["plutil", "-extract", "CFBundleVersion", "raw", str(plist)]).stdout.strip() != "100":
-        raise Failed("Installed App build is not 100")
+    for key, expected in (("CFBundleShortVersionString", package["app"]["version"]),
+                          ("CFBundleVersion", str(package["app"]["build"])),
+                          ("CFBundleIdentifier", package["app"]["bundle_id"])):
+        if command(["plutil", "-extract", key, "raw", str(plist)]).stdout.strip() != expected:
+            raise Failed(f"Installed App {key} differs from package")
     return destination
 
 
@@ -734,7 +767,7 @@ def execute(args) -> int:
         report.update(release_id=package["release_id"], candidate_tree=package["candidate_tree"],
                       host={"macos": platform.mac_ver()[0], "architecture": platform.machine()},
                       package={"manifest_sha256": digest(manifest), "dmg_sha256": digest(dmg),
-                               "app_tree_sha256": package["app"]["tree_sha256"], "build": "100",
+                               "app_tree_sha256": package["app"]["tree_sha256"], "build": package["app"]["build"],
                                "installed_source": "final_dmg"})
         if not args.development or getattr(args, "parent_report", None) is not None:
             report.update(bind_parent_report(getattr(args, "parent_report", None), run_id=args.run_id,
@@ -824,7 +857,11 @@ def execute(args) -> int:
                                  "update_control_url": source.url + "/control" if source else None,
                                  "update_control_token": source.token if source else None,
                                  "update_nonce": source.nonce if source else None, "cdp_port": cdp_port,
-                                 "expected_upgrade_build": "101", "expected_app_tree_sha256": package["app"]["tree_sha256"],
+                                 "expected_app_version": package["app"]["version"],
+                                 "expected_app_build": str(package["app"]["build"]),
+                                 "expected_upgrade_version": package["update_app"]["version"],
+                                 "expected_upgrade_build": str(package["update_app"]["build"]),
+                                 "expected_app_tree_sha256": package["app"]["tree_sha256"],
                                  "expected_update_tree_sha256": package["update_app"]["tree_sha256"]})
             started_case = iso()
             rc, raw = playwright_case(case_id, context, case_out)

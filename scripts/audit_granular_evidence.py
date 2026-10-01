@@ -194,6 +194,12 @@ PASSWORD05_PEER_SOURCE_SETS = (PASSWORD05_PEER_SOURCES, {
     "scripts/granular_e2e.py": "70e29fe415743ea63b95f4916c2cb8f1b0c380bf162bc015c87d59eab420fc17",
     "scripts/local_e2e.py": "d43036d0cee91b06df325f0fd8c9a60067b198fb2702ee56cedc80fcd028dae1",
     "apps/desktop/e2e/granular-login.spec.ts": "0bd303133c7d3bd0452eac4359af45ff8a8d94295664af0aed500faacafbe5a2",
+}, {
+    # Version-bound package checks replace the fixed build-100 check while
+    # preserving distinct peer installation/profile and login assertions.
+    "scripts/granular_e2e.py": "1d186a0ba1b0892f0d344ab6b85ee561595537e327469b464440823e2e3d4339",
+    "scripts/local_e2e.py": "4911312d154ee3fa23b262af3f5421aee82abc73663e63c4dfb74899976fb1b5",
+    "apps/desktop/e2e/granular-login.spec.ts": "0bd303133c7d3bd0452eac4359af45ff8a8d94295664af0aed500faacafbe5a2",
 })
 
 
@@ -596,15 +602,18 @@ def _update04_no_native_handoff(report_path: Path, report: dict, item: dict,
     fixed = (
         {"sourceReady": True, "productMetadata": True, "archiveCount": 1,
          "completeBytes": True, "matchingSha": True},
-        {"signatureRejected": True, "keyUnchanged": True, "build100": True},
+        {"signatureRejected": True, "keyUnchanged": True, "originalBuild": True},
         {"samePid": True, "sameTree": True, "oldBuild": True,
          "verifiedSession": True, "observerBeforeEntry": True,
          "nativeHandoffCount": 0},
         {"temporaryDownloads": 0, "noHigherApp": True,
          "sourceEvidence": True, "noPrivateKeyInEvents": True},
     )
-    if any(row.get("expected") != expected or row.get("actual") != expected
-           for row, expected in zip(steps, fixed)):
+    legacy_second = {"signatureRejected": True, "keyUnchanged": True, "build100": True}
+    if any(row.get("expected") != row.get("actual") or
+           (row.get("expected") not in (expected, legacy_second) if index == 1
+            else row.get("expected") != expected)
+           for index, (row, expected) in enumerate(zip(steps, fixed))):
         raise EvidenceMissing("Bad-signature UI, archive or cleanup step lacks fixed expected evidence")
     if any(row.get("kind") == "native-updater" for row in rows):
         raise EvidenceMissing("A native updater method was called despite signature rejection")

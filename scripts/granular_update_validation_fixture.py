@@ -68,7 +68,8 @@ def _read_config(package: dict, update_zip: Path) -> dict:
     if not isinstance(package, dict):
         raise ValueError("Unexpected local release manifest")
     release_id = package.get("release_id")
-    if not isinstance(release_id, str) or not re.fullmatch(r"v0\.1\.0-\d{8}T\d{6}Z", release_id):
+    if not isinstance(release_id, str) or release_id not in {
+            "v0.1.0-20260929T074814Z", "v0.2.0-20261001T034118Z"}:
         raise ValueError("Unexpected local release manifest")
     root = Path(__file__).resolve().parents[1]
     config_path = root / "releases" / release_id / "local-release.json"
@@ -89,7 +90,8 @@ def _read_config(package: dict, update_zip: Path) -> dict:
         raise ValueError("Update ZIP differs from current package manifest")
     if descriptor.get("bytes") != actual_bytes:
         raise ValueError("Update ZIP length differs from package manifest")
-    if (not isinstance(config, dict) or config.get("update_public_key") is None
+    if (not isinstance(config, dict) or config.get("release_id") != release_id
+            or config.get("update_public_key") is None
             or config.get("certificate_sha256") != package_certificate):
         raise ValueError("Local release trust anchors differ from package")
     return config
@@ -434,9 +436,20 @@ class ValidationFixture:
         elif self.kind == "ZIP_LIMIT_METADATA":
             metadata["bytes"] = MAX_ARCHIVE + 1
         elif self.kind == "INFO_VERSION":
-            metadata["version"] = "0.1.2"
+            current = metadata["version"]
+            match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", current)
+            if match is None:
+                raise ValueError("Update version cannot produce an INFO_VERSION mismatch")
+            metadata["version"] = f"{match[1]}.{match[2]}.{int(match[3]) + 1}"
+            if metadata["version"] == current:
+                raise ValueError("INFO_VERSION metadata must differ from signed App")
         elif self.kind == "INFO_BUILD":
-            metadata["build"] = "102"
+            current = metadata["build"]
+            if re.fullmatch(r"[1-9]\d*", current) is None:
+                raise ValueError("Update build cannot produce an INFO_BUILD mismatch")
+            metadata["build"] = str(int(current) + 1)
+            if metadata["build"] == current:
+                raise ValueError("INFO_BUILD metadata must differ from signed App")
         self.metadata = metadata
         self.stage = "current"
         self.nonce = secrets.token_hex(20)

@@ -167,7 +167,8 @@ class GranularEvidenceAuditTests(unittest.TestCase):
 
     def test_update04_rejects_native_handoff_on_bad_signature(self):
         for variant, expected in (("complete", "PASS"), ("native_handoff", "BLOCKED"),
-                                  ("missing_zip", "BLOCKED")):
+                                  ("missing_zip", "BLOCKED"),
+                                  ("legacy_build_key", "PASS")):
             with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temp:
                 report = observed_boundary_fixture(Path(temp), "TC-TM001-UPDATE-04", variant)
                 self.assertEqual(load_auditor().audit_run(report)["findings"][0]["state"], expected)
@@ -240,8 +241,8 @@ class GranularEvidenceAuditTests(unittest.TestCase):
 
     def test_password05_20261001_frozen_sources_need_whole_peer_review(self):
         reviewed = {
-            "scripts/granular_e2e.py": "70e29fe415743ea63b95f4916c2cb8f1b0c380bf162bc015c87d59eab420fc17",
-            "scripts/local_e2e.py": "d43036d0cee91b06df325f0fd8c9a60067b198fb2702ee56cedc80fcd028dae1",
+            "scripts/granular_e2e.py": "1d186a0ba1b0892f0d344ab6b85ee561595537e327469b464440823e2e3d4339",
+            "scripts/local_e2e.py": "4911312d154ee3fa23b262af3f5421aee82abc73663e63c4dfb74899976fb1b5",
             "apps/desktop/e2e/granular-login.spec.ts": "0bd303133c7d3bd0452eac4359af45ff8a8d94295664af0aed500faacafbe5a2",
         }
         with tempfile.TemporaryDirectory() as temp:
@@ -528,7 +529,7 @@ def observed_boundary_fixture(directory: Path, case: str, variant: str = "comple
              "unauthenticated": True, "noPrematureCheck": True},
             {"autoCurrent": True, "idleRequest": True,
              "noArchive": True, "verified": True},
-            {"versionOffered": True, "build100": True,
+            {"versionOffered": True, "originalBuild": True,
              "validMetadataRead": True, "noArchive": True},
             {"noArchive": True, "noNativeCache": True,
              "oldProcessOnly": True, "oldAppTree": True,
@@ -540,7 +541,8 @@ def observed_boundary_fixture(directory: Path, case: str, variant: str = "comple
         values = [
             {"sourceReady": True, "productMetadata": True, "archiveCount": 1,
              "completeBytes": True, "matchingSha": True},
-            {"signatureRejected": True, "keyUnchanged": True, "build100": True},
+            {"signatureRejected": True, "keyUnchanged": True,
+             "build100" if variant == "legacy_build_key" else "originalBuild": True},
             {"samePid": True, "sameTree": True, "oldBuild": True,
              "verifiedSession": True, "observerBeforeEntry": True, "nativeHandoffCount": 0},
             {"temporaryDownloads": 0, "noHigherApp": True,

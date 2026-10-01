@@ -92,6 +92,49 @@ class NegativeUpdateFixtureTests(unittest.TestCase):
                 self.assertEqual(digest(fixture.sentinel),
                                  json.loads(fixture.manifest_path.read_text())["sentinel_sha256"])
 
+    def test_info_metadata_mismatches_follow_both_approved_release_pairs(self):
+        release_id = "v0.2.0-20261001T034118Z"
+        config = json.loads((ROOT / "releases" / release_id / "local-release.json").read_text())
+        self.assertEqual(config["release_id"], release_id)
+        archive = self.root / "update-02.zip"
+        info = plistlib.dumps({"CFBundleIdentifier": config["bundle_id"],
+                               "CFBundleShortVersionString": "0.2.1", "CFBundleVersion": "201"})
+        with zipfile.ZipFile(archive, "x") as stream:
+            stream.writestr("TokenMeter.app/Contents/Info.plist", info)
+        app_info = self.root / "update-02/mac/TokenMeter.app/Contents/Info.plist"
+        app_info.parent.mkdir(parents=True)
+        app_info.write_bytes(info)
+        package = copy.deepcopy(self.package)
+        package["release_id"] = release_id
+        package["app"]["certificate_sha256"] = config["certificate_sha256"]
+        package["artifacts"]["update_zip"] = {"bytes": archive.stat().st_size,
+                                                "sha256": digest(archive)}
+        package["update_app"] = {"relative_path": "update-02/mac/TokenMeter.app",
+                                 "version": "0.2.1", "build": "201"}
+        releases = (("v0.1.0-20260929T074814Z", self.archive, self.package,
+                     {"INFO_VERSION": ("0.1.2", "101"), "INFO_BUILD": ("0.1.1", "102")}),
+                    (release_id, archive, package,
+                     {"INFO_VERSION": ("0.2.2", "201"), "INFO_BUILD": ("0.2.1", "202")}))
+        for approved_id, source, manifest, cases in releases:
+            for kind, expected in cases.items():
+                with self.subTest(release_id=approved_id, kind=kind):
+                    fixture = ValidationFixture(source, manifest,
+                        self.root / (approved_id + "-" + kind),
+                        "TC-TM001-UPDATE-05#" + kind, self.keys)
+                    try:
+                        self.assertEqual(fixture.config["release_id"], approved_id)
+                        self.assertEqual((fixture.metadata["version"], fixture.metadata["build"]), expected)
+                        recorded = json.loads(fixture.manifest_path.read_text())
+                        self.assertEqual((recorded["metadata_version"], recorded["metadata_build"]), expected)
+                        self.activate(fixture)
+                        with self.opener.open(fixture.url + "/version.json", timeout=3) as response:
+                            served = json.load(response)
+                        self.assertEqual((served["version"], served["build"]), expected)
+                        self.assertNotEqual(expected, (manifest["update_app"]["version"],
+                                                       manifest["update_app"]["build"]))
+                    finally:
+                        self.assertTrue(fixture.close())
+
     def test_unpack_limit_central_directory_is_over_threshold(self):
         archive = self.root / "oversize.zip"
         _small_signed_zip(archive, "UNPACK_LIMIT", self.info)
