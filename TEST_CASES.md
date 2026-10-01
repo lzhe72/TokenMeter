@@ -4,9 +4,9 @@
 
 主要查看入口：[TokenMeter项目总表.xlsx](TokenMeter项目总表.xlsx)。本页提供 Git 可审查索引，详细前置、SQL、逐步观察面和缺项见机器清单及各来源文档。
 
-当前主目录共 **222 条父用例、41 条内嵌稳定变体、703 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
+当前主目录共 **225 条父用例、41 条内嵌稳定变体、712 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
 
-设计状态：baseline_pending 52、baselined 30、designed 78、draft 33、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
+设计状态：baseline_pending 52、baselined 30、designed 78、draft 36、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
 
 本页保存用例设计，不回填运行结果；每批次实际PASS/FAIL/BLOCKED见独立测试结果Excel。新增TC不能继承旧聚合场景的结果。
 
@@ -388,7 +388,7 @@
 | TM-003 / REQ-TM003 | [TC-TM003-CORE-03](docs/testing/cases/03-TM-003-codex-collection.md) · 公开向量身份去重与冲突 | TASK-TM003-IDENTITY | source_check | 公开identity-v1测试key；codex/provider-response/shared-call-01的A=100/10/cached20；同ID重放；shared-call-02同usage；shared-call-01冲突999/99；claude_code/provider-message/shared-call-01仅求键。 | 1. 经正式身份函数处理Codex shared-call-01并通过模块API写入临时SQLite<br>2. 同ID同usage重放，再写shared-call-02相同usage<br>3. 同ID写999/99冲突；另对Claude同字面ID仅求键 | 1. 一事件total110；键精确为afd67bd0cad0227b3e7b5ac132bb9b3ed492073983b9c16a0c9cc24dd3008051<br>2. 重放仍一事件；新ID后两事件，input200/output20/cached40/total220<br>3. 首事件不变，诊断identity_conflict；Claude键精确为bf222a85ab2209f72ff82c21b7172c9315448b3e1d5bf4503a3c76b30c46cad1且不向本例产品库添加Claude事件 | 准备：创建本例拥有的空临时SQLite；不访问产品profile/Keychain<br>变更：仅通过正式模块API插入两条Codex事件与一条冲突诊断<br>核验：只读核对来源域唯一约束、两行总量、首行未覆写和诊断；只清理本例owner DB | draft / unexecuted<br>缺项：正式身份/存储模块和固定程序未绑定；产品DEDUP-01/NAMESPACE-01仍BLOCKED |
 
 
-## TM-004 · 24 行
+## TM-004 · 27 行
 
 | 功能 / 需求 | 用例及详情 | 开发任务 | 类型 | 输入 | 操作步骤 | 独立预期 | DB 准备、变更与核验 | 设计 / 执行状态 |
 
@@ -441,6 +441,12 @@
 | TM-004 / REQ-TM004 | [TC-TM004-SOURCE-04](docs/testing/cases/04-TM-004-claude-collection.md) · 预览截断后的可续扫覆盖（TASK-TM004-SOURCE，AC-001/004，E2E-001/004） | TASK-TM004-SOURCE | product_e2e | 本例独占授权根，固定程序按 TM-002 已提交枚举顺序生成至少1025个普通 `.jsonl` 文件及足够目录项；前段有主M100/10，预览截断范围外且至少第五个256项采集页的深层 `subagents/` 文件有子S50/5，其余文件没有可计量调用。另备可控制的页间撤权/恢复点。 | 1. 真实 UI 选择并确认根<br>2. 经 TM-002 草稿 `beginCandidateScan`/`nextCandidatePage` 取得至多256候选的第一页且 opaque continuation 未耗尽<br>3. 跨至少第五页继续至深层S<br>4. 全部页面 `complete=true` 且完整行提交后 | 1. 1000文件预览显示被截断，不声称全量<br>2. UI 可显示已见M110，但 TM-003 `coverage.scan_incomplete=1`<br>3. 使用 `openCandidateReadOnly(candidateToken)` 读原始行；在另一次固定变体于页间撤权，下一页或打开须拒绝，`cancelScan` 后 `scan_incomplete=1`，重授后以新授权世代续扫<br>4. 可信 M+S 两调用、input150/output15/total165，`scan_incomplete=0` 才可显示本次覆盖完成；重启重扫总量不变 | 准备：按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件<br>变更：仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行<br>核验：规划只读核对：只读各来源事件键、聚合 `(2,150,15)`、游标及 `coverage.scan_incomplete`；中途必须为1；确切可执行SQL待TM-003稳定schema | baseline_pending / unexecuted<br>缺项：TM-002原生授权/分页/只读打开和撤销接口尚未稳定或验证；本例逐步固定产品执行代码和原始结果尚未建立 |
 
 | TM-004 / REQ-TM004 | [TC-TM004-INCREMENTAL-03](docs/testing/cases/04-TM-004-claude-collection.md) · 跨工具同 ID 与 Claude 复制历史（TASK-TM004-INCREMENTAL，AC-001/002，E2E-001/002） | TASK-TM004-INCREMENTAL | product_e2e | 同一合成主体、各自经 UI 授权的 Codex 与 Claude 隔离根。固定本地响应使 Codex 原生 `payload.response_id` 与 Claude 主 `assistant.message.id` 字面均为 `shared-call-01`，分别有 C=11/1 与 M=100/10；Claude 原生 `--fork-session` 复制M，再有独立 Agent 子调用S=200/20（新 message.id、与父同 sessionId 但带 agentId）。另以明确标记的衍生故障数据令同一 Claude message.id 出现矛盾101/10，该行不冒称 CLI 原件。 | 1. 经安装 App 扫描C<br>2. 扫描M<br>3. 扫描 fork 复制M与 Agent S<br>4. 加入矛盾行并重扫/重启 | 1. 可信1次/total12<br>2. 可信2次/input111/output11/total122，跨工具同字面 ID 不冲突<br>3. 可信3次/input311/output31/total342<br>4. 可信仍3次/342，出现 `identity_conflict` 与覆盖不完整 | 准备：按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件<br>变更：仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行<br>核验：规划只读核对：只读同一 `principal_key` 下 `source=codex` 与 `source=claude_code` 各自事件数1/2、`source_event_key` 不同，Agent `source_scope_key` 与主来源可区分，复制M不多行，冲突不覆写原M；键与归属均不得存原生ID/完整路径；确切可执行SQL待TM-003稳定schema | baseline_pending / unexecuted<br>缺项：TM-003事务游标、身份schema和只读SQL尚未稳定或验证；本例逐步固定产品执行代码和原始结果尚未建立 |
+
+| TM-004 / REQ-TM004 | [TC-TM004-CORE-01](docs/testing/cases/04-TM-004-claude-collection.md) · 完整LF、半行与限额续读 | TASK-TM004-INCREMENTAL | source_check | 固定746字节13/7 assistant行、前半字节、两条不同ID完整行、首读上限754字节 | 1. 读未写完的前半行<br>2. 补齐LF、重复读取<br>3. 两完整行首读754字节后续读 | 1. 调用0、偏移0、scanIncomplete=true，不作可信零结论<br>2. 补齐后一次13/7=20、偏移746、前缀MAC匹配；重复读取0调用且游标不变<br>3. 首读只第一条、偏移746、read_limit且未完成；续读只第二条、偏移为总字节长、完成 | 准备：无产品DB；每例新建自有临时文件<br>变更：不适用；只返回模块调用、诊断与游标<br>核验：固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL | draft / unexecuted<br>缺项：SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行 |
+
+| TM-004 / REQ-TM004 | [TC-TM004-CORE-02](docs/testing/cases/04-TM-004-claude-collection.md) · 前缀MAC、变更和密钥失败 | TASK-TM004-INCREMENTAL | source_check | 已提交首行，追加不同ID第二行、同长度ID改写并复原mtime、截短、身份改变、秘密缺失或错误 | 1. 首行后追加第二完整行<br>2. 同长度前缀改写、截短及稳定身份变更<br>3. 秘密无效或读中源变化 | 1. 快照digest变化但稳定身份/前缀MAC相同，续读只第二调用，无cursor_reset<br>2. 分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符<br>3. 拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密 | 准备：无产品DB；每例新建自有临时文件<br>变更：不适用；只返回模块调用、诊断与游标<br>核验：固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL | draft / unexecuted<br>缺项：SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行 |
+
+| TM-004 / REQ-TM004 | [TC-TM004-CORE-03](docs/testing/cases/04-TM-004-claude-collection.md) · 损坏完整行与未知结构 | TASK-TM004-PARSER、TASK-TM004-INCREMENTAL | source_check | 固定13/7行前置非法UTF8完整行和版本2.1.127完整行，尾部再追加无LF坏字节 | 1. 读三条完整LF行<br>2. 核对游标、重复读取及隐私<br>3. 追加无LF坏字节再补LF | 1. 仅合法2.1.126一条调用13/7=20；invalid_utf8及unsupported_version各一次<br>2. 游标到三行LF末，MAC匹配且完成；重复读取0；输出无路径、正文、秘密<br>3. 未补LF前偏移不动且未完成；补LF后仅诊断推进，无伪调用 | 准备：无产品DB；每例新建自有临时文件<br>变更：不适用；只返回模块调用、诊断与游标<br>核验：固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL | draft / unexecuted<br>缺项：SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行 |
 
 
 ## TM-005 · 43 行

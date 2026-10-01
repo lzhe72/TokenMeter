@@ -1,5 +1,11 @@
 # v0.4.0-20261001T040433Z — 执行记录与交接
 
+## 2026-10-02 · 已打开句柄reader辅助TC编制
+
+TM-004新代码工作树报告 `claude-reader.ts` 以已打开的只读FileHandle、完整LF游标和32字节秘密进行限额读取，模块红测0/3、修后绿测3/3及typecheck PASS原件位于其`.local/ci/tm004-reader-*`；源码目前尚未形成该切片的干净提交，以上只作为设计交接证据，不能回填产品`INCREMENTAL-01/02`或`PARSER-02` PASS。文档会话按SOP-002–008、024冻结 `TC-TM004-CORE-01/02/03` 的合成输入和逐步独立预期，保留原20条产品TC、四组摘要及真实授权/SQLite/IPC/App阻断。特别核对TM-002当前候选`fileIdentityDigest`包含size/mtime，追加即改变，不能当作稳定游标身份；同长度/同mtime前缀改写也须用keyed prefixMAC检出，密钥失效时不得提交新游标。纯reader模块既不完成事件与游标的SQLite原子事务，也不证明已授权文件身份。0.4整版基线、产品E2E和正式发行均NOT_RUN/BLOCKED。
+
+SOP-024编制检查：structure退出0（134文档、1219链接），用例目录生成225父TC/712步退出0，治理457/457退出0（原始日志`.local/docs-checks/20261002-tm004-reader-governance.log`），`git diff --check`退出0，根总表回读退出0（11 Sheet、225父TC、41变体、266行、13旧批次；SHA-256 `671ed5da0024d11e9bcd9d0276d3d9d145628302b373ec483b0c536717def3cb`）。此前导出器因TM-005两条E2E标题移动报告stale失败，已把来源行从19/36更新为21/38并重生；不删测试以求通过。固定reader fixture SHA-256 `26c98b52b0af648fd591d6a42eeda83115746cab3f8c920ca7d815a4b5387a49`，逐TC文档 `9ac6b4aaa920ea1eecd3790455fbe648fccd9906346e4eb8a8ceee494f264bb4`，机器用例 `863273f87932606840d963b7b537be2e64c742d63ae9d360a9cb2928bd7c974e`。输入提交后另做SOP-008逐TC语义与依赖核对；本段结构/治理PASS不等于切片或产品PASS。
+
 ## 文档会话接管与可执行边界（2026-10-01）
 
 文档会话保留源分支`05a9cd8`的01–06和20条细TC草稿，并从TM-004代码分支只读核对原生定向收据。`tm004-native-zero-20261001T1130Z/result.json`记录显式上游0/0和省略usage两种SSE都在Claude Code 2.1.126原生assistant JSONL成为0/0，`valid_provider_zero_proven=false`；不能把JSONL零直接当有效零。`tm004-native-nested-20261001T1131Z/result.json`仅记录本次Agent配置的三个请求、父/子两个文件及无`fork-context-ref`，不能推断所有嵌套模式不支持。有效零和`TC-TM004-SOURCE-03`继续`baseline_pending`。0.4正式升级须来自SOP-018/020通过并归档的0.3稳定原包，当前缺失；本轮只同步设计与机器用例，未运行安装后App E2E。

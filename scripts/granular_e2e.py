@@ -27,6 +27,7 @@ from granular_service_fixture import ServiceFixture
 from granular_update_target import DeniedTarget
 import granular_bounds_fixture as bounds
 from granular_shipit_probe import probe as shipit_probe
+from run_test_case import KEY_DIR_PLACEHOLDER, redact_signing_data
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -318,9 +319,12 @@ def one_case(case: dict, args, package: dict, mounted: Path, private_root: Path,
                              forbidden_target_observations_url=denied.url + "/observations",
                              forbidden_target_token=denied.token)
             if case_id.startswith("TC-TM001-UPDATE-05#"):
-                from granular_update_validation_fixture import ValidationFixture
-                update = ValidationFixture(args.update_zip, package, private / "update-validation",
-                                            case_id, ROOT / ".local/internal-release-keys")
+                from granular_update_validation_fixture import SigningInputsUnavailable, ValidationFixture
+                try:
+                    update = ValidationFixture(args.update_zip, package, private / "update-validation",
+                                                case_id, args.key_dir)
+                except SigningInputsUnavailable as error:
+                    raise base.Blocked(str(error)) from error
                 extra.update(validation_fixture_url=update.url,
                     validation_fixture_control_url=update.control_url,
                     validation_fixture_control_token=update.token,
@@ -564,9 +568,12 @@ def execute(args) -> int:
     replay_base = [sys.executable, str(ROOT / "scripts/run_test_case.py"),
         "--package-manifest", str(args.package_manifest.absolute()), "--source-report", str(out / "result.json")]
     if args.development: replay_base.append("--development")
-    report["replay"] = {"working_directory": str(ROOT), "all_command": shlex.join(replay_base + ["--all"]),
+    private_arg = ["--key-dir", KEY_DIR_PLACEHOLDER]
+    report["replay"] = {"working_directory": str(ROOT), "all_command": shlex.join(replay_base + private_arg + ["--all"]),
         "cases": {case["id"]: {"code": "apps/desktop/e2e/" + spec,
-            "test_name": case["id"], "command": shlex.join(replay_base + ["--case-id", case["id"]])}
+            "test_name": case["id"], "command": shlex.join(replay_base +
+                (private_arg if args.key_dir is not None or case["id"] == "TC-TM001-UPDATE-05"
+                 or case["id"].startswith("TC-TM001-UPDATE-05#") else []) + ["--case-id", case["id"]])}
             for case in catalog if (spec := case_spec(case["id"]))}}
     snapshot_files = []
     for relative in inputs:
@@ -588,6 +595,16 @@ def execute(args) -> int:
         args.update_zip = update_zip
         package = base.verify_host_and_manifest(manifest, dmg, update_zip, args.candidate_sha,
                                                 development=args.development)
+        if args.key_dir is not None and not args.key_dir.is_absolute():
+            raise base.Blocked("Signing input directory must be an absolute path")
+        if any(case["id"].startswith("TC-TM001-UPDATE-05#") for case in catalog):
+            if args.key_dir is None:
+                raise base.Blocked("UPDATE-05 requires an explicit absolute --key-dir before App launch")
+            from granular_update_validation_fixture import SigningInputsUnavailable, validate_signing_inputs
+            try:
+                validate_signing_inputs(args.key_dir, package, update_zip)
+            except SigningInputsUnavailable as error:
+                raise base.Blocked(str(error)) from error
         report.update(release_id=package["release_id"], working_tree_dirty=package["working_tree_dirty"],
                       candidate_tree=package["candidate_tree"],
                       host={"macos": platform.mac_ver()[0], "architecture": platform.machine()},
@@ -663,7 +680,7 @@ def execute(args) -> int:
         if mount and mount.exists():
             detached = subprocess.run(["hdiutil", "detach", str(mount)], capture_output=True, text=True, check=False)
             mount_closed = detached.returncode == 0
-        private_closed = False
+        private_closed = private is None
         if private and private.is_dir() and mount_closed and safe_to_continue:
             try:
                 marker = json.loads((private / "owner.json").read_text(encoding="utf-8"))
@@ -678,6 +695,7 @@ def execute(args) -> int:
             report["state"] = "FAIL"
             report["error"] = "Owned resources were not fully cleaned"
         report["finished_at"] = now()
+        report = redact_signing_data(report, args.key_dir)
         base.write_json(out / "result.json", report)
     print(json.dumps({"state": report["state"], "run_id": args.run_id,
                       "results": {state: sum(item["state"] == state for item in report["tc_results"])
@@ -695,6 +713,7 @@ def main(argv=None) -> int:
     parser.add_argument("--candidate-sha", required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--development", action="store_true")
+    parser.add_argument("--key-dir", type=Path, help="Absolute restricted local signing input directory for UPDATE-05")
     parser.add_argument("--case-id", action="append", help="Run one or more specific TC IDs for development diagnosis only")
     return execute(parser.parse_args(argv))
 

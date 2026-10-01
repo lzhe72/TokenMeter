@@ -368,6 +368,8 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
     parser.add_argument("phase", choices=("check", "iteration", "release"))
     parser.add_argument("--package-manifest", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--key-dir", type=Path,
+                        help="Absolute local signing input directory for Electron UPDATE-05")
     args = parser.parse_args(argv)
     baseline_errors, baseline_counts = validate_baseline(root)
     if baseline_errors:
@@ -400,11 +402,14 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
             return 2
         if manifest.get("execution_profile") == "local_electron":
             local = root / "scripts/local_gate.py"
-            if manifest.get("execution_bindings_status") != "ready" or not local.is_file() or not args.package_manifest or not args.output:
-                print(json.dumps({"state": "BLOCKED", "reason": "Electron local gate needs ready bindings and --package-manifest/--output; legacy runner is retired", "release_eligible": False}))
+            if (manifest.get("execution_bindings_status") != "ready" or not local.is_file() or
+                    not args.package_manifest or not args.output or not args.key_dir or
+                    not args.key_dir.is_absolute()):
+                print(json.dumps({"state": "BLOCKED", "reason": "Electron local gate needs ready bindings, --package-manifest, --output and absolute --key-dir; legacy runner is retired", "release_eligible": False}))
                 return 2
             result = subprocess.run([sys.executable, str(local), "--package-manifest", str(args.package_manifest),
-                                     "--output", str(args.output), "--phase", args.phase], cwd=root, check=False)
+                                     "--output", str(args.output), "--key-dir", str(args.key_dir),
+                                     "--phase", args.phase], cwd=root, check=False)
             return result.returncode
     runner = root / "scripts/e2e.py"
     if not runner.resolve().is_relative_to(root.resolve()) or not runner.is_file():

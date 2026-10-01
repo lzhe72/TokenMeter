@@ -12,7 +12,7 @@
         "docs/standards/documentation.md",
         "sop/README.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -248,7 +248,7 @@
         "docs/standards/documentation.md",
         "sop/README.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-024-document-change.md"
     },
     {
@@ -445,7 +445,7 @@
         "docs/standards/documentation.md",
         "sop/README.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-024-document-change.md"
     },
     {
@@ -615,7 +615,7 @@
         "docs/status.md",
         "sop/SOP-024-document-change.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-024-document-change.md"
     },
     {
@@ -1377,7 +1377,7 @@
         "tests/acceptance.json",
         "docs/testing/strategy.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
@@ -1702,7 +1702,7 @@
       "inputs": [
         "releases/v0.3.0-20261001T034652Z/01-requirements.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-022-archive-handoff.md"
     },
     {
@@ -1770,7 +1770,7 @@
       "inputs": [
         "releases/v0.4.0-20261001T040433Z/01-requirements.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-003-feature-breakdown.md"
     },
     {
@@ -1783,7 +1783,7 @@
       "inputs": [
         "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-005-development-plan.md"
     },
     {
@@ -1796,7 +1796,7 @@
       "inputs": [
         "releases/v0.4.0-20261001T040433Z/03-development-plan.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
@@ -1822,7 +1822,7 @@
       "inputs": [
         "releases/v0.4.0-20261001T040433Z/05-release-plan.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-022-archive-handoff.md"
     },
     {

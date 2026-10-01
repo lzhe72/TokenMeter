@@ -12943,7 +12943,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/05-TM-005-usage-statistics.md",
-        "line": 19,
+        "line": 21,
         "heading": "E2E-TM005-001 · 日期筛选、趋势和明细"
       },
       "missing": [
@@ -13008,7 +13008,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/05-TM-005-usage-statistics.md",
-        "line": 36,
+        "line": 38,
         "heading": "E2E-TM005-002 · 时区、月边界与缺失值"
       },
       "missing": [
@@ -18778,6 +18778,209 @@
         "SOP-014"
       ],
       "overall_expected": "1. 两来源complete且无事件、随后移除覆盖事实；前者complete/known0/total0；后者不得自行推断complete\n2. 一来源missing，分别给空事件与可信110；空事件missing/known0/total null；可信110为partial/known110/total null\n3. 两来源complete，分别给可信110+未知诊断、仅未知诊断；前者partial/known110/total null；后者unknown/known0/total null"
+    },
+    {
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "type": "source_check",
+      "preconditions": "仅测试拥有的0700临时目录、固定合成fixture、已打开只读FileHandle、32字节合成秘密和稳定合成文件身份；不访问用户日志、授权、产品Keychain、SQLite、IPC、服务或App。",
+      "db_operations": {
+        "prepare": "无产品DB；每例新建自有临时文件",
+        "expected_changes": "不适用；只返回模块调用、诊断与游标",
+        "verification": "固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL",
+        "read_only_checks": []
+      },
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "missing": [
+        "SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "关闭本例FileHandle并仅删除本例自有临时目录；保留原始模块报告。",
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ],
+      "id": "TC-TM004-CORE-01",
+      "title": "完整LF、半行与限额续读",
+      "task_ids": [
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-002"
+      ],
+      "input": "固定746字节13/7 assistant行、前半字节、两条不同ID完整行、首读上限754字节",
+      "steps": [
+        {
+          "step": 1,
+          "action": "读未写完的前半行",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "调用0、偏移0、scanIncomplete=true，不作可信零结论"
+        },
+        {
+          "step": 2,
+          "action": "补齐LF、重复读取",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "补齐后一次13/7=20、偏移746、前缀MAC匹配；重复读取0调用且游标不变"
+        },
+        {
+          "step": 3,
+          "action": "两完整行首读754字节后续读",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "首读只第一条、偏移746、read_limit且未完成；续读只第二条、偏移为总字节长、完成"
+        }
+      ],
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "line": 170,
+        "heading": "TC-TM004-CORE-01 · 完整LF、半行与限额续读"
+      },
+      "overall_expected": "1. 读未写完的前半行；调用0、偏移0、scanIncomplete=true，不作可信零结论\n2. 补齐LF、重复读取；补齐后一次13/7=20、偏移746、前缀MAC匹配；重复读取0调用且游标不变\n3. 两完整行首读754字节后续读；首读只第一条、偏移746、read_limit且未完成；续读只第二条、偏移为总字节长、完成"
+    },
+    {
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "type": "source_check",
+      "preconditions": "仅测试拥有的0700临时目录、固定合成fixture、已打开只读FileHandle、32字节合成秘密和稳定合成文件身份；不访问用户日志、授权、产品Keychain、SQLite、IPC、服务或App。",
+      "db_operations": {
+        "prepare": "无产品DB；每例新建自有临时文件",
+        "expected_changes": "不适用；只返回模块调用、诊断与游标",
+        "verification": "固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL",
+        "read_only_checks": []
+      },
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "missing": [
+        "SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "关闭本例FileHandle并仅删除本例自有临时目录；保留原始模块报告。",
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ],
+      "id": "TC-TM004-CORE-02",
+      "title": "前缀MAC、变更和密钥失败",
+      "task_ids": [
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-002",
+        "AC-TM004-004"
+      ],
+      "input": "已提交首行，追加不同ID第二行、同长度ID改写并复原mtime、截短、身份改变、秘密缺失或错误",
+      "steps": [
+        {
+          "step": 1,
+          "action": "首行后追加第二完整行",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "快照digest变化但稳定身份/前缀MAC相同，续读只第二调用，无cursor_reset"
+        },
+        {
+          "step": 2,
+          "action": "同长度前缀改写、截短及稳定身份变更",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符"
+        },
+        {
+          "step": 3,
+          "action": "秘密无效或读中源变化",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密"
+        }
+      ],
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "line": 178,
+        "heading": "TC-TM004-CORE-02 · 前缀MAC、变更和密钥失败"
+      },
+      "overall_expected": "1. 首行后追加第二完整行；快照digest变化但稳定身份/前缀MAC相同，续读只第二调用，无cursor_reset\n2. 同长度前缀改写、截短及稳定身份变更；分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符\n3. 秘密无效或读中源变化；拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密"
+    },
+    {
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "type": "source_check",
+      "preconditions": "仅测试拥有的0700临时目录、固定合成fixture、已打开只读FileHandle、32字节合成秘密和稳定合成文件身份；不访问用户日志、授权、产品Keychain、SQLite、IPC、服务或App。",
+      "db_operations": {
+        "prepare": "无产品DB；每例新建自有临时文件",
+        "expected_changes": "不适用；只返回模块调用、诊断与游标",
+        "verification": "固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL",
+        "read_only_checks": []
+      },
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "missing": [
+        "SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "关闭本例FileHandle并仅删除本例自有临时目录；保留原始模块报告。",
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ],
+      "id": "TC-TM004-CORE-03",
+      "title": "损坏完整行与未知结构",
+      "task_ids": [
+        "TASK-TM004-PARSER",
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-003"
+      ],
+      "input": "固定13/7行前置非法UTF8完整行和版本2.1.127完整行，尾部再追加无LF坏字节",
+      "steps": [
+        {
+          "step": 1,
+          "action": "读三条完整LF行",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "仅合法2.1.126一条调用13/7=20；invalid_utf8及unsupported_version各一次"
+        },
+        {
+          "step": 2,
+          "action": "核对游标、重复读取及隐私",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "游标到三行LF末，MAC匹配且完成；重复读取0；输出无路径、正文、秘密"
+        },
+        {
+          "step": 3,
+          "action": "追加无LF坏字节再补LF",
+          "expected_ui": "不适用；纯reader模块",
+          "expected_api_db": "不适用；无产品DB或API",
+          "expected": "未补LF前偏移不动且未完成；补LF后仅诊断推进，无伪调用"
+        }
+      ],
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "line": 186,
+        "heading": "TC-TM004-CORE-03 · 损坏完整行与未知结构"
+      },
+      "overall_expected": "1. 读三条完整LF行；仅合法2.1.126一条调用13/7=20；invalid_utf8及unsupported_version各一次\n2. 核对游标、重复读取及隐私；游标到三行LF末，MAC匹配且完成；重复读取0；输出无路径、正文、秘密\n3. 追加无LF坏字节再补LF；未补LF前偏移不动且未完成；补LF后仅诊断推进，无伪调用"
     }
   ]
 }

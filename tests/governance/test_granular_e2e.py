@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -73,6 +76,87 @@ class GranularEvidenceContract(unittest.TestCase):
             payload["suites"][0]["specs"][0]["tests"][0]["results"].append({"status": "passed"})
             path.write_text(json.dumps(payload))
             self.assertEqual("BLOCKED", runner.raw_status(path, self.case["id"])[0])
+
+    def test_update_signing_preflight_blocks_before_app_mount_and_redacts_report(self):
+        from granular_update_validation_fixture import SigningInputsUnavailable
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve()
+            manifest=root/'package.json'
+            dmg=root/'candidate.dmg'
+            update_zip=root/'update.zip'
+            for path in (manifest,dmg,update_zip): path.write_bytes(b'fixture')
+            key_dir=root/'private-signing-keys'
+            key_dir.mkdir()
+            parent={'id':'TC-TM001-UPDATE-05','steps':[],'design_status':'designed'}
+            child={'id':'TC-TM001-UPDATE-05#BYTES','parent_id':parent['id'],
+                   'steps':[],'design_status':'designed'}
+            package={'release_id':'v0.1.0-test','working_tree_dirty':False,
+                     'candidate_tree':'a'*40,'app':{'tree_sha256':'b'*64}}
+            args=SimpleNamespace(case_id=[parent['id']],output=root/'results',
+                package_manifest=manifest,dmg=dmg,update_zip=update_zip,
+                candidate_sha='a'*40,run_id='local-'+'a'*32,development=False,key_dir=key_dir)
+            with (patch.object(runner,'ROOT',root),patch.object(runner,'read_catalog',return_value=[parent,child]),
+                  patch.object(runner.base,'verify_host_and_manifest',return_value=package),
+                  patch.object(runner.base,'mount_dmg') as mount,
+                  patch('granular_update_validation_fixture.validate_signing_inputs',
+                        side_effect=SigningInputsUnavailable('unsafe '+str(key_dir))) as preflight,
+                  patch('sys.stdout',io.StringIO())):
+                self.assertEqual(runner.execute(args),2)
+            preflight.assert_called_once_with(key_dir,package,update_zip)
+            mount.assert_not_called()
+            report=json.loads((args.output/'result.json').read_text())
+            self.assertEqual(report['state'],'BLOCKED')
+            self.assertEqual(len(report['tc_results']),2)
+            self.assertNotIn(str(key_dir),json.dumps(report))
+            self.assertIn(runner.KEY_DIR_PLACEHOLDER,report['replay']['all_command'])
+            self.assertIn(runner.KEY_DIR_PLACEHOLDER,
+                report['replay']['cases'][parent['id']]['command'])
+            self.assertIn(runner.KEY_DIR_PLACEHOLDER,
+                report['replay']['cases'][child['id']]['command'])
+
+    def test_public_package_mismatch_is_fail_before_app_mount(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve()
+            manifest=root/'package.json'
+            dmg=root/'candidate.dmg'
+            update_zip=root/'update.zip'
+            for path in (manifest,dmg,update_zip): path.write_bytes(b'fixture')
+            case={'id':'TC-TM001-UPDATE-05#SHA','parent_id':'TC-TM001-UPDATE-05',
+                  'steps':[],'design_status':'designed'}
+            args=SimpleNamespace(case_id=[case['id']],output=root/'results',
+                package_manifest=manifest,dmg=dmg,update_zip=update_zip,
+                candidate_sha='a'*40,run_id='local-'+'a'*32,development=False,key_dir=root/'keys')
+            with (patch.object(runner,'ROOT',root),patch.object(runner,'read_catalog',return_value=[case]),
+                  patch.object(runner.base,'verify_host_and_manifest',return_value={}),
+                  patch.object(runner.base,'mount_dmg') as mount,
+                  patch('granular_update_validation_fixture.validate_signing_inputs',
+                        side_effect=ValueError('Update ZIP differs from current package manifest')),
+                  patch('sys.stdout',io.StringIO())):
+                self.assertEqual(runner.execute(args),1)
+            mount.assert_not_called()
+            report=json.loads((args.output/'result.json').read_text())
+            self.assertEqual(report['state'],'FAIL')
+            self.assertIn('Update ZIP differs',report['error'])
+
+    def test_update_without_absolute_key_dir_is_blocked_before_mount(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve()
+            manifest=root/'package.json'
+            dmg=root/'candidate.dmg'
+            update_zip=root/'update.zip'
+            for path in (manifest,dmg,update_zip): path.write_bytes(b'fixture')
+            case={'id':'TC-TM001-UPDATE-05#BYTES','parent_id':'TC-TM001-UPDATE-05',
+                  'steps':[],'design_status':'designed'}
+            for value in (None,Path('relative/keys')):
+                args=SimpleNamespace(case_id=[case['id']],output=root/('run-'+str(value)),
+                    package_manifest=manifest,dmg=dmg,update_zip=update_zip,
+                    candidate_sha='a'*40,run_id='local-'+'a'*32,development=False,key_dir=value)
+                with (patch.object(runner,'ROOT',root),patch.object(runner,'read_catalog',return_value=[case]),
+                      patch.object(runner.base,'verify_host_and_manifest',return_value={}),
+                      patch.object(runner.base,'mount_dmg') as mount,patch('sys.stdout',io.StringIO())):
+                    self.assertEqual(runner.execute(args),2)
+                mount.assert_not_called()
+                self.assertEqual(json.loads((args.output/'result.json').read_text())['state'],'BLOCKED')
 
 
 if __name__ == "__main__":

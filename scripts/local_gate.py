@@ -17,6 +17,7 @@ import platform
 import plistlib
 import re
 import shutil
+import signal
 import sqlite3
 import struct
 import subprocess
@@ -28,7 +29,19 @@ import zipfile
 from urllib.parse import urlsplit
 
 ROOT=Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0,str(ROOT))
+from scripts import granular_update_validation_fixture as signing_fixture
+
 CASES=[f'E2E-TM001-{i:03d}' for i in (1,2,3,5,6,4)]
+AUX_PLACEHOLDER_IDS=frozenset({
+    *(f'TC-TM001-UI-{i:02d}' for i in (1,2,3)),
+    *(f'TC-TM001-CATALOG-{i:02d}' for i in (1,2,3)),
+    *(f'TC-TM001-RECORDS-{i:02d}' for i in (1,2)),
+    *(f'TC-TM001-GATE-{i:02d}' for i in (1,2,3)),
+})
+MAX_CHILD_LOG_BYTES=32*1024*1024
+MAX_CHILD_LINE_BYTES=1024*1024
 REQUIRED_STEPS={
  'E2E-TM001-001':{'default_routes','forced_password','identity','auto_restore','logout_revokes','auto_off'},
  'E2E-TM001-002':{'login_errors','member_identity','admin_hidden','member_forbidden'},
@@ -871,20 +884,82 @@ def write_new(path,value):
     with path.open('x') as f:
         os.chmod(path,0o600);json.dump(value,f,ensure_ascii=False,indent=2);f.write('\n')
 
-def run_logged(argv,log_path):
-    with log_path.open('x') as log:
+def _private_path_forms(paths):
+    """Cover ordinary, resolved, JSON-escaped and repr-escaped spellings."""
+    forms=set()
+    for source in paths:
+        original=str(source)
+        for path in (original,os.path.realpath(original)):
+            if not path:
+                continue
+            forms.add(path)
+            forms.add(json.dumps(path,ensure_ascii=True)[1:-1])
+            forms.add(json.dumps(path,ensure_ascii=False)[1:-1])
+            forms.add(repr(path)[1:-1])
+    return sorted(forms,key=len,reverse=True)
+
+def redact_private_paths(value, paths):
+    result=str(value)
+    for form in _private_path_forms(paths):
+        result=result.replace(form,'<SIGNING_INPUT_DIR>')
+    return result
+
+def run_logged(argv,log_path,*,redact_paths=()):
+    """Stream child output into a bounded, private and redacted evidence log."""
+    with log_path.open('x',encoding='utf-8') as log:
         os.chmod(log_path,0o600)
-        process=subprocess.run(argv,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=False)
-    return process.returncode
+        child=subprocess.Popen(argv,cwd=ROOT,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
+                               start_new_session=True)
+        try:
+            total=0
+            assert child.stdout is not None
+            while line:=child.stdout.readline(MAX_CHILD_LINE_BYTES+1):
+                total+=len(line)
+                if len(line)>MAX_CHILD_LINE_BYTES or total>MAX_CHILD_LOG_BYTES:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    child.wait()
+                    log.write('[Child output exceeded the safe log bound; process stopped]\n')
+                    raise Blocked('Child runner output exceeded the safe log bound')
+                log.write(redact_private_paths(line.decode('utf-8',errors='replace'),redact_paths))
+            return child.wait()
+        finally:
+            if child.stdout is not None:
+                child.stdout.close()
+            if child.poll() is None:
+                try:os.killpg(child.pid,signal.SIGKILL)
+                except ProcessLookupError:pass
+                child.wait()
 
 def verify_detailed_runner_completion(exit_code, raw):
     require(isinstance(raw,dict),'Detailed runner did not produce a JSON object')
-    require(raw.get('state')=='BLOCKED' and exit_code==2,
-            'Detailed runner process and its 11-placeholder BLOCKED original disagree')
+    rows=raw.get('tc_results')
+    require(isinstance(rows,list) and rows,'Detailed runner has no TC originals')
+    require(all(isinstance(row,dict) and isinstance(row.get('case_id'),str) and
+                row.get('state') in ('PASS','FAIL','BLOCKED') for row in rows),
+            'Detailed runner has malformed TC originals')
+    identities=[row['case_id'] for row in rows]
+    require(len(identities)==len(set(identities)),'Detailed runner repeats TC identities')
+    failed=sorted(row['case_id'] for row in rows if row['state']=='FAIL')
+    if failed:
+        raise Invalid('Detailed runner original FAIL: '+', '.join(failed))
+    blocked={row['case_id'] for row in rows if row['state']=='BLOCKED'}
+    if raw.get('state')!='BLOCKED' or exit_code!=2:
+        raise Invalid(f'Detailed runner state/exit mismatch: {raw.get("state")}/{exit_code}; '
+                      'expected BLOCKED/2 for 11 auxiliary placeholders; '
+                      'BLOCKED TC: '+(', '.join(sorted(blocked)) or 'none'))
+    extra=sorted(blocked-AUX_PLACEHOLDER_IDS)
+    if extra:
+        raise Blocked('Detailed runner has additional BLOCKED TC: '+', '.join(extra))
+    missing=sorted(AUX_PLACEHOLDER_IDS-blocked)
+    if missing:
+        raise Blocked('Detailed runner lacks required auxiliary placeholders: '+', '.join(missing))
 
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--package-manifest',type=Path,required=True)
+    parser.add_argument('--key-dir',type=Path,required=True,
+                        help='Absolute, owner-restricted internal signing input directory')
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--phase',choices=['iteration','release'],default='release')
     args=parser.parse_args(argv)
@@ -892,6 +967,8 @@ def main(argv=None):
     out=args.output.absolute();owns_output=False;state={'state':'BLOCKED','release_eligible':False,'run_id':run_id,'started_at':started}
     try:
         require(platform.system()=='Darwin' and platform.machine()=='x86_64','Current profile requires Intel macOS')
+        if not args.key_dir.is_absolute() or any(ord(character)<32 for character in str(args.key_dir)):
+            raise Blocked('Signing input directory must be an absolute path without control characters')
         require(not out.exists() and all(not p.is_symlink() for p in [out,*out.parents]),'Output must be new and unsymlinked')
         out.mkdir(parents=True,mode=0o700)
         owns_output=True
@@ -906,11 +983,18 @@ def main(argv=None):
         package=verify_package(manifest,candidate_sha=candidate,candidate_tree=tree)
         dmg=checked_file(manifest.parent,package['artifacts']['dmg'])
         update_zip=checked_file(manifest.parent,package['artifacts']['update_zip'])
+        try:
+            signing_fixture.validate_signing_inputs(args.key_dir,package,update_zip)
+        except signing_fixture.SigningInputsUnavailable as error:
+            raise Blocked(str(error)) from error
+        except OSError as error:
+            raise Blocked('Internal signing input access failed') from error
         granular=out/'granular'
         granular_cmd=[sys.executable,str(ROOT/'scripts/granular_e2e.py'),'--package-manifest',str(manifest),
                       '--dmg',str(dmg),'--update-zip',str(update_zip),'--output',str(granular),
-                      '--candidate-sha',candidate,'--run-id',run_id]
-        state['granular_exit_code']=run_logged(granular_cmd,out/'granular-runner.log')
+                      '--candidate-sha',candidate,'--run-id',run_id,'--key-dir',str(args.key_dir)]
+        state['granular_exit_code']=run_logged(granular_cmd,out/'granular-runner.log',
+                                              redact_paths=(args.key_dir,))
         if not (granular/'result.json').is_file():raise Blocked('Detailed runner produced no original result; see granular-runner.log')
         state['granular_report']=descriptor(granular/'result.json',out)
         granular_raw=read_json(granular/'result.json')
@@ -1001,7 +1085,9 @@ def main(argv=None):
                           'sop/SOP-018-release-gate.md','apps/desktop/package-lock.json')}}
             write_new(out/(release_id+'.passport.json'),passport)
     except (OSError,Invalid,KeyError,TypeError,ValueError,subprocess.SubprocessError) as exc:
-        state.update(state='BLOCKED' if isinstance(exc,(Blocked,FileNotFoundError)) else 'FAIL',release_eligible=False,error=str(exc),finished_at=time.time())
+        state.update(state='BLOCKED' if isinstance(exc,(Blocked,FileNotFoundError)) else 'FAIL',
+                     release_eligible=False,error=redact_private_paths(str(exc),(args.key_dir,)),
+                     finished_at=time.time())
     if owns_output and out.is_dir() and not (out/'gate.json').exists():write_new(out/'gate.json',state)
     print(json.dumps(state,ensure_ascii=False))
     return 0 if state['state']=='PASS' else 2 if state['state']=='BLOCKED' else 1

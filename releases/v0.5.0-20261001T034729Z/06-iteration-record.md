@@ -1,5 +1,9 @@
 # TM-005 执行记录
 
+## 2026-10-02 · 固定模块程序原件交接
+
+TM-005开发工作树干净提交`6a0f6f44096b04052ce5a0d1d4ff8939a421abd1`、tree`a7f9c40036df81f98c2cf247eb03df25833b5531`中，`apps/desktop/tests/tm005-core.test.ts`按`TC-TM005-CORE-01/02/03`各有固定Node入口。原始`.local/tm005-core-postcommit-20261001T162401Z/{summary.json,core.txt,desktop_tests.txt,build.txt}`显示fixture摘要与文档冻结值一致、CORE3/3逐步PASS、桌面29/29和build退出0；此前预期红测3/3失败原件在`.local/tm005-core-red-20261002/`，未被绿测覆盖。代码尚未进入本文档工作树，机器binding保持null；原32条产品TC/6变体、双来源真实SQLite/IPC/App及产品E2E仍未执行。按SOP会话新提交`4cca918`，模块独立结果Excel须用固定`source_check`导出器从原始逐TC字段生成；现行产品导出器不适用，模块Excel和总表批次登记BLOCKED，正式发行NOT_RUN。模块结果可作为后续独立切片的实现证据，不能写为整版0.5或产品PASS。
+
 ## 2026-10-02 · SOP-008 纯统计独立切片就绪
 
 对固定输入提交 `061c759a9dbe52e15a5fb06ca1b1451a61e65c55`（tree `44b201503b85f480d8d5d2e9ae3a031aa5002487`）逐项核对 `TC-TM005-CORE-01/02/03`：CORE-01 的A/B筛选、半开时界、主体隔离、330总数与非法值拒绝；CORE-02 的已知330、未知诊断后partial、仅诊断时unknown且总数为null；CORE-03 的complete/missing/partial/unknown声明式代数。三例均有固定合成输入、顺序步骤与逐步独立预期、无需产品DB的验证和重置方式。`TASK-TM005-EVENT-CONTRACT/RANGE-QUERY/COVERAGE` 的纯函数部分可独立实现；TM-003/004 原生日志、来源身份、授权、真实覆盖事实、SQLite、IPC和App均在此切片之外，相关未决决定不改变本切片已固定的合成输入预期。若上游合同将来改变该纯函数输入，撤销本判定并重新核对。

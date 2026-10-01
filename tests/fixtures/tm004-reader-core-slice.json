@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "fixture_id": "tm004-reader-core-v1",
+  "scope": "already_open_read_only_handle_module_only",
+  "source_projection": "tests/fixtures/tm004/native-2.1.126-projection/raw-main.jsonl",
+  "source_projection_sha256": "2b484c185cf0ba333a85c53eb4953f13ddd2e40b6ab95167ca353a8454588ffe",
+  "assistant_selection": "first JSONL object with type=assistant, parse then compact JSON stringify plus LF",
+  "selected_line_utf8_bytes": 746,
+  "selected_line_sha256": "cefd7dbe966383874d5b0f587c41089ecfbd8150a980a8b9ca701e4df4c9855f",
+  "selected_call_id": "msg_tm004_synthetic_main_001",
+  "selected_input_tokens": 13,
+  "selected_output_tokens": 7,
+  "secret_hex": "4242424242424242424242424242424242424242424242424242424242424242",
+  "stable_module_file_identity": "synthetic-file-a",
+  "product_file_identity_proven": false,
+  "max_read_bytes": 1048576,
+  "bounded_first_read_bytes": 754,
+  "privacy": "Only synthetic fixture bytes and temporary owned files; no user log, source path in output, or product database."
+}

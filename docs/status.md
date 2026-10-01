@@ -2,11 +2,19 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc405952b79de4163` 并由总控整合入新主仓库本地 `master=6bbab2ed20878fe7fd4742967982f1d0b65c6138`。文档会话按新SOP-011/013/014/024同步[总表规范](standards/project-workbook.md)、[执行模板](templates/test-execution.md)、项目登记与Excel。当前总表11 Sheet、225父TC、41变体、266用例行、13历史批次，回读PASS，SHA-256 `cae33ac340ae86f34c93b1136ed52e48fc75f00212724a0129f3d9cb0cced9cb`。`source_check`原始模块PASS与独立结果Excel/总表批次状态分开：现有产品导出器不能处理模块TC，新固定导出器尚未交付，因此TM-003、TM-005已观察的模块3/3原件保留，而其模块Excel和正式批次索引暂为BLOCKED，产品E2E均为NOT_RUN。
+
 新主仓库 `/Users/lz/文档/git/TokenMeter` 的 `master` 已将文档恢复提交 `48ca089a8569cb33ad3e97ba91b6712cc6be51d0` 集成为 `d606fbd9763447387b88f0d02a881091d0982631`；总控对该整合树执行的文档 structure、当前0.2 baseline、quality 和治理457/457均PASS。该合并只说明源码文档进入本地 master，旧仓库Git对象丢失、历史 c291 产品门禁 FAIL、各需求产品 E2E 未通过和正式发行 `NOT_RUN` 均保留。
 
 TM-003 开发分支提交 `311deedf19d54a77e4c2d5c99eaeb3a1ea45c787`（tree `b4df51097810a44ce56118e7edce0b35e525a886`）的原始收据 `.local/ci/tm003-core-20261001/receipt.json` 报 `TC-TM003-CORE-01/02/03` 模块3/3 PASS，另有桌面单元29/29、typecheck、身份向量及治理检查PASS；初次绿测因临时目录权限失败，修正后第二次绿测PASS，原记录保留。代码尚未合入本文件所在文档分支，机器用例目录中的程序绑定继续为空；产品 E2E、真实授权源与正式发行均未运行。独立模块结果 Excel 的既有导出器只接受产品聚合报告，已请 SOP 会话补执行合同；在规范与真实导出程序就绪前不把模块3/3写成产品测试批次。
 
-TM-005 纯统计三条辅助 `TC-TM005-CORE-01/02/03` 已冻结合成可信事件、未知诊断和声明式覆盖输入，并在输入提交 `061c759` 上按SOP-008独立判为 `development_slice_ready`（structure、治理457/457、总表回读PASS）。原32条产品父TC及6个变体保留草稿/未执行；三条CORE程序也未绑定和执行。根总表11 Sheet、222父TC、41变体、263行、13旧批次，SHA-256 `4a596813f2fa99fd1473bbaacd743341f9d2ef01e3546f779327e41705b11e65`。具体收据见[0.5执行记录](../releases/v0.5.0-20261001T034729Z/06-iteration-record.md)；其模块代码、完整双来源采集、真实SQLite/IPC/App及产品 E2E 尚不能据此宣称通过。
+TM-003 更新的干净代码候选 `44379e6d8546ba3a8cef9f000a99695c6027a9d4`（tree `2df6e47f388def16618144358b5dd28d89ca5334`）在新运行 `.local/ci/tm003-core-step-evidence-20261002/` 保存三条CORE的每步实际数值、3/3 PASS、桌面29/29、typecheck/build PASS；这是独立模块验证，不覆盖旧311deed批次，也不授予原27条产品TC PASS。TM-005代码分支 `6a0f6f44096b04052ce5a0d1d4ff8939a421abd1`（tree `a7f9c40036df81f98c2cf247eb03df25833b5531`）的 `.local/tm005-core-postcommit-20261001T162401Z/summary.json` 与TAP逐步原件为CORE3/3、桌面29/29和build PASS；产品E2E执行0。两套代码尚未进入本文件所在文档树，固定程序路径暂不写成本树ready绑定；等总控整合后复核。
+
+TM-001的本地主仓库源码里程碑`709d212`（被测tree`6309bb7`）仅执行UPDATE-05主例与13变体的一次定向候选包探针：开发会话交接原始`local-65796d0033704e3988cd7174dec93c81/result.json`报14/14 PASS、240证据文件摘要核对及清理完成，运行7分36秒。其`scope=granular_targeted_probe`、`release_eligible=false`；未执行该候选全部功能TC或完整发行门禁，后续SOP-only整合`6bbab2e`也未参与被测包。旧c291失败原件仍有效；独立Excel及总表批次索引待固定产品导出器回读后登记。
+
+TM-005 纯统计三条辅助 `TC-TM005-CORE-01/02/03` 已冻结合成可信事件、未知诊断和声明式覆盖输入，并在输入提交 `061c759` 上按SOP-008独立判为 `development_slice_ready`（structure、治理457/457、总表回读PASS）。原32条产品父TC及6个变体保留草稿/未执行；三条CORE程序也未绑定和执行。该判定时的根总表为11 Sheet、222父TC、41变体、263行、13旧批次，SHA-256 `4a596813f2fa99fd1473bbaacd743341f9d2ef01e3546f779327e41705b11e65`；后续TM-004辅助输入使当前总表增加三行。具体收据见[0.5执行记录](../releases/v0.5.0-20261001T034729Z/06-iteration-record.md)；其模块代码、完整双来源采集、真实SQLite/IPC/App及产品 E2E 尚不能据此宣称通过。
+
+TM-004 另编三条已打开只读句柄的 reader 辅助 `CORE-01/02/03`，固定LF半行、1MiB限额、前缀HMAC、原地改写/截短、损坏行和未知版本的独立预期，原20条产品TC及四组摘要不变。TM-004 开发树报告reader红0/3、绿3/3和typecheck PASS，但代码尚未形成干净提交；其原始日志只可说明该开发树模块检查，不能给产品TC或本树新增CORE用例填PASS。详情见[0.4执行记录](../releases/v0.4.0-20261001T040433Z/06-iteration-record.md)。当前根总表随新增三条候选输入回读为11 Sheet、225父TC、41变体、266行、13旧批次，SHA-256 `671ed5da0024d11e9bcd9d0276d3d9d145628302b373ec483b0c536717def3cb`；其切片SOP-008判定待输入提交后完成。
 
 ## 2026-10-01 当前开发阶段与证据边界
 

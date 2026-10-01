@@ -23,6 +23,113 @@ gate=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gate)
 
 class EvidenceTests(unittest.TestCase):
+    def test_detailed_runner_classifies_original_tc_states_and_exit(self):
+        original=[{'case_id':identity,'state':'BLOCKED'} for identity in sorted(gate.AUX_PLACEHOLDER_IDS)]
+        raw={'state':'BLOCKED','tc_results':original+[{'case_id':'TC-TM001-LOGIN-01','state':'PASS'}]}
+        gate.verify_detailed_runner_completion(2,raw)
+        failed=copy.deepcopy(raw)
+        failed['state']='FAIL'
+        failed['tc_results'][-1]['state']='FAIL'
+        with self.assertRaisesRegex(gate.Invalid,'TC-TM001-LOGIN-01'):
+            gate.verify_detailed_runner_completion(1,failed)
+        self.assertEqual(failed['tc_results'][-1]['state'],'FAIL')
+        additional=copy.deepcopy(raw)
+        additional['tc_results'][-1]['state']='BLOCKED'
+        with self.assertRaisesRegex(gate.Blocked,'TC-TM001-LOGIN-01'):
+            gate.verify_detailed_runner_completion(2,additional)
+        missing=copy.deepcopy(raw)
+        missing['tc_results'].pop(0)
+        with self.assertRaisesRegex(gate.Blocked,'required auxiliary placeholders'):
+            gate.verify_detailed_runner_completion(2,missing)
+        for exit_code,state in ((1,'BLOCKED'),(2,'FAIL'),(0,'PASS')):
+            with self.subTest(exit_code=exit_code,state=state),self.assertRaisesRegex(gate.Invalid,'state/exit mismatch'):
+                gate.verify_detailed_runner_completion(exit_code,{**raw,'state':state})
+
+    def test_child_log_redacts_raw_resolved_json_and_repr_path(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve()
+            actual=root/"private '签名'"
+            actual.mkdir()
+            alias=root/'alias'
+            alias.symlink_to(actual,target_is_directory=True)
+            key_dir=alias/'keys'
+            log=root/'child.log'
+            script=('import json,os,sys; p=sys.argv[1]; '
+                    'print(p); print(os.path.realpath(p)); print(json.dumps({"path":p})); print(repr(p))')
+            self.assertEqual(gate.run_logged([sys.executable,'-c',script,str(key_dir)],log,
+                                             redact_paths=(key_dir,)),0)
+            recorded=log.read_text()
+            self.assertNotIn(str(key_dir),recorded)
+            self.assertNotIn(str(actual/'keys'),recorded)
+            self.assertNotIn(json.dumps(str(key_dir),ensure_ascii=True)[1:-1],recorded)
+            self.assertNotIn(repr(str(key_dir))[1:-1],recorded)
+            self.assertIn('<SIGNING_INPUT_DIR>',recorded)
+            self.assertEqual(log.stat().st_mode & 0o777,0o600)
+
+    def test_child_log_oversize_stops_child_without_retaining_raw_output(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve();log=root/'child.log'
+            with patch.object(gate,'MAX_CHILD_LINE_BYTES',1024),\
+                 patch.object(gate,'MAX_CHILD_LOG_BYTES',2048):
+                with self.assertRaisesRegex(gate.Blocked,'safe log bound'):
+                    gate.run_logged([sys.executable,'-c','print("S"*4096)'],log)
+            self.assertEqual(log.read_text(),'[Child output exceeded the safe log bound; process stopped]\n')
+            self.assertEqual(log.stat().st_mode & 0o777,0o600)
+
+    def test_signing_preflight_classifies_private_blocked_and_public_fail_before_runner(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve()
+            manifest=root/'package-manifest.json';manifest.write_text('{}')
+            dmg=root/'candidate.dmg';dmg.write_bytes(b'candidate')
+            update=root/'update.zip';update.write_bytes(b'update')
+            package={'artifacts':{'dmg':gate.descriptor(dmg,root),
+                                  'update_zip':gate.descriptor(update,root)}}
+            key_dir=root/"private '签名'"
+            def fake_git(*args):
+                if args==('rev-parse','HEAD'):return 'a'*40
+                if args==('rev-parse','HEAD^{tree}'):return 'b'*40
+                if args==('status','--porcelain'):return ''
+                raise AssertionError(args)
+            for label,error,expected_code,expected_state in (
+                ('private',gate.signing_fixture.SigningInputsUnavailable(str(key_dir)+' missing'),2,'BLOCKED'),
+                ('public',ValueError(json.dumps(str(key_dir))+' public manifest mismatch'),1,'FAIL'),
+            ):
+                with self.subTest(label=label):
+                    out=root/label
+                    stdout=io.StringIO()
+                    with patch.object(gate.platform,'system',return_value='Darwin'),\
+                         patch.object(gate.platform,'machine',return_value='x86_64'),\
+                         patch.object(gate,'git',side_effect=fake_git),\
+                         patch.object(gate,'current_cases',return_value=('release',
+                             {'execution_profile':'local_electron','execution_bindings_status':'ready'},gate.CASES)),\
+                         patch.object(gate.subprocess,'run',return_value=SimpleNamespace(returncode=0)),\
+                         patch.object(gate,'verify_package',return_value=package),\
+                         patch.object(gate.signing_fixture,'validate_signing_inputs',side_effect=error),\
+                         patch.object(gate,'run_logged',side_effect=AssertionError('runner started')),\
+                         contextlib.redirect_stdout(stdout):
+                        self.assertEqual(gate.main(['--package-manifest',str(manifest),
+                                                    '--key-dir',str(key_dir),'--output',str(out)]),expected_code)
+                    report=(out/'gate.json').read_text()
+                    self.assertEqual(json.loads(report)['state'],expected_state)
+                    self.assertIn('<SIGNING_INPUT_DIR>',report)
+                    self.assertNotIn(str(key_dir),report+stdout.getvalue())
+                    self.assertNotIn(json.dumps(str(key_dir),ensure_ascii=True)[1:-1],report+stdout.getvalue())
+                    self.assertFalse(list(out.glob('*.passport.json')))
+
+    def test_signing_input_option_requires_an_explicit_absolute_path(self):
+        with tempfile.TemporaryDirectory() as temp:
+            out=Path(temp).resolve()/'gate'
+            manifest=out.parent/'package.json'
+            with contextlib.redirect_stderr(io.StringIO()),self.assertRaises(SystemExit) as missing:
+                gate.main(['--package-manifest',str(manifest),'--output',str(out)])
+            self.assertEqual(missing.exception.code,2)
+            with patch.object(gate.platform,'system',return_value='Darwin'),\
+                 patch.object(gate.platform,'machine',return_value='x86_64'),\
+                 contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(gate.main(['--package-manifest',str(manifest),'--output',str(out),
+                                            '--key-dir','relative-keys']),2)
+            self.assertFalse(out.exists())
+
     def test_parent_gate_dispatches_distinct_bound_supplemental_run(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp).resolve();out=root/'gate'
@@ -32,7 +139,7 @@ class EvidenceTests(unittest.TestCase):
             package={'artifacts':{'dmg':gate.descriptor(dmg,root),
                                   'update_zip':gate.descriptor(update,root)}}
             calls=[]
-            def fake_runner(argv,log_path):
+            def fake_runner(argv,log_path,**kwargs):
                 calls.append(argv)
                 output=Path(argv[argv.index('--output')+1])
                 if Path(argv[1]).name=='granular_test_result.py':
@@ -43,7 +150,10 @@ class EvidenceTests(unittest.TestCase):
                 else:
                     output.mkdir()
                     state='BLOCKED' if Path(argv[1]).name=='granular_e2e.py' else 'PASS'
-                    (output/'result.json').write_text(json.dumps({'state':state,'cleanup_completed':True}))
+                    rows=([{'case_id':identity,'state':'BLOCKED'} for identity in sorted(gate.AUX_PLACEHOLDER_IDS)]
+                          if state=='BLOCKED' else [])
+                    (output/'result.json').write_text(json.dumps({'state':state,'cleanup_completed':True,
+                                                                  'tc_results':rows}))
                 log_path.write_text('synthetic runner')
                 return 2 if Path(argv[1]).name=='granular_e2e.py' else 0
             def fake_git(*args):
@@ -58,10 +168,13 @@ class EvidenceTests(unittest.TestCase):
                      {'execution_profile':'local_electron','execution_bindings_status':'ready'},gate.CASES)),\
                  patch.object(gate.subprocess,'run',return_value=SimpleNamespace(returncode=0)),\
                  patch.object(gate,'verify_package',return_value=package),\
+                 patch.object(gate.signing_fixture,'validate_signing_inputs',return_value={},create=True),\
                  patch.object(gate,'run_logged',side_effect=fake_runner),\
                  contextlib.redirect_stdout(io.StringIO()):
-                self.assertEqual(gate.main(['--package-manifest',str(manifest),'--output',str(out)]),1)
+                self.assertEqual(gate.main(['--package-manifest',str(manifest),'--output',str(out),
+                                            '--key-dir',str(root/'signing')]),1)
             detailed=next(item for item in calls if Path(item[1]).name=='granular_e2e.py')
+            self.assertEqual(detailed[detailed.index('--key-dir')+1],str(root/'signing'))
             supplemental=next((item for item in calls if Path(item[1]).name=='local_e2e.py'),None)
             self.assertIsNotNone(supplemental,repr((calls,json.loads((out/'gate.json').read_text()))))
             detail_id=detailed[detailed.index('--run-id')+1]
@@ -81,7 +194,7 @@ class EvidenceTests(unittest.TestCase):
             package={'artifacts':{'dmg':gate.descriptor(dmg,root),
                                   'update_zip':gate.descriptor(update,root)}}
             release_id=json.loads((ROOT/'releases/current.json').read_text())['release_id']
-            def fake_runner(argv,log_path):
+            def fake_runner(argv,log_path,**kwargs):
                 destination=Path(argv[argv.index('--output')+1]);destination.mkdir()
                 (destination/'result.json').write_text(json.dumps({
                     'state':'BLOCKED','cleanup_completed':True,
@@ -100,9 +213,11 @@ class EvidenceTests(unittest.TestCase):
                      {'execution_profile':'local_electron','execution_bindings_status':'ready'},gate.CASES)),\
                  patch.object(gate.subprocess,'run',return_value=SimpleNamespace(returncode=0)),\
                  patch.object(gate,'verify_package',return_value=package),\
+                 patch.object(gate.signing_fixture,'validate_signing_inputs',return_value={},create=True),\
                  patch.object(gate,'run_logged',side_effect=fake_runner),\
                  contextlib.redirect_stdout(io.StringIO()):
-                self.assertEqual(gate.main(['--package-manifest',str(manifest),'--output',str(out)]),1)
+                self.assertEqual(gate.main(['--package-manifest',str(manifest),'--output',str(out),
+                                            '--key-dir',str(root/'signing')]),1)
             recorded=json.loads((out/'gate.json').read_text())
             self.assertEqual(recorded['state'],'FAIL')
             self.assertEqual(recorded['granular_exit_code'],1)
@@ -577,7 +692,8 @@ class EvidenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             out=Path(temp).resolve()
             with patch.object(gate.platform,'system',return_value='Darwin'), patch.object(gate.platform,'machine',return_value='x86_64'), contextlib.redirect_stdout(io.StringIO()):
-                self.assertEqual(gate.main(['--output',str(out),'--package-manifest',str(out/'absent.json')]),1)
+                self.assertEqual(gate.main(['--output',str(out),'--package-manifest',str(out/'absent.json'),
+                                            '--key-dir',str(out/'signing')]),1)
             self.assertEqual(list(out.iterdir()),[])
 
     def test_time_range_rejects_stale_future_or_reversed(self):
