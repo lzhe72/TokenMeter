@@ -1362,7 +1362,7 @@
         "releases/v0.3.0-20261001T034652Z/04-test-plan.md",
         "tests/acceptance.json"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
@@ -1650,7 +1650,7 @@
       "inputs": [
         "releases/v0.3.0-20261001T034652Z/01-requirements.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-003-feature-breakdown.md"
     },
     {
@@ -1663,7 +1663,7 @@
       "inputs": [
         "releases/v0.3.0-20261001T034652Z/01-requirements.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-004-technical-design.md"
     },
     {
@@ -1676,7 +1676,7 @@
       "inputs": [
         "releases/v0.3.0-20261001T034652Z/01-requirements.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
