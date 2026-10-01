@@ -107,6 +107,36 @@ class AuxiliaryTests(unittest.TestCase):
             self.assertTrue(auxiliary.records_01(root / "positive", context)["passed"])
             self.assertTrue(auxiliary.records_02(root / "negative", context)["passed"])
 
+    def test_auxiliary_rejects_wrong_source_release_before_writing(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            parent = self.parent(root)
+            payload = json.loads(parent.read_text())
+            payload["release_id"] = json.loads((results.ROOT / "tests/test_cases.json").read_text())["release_id"]
+            parent.write_text(json.dumps(payload))
+            output = root / "auxiliary"
+            args = argparse.Namespace(parent_report=parent, output=output, run_id="aux-wrong-release",
+                                      case_id=["TC-TM001-CATALOG-02"], with_ui=False,
+                                      package_manifest=None, dmg=None, update_zip=None)
+            with self.assertRaisesRegex(results.Invalid, "TM-001 source cases"):
+                auxiliary.execute(args)
+            self.assertFalse(output.exists())
+
+    def test_auxiliary_rejects_changed_frozen_catalog_before_writing(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            parent = self.parent(root)
+            payload = json.loads(parent.read_text())
+            payload["test_inputs_sha256"]["tests/test_cases.json"] = "0" * 64
+            parent.write_text(json.dumps(payload))
+            output = root / "auxiliary"
+            args = argparse.Namespace(parent_report=parent, output=output, run_id="aux-changed-catalog",
+                                      case_id=["TC-TM001-CATALOG-02"], with_ui=False,
+                                      package_manifest=None, dmg=None, update_zip=None)
+            with self.assertRaisesRegex(results.Invalid, "frozen input"):
+                auxiliary.execute(args)
+            self.assertFalse(output.exists())
+
 
 if __name__ == "__main__":
     unittest.main()
