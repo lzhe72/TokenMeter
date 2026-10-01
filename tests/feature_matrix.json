@@ -15,9 +15,10 @@
           "data_program": "tests/server/fixtures.py",
           "dataset": "auth_accounts",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "automated_test": "apps/desktop/e2e/tm001.spec.ts",
           "acceptance_id": "AC-TM001-001",
-          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_001"
+          "engine": "playwright_electron",
+          "test_identity": "E2E-TM001-001"
         },
         {
           "id": "E2E-TM001-002",
@@ -26,9 +27,10 @@
           "data_program": "tests/server/fixtures.py",
           "dataset": "auth_accounts",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "automated_test": "apps/desktop/e2e/tm001.spec.ts",
           "acceptance_id": "AC-TM001-002",
-          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_002"
+          "engine": "playwright_electron",
+          "test_identity": "E2E-TM001-002"
         },
         {
           "id": "E2E-TM001-003",
@@ -37,9 +39,10 @@
           "data_program": "tests/server/fixtures.py",
           "dataset": "auth_accounts",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "automated_test": "apps/desktop/e2e/tm001.spec.ts",
           "acceptance_id": "AC-TM001-003",
-          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_003"
+          "engine": "playwright_electron",
+          "test_identity": "E2E-TM001-003"
         },
         {
           "id": "E2E-TM001-005",
@@ -48,35 +51,39 @@
           "data_program": "scripts/bootstrap_sqlite.py",
           "dataset": "production_bootstrap",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "automated_test": "apps/desktop/e2e/tm001.spec.ts",
           "acceptance_id": "AC-TM001-005",
-          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_005"
+          "engine": "playwright_electron",
+          "test_identity": "E2E-TM001-005"
         },
         {
           "id": "E2E-TM001-006",
-          "scenario": "真实 App 首次连接127.0.0.1:49176；切换第二隔离服务并重启，验证地址与自动登录凭据按规范化origin隔离；检查非回环HTTP/HTTPS地址校验；配置页保存合法合成更新URL、重启保持、恢复默认并拒绝非法URL",
+          "scenario": "首次UI核对127.0.0.1默认值；经真实配置UI切两套动态独占服务，验证origin隔离与重启持久化；更新URL合法保存/取消/恢复及非法拒绝",
           "expected": "默认本机服务可用，手动地址跨重启保留；旧服务token不发送至新服务，两个origin持久凭据互不覆盖；非回环HTTP拒绝，HTTPS地址可配置；更新URL配置覆盖可恢复到本版内置49177默认值，坏URL拒绝且公钥不变",
           "data_program": "tests/server/fixtures.py",
           "dataset": "auth_accounts",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "automated_test": "apps/desktop/e2e/tm001.spec.ts",
           "acceptance_id": "AC-TM001-006",
-          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_006"
+          "engine": "playwright_electron",
+          "test_identity": "E2E-TM001-006"
         },
         {
           "id": "E2E-TM001-004",
-          "scenario": "最小更新器：真实App从执行机固定49177内置回环更新源拒绝无效签名包，再安装/重启受控高版本包；两构建共用隔离临时凭据目录",
-          "expected": "默认feed确为本机49177；无效签名不替换原版；有效包安装重启并由 /v1/me 无交互恢复，不读取生产凭据或旧Keychain",
-          "data_program": "tests/e2e/update_source.py",
+          "scenario": "同机隔离更新源：自动发现、非法URL/重定向/坏签名拒绝、有效包真实安装并自主重启",
+          "expected": "最终候选原DMG完整验收；错误更新保留原版，100→受控101后同profile及/me身份恢复，更新源只本机持有",
+          "data_program": "scripts/local_e2e.py",
           "dataset": "tm001_update_packages",
           "sop": "sop/SOP-014-e2e.md",
-          "automated_test": "apps/macos/TokenMeterUITests/TM001AccountUITests.swift",
+          "automated_test": "apps/desktop/e2e/tm001.spec.ts",
           "acceptance_id": "AC-TM001-004",
-          "native_test": "TokenMeterUITests/TM001AccountUITests/testE2E_TM001_004"
+          "engine": "playwright_electron",
+          "test_identity": "E2E-TM001-004"
         }
       ],
       "source_requirement": "REQ-TM001",
-      "depends_on": []
+      "depends_on": [],
+      "test_case_document": "docs/testing/cases/01-TM-001-accounts.md"
     },
     {
       "id": "TM-002",
@@ -109,7 +116,8 @@
       "source_requirement": "REQ-TM002",
       "depends_on": [
         "TM-001"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/02-TM-002-permissions.md"
     },
     {
       "id": "TM-003",
@@ -163,7 +171,8 @@
       "depends_on": [
         "TM-001",
         "TM-002"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/03-TM-003-codex-collection.md"
     },
     {
       "id": "TM-004",
@@ -217,7 +226,8 @@
       "depends_on": [
         "TM-002",
         "TM-003"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/04-TM-004-claude-collection.md"
     },
     {
       "id": "TM-005",
@@ -251,7 +261,8 @@
       "depends_on": [
         "TM-003",
         "TM-004"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/05-TM-005-usage-statistics.md"
     },
     {
       "id": "TM-006",
@@ -284,7 +295,8 @@
       "source_requirement": "REQ-TM006",
       "depends_on": [
         "TM-005"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/06-TM-006-cost-estimates.md"
     },
     {
       "id": "TM-007",
@@ -340,7 +352,8 @@
         "TM-003",
         "TM-004",
         "TM-005"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/07-TM-007-team-sync.md"
     },
     {
       "id": "TM-008",
@@ -374,7 +387,8 @@
       "depends_on": [
         "TM-005",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/08-TM-008-csv-export.md"
     },
     {
       "id": "TM-009",
@@ -408,7 +422,8 @@
       "depends_on": [
         "TM-006",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/09-TM-009-budget-alerts.md"
     },
     {
       "id": "TM-010",
@@ -452,7 +467,8 @@
       "depends_on": [
         "TM-001",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/10-TM-010-software-updates.md"
     },
     {
       "id": "TM-011",
@@ -506,7 +522,8 @@
       "depends_on": [
         "TM-001",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/11-TM-011-data-migration.md"
     },
     {
       "id": "TM-012",
@@ -542,7 +559,8 @@
         "TM-004",
         "TM-005",
         "TM-007"
-      ]
+      ],
+      "test_case_document": "docs/testing/cases/12-TM-012-menu-diagnostics.md"
     }
   ]
 }

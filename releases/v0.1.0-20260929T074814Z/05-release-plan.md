@@ -1,23 +1,21 @@
 # v0.1.0-20260929T074814Z — 发布预案
 
-## 发布范围与当前状态
+## 范围、输入与状态
 
-TM-001：预置账号与登录、权限管理和最小更新器。版本0.1.0，未发布；[Changelog](../../CHANGELOG.md) 与本档案使用相同 release_id。基础来源为已合并548c582；无上一公开稳定App安装包。
+输入：[需求](01-requirements.md)、[测试计划](04-test-plan.md)、[当前设计](../../docs/architecture/01-electron-local.md)、[发布规范](../../docs/standards/release.md)。TM-001首版0.1.0/build100，macOS15 Intel，本机Electron内部分发。当前未发布；六例及最终包门禁尚待执行，不预填通行证。
 
-## 候选、平台和资产
+## 构建、验证与本地资产
 
-源文档/代码/数据/测试先形成干净候选。用户本轮目标为团队内部使用：`distribution_profile=internal`。内部 DMG 仍须从固定 SHA 构建、记录 DMG/内部 App 摘要，经 macOS14+ arm64/Intel 实际包安装、启动、六例原生回归、同机隔离回环更新源升级、生产 SQLite 副本备份恢复与专用机器门禁，才能作为内部版本分发；签名类型、Gatekeeper 行为、安装路径和交付边界须在候选上实测并写报告。现有 `package_preview_dmg.py` 只能产生预览诊断包，`package_release_dmg.py` 只覆盖 Developer ID 公证公开分支；内部包打包/验证和 `distribution_profile=internal` 的质量门禁尚未实现，故内部正式发布 BLOCKED，不能把预览包改名或改报告字段冒充通过。公开分支 `distribution_profile=public` 保留 Developer ID、hardened runtime、公证、装订、Gatekeeper 和最终包全矩阵；当前亦缺真实 Developer ID、Keychain 公证 profile 和完整执行证据，保持 BLOCKED。两个 profile 共用 SOP-017/018 的步骤顺序，但各自判定不同，不互借通过证据。开发迭代允许隔离自签身份验证 Sparkle 包签名与本版文件凭据自动登录，迭代 PASS 不授予任一 profile 的发行资格。
+使用干净候选完整SHA/tree和锁定依赖，electron-builder目录包→固定自签证书嵌套签名→DMG安装包与ZIP更新包。无Apple Developer账号或公网发布要求。公证不作为本轮内部配置的必需项，实际签名与系统打开行为必须如实记录；不关闭Gatekeeper或全局移除隔离来伪造通过。
 
-此前 `package_preview_dmg.py` 曾将 CI 的 UITESTING App 包装成本机预览 DMG；新的严格临时凭据路径被写入 UITESTING Info.plist，离开 runner 后不可用于用户本机登录，也不得回落读取生产凭据。故本候选停止自动从该包生成预览 DMG，脚本须显式拒绝 `TMTestCredentialsDirectory`，工作流仅可保留测试 App 压缩件作诊断，不提供新的可安装预览包。现有 `/Applications/TokenMeter.app` 是旧预览诊断，不代表新候选或内部分发；用户本机使用的新内部 DMG 须等独立无测试路径构建与完整包级门禁。
+从同一DMG安装正式App，完整六例；首版没有上一稳定版，另构建同源受控0.1.1/build101验证真实自主更新，受控包不交给用户充当0.1.0。以后使用上一实际稳定本地包升级。全部原始证据经local_gate独立复核，PASS才生成v0.1.0-20260929T074814Z.passport.json。
 
-首版最终候选先独立完成干净安装与六例E2E，其中包括默认本机地址、可配置服务与会话隔离；再经执行App的同机回环源从候选更新到受控高版本包。登记受控包源码、构建版本、摘要、签名；升级后包的结果不替代原候选验收。拒绝坏签名/中断，保留原版与账号状态。未来生产服务器 HTTPS 地址确定后，另一个版本须把新内置默认值和仅迁移未手动配置用户的规则写进该版升级计划，并在真实升级 E2E 中验证；当前不预设地址或把迁移算作通过。
+开发/候选DMG的便捷副本以`NOT-RELEASED`标记放在仓库根`dmg/v0.1.0-20260929T074814Z/`，原件仍按候选独立保存并接受测试。门禁PASS后，最终原DMG、更新ZIP、package-manifest、测试报告/通行证存同版本目录的`release-archive/`并读回摘要，再把已验证原DMG以原名独占复制到版本目录供安装；不覆盖已有档案，不重建包借用报告。Git保存源码、版本文档、Changelog与Tag索引；不创建GitHub Release、不上传安装包/报告。Actions仅未来用户明确要求多环境时执行。
 
-内部 Tag/Release 或任何分发动作仍以 `distribution_profile=internal` 的机器通行证为前提；预期Tag和Release名称同本release_id，预期通行证为 `<release_id>.passport.json`。当前不能签发；源码 PR 在完整迭代通过后可先合并，但合并不等于发版。内部与公开两个 profile 均按017→018→019→020执行，程序须绑定profile、固定SHA和最终包证据。
+## Git、部署和恢复
 
-## 数据与恢复
+总控先把本版需求分支按适用检查集成本地`master`；对最终整合提交执行完整逐TC及六组补充产品E2E、最终DMG安装升级验证和本机发布门禁。PASS后按当前远端强制PR规则，以同一已测本地整合候选建立受控PR，满足仍有效的保护并读回实际合并SHA/tree，再建立正式Tag与本地归档；禁止强推、删除保护或用旧分支报告替代整合候选。2026-10-01已按用户决定移除旧Actions必需检查，不启动多环境Actions；若远端保护发生变化则重新核对。实际合并tree与被测候选不同须重测。产物始终绑定实际被测SHA。
 
-v0.1.0 服务端生产库为 `database/production/production.db`，Codex 回归库为 `database/test/test.db`；两库不得复用账号或数据。首次生产初始化运行 Alembic 并预置 `admin / 123456`，要求首次登录改密；后续启动和检查不得覆盖已改密码与真实成员。测试 SQL 由程序生成并只导入回归库。无历史产品schema需要升级。生产升级前备份账号库、校验hash和restore；服务健康检查和认证自检通过才分发客户端。失败停止发布，保护旧包和数据库；无有效恢复证据不能上线。MySQL迁移留待后续版本，不作为本版门禁。
+API默认http://127.0.0.1:49176，更新清单默认http://127.0.0.1:49177/version.json；可在App真实配置管理中修改。生产SQLite保留database/production/production.db，Codex测试database/test/test.db及隔离临时副本，不能覆盖生产账号。新库仅admin/123456且强制改密；已有库不重置。服务端归档可独立安装，先备份并验证恢复，再升级兼容服务，随后用户安装已验证DMG。
 
-## 当前条件与PR
-
-本机缺完整Xcode且AX权限未授，现有旧App构建100没有更新配置，不能当作新候选的更新验收；两台远端macOS runner须各自在同机回环49177运行App/更新服务并实际执行完整六例。远端内部发版保护与专用机器门禁未就绪；公开分支另缺 Developer ID/公证和受保护分发配置。Codex按用户持续授权创建PR、检查、修复并在适用门禁通过后合并；不得管理员绕过失败检查，不因能合并就创建Tag。缺环境时提交真实进展和阻塞，不能预填通行证。
+测试不替换用户现有/Applications/TokenMeter.app、不终止用户服务。失败保留原包、原库和诊断，停止通行证签发，按SOP-015/021修复或恢复；没有PASS不得写更新清单推广。公开分发或arm64另立范围、测试矩阵和证据。

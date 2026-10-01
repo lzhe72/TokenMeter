@@ -47,17 +47,34 @@
       "sop": "sop/SOP-010-test-data.md"
     },
     {
-      "doc_id": "DOC-DOCS-README",
-      "path": "docs/README.md",
       "type": "index",
       "status": "baselined",
-      "applicable_release": "all",
+      "applicable_release": "v0.1.0-20260929T074814Z",
       "base_release": null,
+      "updated_at": "2026-09-30",
+      "doc_id": "DOC-DMG-INDEX",
+      "path": "dmg/README.md",
       "inputs": [
-        "docs/standards/documentation.md"
+        "sop/SOP-017-package-validation.md",
+        "sop/SOP-020-deployment.md",
+        "releases/v0.1.0-20260929T074814Z/08-release-record.md"
       ],
-      "updated_at": "2026-09-29",
       "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "type": "index",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "updated_at": "2026-09-30",
+      "doc_id": "DOC-DMG-V010",
+      "path": "dmg/v0.1.0-20260929T074814Z/README.md",
+      "inputs": [
+        "dmg/README.md",
+        "releases/v0.1.0-20260929T074814Z/08-release-record.md",
+        "docs/status.md"
+      ],
+      "sop": "sop/SOP-017-package-validation.md"
     },
     {
       "doc_id": "DOC-DOCS-ARCHITECTURE",
@@ -72,7 +89,7 @@
         "apps/macos/TokenMeter/TokenMeterApp.swift",
         "releases/v0.1.0-20260929T074814Z/03-development-plan.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-004-technical-design.md"
     },
     {
@@ -106,67 +123,6 @@
       "sop": "sop/SOP-004-technical-design.md"
     },
     {
-      "doc_id": "DOC-DOCS-LIFECYCLE",
-      "path": "docs/lifecycle.md",
-      "type": "standard",
-      "status": "baselined",
-      "applicable_release": "all",
-      "base_release": null,
-      "inputs": [
-        "docs/standards/documentation.md",
-        "docs/decision-inputs.md"
-      ],
-      "updated_at": "2026-09-29",
-      "sop": "sop/SOP-000-maintenance.md"
-    },
-    {
-      "doc_id": "DOC-DOCS-PRODUCT",
-      "path": "docs/product/README.md",
-      "type": "design",
-      "status": "baselined",
-      "applicable_release": "all",
-      "base_release": null,
-      "inputs": [
-        "docs/decision-inputs.md",
-        "tests/acceptance.json",
-        "releases/v0.1.0-20260929T074814Z/01-requirements.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-002-requirements.md"
-    },
-    {
-      "doc_id": "DOC-REVIEW-20260929-CONSISTENCY",
-      "path": "docs/reviews/2026-09-29-plan-consistency.md",
-      "type": "record",
-      "status": "baselined",
-      "applicable_release": "v0.0.1-20260929T060944Z",
-      "base_release": null,
-      "inputs": [
-        "docs/design-plan.md",
-        "docs/standards/documentation.md",
-        "sop/README.md",
-        "releases/v0.0.1-20260929T060944Z/00-manifest.json",
-        "tests/governance/test_candidate_gate.py",
-        "tests/acceptance.json"
-      ],
-      "updated_at": "2026-09-29",
-      "sop": "sop/SOP-008-baseline-check.md"
-    },
-    {
-      "doc_id": "DOC-DOCS-ROADMAP",
-      "path": "docs/roadmap.md",
-      "type": "plan",
-      "status": "baselined",
-      "applicable_release": "all",
-      "base_release": null,
-      "inputs": [
-        "docs/product/README.md",
-        "docs/standards/versioning.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-003-feature-breakdown.md"
-    },
-    {
       "doc_id": "DOC-DOCS-DEVELOPMENT",
       "path": "docs/standards/development.md",
       "type": "standard",
@@ -194,6 +150,48 @@
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
+      "doc_id": "DOC-DOCS-LIFECYCLE",
+      "path": "docs/lifecycle.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "docs/decision-inputs.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-000-maintenance.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-PRODUCT",
+      "path": "docs/product/README.md",
+      "type": "design",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/decision-inputs.md",
+        "tests/acceptance.json",
+        "releases/v0.1.0-20260929T074814Z/01-requirements.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-002-requirements.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-README",
+      "path": "docs/README.md",
+      "type": "index",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
       "doc_id": "DOC-DOCS-RELEASE",
       "path": "docs/standards/release.md",
       "type": "standard",
@@ -212,19 +210,60 @@
       "sop": "sop/SOP-018-release-gate.md"
     },
     {
-      "doc_id": "DOC-DOCS-VERSIONING",
-      "path": "docs/standards/versioning.md",
-      "type": "standard",
+      "doc_id": "DOC-DOCS-ROADMAP",
+      "path": "docs/roadmap.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/product/README.md",
+        "docs/standards/versioning.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-003-feature-breakdown.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-SOP-README",
+      "path": "sop/README.md",
+      "type": "index",
       "status": "baselined",
       "applicable_release": "all",
       "base_release": null,
       "inputs": [
         "docs/decision-inputs.md",
-        "docs/standards/documentation.md",
-        "scripts/release_contract.py"
+        "docs/standards/documentation.md"
       ],
       "updated_at": "2026-10-01",
-      "sop": "sop/SOP-001-version-start.md"
+      "sop": "sop/SOP-000-maintenance.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-STANDARDS-PROJECT-WORKBOOK-MD",
+      "path": "docs/standards/project-workbook.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-STANDARDS-TEST-CASES-MD",
+      "path": "docs/standards/test-cases.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
     },
     {
       "doc_id": "DOC-DOCS-STATUS",
@@ -238,7 +277,7 @@
         "releases/v0.0.1-20260929T060944Z/06-iteration-record.md",
         "releases/v0.1.0-20260929T074814Z/06-iteration-record.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-022-archive-handoff.md"
     },
     {
@@ -252,7 +291,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-003-feature-breakdown.md"
     },
     {
@@ -266,7 +305,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-015-bugfix.md"
     },
     {
@@ -280,7 +319,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-005-development-plan.md"
     },
     {
@@ -294,7 +333,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-002-requirements.md"
     },
     {
@@ -308,7 +347,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-023-iteration.md"
     },
     {
@@ -322,7 +361,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-001-version-start.md"
     },
     {
@@ -336,7 +375,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-007-release-plan.md"
     },
     {
@@ -350,7 +389,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-002-requirements.md"
     },
     {
@@ -364,7 +403,7 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
@@ -378,8 +417,36 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-004-technical-design.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-TEMPLATES-TEST-CASE-MD",
+      "path": "docs/templates/test-case.md",
+      "type": "template",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-TEMPLATES-TEST-EXECUTION-MD",
+      "path": "docs/templates/test-execution.md",
+      "type": "template",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
     },
     {
       "doc_id": "DOC-DOCS-TEMPLATES-TEST-PLAN",
@@ -392,8 +459,50 @@
         "docs/standards/documentation.md",
         "docs/lifecycle.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-09-30",
       "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-TESTING-CASES-01A-TM-001-LOGIN-SCENARIOS-MD",
+      "path": "docs/testing/cases/01a-TM-001-login-scenarios.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-TESTING-CASES-01B-TM-001-SESSION-ADMIN-RELEASE-SCENARIOS-MD",
+      "path": "docs/testing/cases/01b-TM-001-session-admin-release-scenarios.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-TESTING-CASES-01C-TM-001-DELIVERY-CHECKS-MD",
+      "path": "docs/testing/cases/01c-TM-001-delivery-checks.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
     },
     {
       "doc_id": "DOC-DOCS-TESTING-SOP",
@@ -413,7 +522,7 @@
         "tests/governance/test_environment_probe.py",
         "tests/governance/test_native_e2e.py"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-014-e2e.md"
     },
     {
@@ -429,8 +538,69 @@
         "tests/acceptance.json",
         "tests/datasets.json"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-DOCS-VERSIONING",
+      "path": "docs/standards/versioning.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/decision-inputs.md",
+        "docs/standards/documentation.md",
+        "scripts/release_contract.py"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-001-version-start.md"
+    },
+    {
+      "doc_id": "DOC-ELECTRON-LOCAL-010",
+      "path": "docs/architecture/01-electron-local.md",
+      "type": "design",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/01-requirements.md",
+        "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-004-technical-design.md"
+    },
+    {
+      "doc_id": "DOC-INTERNAL-INSTALLATION-010",
+      "path": "docs/releases/02-installation.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "docs/releases/01-internal-v0.1.0.md",
+        "sop/SOP-020-deployment.md",
+        "scripts/bootstrap_sqlite.py"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-020-deployment.md"
+    },
+    {
+      "doc_id": "DOC-INTERNAL-RELEASE-010",
+      "path": "docs/releases/01-internal-v0.1.0.md",
+      "type": "design",
+      "status": "superseded",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/01-requirements.md",
+        "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+        "sop/SOP-017-package-validation.md",
+        "sop/SOP-018-release-gate.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-004-technical-design.md"
     },
     {
       "doc_id": "DOC-README",
@@ -445,20 +615,6 @@
       ],
       "updated_at": "2026-09-29",
       "sop": "sop/SOP-024-document-change.md"
-    },
-    {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-REQUIREMENTS",
-      "path": "releases/v0.0.1-20260929T060944Z/01-requirements.md",
-      "type": "plan",
-      "status": "baselined",
-      "applicable_release": "v0.0.1-20260929T060944Z",
-      "base_release": null,
-      "inputs": [
-        "docs/decision-inputs.md",
-        "docs/design-plan.md"
-      ],
-      "updated_at": "2026-09-29",
-      "sop": "sop/SOP-002-requirements.md"
     },
     {
       "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-BREAKDOWN",
@@ -488,18 +644,18 @@
       "sop": "sop/SOP-005-development-plan.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-TEST-PLAN",
-      "path": "releases/v0.0.1-20260929T060944Z/04-test-plan.md",
-      "type": "plan",
+      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-ITERATION-RECORD",
+      "path": "releases/v0.0.1-20260929T060944Z/06-iteration-record.md",
+      "type": "record",
       "status": "baselined",
       "applicable_release": "v0.0.1-20260929T060944Z",
       "base_release": null,
       "inputs": [
         "releases/v0.0.1-20260929T060944Z/03-development-plan.md",
-        "docs/testing/strategy.md"
+        "releases/v0.0.1-20260929T060944Z/04-test-plan.md"
       ],
       "updated_at": "2026-09-29",
-      "sop": "sop/SOP-006-test-plan.md"
+      "sop": "sop/SOP-023-iteration.md"
     },
     {
       "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-RELEASE-NOTES",
@@ -516,32 +672,217 @@
       "sop": "sop/SOP-007-release-plan.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-ITERATION-RECORD",
-      "path": "releases/v0.0.1-20260929T060944Z/06-iteration-record.md",
-      "type": "record",
+      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-REQUIREMENTS",
+      "path": "releases/v0.0.1-20260929T060944Z/01-requirements.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.0.1-20260929T060944Z",
+      "base_release": null,
+      "inputs": [
+        "docs/decision-inputs.md",
+        "docs/design-plan.md"
+      ],
+      "updated_at": "2026-09-29",
+      "sop": "sop/SOP-002-requirements.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-0-1-20260929T060944Z-TEST-PLAN",
+      "path": "releases/v0.0.1-20260929T060944Z/04-test-plan.md",
+      "type": "plan",
       "status": "baselined",
       "applicable_release": "v0.0.1-20260929T060944Z",
       "base_release": null,
       "inputs": [
         "releases/v0.0.1-20260929T060944Z/03-development-plan.md",
-        "releases/v0.0.1-20260929T060944Z/04-test-plan.md"
+        "docs/testing/strategy.md"
       ],
       "updated_at": "2026-09-29",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-01A-FEATURE-POINTS-MD",
+      "path": "releases/v0.1.0-20260929T074814Z/01a-feature-points.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-07-TEST-RESULTS-MD",
+      "path": "releases/v0.1.0-20260929T074814Z/07-test-results.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-08-RELEASE-RECORD-MD",
+      "path": "releases/v0.1.0-20260929T074814Z/08-release-record.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-BREAKDOWN",
+      "path": "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/01-requirements.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-003-feature-breakdown.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-DEVELOPMENT-PLAN",
+      "path": "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
+        "docs/architecture/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-005-development-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-ITERATION-RECORD",
+      "path": "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
+        "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
+      ],
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-023-iteration.md"
     },
     {
-      "doc_id": "DOC-DOCS-SOP-README",
-      "path": "sop/README.md",
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-README-MD",
+      "path": "releases/v0.1.0-20260929T074814Z/README.md",
+      "type": "index",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-RELEASE-NOTES",
+      "path": "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
+        "docs/standards/release.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-007-release-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-REQUIREMENTS",
+      "path": "releases/v0.1.0-20260929T074814Z/01-requirements.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "docs/decision-inputs.md",
+        "docs/design-plan.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-002-requirements.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-TEST-PLAN",
+      "path": "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-RETROSPECTIVE-20260929-20260930",
+      "path": "docs/retrospectives/2026-09-29--2026-09-30-tokenmeter.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "v0.1.0-20260929T074814Z",
+      "base_release": "v0.0.1-20260929T060944Z",
+      "inputs": [
+        "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
+        "releases/v0.0.1-20260929T060944Z/06-iteration-record.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-023-iteration.md"
+    },
+    {
+      "doc_id": "DOC-RETROSPECTIVES-INDEX",
+      "path": "docs/retrospectives/README.md",
       "type": "index",
       "status": "baselined",
       "applicable_release": "all",
       "base_release": null,
       "inputs": [
-        "docs/decision-inputs.md",
-        "docs/standards/documentation.md"
+        "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
+        "releases/v0.0.1-20260929T060944Z/06-iteration-record.md"
       ],
-      "updated_at": "2026-10-01",
-      "sop": "sop/SOP-000-maintenance.md"
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-REVIEW-20260929-CONSISTENCY",
+      "path": "docs/reviews/2026-09-29-plan-consistency.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "v0.0.1-20260929T060944Z",
+      "base_release": null,
+      "inputs": [
+        "docs/design-plan.md",
+        "docs/standards/documentation.md",
+        "sop/README.md",
+        "releases/v0.0.1-20260929T060944Z/00-manifest.json",
+        "tests/governance/test_candidate_gate.py",
+        "tests/acceptance.json"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-008-baseline-check.md"
     },
     {
       "doc_id": "DOC-SOP-000",
@@ -919,6 +1260,215 @@
       "sop": "sop/SOP-000-maintenance.md"
     },
     {
+      "doc_id": "DOC-TEST-CASES-INDEX",
+      "path": "docs/testing/cases/README.md",
+      "type": "index",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-MD",
+      "path": "TEST_CASES.md",
+      "type": "index",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "docs/standards/documentation.md",
+        "sop/README.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-001",
+      "path": "docs/testing/cases/01-TM-001-accounts.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-002",
+      "path": "docs/testing/cases/02-TM-002-permissions.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-003",
+      "path": "docs/testing/cases/03-TM-003-codex-collection.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-004",
+      "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-005",
+      "path": "docs/testing/cases/05-TM-005-usage-statistics.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-006",
+      "path": "docs/testing/cases/06-TM-006-cost-estimates.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-007",
+      "path": "docs/testing/cases/07-TM-007-team-sync.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-008",
+      "path": "docs/testing/cases/08-TM-008-csv-export.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-009",
+      "path": "docs/testing/cases/09-TM-009-budget-alerts.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-010",
+      "path": "docs/testing/cases/10-TM-010-software-updates.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-011",
+      "path": "docs/testing/cases/11-TM-011-data-migration.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-TEST-CASES-TM-012",
+      "path": "docs/testing/cases/12-TM-012-menu-diagnostics.md",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "tests/feature_matrix.json",
+        "tests/acceptance.json",
+        "docs/testing/strategy.md"
+      ],
+      "updated_at": "2026-09-30",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
       "doc_id": "DOC-TESTS-FIXTURES-README",
       "path": "tests/fixtures/README.md",
       "type": "standard",
@@ -933,158 +1483,19 @@
       "sop": "sop/SOP-010-test-data.md"
     },
     {
-      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-REQUIREMENTS",
-      "path": "releases/v0.1.0-20260929T074814Z/01-requirements.md",
+      "doc_id": "DOC-TM001-REGRESSION-FIXES",
+      "path": "releases/v0.1.0-20260929T074814Z/09-regression-fixes.md",
       "type": "plan",
       "status": "baselined",
       "applicable_release": "v0.1.0-20260929T074814Z",
       "base_release": "v0.0.1-20260929T060944Z",
-      "inputs": [
-        "docs/decision-inputs.md",
-        "docs/design-plan.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-002-requirements.md"
-    },
-    {
-      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-BREAKDOWN",
-      "path": "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
-      "type": "plan",
-      "status": "baselined",
-      "applicable_release": "v0.1.0-20260929T074814Z",
-      "base_release": "v0.0.1-20260929T060944Z",
-      "inputs": [
-        "releases/v0.1.0-20260929T074814Z/01-requirements.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-003-feature-breakdown.md"
-    },
-    {
-      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-DEVELOPMENT-PLAN",
-      "path": "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
-      "type": "plan",
-      "status": "baselined",
-      "applicable_release": "v0.1.0-20260929T074814Z",
-      "base_release": "v0.0.1-20260929T060944Z",
-      "inputs": [
-        "releases/v0.1.0-20260929T074814Z/02-breakdown.md",
-        "docs/architecture/README.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-005-development-plan.md"
-    },
-    {
-      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-TEST-PLAN",
-      "path": "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
-      "type": "plan",
-      "status": "baselined",
-      "applicable_release": "v0.1.0-20260929T074814Z",
-      "base_release": "v0.0.1-20260929T060944Z",
-      "inputs": [
-        "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
-        "docs/testing/strategy.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-006-test-plan.md"
-    },
-    {
-      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-RELEASE-NOTES",
-      "path": "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
-      "type": "plan",
-      "status": "baselined",
-      "applicable_release": "v0.1.0-20260929T074814Z",
-      "base_release": "v0.0.1-20260929T060944Z",
-      "inputs": [
-        "releases/v0.1.0-20260929T074814Z/04-test-plan.md",
-        "docs/standards/release.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-007-release-plan.md"
-    },
-    {
-      "doc_id": "DOC-RELEASES-V0-1-0-20260929T074814Z-ITERATION-RECORD",
-      "path": "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
-      "type": "record",
-      "status": "baselined",
-      "applicable_release": "v0.1.0-20260929T074814Z",
-      "base_release": "v0.0.1-20260929T060944Z",
-      "inputs": [
-        "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
-        "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
-      ],
-      "updated_at": "2026-10-01",
-      "sop": "sop/SOP-023-iteration.md"
-    },
-    {
-      "doc_id": "DOC-DOCS-STANDARDS-PROJECT-WORKBOOK-MD",
-      "path": "docs/standards/project-workbook.md",
-      "type": "standard",
-      "status": "baselined",
-      "applicable_release": "all",
-      "base_release": null,
-      "inputs": [
-        "docs/standards/documentation.md",
-        "sop/README.md"
-      ],
-      "updated_at": "2026-10-01",
-      "sop": "sop/SOP-024-document-change.md"
-    },
-    {
-      "doc_id": "DOC-DOCS-STANDARDS-TEST-CASES-MD",
-      "path": "docs/standards/test-cases.md",
-      "type": "standard",
-      "status": "baselined",
-      "applicable_release": "all",
-      "base_release": null,
-      "inputs": [
-        "docs/standards/documentation.md",
-        "sop/README.md"
-      ],
-      "updated_at": "2026-10-01",
-      "sop": "sop/SOP-024-document-change.md"
-    },
-    {
-      "doc_id": "DOC-DOCS-TEMPLATES-TEST-CASE-MD",
-      "path": "docs/templates/test-case.md",
-      "type": "template",
-      "status": "baselined",
-      "applicable_release": "all",
-      "base_release": null,
-      "inputs": [
-        "docs/standards/documentation.md",
-        "sop/README.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-024-document-change.md"
-    },
-    {
-      "doc_id": "DOC-DOCS-TEMPLATES-TEST-EXECUTION-MD",
-      "path": "docs/templates/test-execution.md",
-      "type": "template",
-      "status": "baselined",
-      "applicable_release": "all",
-      "base_release": null,
-      "inputs": [
-        "docs/standards/documentation.md",
-        "sop/README.md"
-      ],
-      "updated_at": "2026-09-30",
-      "sop": "sop/SOP-024-document-change.md"
-    },
-    {
-      "doc_id": "DOC-ELECTRON-LOCAL-010",
-      "path": "docs/architecture/01-electron-local.md",
-      "type": "design",
-      "status": "baselined",
-      "applicable_release": "v0.1.0-20260929T074814Z",
-      "base_release": null,
       "inputs": [
         "releases/v0.1.0-20260929T074814Z/01-requirements.md",
-        "releases/v0.1.0-20260929T074814Z/05-release-plan.md",
-        "sop/README.md"
+        "releases/v0.1.0-20260929T074814Z/07-test-results.md",
+        "tests/test_cases.json"
       ],
       "updated_at": "2026-10-01",
-      "sop": "sop/SOP-004-technical-design.md"
+      "sop": "sop/SOP-015-bugfix.md"
     }
   ]
 }

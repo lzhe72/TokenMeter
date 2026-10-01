@@ -1,37 +1,81 @@
 import XCTest
 import CryptoKit
 import Darwin
+import AppKit
 
 /// These cases run one at a time against a fresh database and isolated credential directory.
 /// Direct API requests add server-side assertions; every case also drives the real UI.
 final class TM001AccountUITests: XCTestCase {
     private var app: XCUIApplication!
+    private var installedAppURL: URL?
     private var environment: [String: String] { ProcessInfo.processInfo.environment }
     private let changedPassword = "TEST-ONLY-Changed-42!"
 
     override func setUpWithError() throws {
         continueAfterFailure = false
         guard let api = environment["TM_TEST_API_URL"], URL(string: api) != nil,
-              let run = environment["TM_TEST_RUN_ID"], !run.isEmpty,
-              let credentials = environment["TM_TEST_CREDENTIALS_DIR"],
-              credentials.hasPrefix("/"),
-              canonicalPath(credentials) == credentials,
-              credentials != FileManager.default.homeDirectoryForCurrentUser
-                .appendingPathComponent("Library/Application Support/TokenMeter/credentials").path else {
+              let run = environment["TM_TEST_RUN_ID"], !run.isEmpty else {
             throw NSError(domain: "TokenMeterE2E", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "Missing isolated API, run ID, or resolved credential directory"])
+                          userInfo: [NSLocalizedDescriptionKey: "Missing isolated API or run ID"])
         }
-        app = XCUIApplication()
+        if let installedPath = environment["TM_TEST_INSTALLED_APP_PATH"] {
+            guard installedPath.hasPrefix("/"), canonicalPath(installedPath) == installedPath,
+                  let installed = Bundle(path: installedPath),
+                  installed.bundleIdentifier == "org.tokenmeter.TokenMeter",
+                  installed.object(forInfoDictionaryKey: "TMTestRunID") == nil,
+                  installed.object(forInfoDictionaryKey: "TMTestCredentialsDirectory") == nil,
+                  installed.object(forInfoDictionaryKey: "TMTestAPIURL") == nil,
+                  let publicKey = installed.object(forInfoDictionaryKey: "SUPublicEDKey") as? String,
+                  environment["TM_TEST_EXPECTED_PUBLIC_KEY"] == publicKey,
+                  Data(base64Encoded: publicKey)?.count == 32 else {
+                throw NSError(domain: "TokenMeterE2E", code: 2,
+                              userInfo: [NSLocalizedDescriptionKey: "Installed App is not the fixed production bundle"])
+            }
+            installedAppURL = URL(fileURLWithPath: installedPath, isDirectory: true)
+            app = XCUIApplication(url: installedAppURL!)
+            // Xcode may supply the test runner's environment by default. Do not
+            // pass fixture paths, account data or signing inputs into this App.
+            app.launchEnvironment = app.launchEnvironment.filter { key, _ in
+                !key.hasPrefix("TM_TEST_") && !key.hasPrefix("TEST_RUNNER_TM_TEST_")
+                    && !key.hasPrefix("TM_E2E_SIGNING_") && !key.hasPrefix("TM_INTERNAL_")
+            }
+            XCTAssertFalse(app.launchEnvironment.keys.contains { $0.hasPrefix("TM_TEST_")
+                || $0.hasPrefix("TEST_RUNNER_TM_TEST_") || $0.hasPrefix("TM_E2E_SIGNING_")
+                || $0.hasPrefix("TM_INTERNAL_") })
+        } else {
+            guard let credentials = environment["TM_TEST_CREDENTIALS_DIR"],
+                  credentials.hasPrefix("/"), canonicalPath(credentials) == credentials,
+                  credentials != FileManager.default.homeDirectoryForCurrentUser
+                    .appendingPathComponent("Library/Application Support/TokenMeter/credentials").path else {
+                throw NSError(domain: "TokenMeterE2E", code: 3,
+                              userInfo: [NSLocalizedDescriptionKey: "Missing resolved test credential directory"])
+            }
+            app = XCUIApplication()
+            app.launchEnvironment["TM_TEST_API_URL"] = api
+            app.launchEnvironment["TM_TEST_RUN_ID"] = run
+            app.launchEnvironment["TM_TEST_CREDENTIALS_DIR"] = credentials
+        }
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
-        app.launchEnvironment["TM_TEST_API_URL"] = api
-        app.launchEnvironment["TM_TEST_RUN_ID"] = run
-        app.launchEnvironment["TM_TEST_CREDENTIALS_DIR"] = credentials
     }
 
     private func canonicalPath(_ path: String) -> String? {
         guard let resolved = realpath(path, nil) else { return nil }
         defer { free(resolved) }
         return String(cString: resolved)
+    }
+
+    private func launchApp() {
+        app.launch()
+        assertRunningInstalledApp()
+    }
+
+    private func assertRunningInstalledApp() {
+        guard let installed = installedAppURL else { return }
+        let matches = NSRunningApplication.runningApplications(withBundleIdentifier: "org.tokenmeter.TokenMeter")
+        XCTAssertEqual(matches.count, 1, "Exactly one production TokenMeter App must be running")
+        guard let actual = matches.first?.bundleURL else { return }
+        XCTAssertEqual(canonicalPath(actual.path), installed.path,
+                       "XCTest must launch the App installed from the final DMG")
     }
 
     override func tearDownWithError() throws {
@@ -89,7 +133,14 @@ final class TM001AccountUITests: XCTestCase {
     }
 
     private func credentialFile(baseURL: String? = nil) throws -> URL {
-        let root = try XCTUnwrap(environment["TM_TEST_CREDENTIALS_DIR"])
+        let root: String
+        if installedAppURL != nil {
+            root = try XCTUnwrap(FileManager.default.urls(for: .applicationSupportDirectory,
+                                                          in: .userDomainMask).first)
+                .appendingPathComponent("TokenMeter/credentials", isDirectory: true).path
+        } else {
+            root = try XCTUnwrap(environment["TM_TEST_CREDENTIALS_DIR"])
+        }
         var origin = try XCTUnwrap(URLComponents(string: baseURL ?? environment["TM_TEST_API_URL"]!))
         origin.scheme = origin.scheme?.lowercased()
         origin.host = origin.host?.lowercased()
@@ -190,7 +241,7 @@ final class TM001AccountUITests: XCTestCase {
 
     func testE2E_TM001_001() throws {
         let oldToken = try token("alice")
-        app.launch()
+        launchApp()
         XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
         assertAutomaticLogin(true)
         captureWindow("TM001-001-01-login")
@@ -206,7 +257,7 @@ final class TM001AccountUITests: XCTestCase {
             "username": "test-alice", "password": "TEST-ONLY-alice-42!"
         ]).0, 401)
         app.terminate()
-        app.launch()
+        launchApp()
         assertIdentity("test-alice")
         try refreshIdentity("test-alice")
         XCTAssertTrue(try savedCredential() == savedToken)
@@ -235,7 +286,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(try request("GET", "/v1/me", token: savedToken).0, 401)
         XCTAssertEqual(try aliceLogoutCount(), logoutCount + 1, "UI logout must reach the real session revocation endpoint")
         app.terminate()
-        app.launch()
+        launchApp()
         XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
         assertAutomaticLogin(true)
         app.checkBoxes["auth.automatic-login"].click()
@@ -244,7 +295,7 @@ final class TM001AccountUITests: XCTestCase {
         assertIdentity("test-alice")
         try assertNoSavedCredential()
         app.terminate()
-        app.launch()
+        launchApp()
         XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
         assertAutomaticLogin(false)
         app.checkBoxes["auth.automatic-login"].click()
@@ -255,7 +306,7 @@ final class TM001AccountUITests: XCTestCase {
     }
 
     func testE2E_TM001_002() throws {
-        app.launch()
+        launchApp()
         login("bob", password: "TEST-ONLY-Wrong-42!")
         let incorrect = app.staticTexts["auth.error"]
         expectation(for: NSPredicate(format: "value CONTAINS %@", "invalid_credentials"), evaluatedWith: incorrect)
@@ -283,7 +334,7 @@ final class TM001AccountUITests: XCTestCase {
 
     func testE2E_TM001_003() throws {
         let oldMemberToken = try token("bob")
-        app.launch()
+        launchApp()
         login("admin")
         changePassword(current: "TEST-ONLY-admin-42!", new: changedPassword)
         assertIdentity("test-admin")
@@ -323,7 +374,7 @@ final class TM001AccountUITests: XCTestCase {
                                    body: ["temporary_password": "TEST-ONLY-Reset-42!"]).0, 200)
         XCTAssertEqual(try request("GET", "/v1/me", token: savedBob).0, 401)
         app.terminate()
-        app.launch()
+        launchApp()
         expectation(for: NSPredicate(format: "exists == YES AND value CONTAINS %@", "invalid_session"),
                     evaluatedWith: app.staticTexts["auth.error"])
         waitForExpectations(timeout: 15)
@@ -337,7 +388,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(try request("POST", endpoint + "/disable", token: administrator).0, 200)
         XCTAssertEqual(try request("GET", "/v1/me", token: beforeDisable).0, 401)
         app.terminate()
-        app.launch()
+        launchApp()
         expectation(for: NSPredicate(format: "exists == YES AND value CONTAINS %@", "invalid_session"),
                     evaluatedWith: app.staticTexts["auth.error"])
         waitForExpectations(timeout: 15)
@@ -391,7 +442,7 @@ final class TM001AccountUITests: XCTestCase {
             XCTAssertEqual(app.staticTexts["app.build"].value as? String, originalBuild)
         }
 
-        app.launch()
+        launchApp()
         click("configuration.open")
         XCTAssertEqual(app.textFields["configuration.update-url"].value as? String,
                        "http://127.0.0.1:49177/appcast.xml")
@@ -426,7 +477,7 @@ final class TM001AccountUITests: XCTestCase {
         app.terminate()
         // Only the external fixture changes; the application keeps the exact same feed and trust policy.
         try switchFeed(controlURL)
-        app.launch()
+        launchApp()
         assertIdentity("test-alice")
         click("updates.check")
         let installValid = app.buttons["Install Update"].firstMatch
@@ -439,6 +490,7 @@ final class TM001AccountUITests: XCTestCase {
         expectation(for: NSPredicate(format: "value == %@", expectedBuild),
                     evaluatedWith: app.staticTexts["app.build"])
         waitForExpectations(timeout: 90)
+        assertRunningInstalledApp()
         assertIdentity("test-alice")
         try refreshIdentity("test-alice")
         XCTAssertTrue(try savedCredential() == beforeUpgrade,
@@ -467,7 +519,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual((denied.1["error"] as? [String: Any])?["code"] as? String,
                        "password_change_required")
 
-        app.launch()
+        launchApp()
         XCTAssertTrue(app.buttons["auth.login"].waitForExistence(timeout: 15))
         loginUsername("admin", password: "123456")
         assertIdentity("admin")
@@ -504,7 +556,7 @@ final class TM001AccountUITests: XCTestCase {
         captureWindow("TM001-005-02-production-admin-only")
 
         app.terminate()
-        app.launch()
+        launchApp()
         assertIdentity("admin")
         XCTAssertTrue(app.buttons["admin.accounts"].waitForExistence(timeout: 15))
         click("session.logout")
@@ -526,8 +578,10 @@ final class TM001AccountUITests: XCTestCase {
 
         // The test process uses TM_TEST_API_URL for independent HTTP assertions.
         // The App itself must read its shipped default, with no test URL injection.
-        app.launchEnvironment.removeValue(forKey: "TM_TEST_API_URL")
-        app.launch()
+        if installedAppURL == nil {
+            app.launchEnvironment.removeValue(forKey: "TM_TEST_API_URL")
+        }
+        launchApp()
         let serverField = app.textFields["auth.server"]
         XCTAssertTrue(serverField.waitForExistence(timeout: 15))
         XCTAssertEqual(serverField.value as? String, first)
@@ -556,7 +610,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(try request("GET", "/v1/me", token: savedFirst, baseURL: first).0, 200)
         XCTAssertEqual(try request("GET", "/v1/me", token: savedFirst, baseURL: second).0, 401)
         app.terminate()
-        app.launch()
+        launchApp()
         assertIdentity("test-alice")
         XCTAssertTrue(try savedCredential(baseURL: first) == savedFirst)
         click("session.logout")
@@ -577,7 +631,7 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(try request("GET", "/v1/me", token: savedSecond, baseURL: first).0, 401)
         try assertNoSavedCredential(baseURL: first)
         app.terminate()
-        app.launch()
+        launchApp()
         assertIdentity("test-alice")
         try refreshIdentity("test-alice")
         XCTAssertTrue(try savedCredential(baseURL: second) == savedSecond)
@@ -587,7 +641,9 @@ final class TM001AccountUITests: XCTestCase {
         XCTAssertEqual(app.textFields["auth.server"].value as? String, second)
         try assertNoSavedCredential(baseURL: second)
 
-        let customFeed = "https://updates.example.invalid/team/appcast.xml"
+        let customFeed = installedAppURL == nil
+            ? "https://updates.example.invalid/team/appcast.xml"
+            : "http://127.0.0.1:49177/configuration-only.xml"
         click("configuration.open")
         XCTAssertEqual(app.textFields["configuration.api-url"].value as? String, second)
         for invalid in ["http://192.0.2.1/appcast.xml", "https://user:secret@example.invalid/appcast.xml",
@@ -602,12 +658,18 @@ final class TM001AccountUITests: XCTestCase {
         click("configuration.save")
         XCTAssertTrue(app.staticTexts["configuration.status"].waitForExistence(timeout: 15))
         click("configuration.cancel")
-        // No public key is injected in case 006, so saving an address cannot
-        // enable an unsigned updater or contact this synthetic remote hostname.
-        XCTAssertFalse(app.buttons["updates.check"].isEnabled)
-        XCTAssertEqual(app.staticTexts["updates.status"].value as? String, "更新签名公钥尚未配置")
+        if installedAppURL == nil {
+            // The development package has no public key in this case.
+            XCTAssertFalse(app.buttons["updates.check"].isEnabled)
+            XCTAssertEqual(app.staticTexts["updates.status"].value as? String, "更新签名公钥尚未配置")
+        } else {
+            // The installed production bundle keeps its fixed signing key while
+            // the user changes only the feed address through the UI.
+            XCTAssertTrue(app.buttons["updates.check"].isEnabled)
+            XCTAssertFalse(app.textFields["configuration.update-key"].exists)
+        }
         app.terminate()
-        app.launch()
+        launchApp()
         click("configuration.open")
         XCTAssertEqual(app.textFields["configuration.api-url"].value as? String, second)
         XCTAssertEqual(app.textFields["configuration.update-url"].value as? String, customFeed)
@@ -621,7 +683,7 @@ final class TM001AccountUITests: XCTestCase {
                        "http://127.0.0.1:49177/appcast.xml")
         click("configuration.cancel")
         app.terminate()
-        app.launch()
+        launchApp()
         XCTAssertTrue(serverField.waitForExistence(timeout: 15))
         XCTAssertEqual(serverField.value as? String, first)
         click("configuration.open")
