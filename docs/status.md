@@ -4,6 +4,8 @@
 
 TM-003新增`CORE-07`主进程编排辅助输入：固定两页两文件、分块读满、HMAC键、守卫撤权与超预算安全失败；目前仅设计、程序绑定null/未执行。它不证明任意大日志或真实App/Keychain产品链路，0.3产品E2E仍NOT_RUN。
 
+`CORE-07`干净输入提交`a3e99dafa8948cdf91d733c374d25a132dc60df2`的[SOP-008收据](../.local/docs-checks/20261002-tm003-core07-slice/receipt.json)判仅该辅助切片`development_slice_ready`；structure、治理477/477、用例233/744和总表回读PASS。程序绑定及实际执行仍空，产品和发行状态不因此改变。
+
 
 TM-002候选`0cc4f3e6`的run`local-6ece8e342b514683a64d1cc0a9bf5282`在产品包预检因缺显式独立测试账号及排除账号而33/33 BLOCKED、零步骤，清理PASS，App未启动且未触及Keychain；较早格式错误的预检FAIL另存。该run没有固定导出的独立结果Excel/verification，因此根总表尚未登记批次；0.2真实产品E2E和正式发行未通过。
 

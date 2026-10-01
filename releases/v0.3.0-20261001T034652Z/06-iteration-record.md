@@ -104,3 +104,5 @@ SOP-008对干净输入提交`ff668d0de1fef3dfc162c0d2bc71825df6425511`（tree`20
 ## 2026-10-02 · CORE-07主进程编排辅助输入
 
 在已运行`CORE-01`至`CORE-06`模块原件之外，新增尚未执行的`CORE-07`五步固定输入：已验证主体/已确认`sourceId`、TM-002真实形状的假分页/分块能力、两文件410字节及公开root/file HMAC向量、独立本例SQLite。合法路径必须把每个文件读到声明size、页末`complete=true`及同步`commitGuard`后一次提交；提前EOF/读异常、注入暂存预算超限、撤权和主体切换均零提交并关闭scan。当前`CodexGeneration.stage`收完整Buffer，1024字节预算仅是辅助故障注入；任意大产品日志处理和真实TM-002/App/IPC/Keychain E2E仍未证明。程序绑定null、实际unexecuted，SOP-008只对本切片另做核对，整版0.3及正式发行状态不变。
+
+干净输入提交`a3e99dafa8948cdf91d733c374d25a132dc60df2`（tree`8c87e094e037caca1057a954244681f10855e305`）的SOP-008收据`.local/docs-checks/20261002-tm003-core07-slice/receipt.json`判仅`CORE-07`为`development_slice_ready`：structure PASS、治理477/477、机器目录233父/744步、总表233父+42变体/20批次回读PASS（SHA-256 `2ce91c32397a2be9bf668e312a7181f63dbc099f6b37e743789fd80b6a332549`），diff检查无错误。该结论只准其固定辅助红测/实现；程序和产品结果仍未运行，整版严格基线/quality及正式门禁NOT_RUN。
