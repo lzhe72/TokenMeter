@@ -16,6 +16,8 @@
 
 恢复进展：总控在 `/Users/lz/文档/git/TokenMeter` 建立新本地仓库，`master=8f6cac8bd8d0358dcb5eebd72df26f59fa7bf6ff`；文档会话从最终私有快照 `/Users/lz/.codex/recovery/tokenmeter-documentation-20261001T151000Z/`（323个普通文件逐项核对，归档SHA-256 `d922501ca8b950dbc77901077a6b19666c3a3e3323d61076adf5b569dc69d0f5`）只迁入非SOP文件，并按新主仓库SOP修订重新生成总表。恢复后的独立文档树执行结构、当前0.2严格基线、质量追踪、219父TC/694步目录和Excel回读均PASS；首次治理452项中10项ERROR，9项为旧跨版本来源校验代码未迁入、1项为缺锁定Playwright依赖，原件保留。移植旧分支已验证的四个治理文件并在本树`npm ci`后，治理457/457 PASS；这些仍不证明0.3产品E2E。切片提交SHA及本次语义收据在完成候选提交后补录；此时仍不预填`development_slice_ready`。
 
+恢复后的候选提交 `7d77d63e30cfb25baf0b6875acdbfc92dec87ca0`、tree `9a16f7154dcd1d4f8e75903a1e5c407dc0b939c0` 已包含三条 CORE 用例的固定输入与追踪。按新 SOP-008 修订5重新核对 `CORE-01/02/03`、八个输入文件摘要、原27条目标TC仍在且总计30条、模块不调用TM-002授权/产品Keychain/真实App、未决项不改变模块计数/诊断/身份预期；`check_docs.py --mode structure` PASS（134文档、1201链接）、`export_test_cases.py --check` CURRENT（219父TC、694步）、治理457/457 PASS，原件为本树 `.local/docs-checks/20261001-tm003-recovery-slice/receipt.json` 及同目录日志。**仅此三条辅助模块切片判定 `development_slice_ready`**，可进入SOP-009–014建立代码与固定红测；程序绑定仍null、实际运行unexecuted。0.3整版仍draft，整版baseline与quality按切片合同均NOT_RUN，产品E2E及正式发行门禁NOT_RUN；TM-002授权、真实SQLite/App/服务、来源分页和其他产品TC仍BLOCKED。此判定绑定上述候选输入SHA，后续内容变化须重核。
+
 ## 2026-10-01 · 独立立项与设计
 
 1. 按 AGENTS.md 第一项先读 `sop/README.md`，再完整读取 SOP-001–014 中与本轮设计/开发有关文件、SOP-016/022/024、文档/版本/用例规范。输入为用户授权的单需求 REQ-TM003、TM-001 正在回归、TM-002 单独开发及现有功能矩阵。决定：仅在独立工作树开展，不改主工作区或占用其 GUI 测试资源。
