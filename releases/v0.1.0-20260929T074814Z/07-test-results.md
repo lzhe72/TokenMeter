@@ -2,7 +2,13 @@
 
 本文按 SOP-014/018/022/024 汇总已保存的真实原件和当前执行结果。它是结果索引，不是手写通过报告。dev07六个聚合场景组属于历史运行，不能回填新增精细TC。首轮精细全量`local-7feea03dd72e4eddba0651cede8fd23d`为BLOCKED；新版全量`local-343e54113b0b442383e80f137013014b`为FAIL。两轮原件均保留，后续定向及新包运行不改写它们。
 
-## 最终候选待执行（2026-10-01）
+## 首次干净候选门禁：FAIL（2026-10-01）
+
+候选`3467dc143b2e2fc71f51515f483f0ecff8637947`、DMG SHA-256 `e310a0aa5f05cc08930b4a2f57453c51a564ca16e5f3d756c65e25443ef1ac4d`的原始门禁位于`.local/gates/tm001-final-gate-3467dc1-20261001T0730Z/`。`gate.json`记录**FAIL**、`release_eligible=false`、错误`No actual identity verification`；没有通行证或`final-product-result.json`。精细主批次`local-2330ba0350354fbab6a7329f49512eec`的95个实际Playwright入口全部PASS，116条原始结果为105 PASS/0 FAIL/11辅助占位BLOCKED；辅助`aux-4697bca3e45e4671bb33484c659c0b03`为11/11 PASS，独立审计12/12 PASS，补充`local-82b058cbee2b4051a786eb15e19c53ef`为6/6 PASS。独立逐例Excel`granular-reviewed/TokenMeter测试结果-local-2330ba0350354fbab6a7329f49512eec.xlsx`及`verification.json`导出/回读PASS，但保留主原件的BLOCKED，不构成发布资格。
+
+补充场景`E2E-TM001-003`缺少有效管理员会话的真实`/v1/me` 200；另在已失败报告上进行的只读逐项校验发现`E2E-TM001-004`的`lsof`采集结果含空名称，发布核验也会拒绝。原始请求与进程原件不改写。固定测试已增加真实App重启恢复身份、管理员会话账号/角色断言，并让`lsof`解析忽略无名称行；新候选的完整产品回归尚待执行。
+
+## 首次门禁前的待执行记录（历史）
 
 本机最终门禁代码已将精细主批次、独立辅助11例、证据审计12项和补充六组的原始结果编排为同一候选验证，并另生成由机器复算的`final-product-result.json`及独立逐例Excel。现有开发包的联合逐例复核仍以`local-534748ff47cb44229183a6bd878c1674`等下列原件为依据；它们并非干净提交的最终包。**截至本记录，尚无最终候选的`final-product-result.json`、完整门禁PASS或正式通行证。** 后续正式执行只能在固定SHA/tree和同一DMG上生成新的run，不能把以下开发包记录复制为新证据。
 

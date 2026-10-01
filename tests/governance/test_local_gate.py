@@ -495,6 +495,13 @@ class EvidenceTests(unittest.TestCase):
             for field,value in [('runner_launch_count_after_install',1),('runtime_sha256_after','c'*64),('new_pid',1)]:
                 value_set=copy.deepcopy(common);value_set['suites'][-1]['update'][field]=value;variants.append(value_set)
             value_set=copy.deepcopy(common);value_set['suites'][0]['traces']=[];variants.append(value_set)
+            value_set=copy.deepcopy(common)
+            admin_suite=next(s for s in value_set['suites'] if s['case_id']=='E2E-TM001-003')
+            admin_suite['service_audit']=evidence('E2E-TM001-003','audit-without-valid-me.json',
+                dict(run_id='fresh',case_id='E2E-TM001-003',requests=[
+                    {'route':'/v1/auth/login','status':200},
+                    {'route':'/v1/me','status':401}]))
+            variants.append(value_set)
             case='E2E-TM001-004'
             raw_open=json.loads((root/case/'process-open-files.json').read_text())
             raw_process=json.loads((root/case/'process.json').read_text())

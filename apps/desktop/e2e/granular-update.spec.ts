@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, lstatSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { launchObserved, observations as mainObservations } from './main-observer';
+import { parseLsofPaths } from './lsof';
 
 type Context = {
   run_id: string; candidate_sha: string; case_id: string; app_path: string; profile_path: string;
@@ -193,7 +194,7 @@ function temporaryDownloadEntries(): string[] {
 function openedFilePaths(pid: number): string[] {
   const result = execFileSync('/usr/sbin/lsof', ['-nP', '-p', String(pid), '-Fn'],
     { encoding: 'utf8', timeout: 10_000, maxBuffer: 4 * 1024 * 1024 });
-  return result.split('\n').filter(line => line.startsWith('n')).map(line => line.slice(1));
+  return parseLsofPaths(result);
 }
 async function attachPhaseObserver(): Promise<string[]> {
   const history: string[] = [];

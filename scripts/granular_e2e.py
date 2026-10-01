@@ -553,7 +553,8 @@ def execute(args) -> int:
     input_paths.extend(ROOT / name for name in ("scripts/bootstrap_sqlite.py", "tests/server/fixtures.py",
         "apps/desktop/package-lock.json", "server/requirements-dev.txt", "server/requirements.txt"))
     input_paths.extend(ROOT / name for name in ("scripts/local_package.py", "scripts/package_release_dmg.py", "scripts/internal_package.py"))
-    input_paths.extend(ROOT / name for name in ("apps/desktop/e2e/main-observer.ts", "apps/desktop/e2e/main-observer.cjs"))
+    input_paths.extend(ROOT / name for name in ("apps/desktop/e2e/main-observer.ts", "apps/desktop/e2e/main-observer.cjs",
+                                                "apps/desktop/e2e/lsof.ts"))
     input_paths.extend((ROOT / "server").rglob("*.py"))
     input_paths.extend((ROOT / "releases").glob("*/local-release.json"))
     used_specs = {case_spec(case["id"]) for case in catalog}

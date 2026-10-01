@@ -670,3 +670,12 @@ SOP-019修订至8并同步索引、AGENTS、发布/版本规范、Electron本机
 ### 2026-10-01：合并后治理原始检查
 
 TM-001源码提交`44e3844ce566eb3120f17ee555321434fcac4231`与已合入的SOP规范提交`f3b29f6b4203fe22ae8a40533e775291253bb7b3`在本地合并，冲突按现行SOP内容及TM-001用例合同解决；本条检查发生在合并提交前的已暂存树，不冒充最终包验收。原始命令输出及各文件SHA-256保存在`.local/ci/tm001-merge-preflight-20261001T0716Z/receipt.json`及同目录日志。`python3 scripts/check_docs.py --mode structure`、`--mode baseline`、`python3 scripts/quality_gate.py check`和`git diff --cached --check`均退出0；`python3 -m unittest discover -s tests/governance -p 'test_*.py'`在46.0秒内实际运行426项、全部通过，退出0。先前并发改动期间422项的1 FAIL/7 ERROR仍按历史保留，由本次新原件证明合并后的治理检查已修复。上述结果仍不是最终签名DMG的产品E2E或SOP-018发布门禁；正式候选尚无通行证。
+
+
+### 2026-10-01：首次干净候选门禁及两项固定测试证据缺口
+
+本地合并提交`3467dc143b2e2fc71f51515f483f0ecff8637947`（tree `136c200d20f6e399928b06fee65780f39e7b99b1`）在隔离工作树构建签名内部DMG，包清单`.local/ci/tm001-final-package-3467dc1-20261001T0726Z/package-manifest.json`；DMG SHA-256 `e310a0aa5f05cc08930b4a2f57453c51a564ca16e5f3d756c65e25443ef1ac4d`。正式门禁`.local/gates/tm001-final-gate-3467dc1-20261001T0730Z/gate.json`运行约48分钟后返回**FAIL**、`release_eligible=false`、`No actual identity verification`。95个实际精细Playwright入口PASS，主原件116条105 PASS/0 FAIL/11辅助占位BLOCKED；辅助11/11、审计12/12、补充六组6/6分别PASS，Excel已导出并回读PASS；这些分项不使最终门禁通过，未生成`final-product-result.json`或通行证。
+
+按SOP-015复核保留原件。补充003组管理员管理操作通过，但固定脚本仅对撤销后的成员会话请求`/v1/me`并得到预期401，没有有效管理员身份200。只读继续核验发现补充004组的`lsof -Fn`包含一条无文件名的`n`行，固定采集器将其记为空路径，后续发布校验会报`Incomplete restarted-process open-file list`。两者均属于固定测试/证据采集缺口，未发现产品认证或升级的确定性失败。现已在003脚本增加真实App重启、自动恢复管理员身份和服务账号/角色断言；在003及精细更新采集器用同一解析器忽略空名称，保留所有具名路径，并添加解析单元测试及003缺200的门禁负测。修改后基础检查与新候选完整门禁需重新运行，旧FAIL原件不覆盖。
+
+修订后候选前检日志保存在`.local/ci/tm001-gate-fix-preflight-20261001T0837Z/`：文档严格基线与质量追踪均退出0（102文档、904链接；质量检查仍`release_eligible=false`），完整治理426/426、服务端55/55、桌面单元26/26（含`lsof`解析回归）通过，Electron构建退出0。固定精细Playwright注册95/95、补充六组注册6/6，`git diff --check`通过。补充列表首次因预检命令遗漏执行器所需`TM_E2E_JSON`而退出1，补齐隔离输出路径后同一固定六组列表核对通过；该列表检查没有执行App。所有基础与列表检查仅用于新候选前检，不能替代再次完整E2E。

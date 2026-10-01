@@ -181,7 +181,7 @@ class GranularEvidenceAuditTests(unittest.TestCase):
 
     def test_update07_requires_unfiltered_lsof_evidence(self):
         for variant, expected in (("complete", "PASS"), ("filtered", "BLOCKED"),
-                                  ("default_open", "BLOCKED")):
+                                  ("default_open", "BLOCKED"), ("empty_name", "BLOCKED")):
             with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temp:
                 report = update07_full_lsof_fixture(Path(temp), variant)
                 self.assertEqual(load_auditor().audit_run(report)["findings"][0]["state"], expected)
@@ -240,7 +240,7 @@ class GranularEvidenceAuditTests(unittest.TestCase):
 
     def test_password05_20261001_frozen_sources_need_whole_peer_review(self):
         reviewed = {
-            "scripts/granular_e2e.py": "83872c29f7be845de0bac933e8a981615def0d4e4e1bd49948efcd0d738af21e",
+            "scripts/granular_e2e.py": "22e85ed37e850d38b7fd05ccc79346e96f5a7dbd6a1744f1b84b51dad07a6f5b",
             "scripts/local_e2e.py": "d43036d0cee91b06df325f0fd8c9a60067b198fb2702ee56cedc80fcd028dae1",
             "apps/desktop/e2e/granular-login.spec.ts": "0bd303133c7d3bd0452eac4359af45ff8a8d94295664af0aed500faacafbe5a2",
         }
@@ -660,6 +660,8 @@ def update07_full_lsof_fixture(directory: Path, variant: str) -> Path:
         paths = owned
     if variant == "default_open":
         paths.append(default + "/settings.json")
+    if variant == "empty_name":
+        paths.append("")
     process = case_dir / "process-open-files.json"
     process.write_text(json.dumps({"run_id": "run-1", "case_id": case, "pid": 3001,
         "observed_at": "2026-09-30T10:00:05Z", "all_open_paths": paths,

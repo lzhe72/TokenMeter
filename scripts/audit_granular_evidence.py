@@ -182,6 +182,12 @@ PASSWORD05_PEER_SOURCE_SETS = (PASSWORD05_PEER_SOURCES, {
     "scripts/granular_e2e.py": "83872c29f7be845de0bac933e8a981615def0d4e4e1bd49948efcd0d738af21e",
     "scripts/local_e2e.py": "d43036d0cee91b06df325f0fd8c9a60067b198fb2702ee56cedc80fcd028dae1",
     "apps/desktop/e2e/granular-login.spec.ts": "0bd303133c7d3bd0452eac4359af45ff8a8d94295664af0aed500faacafbe5a2",
+}, {
+    # The detailed runner now snapshots the shared lsof parser imported only by
+    # update specs. Its peer App installation, profile and launch paths are unchanged.
+    "scripts/granular_e2e.py": "22e85ed37e850d38b7fd05ccc79346e96f5a7dbd6a1744f1b84b51dad07a6f5b",
+    "scripts/local_e2e.py": "d43036d0cee91b06df325f0fd8c9a60067b198fb2702ee56cedc80fcd028dae1",
+    "apps/desktop/e2e/granular-login.spec.ts": "0bd303133c7d3bd0452eac4359af45ff8a8d94295664af0aed500faacafbe5a2",
 })
 
 
@@ -660,11 +666,11 @@ def _update07_full_open_files(report_path: Path, report: dict, item: dict,
     owned = record.get("owned_profile_paths")
     default = record.get("default_profile")
     default_paths = record.get("default_profile_paths")
-    if not isinstance(paths, list) or not all(isinstance(path, str) for path in paths) or \
+    if not isinstance(paths, list) or not all(isinstance(path, str) and path for path in paths) or \
             not isinstance(owned, list) or not isinstance(default, str) or \
             not default.endswith("/Library/Application Support/TokenMeter") or \
             not isinstance(default_paths, list):
-        raise EvidenceMissing("Unfiltered lsof path list or profile comparison is absent")
+        raise EvidenceMissing("Complete named lsof path list or profile comparison is absent")
     candidate_roots = {path.split("/profile/", 1)[0] + "/profile" for path in owned
                        if isinstance(path, str) and "/profile/" in path}
     if len(candidate_roots) != 1:

@@ -32,7 +32,8 @@ CASES=[f'E2E-TM001-{i:03d}' for i in (1,2,3,5,6,4)]
 REQUIRED_STEPS={
  'E2E-TM001-001':{'default_routes','forced_password','identity','auto_restore','logout_revokes','auto_off'},
  'E2E-TM001-002':{'login_errors','member_identity','admin_hidden','member_forbidden'},
- 'E2E-TM001-003':{'admin_actions','audit','reset_revokes','disable_revokes'},
+ 'E2E-TM001-003':{'admin_restored_identity','admin_restored_role','admin_session_verified',
+                  'admin_session_matches_ui','admin_actions','audit','reset_revokes','disable_revokes'},
  'E2E-TM001-005':{'bootstrap_forced','admin_only','password_persists','restore'},
  'E2E-TM001-006':{'default_routes','atomic_config','origin_isolation','config_validation','restore_defaults'},
  'E2E-TM001-004':{'auto_discovery','forbidden','redirect','invalid_signature','valid_install','self_relaunch','identity_restored',
@@ -554,7 +555,7 @@ def verify_granular_run(gate_dir: Path, manifest_path: Path, *, run_id: str,
             primary.get('cleanup_completed') is True,'Detailed run left owned resources')
     primary_code=_frozen_code(primary,primary_path.parent,{'tests/test_cases.json','tests/granular_login_variants.json',
         'tests/granular_update_variants.json','scripts/granular_e2e.py','scripts/local_e2e.py',
-        'apps/desktop/e2e/playwright.config.ts'})
+        'apps/desktop/e2e/playwright.config.ts','apps/desktop/e2e/lsof.ts'})
     require(primary_code['tests/test_cases.json']==sha256(ROOT/'tests/test_cases.json') and
             primary_code['tests/granular_login_variants.json']==sha256(ROOT/'tests/granular_login_variants.json') and
             primary_code['tests/granular_update_variants.json']==sha256(ROOT/'tests/granular_update_variants.json'),

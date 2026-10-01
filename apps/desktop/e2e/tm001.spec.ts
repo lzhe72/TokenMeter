@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { existsSync, lstatSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { parseLsofPaths } from './lsof';
 
 type Context = {
   run_id: string; candidate_sha: string; case_id: string; app_path: string; profile_path: string;
@@ -158,7 +159,7 @@ function ownedAppPids(): number[] {
 function openedFilePaths(pid: number): string[] {
   const output = execFileSync('/usr/sbin/lsof', ['-nP', '-p', String(pid), '-Fn'],
     { encoding: 'utf8', timeout: 10_000, maxBuffer: 4 * 1024 * 1024 });
-  return output.split('\n').filter(line => line.startsWith('n')).map(line => line.slice(1));
+  return parseLsofPaths(output);
 }
 async function waitForNewPid(oldPid: number): Promise<number> {
   const end = Date.now() + 180_000;
@@ -228,6 +229,13 @@ test('E2E-TM001-003 administrator reset, audit and revoked sessions', async () =
   await launch(); await defaults(); await configure(c.service_url);
   await login('test-admin','TEST-ONLY-admin-42!'); await changePassword('TEST-ONLY-admin-42!');
   await identity('admin_identity','test-admin');
+  await restart();
+  await identity('admin_restored_identity','test-admin');
+  await uiEquals('admin_restored_role','session.role','管理员');
+  const verifiedAdmin = await status('admin_session_verified',200,c.service_url,'GET','/v1/me',undefined,savedToken());
+  event('admin_session_matches_ui','service',
+    {username:'test-admin',role:'admin'},
+    {username:verifiedAdmin.username,role:verifiedAdmin.role});
   await page!.getByTestId('admin.accounts').click();
   await expect(page!.getByTestId('admin.reset.test-bob')).toBeVisible();
   await page!.getByTestId('admin.reset.test-bob').click();
