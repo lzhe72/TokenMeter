@@ -744,3 +744,5 @@ TM-001开发会话交接`709d21253a0f88bc703a431cbf3adba3df17e508`原始`local-6
 `BOOTSTRAP-03`详细用例已写固定额外成员provision，机器目录仍误写“数据绑定待补”；只读核对`apps/desktop/e2e/granular-account.spec.ts`在`TC-TM001-BOOTSTRAP-03`第4步用本例库调用`server.tokenmeter_server.provision`创建尾0007的test-extra，并在owned重启、拒绝重首建后核对成员和改后管理员。已同步更正机器目录前置/数据库准备文字，不变动步骤预期、程序、执行状态或旧结果。709d另有登录定向run`local-2aa05fb7b2754289a1d77b9ef89bd321`五父例/11步真实App PASS及独立Excel回读，详见07；该定向结果不解除旧c291完整门禁FAIL。
 
 同候选新增另一次`LOGIN-SESSION`定向run`local-1d7d9238f9fd4d389e27cad990a6cb97`六父例/14步真实App PASS、清理及独立Excel回读PASS，作为总表第20批次。与上一`LOGIN-AUTH`第19批次分开登记，不能拼成整版门禁。
+
+709d候选再有`LOGIN-VALIDATION`十父/十二变体22行、36步的独立run`local-5e076fa3d05b4d949877333a3b5339e0`和`LOGIN-RATE`单父/三步的run`local-09f2c4fd672848a9a68ba851a5d7b3c9`；两者原报告、独立Excel及verification均回读PASS，分列总表第21/22批次。四批累计覆盖709d登录任务22父+12变体，但并非一次TM-001全功能回归，旧c291完整门禁FAIL和正式发行NOT_RUN保持；逐批SHA与派生父例口径见07。

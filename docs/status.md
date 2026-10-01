@@ -2,6 +2,11 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-005代码候选`259cf768`的`CORE-04/05`两次独立`source_check`各1/1、三/四步、清理及独立Excel回读PASS，作为总表第23/24批次。代码同名远端功能分支已由push与GitHub API读回同SHA/tree；Git ls-remote曾因443不可达失败。测试程序尚未并入本文档树，机器目录绑定保持null；0.5产品TC、真实App/原生日志E2E和正式发行仍NOT_RUN。
+
+TM-001同一709d候选新增`LOGIN-VALIDATION`十父/十二变体22行36步与`LOGIN-RATE`单父三步两次真实App定向PASS，独立Excel均回读，分列总表第21/22批次。四批登录任务合计22父+12变体已按各自run通过；其余TM-001功能尚未验收，旧c291完整门禁FAIL与正式发行NOT_RUN。
+
+
 TM-003新增`CORE-07`主进程编排辅助输入：固定两页两文件、分块读满、HMAC键、守卫撤权与超预算安全失败；目前仅设计、程序绑定null/未执行。它不证明任意大日志或真实App/Keychain产品链路，0.3产品E2E仍NOT_RUN。
 
 `CORE-07`干净输入提交`a3e99dafa8948cdf91d733c374d25a132dc60df2`的[SOP-008收据](../.local/docs-checks/20261002-tm003-core07-slice/receipt.json)判仅该辅助切片`development_slice_ready`；structure、治理477/477、用例233/744和总表回读PASS。程序绑定及实际执行仍空，产品和发行状态不因此改变。
