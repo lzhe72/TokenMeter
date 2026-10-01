@@ -23,7 +23,7 @@ const suiteName = option('--suite');
 const runId = option('--run-id');
 const suite = registry.suites?.[suiteName];
 if (registry.schema_version !== 1 || !suite || !/^[a-z0-9][A-Za-z0-9-]{7,100}$/.test(runId) ||
-    !/^tm\d{3}-core$/.test(suiteName) || !/^v\d+\.\d+\.\d+-\d{8}T\d{6}Z$/.test(suite.release_id) ||
+    !/^tm\d{3}-core(?:\d{2})?$/.test(suiteName) || !/^v\d+\.\d+\.\d+-\d{8}T\d{6}Z$/.test(suite.release_id) ||
     !/^apps\/desktop\/tests\/[a-z0-9-]+\.test\.ts$/.test(suite.file) ||
     !Array.isArray(suite.cases) || suite.cases.length < 1 || new Set(suite.cases).size !== suite.cases.length ||
     suite.cases.some(id => !/^TC-TM\d{3}-CORE-\d{2}$/.test(id)) ||
