@@ -2,6 +2,10 @@
 
 ## 2026-10-02 · 主进程触发端口辅助TC输入
 
+**更正后续设计输入：** 早期reader记录称TM-002候选`fileIdentityDigest`含size/mtime，已由TM-002提交`63fe465cf00ed64620da0ef8e8b30625f0c1ddbc`的C helper源码反证：`tm002-file-id-v1`只编码根dev/ino与文件dev/ino，普通追加不改摘要。旧句作为当时判断保留；当前02/03、详细CORE-02及机器预期改为稳定摘要+keyed prefixMAC。TM-003 `eef956b`现有`commitScanBatch`合同要求每文件独立64hex`sourceKey`、`fileIdentity`、事件/诊断/游标与独立`rootKey`，整代一次同步事务；下一辅助TC将固定这层映射及只作scope的Claude`turnId`代号，产品权限和App验收仍另测。
+
+`TC-TM004-CORE-05`已新增：三文件合成输入的根/文件HMAC向量、M/S/Q各文件归属、主/Agent/缺agent的scope代号、第二游标失败和guard拒绝全代际零提交、稳定末页一次`commitScanBatch`后3调用/385 Token/三游标/四诊断以及SQLite/WAL无模型字段哨兵。`CORE-04`各拒绝码与成功返回结构亦已从笼统描述固定到fixture和机器逐步预期。两条都是未执行的source_check辅助用例，程序绑定null；原20条产品TC、四组摘要、真实授权、App/服务与整版0.4基线未由此改变。当前总表230父+42变体/18批次，SHA-256 `7088db53f08bfd2391e7d93112bfa0995c7c38807eda261cb576f20dd6850525`，回读PASS；本轮干净输入提交与SOP-008收据待补。
+
 收到开发会话关于主进程触发、账号/授权世代守卫和同步提交边界的交接，文档会话按SOP-024、SOP-002–008新增`TC-TM004-CORE-04`。固定合成fixture只含UUID来源、假已验证主体、M100/10、路径注入反例、未验证/停用/强制改密和来源不匹配反例，以及扫描中换账号/撤权/取消屏障；三步分别要求扫描前拒绝且零端口调用、屏障取消且零提交、健康场景一次同步提交并只返回1/100/10/110与覆盖状态。每个负例重置假端口，不访问真实TM-002、TM-003 SQLite、App或用户日志。原20条产品TC和四组E2E摘要保持draft/unexecuted；程序绑定为空，本新增辅助TC亦未运行，正式发行NOT_RUN。
 
 输入见`tests/fixtures/tm004-trigger-core-slice.json`、详细用例、02任务、03设计、04计划、manifest、`tests/test_cases.json`与根总表。输入提交和SOP-008切片收据将在干净提交后追加；编制期`structure`退出0、机器用例目录229例/728步生成并回读、总表229父+42变体/17批次回读PASS，SHA-256 `c9ff24fd752a2d9a533c149843a994553163142e566d6fe0d20657b7f36649ba`。这些检查不表示程序或产品通过。

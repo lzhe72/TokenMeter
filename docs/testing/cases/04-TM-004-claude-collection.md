@@ -165,7 +165,7 @@
 输入：同一合成主体、各自经 UI 授权的 Codex 与 Claude 隔离根。固定本地响应使 Codex 原生 `payload.response_id` 与 Claude 主 `assistant.message.id` 字面均为 `shared-call-01`，分别有 C=11/1 与 M=100/10；Claude 原生 `--fork-session` 复制M，再有独立 Agent 子调用S=200/20（新 message.id、与父同 sessionId 但带 agentId）。另以明确标记的衍生故障数据令同一 Claude message.id 出现矛盾101/10，该行不冒称 CLI 原件。步骤：①经安装 App 扫描C，可信1次/total12；②扫描M，可信2次/input111/output11/total122，跨工具同字面 ID 不冲突；③扫描 fork 复制M与 Agent S，可信3次/input311/output31/total342；④加入矛盾行并重扫/重启，可信仍3次/342，出现 `identity_conflict` 与覆盖不完整。SQL：只读同一 `principal_key` 下 `source=codex` 与 `source=claude_code` 各自事件数1/2、`source_event_key` 不同，Agent `source_scope_key` 与主来源可区分，复制M不多行，冲突不覆写原M；键与归属均不得存原生ID/完整路径。类型：产品E2E；`usage-identity-v1` 长度前缀/HMAC、TM-003 schema 和迁移、两工具原生同字面ID固定程序、安装 App/SQL绑定均待稳定实现，`baseline_pending`、`automated_test=null`。
 ## 无授权依赖的reader辅助切片
 
-共同输入为版本化[reader fixture](../../../tests/fixtures/tm004-reader-core-slice.json)：隔离Claude 2.1.126投影 `raw-main.jsonl` SHA-256 `2b484c185cf0ba333a85c53eb4953f13ddd2e40b6ab95167ca353a8454588ffe`，首条assistant按JSON解析再紧凑序列化加LF为746字节、SHA-256 `cefd7dbe966383874d5b0f587c41089ecfbd8150a980a8b9ca701e4df4c9855f`，调用13/7=20。测试仅在自有0700临时目录写0600合成文件，并另以只读方式打开FileHandle，把合成稳定身份和32字节测试秘密传给模块；不访问用户日志、TM-002授权、产品Keychain、SQLite、IPC、服务或App。每例固定程序先核对输入摘要，逐步输出数值/诊断/游标及退出状态，最终只删除本例自有文件；无产品DB操作，原20条产品TC仍draft/unexecuted。此处的`fileIdentity`是模块合成稳定值，不等于TM-002会随size/mtime改变的候选`fileIdentityDigest`。
+共同输入为版本化[reader fixture](../../../tests/fixtures/tm004-reader-core-slice.json)：隔离Claude 2.1.126投影 `raw-main.jsonl` SHA-256 `2b484c185cf0ba333a85c53eb4953f13ddd2e40b6ab95167ca353a8454588ffe`，首条assistant按JSON解析再紧凑序列化加LF为746字节、SHA-256 `cefd7dbe966383874d5b0f587c41089ecfbd8150a980a8b9ca701e4df4c9855f`，调用13/7=20。测试仅在自有0700临时目录写0600合成文件，并另以只读方式打开FileHandle，把合成稳定身份和32字节测试秘密传给模块；不访问用户日志、TM-002授权、产品Keychain、SQLite、IPC、服务或App。每例固定程序先核对输入摘要，逐步输出数值/诊断/游标及退出状态，最终只删除本例自有文件；无产品DB操作，原20条产品TC仍draft/unexecuted。此处的`fileIdentity`是模块合成稳定值，产品身份仍须从TM-002根与文件dev/ino稳定摘要按sourceId分域HMAC取得。
 
 ### TC-TM004-CORE-01 · 完整LF、半行与限额续读
 
@@ -179,7 +179,7 @@
 
 **TASK：** `TASK-TM004-INCREMENTAL`；**AC：** `AC-TM004-002/004`；**类型：** 辅助模块。**输入：** 首次完整行及游标、在同一文件追加第二完整行、同长度不同ID改写行、截短、模拟源身份变化和不可用秘密。每一子场景从相同已提交第一行的自有副本开始。
 
-1. 固定第一行后追加第二完整行，即使候选size/mtime指纹变化，只要同一稳定模块身份和已提交746字节前缀MAC不变，续读仅返回第二调用，偏移到新LF末，不报`cursor_reset`。不能把TM-002候选快照digest当稳定身份传入。
+1. 固定第一行后追加第二完整行，候选size/mtime变化但TM-002 dev/ino稳定摘要和已提交746字节前缀MAC不变，续读仅返回第二调用，偏移到新LF末，不报`cursor_reset`。产品仍须先把来源摘要以本机密钥和sourceId分域，不把摘要原值当数据库来源键。
 2. 将前缀原地改成同字节长度、不同`message.id`的完整行，并把mtime恢复为原值；同inode/同size/同mtime也须因prefixMAC不符报`cursor_reset`、从0返回改写后的唯一调用。截短到游标前、或使用不同稳定身份时亦从0重扫且报重置。reader本身不保证数据库去重，旧事件保留及coverage缺口须由TM-003事务与产品TC核对。
 3. 秘密缺失/非32字节或读中源发生变化时返回错误，不产生可提交的新cursor、可信调用或成功零；不输出路径/正文/秘密。无产品DB写入；完整产品`INCREMENTAL-02`仍未通过。
 
@@ -199,6 +199,15 @@
 
 **TASK：** `TASK-TM004-SOURCE`、`TASK-TM004-INCREMENTAL`；**AC：** `AC-TM004-001/004`；**类型：** 辅助模块。**输入：** fixture中的UUID `source_id`、已验证且启用/无需改密的合成主体、M=100/10完整候选；同fixture的额外路径字段、错误账号/来源及屏障事件。每一子变体重置假端口计数与候选缓冲。
 
-1. 仅允许请求携带`sourceId`。分别提交含`rootPath`、含`relativeName`的请求，未验证/停用/强制改密主体、格式错误或不属于主体的`sourceId`、以及开始前已取消的请求：返回明确拒绝码；`beginCandidateScan=0`、`commitSync=0`，不把拒绝映射成成功零用量。对有效请求才允许由主进程从假账号快照与授权源端口取得候选；调用方不能提供任意文件路径或替换账号身份。
-2. 有效请求在假`beginCandidateScan`之后、提交守卫之前停于固定屏障，分别发生账号切换、授权撤销与取消：`cancelScan`被调用，守卫拒绝或在守卫前终止，`commitSync=0`；缓冲调用、游标和诊断均不可从返回值暴露。每个事件从新状态重演，不复用已撤销世代。
-3. 重新建立健康合成主体与授权世代，扫描完整M一次，守卫成功且同步提交端口恰调用一次；返回汇总`call_count=1,input=100,output=10,total=110,scan_incomplete=false`及允许的诊断码/计数。序列化返回不得出现fixture的合成路径、prompt/key哨兵、原生会话/Agent/调用ID、行正文或秘密。该端口测试没有真实SQLite提交、授权来源、UI/IPC或产品E2E；这些仍由`SOURCE-01/02/04`、`INCREMENTAL-01/02/03`及`E2E-01`验证。
+1. 仅允许请求携带`sourceId`。分别提交含`rootPath`、含`relativeName`的请求和格式错误的`sourceId`，固定错误码`invalid_collection_request`；未验证/停用/强制改密主体为`collection_unavailable`；不属于主体的合法UUID为`source_not_authorized`；开始前已取消为`collection_cancelled`。每项均`beginCandidateScan=0`、`commitSync=0`，不把拒绝映射成成功零用量。对有效请求才允许由主进程从假账号快照与授权源端口取得候选；调用方不能提供任意文件路径或替换账号身份。
+2. 有效请求在假`beginCandidateScan`之后、提交守卫之前停于固定屏障，分别发生账号切换、授权撤销与取消：前两者返回`collection_stale`，取消返回`collection_cancelled`；`cancelScan`被调用，守卫拒绝或在守卫前终止，`commitSync=0`；缓冲调用、游标和诊断均不可从返回值暴露。每个事件从新状态重演，不复用已撤销世代。
+3. 重新建立健康合成主体与授权世代，扫描完整M一次，守卫成功且同步提交端口恰调用一次；返回形状固定为`{summary:{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]}`，诊断若存在也只能为`{code,count}`数组项。序列化返回不得出现fixture的合成路径、prompt/key哨兵、原生会话/Agent/调用ID、行正文或秘密。该端口测试没有真实SQLite提交、授权来源、UI/IPC或产品E2E；这些仍由`SOURCE-01/02/04`、`INCREMENTAL-01/02/03`及`E2E-01`验证。
+
+### TC-TM004-CORE-05 · 多文件来源键与整代持久映射
+
+**TASK：** `TASK-TM004-INCREMENTAL`、`TASK-TM004-LINEAGE`；**AC：** `AC-TM004-001/002/004`；**类型：** 辅助模块。**输入：** [存储端口合成fixture](../../../tests/fixtures/tm004-storage-port-slice.json)中的固定`sourceId`、32字节测试秘密、同一合成会话的主M100/10、可证实Agent S200/20、缺agentId子调用Q50/5、各自稳定文件摘要/游标/诊断。只用注入假来源端口和本例独占0700目录中的0600 SQLite；输入为合成解析后记录，不冒称Claude原生JSONL。每个故障子场景重建空库，记录所有调用与清理。
+
+1. 以固定长度前缀编码分别计算`rootKey=HMAC(secret,[claude-root-v1,sourceId])`和每文件`sourceKey=fileIdentity=HMAC(secret,[claude-file-v1,sourceId,decodeHex(fileIdentityDigest)])`，逐一等于fixture所列64hex向量。相同dev/ino摘要的普通追加与同inode改写保持键不变，换`sourceId`或文件摘要必须改变键；没有相对名、size/mtime或原始摘要入库。游标重扫仍以keyed prefixMAC判定。
+2. 假扫描完整三个文件后，构成一次`commitScanBatch`输入，文件a/b/c分别且仅分别拥有自己的M/S/Q、`invalid_json`/`unsupported_version`/`unverified_parent`诊断及410/510/610游标；c另带异常`model_id`哨兵，只有符合fixture中有界模型标识规则的值可保留，异常值置`null`并在c增加`invalid_model_id`诊断，不得把哨兵写入SQLite/WAL。不得把扁平调用/诊断列表全挂第一文件。M的`turnId`代号为`claude-main-v1`，S为`claude-agent-v1:agent-01`，Q为`claude-unverified-v1:msg-q`并保持父归属未核实；三种代号仅参与`source_scope_key`本机HMAC，原生session/agent/call ID不作SQLite列值。未到末页或任一文件正文不稳定时`commitScanBatch=0`。
+3. 在新库分别注入第二游标写入失败、guard拒绝/撤权：每次整代事务回滚或未开始，三文件事件/游标/诊断/覆盖/密钥标记均不存在，`cancelScan`执行且缓冲清空；不能把前两文件的成功留在库中。
+4. 稳定末页且guard通过时同步调用`commitScanBatch`恰一次：只读SQLite见三唯一调用、input350/output35/total385、三个来源键及410/510/610游标、四种诊断按文件归属，根覆盖`scan_incomplete=1`（Q父归属未核实），三个`source_scope_key`等于fixture向量，重扫不增加事件。完整SQLite及WAL/返回序列化无异常模型哨兵、原生session/agent/call ID、相对名、完整路径、正文和秘密。这里仅核对合成端口+隔离SQLite；真实TM-002授权、安装App UI/IPC、服务及原产品`LINEAGE/INCREMENTAL/SOURCE`仍须各自E2E。

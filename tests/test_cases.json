@@ -19154,7 +19154,7 @@
           "action": "首行后追加第二完整行",
           "expected_ui": "不适用；纯reader模块",
           "expected_api_db": "不适用；无产品DB或API",
-          "expected": "快照digest变化但稳定身份/前缀MAC相同，续读只第二调用，无cursor_reset"
+          "expected": "候选size/mtime变化但TM-002 dev/ino摘要与前缀MAC不变，续读只第二调用，无cursor_reset；入库来源键须由sourceId分域HMAC"
         },
         {
           "step": 2,
@@ -19176,7 +19176,7 @@
         "line": 178,
         "heading": "TC-TM004-CORE-02 · 前缀MAC、变更和密钥失败"
       },
-      "overall_expected": "1. 首行后追加第二完整行；快照digest变化但稳定身份/前缀MAC相同，续读只第二调用，无cursor_reset\n2. 同长度前缀改写、截短及稳定身份变更；分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符\n3. 秘密无效或读中源变化；拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密"
+      "overall_expected": "1. 首行后追加第二完整行；size/mtime变化但TM-002 dev/ino摘要和前缀MAC相同，续读只第二调用，无cursor_reset\n2. 同长度前缀改写、截短及稳定身份变更；分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符\n3. 秘密无效或读中源变化；拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密"
     },
     {
       "feature_id": "TM-004",
@@ -19284,28 +19284,28 @@
         "AC-TM004-001",
         "AC-TM004-004"
       ],
-      "input": "tests/fixtures/tm004-trigger-core-slice.json；固定UUID、M=100/10、无效路径/主体/来源、三种屏障事件",
+      "input": "tests/fixtures/tm004-trigger-core-slice.json；固定UUID、M=100/10、各错误码、三种屏障事件及成功返回形状",
       "steps": [
         {
           "step": 1,
           "action": "拒绝路径字段、无效主体/来源和预先取消的请求",
           "expected_ui": "不适用；纯主进程端口模块",
           "expected_api_db": "不适用；无真实API或产品DB",
-          "expected": "明确拒绝；beginCandidateScan=0，commitSync=0，无成功零值"
+          "expected": "路径字段/坏UUID为invalid_collection_request；账号不可用为collection_unavailable；异主体来源为source_not_authorized；预先取消为collection_cancelled；均扫描0、提交0"
         },
         {
           "step": 2,
           "action": "扫描开始后在固定屏障分别换账号、撤权和取消",
           "expected_ui": "不适用；纯主进程端口模块",
           "expected_api_db": "不适用；无真实API或产品DB",
-          "expected": "每次cancelScan被调用；commitSync=0；缓冲数据不外露"
+          "expected": "换账号/撤权为collection_stale，取消为collection_cancelled；每次cancelScan、commitSync=0、缓冲不外露"
         },
         {
           "step": 3,
           "action": "健康主体和授权世代扫描完整M并通过提交守卫",
           "expected_ui": "不适用；纯主进程端口模块",
           "expected_api_db": "不适用；无真实API或产品DB",
-          "expected": "commitSync恰一次；返回1次调用、100/10/110、覆盖完整；无私密哨兵/原生标识"
+          "expected": "commitSync恰一次；返回summary{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]，无私密哨兵/原生标识"
         }
       ],
       "source": {
@@ -19313,7 +19313,84 @@
         "line": 198,
         "heading": "TC-TM004-CORE-04 · 授权主体与扫描事务触发"
       },
-      "overall_expected": "1. 拒绝路径字段、无效主体/来源和预先取消的请求；明确拒绝；beginCandidateScan=0，commitSync=0，无成功零值\n2. 扫描开始后在固定屏障分别换账号、撤权和取消；每次cancelScan被调用；commitSync=0；缓冲数据不外露\n3. 健康主体和授权世代扫描完整M并通过提交守卫；commitSync恰一次；返回1次调用、100/10/110、覆盖完整；无私密哨兵/原生标识"
+      "overall_expected": "1. 拒绝路径字段、无效主体/来源和预先取消的请求；路径字段/坏UUID为invalid_collection_request；账号不可用为collection_unavailable；异主体来源为source_not_authorized；预先取消为collection_cancelled；均扫描0、提交0\n2. 扫描开始后在固定屏障分别换账号、撤权和取消；换账号/撤权为collection_stale，取消为collection_cancelled；每次cancelScan、commitSync=0、缓冲不外露\n3. 健康主体和授权世代扫描完整M并通过提交守卫；commitSync恰一次；返回summary{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]，无私密哨兵/原生标识"
+    },
+    {
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "type": "source_check",
+      "preconditions": "仅合成解析后fixture、注入假来源端口和本例0700独占目录内0600隔离SQLite；固定32字节测试秘密；不读取用户日志、Keychain、服务、IPC或App。",
+      "db_operations": {
+        "prepare": "每故障子场景新建本例空SQLite；故障注入只在本例库设置第二游标写入RAISE(ABORT)",
+        "expected_changes": "成功一次事务新增三事件、三个游标、三诊断与根覆盖；失败和撤权零提交",
+        "verification": "只读查询usage_event、source_cursor、collection_diagnostic、coverage的数量/键/数值；核对源键和scope HMAC向量及无原生标识；关闭并核对SQLite/WAL无合成prompt/路径哨兵",
+        "read_only_checks": []
+      },
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "missing": [
+        "SOP-011固定存储适配程序与真实TM-002/003集成尚未绑定；原20条产品TC仍BLOCKED或未执行"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "关闭SQLite句柄，核对owner marker后只删除本例独占目录；保留原始模块报告。",
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-013"
+      ],
+      "id": "TC-TM004-CORE-05",
+      "title": "多文件来源键与整代持久映射",
+      "task_ids": [
+        "TASK-TM004-INCREMENTAL",
+        "TASK-TM004-LINEAGE"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-002",
+        "AC-TM004-004"
+      ],
+      "input": "tests/fixtures/tm004-storage-port-slice.json；合成M100/10、S200/20、Q50/5，三文件HMAC/游标/诊断与隔离SQLite；异常model_id哨兵与invalid_model_id诊断",
+      "steps": [
+        {
+          "step": 1,
+          "action": "计算三个文件来源键、根键及换源/追加/替换向量",
+          "expected_ui": "不适用；合成来源/隔离SQLite模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名"
+        },
+        {
+          "step": 2,
+          "action": "构造完整三文件generation并核对文件归属与turnId代号",
+          "expected_ui": "不适用；合成来源/隔离SQLite模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交"
+        },
+        {
+          "step": 3,
+          "action": "分别在新库注入第二游标写失败与guard撤权",
+          "expected_ui": "不适用；合成来源/隔离SQLite模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲"
+        },
+        {
+          "step": 4,
+          "action": "稳定末页通过guard后一次同步commitScanBatch并重扫",
+          "expected_ui": "不适用；合成来源/隔离SQLite模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识"
+        }
+      ],
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "line": 206,
+        "heading": "TC-TM004-CORE-05 · 多文件来源键与整代持久映射"
+      },
+      "overall_expected": "1. 计算三个文件来源键、根键及换源/追加/替换向量；64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名\n2. 构造完整三文件generation并核对文件归属与turnId代号；a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交\n3. 分别在新库注入第二游标写失败与guard撤权；每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲\n4. 稳定末页通过guard后一次同步commitScanBatch并重扫；唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识"
     }
   ]
 }

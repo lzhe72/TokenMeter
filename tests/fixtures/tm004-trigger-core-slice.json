@@ -13,19 +13,44 @@
     "source_id": "11111111-2222-4333-8444-555555555555",
     "complete": true,
     "calls": [
-      { "source_event_key": "synthetic-call-m", "input_tokens": 100, "output_tokens": 10 }
+      {
+        "source_event_key": "synthetic-call-m",
+        "input_tokens": 100,
+        "output_tokens": 10
+      }
     ],
     "diagnostics": [],
     "scan_incomplete": false
   },
   "invalid_requests": [
-    { "source_id": "11111111-2222-4333-8444-555555555555", "rootPath": "/synthetic/forbidden" },
-    { "source_id": "11111111-2222-4333-8444-555555555555", "relativeName": "../forbidden.jsonl" }
+    {
+      "source_id": "11111111-2222-4333-8444-555555555555",
+      "rootPath": "/synthetic/forbidden"
+    },
+    {
+      "source_id": "11111111-2222-4333-8444-555555555555",
+      "relativeName": "../forbidden.jsonl"
+    }
   ],
-  "blocked_account_states": ["unverified", "disabled", "must_change_password"],
-  "blocked_source_ids": ["not-a-uuid", "99999999-2222-4333-8444-555555555555"],
-  "barrier_events": ["account_switch", "authorization_revoked", "cancel_requested"],
-  "synthetic_private_sentinels": ["SYNTHETIC-PROMPT-SENTINEL", "SYNTHETIC-KEY-SENTINEL", "/synthetic/private/source.jsonl"],
+  "blocked_account_states": [
+    "unverified",
+    "disabled",
+    "must_change_password"
+  ],
+  "blocked_source_ids": [
+    "not-a-uuid",
+    "99999999-2222-4333-8444-555555555555"
+  ],
+  "barrier_events": [
+    "account_switch",
+    "authorization_revoked",
+    "cancel_requested"
+  ],
+  "synthetic_private_sentinels": [
+    "SYNTHETIC-PROMPT-SENTINEL",
+    "SYNTHETIC-KEY-SENTINEL",
+    "/synthetic/private/source.jsonl"
+  ],
   "expected_success_summary": {
     "call_count": 1,
     "input_tokens": 100,
@@ -33,5 +58,27 @@
     "total_tokens": 110,
     "scan_incomplete": false
   },
-  "privacy": "No real account, Keychain, log, path, SQLite, service, IPC, renderer, or installed App is used."
+  "privacy": "No real account, Keychain, log, path, SQLite, service, IPC, renderer, or installed App is used.",
+  "expected_errors": {
+    "extra_path_field": "invalid_collection_request",
+    "malformed_source_id": "invalid_collection_request",
+    "unverified_account": "collection_unavailable",
+    "disabled_account": "collection_unavailable",
+    "must_change_password": "collection_unavailable",
+    "foreign_source_id": "source_not_authorized",
+    "cancel_before_scan": "collection_cancelled",
+    "account_switch_during_scan": "collection_stale",
+    "authorization_revoked_during_scan": "collection_stale",
+    "cancel_during_scan": "collection_cancelled"
+  },
+  "expected_success_result": {
+    "summary": {
+      "callCount": 1,
+      "inputTokens": 100,
+      "outputTokens": 10,
+      "totalTokens": 110,
+      "scanIncomplete": false
+    },
+    "diagnostics": []
+  }
 }

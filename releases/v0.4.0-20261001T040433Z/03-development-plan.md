@@ -26,11 +26,17 @@ TM-002 UI 候选预览上限为1000文件、5000目录项、2秒，**不能充�
 
 本切片由调用方提供**已获得且已核验的只读 FileHandle**、合成稳定文件身份、前次完整LF游标和32字节本地秘密；reader不接受路径、不负责授权或打开来源。固定 `tests/fixtures/tm004-reader-core-slice.json` 从隔离Claude 2.1.126投影行派生746字节完整assistant行（13/7=20）。单次读取上限1MiB，只有最后一个完整LF及以前的字节可进入解析与游标；半行/读限保留`scanIncomplete`和诊断，不把未提交尾字节算成调用。游标携带完整LF后字节偏移与 `HMAC-SHA256(secret, 从文件起点到该偏移的原始字节)`，不持久化明文前缀或无密钥SHA。若短于游标、身份不符或前缀MAC不符，从0重扫并报`cursor_reset`；重扫仅是reader输出，TM-003事件唯一键和同事务提交才提供跨运行幂等。读取期间文件变化、秘密不可用/长度错误、越界输入须拒绝且不交付新游标。完整LF内非法UTF-8可按已确定诊断推进该行偏移，未知2.1.127结构只给诊断；两者不得制造可信调用或零用量。输出不得带原始路径、正文、秘密。
 
-TM-002 `SourceCandidate.fileIdentityDigest` 由dev/ino/size/mtime组成，正常追加也会变化；它只是候选快照指纹，**不是**本切片所需的稳定文件身份。产品整合要由TM-002/003固定稳定匿名身份与已提交前缀MAC如何跨候选续读，并用`TC-TM004-CORE-02`核对“仅digest变化且前缀相同”不会误重扫；在接口未固定前，只可把合成`synthetic-file-a`用于纯模块，不能宣称产品续扫正确。真实文件打开、每次授权/边界重验、SQLite event+cursor原子事务和coverage缺口判定仍受TM-002/003依赖，全部产品TC保留BLOCKED。
+TM-002已提交的`SourceCandidate.fileIdentityDigest`从根与文件dev/ino派生，不包含size/mtime，普通追加和同inode前缀改写均不改变它。TM-004将`sourceId`和该稳定摘要以`claude-file-v1`长度前缀域作本机HMAC，得到64hex文件`sourceKey/fileIdentity`；另以独立`claude-root-v1`域从`sourceId`产生64hex `rootKey`，不直接将未加密的候选摘要或相对名写入用量库。`TC-TM004-CORE-02`核对普通追加沿原游标续读，同inode/同size/同mtime前缀改写仍由keyed prefixMAC触发重扫。真实文件打开、每次授权/边界重验、SQLite event+cursor原子事务和coverage缺口判定仍受TM-002/003依赖，全部产品TC保留BLOCKED。
 
 #### 主进程触发端口的独立切片
 
 `TC-TM004-CORE-04`仅让主进程接收`sourceId`，从注入的已验证账号快照查授权源，通过注入的TM-002扫描端口取得候选，再在账号/授权世代/取消状态的提交守卫下调用注入的同步提交端口。请求中路径字段、无效主体或sourceId必须在扫描前拒绝；扫描中主体变化、撤权或取消须取消扫描且不提交；成功只返回数字汇总、覆盖状态和受限诊断。固定输入为[合成端口fixture](../../tests/fixtures/tm004-trigger-core-slice.json)，不使用真实账号、Keychain、日志、SQLite、IPC或App。此模块顺序检查不能证明真实权限/事务或产品E2E；稳定TM-002/003接口整合后仍按原产品TC复核。
+
+该触发端口的错误码固定为：请求额外路径字段或sourceId格式错误`invalid_collection_request`，账号未验证/停用/须改密`collection_unavailable`，合法但不属当前主体的sourceId`source_not_authorized`，预先或途中取消`collection_cancelled`，扫描中换账号/撤权`collection_stale`。成功只返回`summary`数值及`diagnostics:[{code,count}]`，空诊断为`[]`；失败绝不返回缓冲的调用、游标或原生身份。切片程序必须逐一断言该映射，不自行选码。
+
+`TC-TM004-CORE-05`在独立隔离SQLite上验证来源与存储适配：同一根的三个文件各自`sourceKey=fileIdentity`，按`claude-file-v1`域从`sourceId`和TM-002 dev/ino摘要导出；`rootKey`只按独立`claude-root-v1`域从`sourceId`导出。每文件的已接受事件、诊断和游标必须保留其来源键，待所有页稳定且守卫通过后，调用TM-003 `commitScanBatch`**一次**同步提交，失败整代回滚。Claude JSONL无Codex的原生turn字段，主调用使用`claude-main-v1`、可证实Agent使用`claude-agent-v1:<agentId>`、缺agent的sidechain使用`claude-unverified-v1:<canonicalCallId>`作为仅供scope HMAC的代号；`source_event_key`仍仅按provider-message原生调用ID的独立HMAC，代号不参与唯一调用键，也不直接入库。缺agent父归属诊断保持覆盖不完整，不能据scope代号猜项目。固定fixture是合成解析后记录，不是厂商原件；真实数据来源、App/IPC/服务与产品E2E仍受原20条TC约束。
+
+入库前对Codex与Claude的`model_id`采用共同有界标识规则`^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$`；不合规则设`null`并产生`invalid_model_id`及覆盖缺口，不能把模型字段直接当可信路径/正文。`CORE-05`的c文件使用合成prompt/路径哨兵作固定负例，核对SQLite及WAL无哨兵；真实安装App的隐私TC仍需另验。
 
 只处理最后一个换行已写完且能完整解析的事件。对末尾半行保留读取偏移前状态，补写后重新尝试；文件缩短、更换或移动时按文件身份与内容来源核对重新扫描，但已提交事件唯一约束保持。SQLite 单事务提交事件键、用量及游标，崩溃后重扫必须幂等。跨文件复制、主/子代理引用及 fork 历史去重不能仅靠行号或会话消息 ID；原生2.1.126双 text 内容块证实同一次 API 响应可写成两条 assistant 行，保留相同 `message.id` 与完整 usage 31/9，唯一调用应只计一次40。父 Agent tool_result 的 `<usage>total_tokens: 25</usage>` 是子代理19/6摘要，不得再次入账。会话 ID 也不能单独标识调用，子代理与父文件可共用它；应联合真实来源、agentId及已证明的调用身份设计唯一性，跨 fork 改写 ID 的规则仍待原件。无法证明是新调用时隔离诊断，不能增加可信汇总，也不能悄悄丢掉待核实条目。
 

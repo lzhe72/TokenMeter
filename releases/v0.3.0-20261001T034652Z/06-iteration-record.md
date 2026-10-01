@@ -1,5 +1,9 @@
 # REQ-TM003 · 执行记录与交接
 
+## 2026-10-02 · CORE-06 多文件generation固定模块回归
+
+固定输入先于实现提交`ff668d0de1fef3dfc162c0d2bc71825df6425511`、SOP-008收据`.local/docs-checks/20261002-tm003-core06-slice-ready/receipt.json`。开发会话的测试提交`408ebf8684bd27c555bee6730dc1953f4d3ae51f`（tree`0702b941b10dd072aacb1aaccf6e2418eba33df3`）原始红测`.local/source-check-runs/tm003-core06-red-20261001T182000Z/report.json`为FAIL：第一步仅暂存通过，第二步因整代事务尚未实现而失败；原件保留。修复提交`eef956b877ebe60f53e605db861f738533837f8b`（tree`802e6c9fd461ed50ce31b06b477da4ef34a1a964`）新固定run`tm003-core06-20261001T182500Z`报告`source_check` 1/1、四步、清理PASS；分别实测末页前不提交、第二游标故障整代回滚、撤权零提交、两文件一次事务提交后重扫不重复。报告SHA-256 `b6a2a8586ffbb14626858263638a7f13c690e3cf5503741bd2526cda3ea24e87`；独立Excel SHA-256 `4bfb058e0d0d9779a90ae61ebb207bdf0f8cec2dc6d55e813e33fcd4920f49a5`，verification为PASS，根总表以被测SHA登记第18批次。原始报告、TAP与Excel见本工作树同run的`.local/source-check-runs/`、`.local/test-results/`。开发会话另报告桌面32/32、build/typecheck PASS，未移作本树完整构建结论。该模块结果不证明TM-002真实授权或安装App，原27条产品TC、正式发行NOT_RUN。
+
 **release_id：** `v0.3.0-20261001T034652Z`　**状态：** draft；当前无产品 PASS、无发布资格。
 
 ## 2026-10-01 · 无授权模块切片编制

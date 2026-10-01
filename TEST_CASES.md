@@ -4,9 +4,9 @@
 
 主要查看入口：[TokenMeter项目总表.xlsx](TokenMeter项目总表.xlsx)。本页提供 Git 可审查索引，详细前置、SQL、逐步观察面和缺项见机器清单及各来源文档。
 
-当前主目录共 **229 条父用例、42 条内嵌稳定变体、728 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
+当前主目录共 **230 条父用例、42 条内嵌稳定变体、732 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
 
-设计状态：baseline_pending 52、baselined 30、designed 78、draft 40、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
+设计状态：baseline_pending 52、baselined 30、designed 78、draft 41、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
 
 本页保存用例设计，不回填运行结果；每批次实际PASS/FAIL/BLOCKED见独立测试结果Excel。新增TC不能继承旧聚合场景的结果。
 
@@ -396,7 +396,7 @@
 | TM-003 / REQ-TM003 | [TC-TM003-CORE-06](docs/testing/cases/03-TM-003-codex-collection.md) · 多文件代际一次提交与全回滚 | TASK-TM003-SCAN、TASK-TM003-STORE | source_check | 固定tm003-core-generation.json：同一generation两页file-a/file-b，各header+完整LF调用、各410字节；第1页complete=false，末页complete=true；owner空SQLite、公开key1、假scan capability/guard；四步各新空库。 | 1. 只读第1页file-a并验证LF/版本/SHA，末页未到达<br>2. 新库重建完整两页及稳定正文；在owner库对第二条source_cursor INSERT注入RAISE(ABORT)，guard通过后同步commitScanBatch<br>3. 新库验证完整两页，file-b字节复核后在guard/事务前模拟capability撤权或cancel<br>4. 新库/新generation保持两文件稳定且末页complete=true，guard通过后同步提交一次；重启同库重扫 | 1. A仅内存暂存；commitScanBatch调用0次，事件/游标/诊断/覆盖无本代际行，complete=false不称完整<br>2. 批次失败并全回滚：A/B事件、两个游标、诊断、覆盖、首次key标记均0或不存在；重开库仍空<br>3. guard拒绝或取消，cancelScan调用1次，commitScanBatch调用0次；暂存清空，事件/两个游标/诊断/覆盖/密钥标记均未提交<br>4. A/B唯一两行，(count,input,output,cached,total)=(2,300,30,60,330)；两游标各410及prefixMAC、coverage.scan_incomplete=0；重启不重复，不输出路径/正文/密钥 | 准备：每路径独立owner 0700根/0600空SQLite；事件只由正式模块API提交；步骤2仅创建本例游标失败触发器<br>变更：未完成无提交；第二游标失败或guard撤权全代际回滚；完整稳定代际原子提交A/B两个事件、两个游标和覆盖<br>核验：逐步只读usage_event唯一键/聚合、source_cursor数量及偏移/prefixMAC、collection_diagnostic、coverage和identity_key_state；重开验证失败仍空、成功不重计；owner清理 | draft / unexecuted<br>缺项：固定source_check程序未绑定；假capability不证明TM002真实授权或产品App/IPC E2E |
 
 
-## TM-004 · 28 行
+## TM-004 · 29 行
 
 | 功能 / 需求 | 用例及详情 | 开发任务 | 类型 | 输入 | 操作步骤 | 独立预期 | DB 准备、变更与核验 | 设计 / 执行状态 |
 
@@ -452,11 +452,13 @@
 
 | TM-004 / REQ-TM004 | [TC-TM004-CORE-01](docs/testing/cases/04-TM-004-claude-collection.md) · 完整LF、半行与限额续读 | TASK-TM004-INCREMENTAL | source_check | 固定746字节13/7 assistant行、前半字节、两条不同ID完整行、首读上限754字节 | 1. 读未写完的前半行<br>2. 补齐LF、重复读取<br>3. 两完整行首读754字节后续读 | 1. 调用0、偏移0、scanIncomplete=true，不作可信零结论<br>2. 补齐后一次13/7=20、偏移746、前缀MAC匹配；重复读取0调用且游标不变<br>3. 首读只第一条、偏移746、read_limit且未完成；续读只第二条、偏移为总字节长、完成 | 准备：无产品DB；每例新建自有临时文件<br>变更：不适用；只返回模块调用、诊断与游标<br>核验：固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL | draft / unexecuted<br>缺项：SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行 |
 
-| TM-004 / REQ-TM004 | [TC-TM004-CORE-02](docs/testing/cases/04-TM-004-claude-collection.md) · 前缀MAC、变更和密钥失败 | TASK-TM004-INCREMENTAL | source_check | 已提交首行，追加不同ID第二行、同长度ID改写并复原mtime、截短、身份改变、秘密缺失或错误 | 1. 首行后追加第二完整行<br>2. 同长度前缀改写、截短及稳定身份变更<br>3. 秘密无效或读中源变化 | 1. 快照digest变化但稳定身份/前缀MAC相同，续读只第二调用，无cursor_reset<br>2. 分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符<br>3. 拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密 | 准备：无产品DB；每例新建自有临时文件<br>变更：不适用；只返回模块调用、诊断与游标<br>核验：固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL | draft / unexecuted<br>缺项：SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行 |
+| TM-004 / REQ-TM004 | [TC-TM004-CORE-02](docs/testing/cases/04-TM-004-claude-collection.md) · 前缀MAC、变更和密钥失败 | TASK-TM004-INCREMENTAL | source_check | 已提交首行，追加不同ID第二行、同长度ID改写并复原mtime、截短、身份改变、秘密缺失或错误 | 1. 首行后追加第二完整行<br>2. 同长度前缀改写、截短及稳定身份变更<br>3. 秘密无效或读中源变化 | 1. 候选size/mtime变化但TM-002 dev/ino摘要与前缀MAC不变，续读只第二调用，无cursor_reset；入库来源键须由sourceId分域HMAC<br>2. 分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符<br>3. 拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密 | 准备：无产品DB；每例新建自有临时文件<br>变更：不适用；只返回模块调用、诊断与游标<br>核验：固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL | draft / unexecuted<br>缺项：SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行 |
 
 | TM-004 / REQ-TM004 | [TC-TM004-CORE-03](docs/testing/cases/04-TM-004-claude-collection.md) · 损坏完整行与未知结构 | TASK-TM004-PARSER、TASK-TM004-INCREMENTAL | source_check | 固定13/7行前置非法UTF8完整行和版本2.1.127完整行，尾部再追加无LF坏字节 | 1. 读三条完整LF行<br>2. 核对游标、重复读取及隐私<br>3. 追加无LF坏字节再补LF | 1. 仅合法2.1.126一条调用13/7=20；invalid_utf8及unsupported_version各一次<br>2. 游标到三行LF末，MAC匹配且完成；重复读取0；输出无路径、正文、秘密<br>3. 未补LF前偏移不动且未完成；补LF后仅诊断推进，无伪调用 | 准备：无产品DB；每例新建自有临时文件<br>变更：不适用；只返回模块调用、诊断与游标<br>核验：固定fixture/行摘要和逐步返回值、前缀MAC及失败时无新游标；无SQL | draft / unexecuted<br>缺项：SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行 |
 
-| TM-004 / REQ-TM004 | [TC-TM004-CORE-04](docs/testing/cases/04-TM-004-claude-collection.md) · 授权主体与扫描事务触发 | TASK-TM004-SOURCE、TASK-TM004-INCREMENTAL | source_check | tests/fixtures/tm004-trigger-core-slice.json；固定UUID、M=100/10、无效路径/主体/来源、三种屏障事件 | 1. 拒绝路径字段、无效主体/来源和预先取消的请求<br>2. 扫描开始后在固定屏障分别换账号、撤权和取消<br>3. 健康主体和授权世代扫描完整M并通过提交守卫 | 1. 明确拒绝；beginCandidateScan=0，commitSync=0，无成功零值<br>2. 每次cancelScan被调用；commitSync=0；缓冲数据不外露<br>3. commitSync恰一次；返回1次调用、100/10/110、覆盖完整；无私密哨兵/原生标识 | 准备：无产品DB；每子变体新建假端口与计数器<br>变更：无SQLite；只观察假同步提交次数及数值<br>核验：逐步断言扫描、取消、守卫、提交次数与返回白名单；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；真实TM-002/003与原20条产品TC仍BLOCKED或未执行 |
+| TM-004 / REQ-TM004 | [TC-TM004-CORE-04](docs/testing/cases/04-TM-004-claude-collection.md) · 授权主体与扫描事务触发 | TASK-TM004-SOURCE、TASK-TM004-INCREMENTAL | source_check | tests/fixtures/tm004-trigger-core-slice.json；固定UUID、M=100/10、各错误码、三种屏障事件及成功返回形状 | 1. 拒绝路径字段、无效主体/来源和预先取消的请求<br>2. 扫描开始后在固定屏障分别换账号、撤权和取消<br>3. 健康主体和授权世代扫描完整M并通过提交守卫 | 1. 路径字段/坏UUID为invalid_collection_request；账号不可用为collection_unavailable；异主体来源为source_not_authorized；预先取消为collection_cancelled；均扫描0、提交0<br>2. 换账号/撤权为collection_stale，取消为collection_cancelled；每次cancelScan、commitSync=0、缓冲不外露<br>3. commitSync恰一次；返回summary{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]，无私密哨兵/原生标识 | 准备：无产品DB；每子变体新建假端口与计数器<br>变更：无SQLite；只观察假同步提交次数及数值<br>核验：逐步断言扫描、取消、守卫、提交次数与返回白名单；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；真实TM-002/003与原20条产品TC仍BLOCKED或未执行 |
+
+| TM-004 / REQ-TM004 | [TC-TM004-CORE-05](docs/testing/cases/04-TM-004-claude-collection.md) · 多文件来源键与整代持久映射 | TASK-TM004-INCREMENTAL、TASK-TM004-LINEAGE | source_check | tests/fixtures/tm004-storage-port-slice.json；合成M100/10、S200/20、Q50/5，三文件HMAC/游标/诊断与隔离SQLite；异常model_id哨兵与invalid_model_id诊断 | 1. 计算三个文件来源键、根键及换源/追加/替换向量<br>2. 构造完整三文件generation并核对文件归属与turnId代号<br>3. 分别在新库注入第二游标写失败与guard撤权<br>4. 稳定末页通过guard后一次同步commitScanBatch并重扫 | 1. 64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名<br>2. a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交<br>3. 每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲<br>4. 唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识 | 准备：每故障子场景新建本例空SQLite；故障注入只在本例库设置第二游标写入RAISE(ABORT)<br>变更：成功一次事务新增三事件、三个游标、三诊断与根覆盖；失败和撤权零提交<br>核验：只读查询usage_event、source_cursor、collection_diagnostic、coverage的数量/键/数值；核对源键和scope HMAC向量及无原生标识；关闭并核对SQLite/WAL无合成prompt/路径哨兵 | draft / unexecuted<br>缺项：SOP-011固定存储适配程序与真实TM-002/003集成尚未绑定；原20条产品TC仍BLOCKED或未执行 |
 
 
 ## TM-005 · 43 行

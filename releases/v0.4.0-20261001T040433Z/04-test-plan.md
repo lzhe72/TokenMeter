@@ -8,6 +8,8 @@
 **新增reader辅助切片：** `TC-TM004-CORE-01/02/03` 使用固定[合成输入](../../tests/fixtures/tm004-reader-core-slice.json)及[逐步判据](../../docs/testing/cases/04-TM-004-claude-collection.md#无授权依赖的reader辅助切片)，分别验证半行/限额、前缀MAC/重扫和损坏完整行。输入为测试拥有的已打开只读文件，DB操作不适用；每例新临时目录并只清理本例资源。独立SOP-008仅可给这三条与相应TASK纯reader部分切片就绪；原20条产品TC、四组摘要、真实授权、SQLite事务、App E2E与整版0.4基线仍draft/BLOCKED。现有模块单元结果不可回填为原产品TC PASS。
 
 **新增触发端口辅助切片：** `TC-TM004-CORE-04` 按[合成端口fixture](../../tests/fixtures/tm004-trigger-core-slice.json)与[三步判据](../../docs/testing/cases/04-TM-004-claude-collection.md#主进程触发的隔离辅助切片)固定拒绝、屏障取消及成功汇总。每个负例重新建立假账号、来源扫描、提交端口，断言扫描/取消/提交次数及返回白名单；无产品DB或SQL，运行后丢弃本例内存状态并保留原始模块报告。SOP-011程序绑定仍为空；只可独立检查这条辅助TC，原20条产品TC、真实授权、SQLite/IPC/App和整版基线仍draft/BLOCKED。
+
+**新增存储端口辅助切片：** `TC-TM004-CORE-05` 用[三文件合成fixture](../../tests/fixtures/tm004-storage-port-slice.json)固定HMAC向量、每文件事件/诊断/游标对应、scope-only turn代号、异常model_id哨兵拒绝、整代失败全回滚与成功一次事务；只读检查本例独占SQLite的事件数/350+35=385、三游标偏移、四种诊断来源、覆盖缺口，并核对SQLite/WAL无哨兵或原生标识。各故障子场景重建私有空库，只清理本例拥有目录；程序绑定仍为空。它不替代真实授权/安装App产品E2E，原20条产品TC继续draft/unexecuted。
 ## 场景与任务覆盖
 
 | 汇总场景 | AC | 对应具体 TASK → 细TC | 独立数字/错误边界 |

@@ -2,7 +2,9 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
-TM-004新增未执行的`TC-TM004-CORE-04`主进程触发端口辅助设计，固定合成账号/授权源/提交端口的拒绝、扫描中取消、提交守卫和隐私汇总。根总表已同步为11 Sheet、229父TC、42变体、271用例行、17批次，SHA-256 `c9ff24fd752a2d9a533c149843a994553163142e566d6fe0d20657b7f36649ba`、回读PASS；该新增行尚无程序绑定或实际运行。TM-004原20条产品TC、真实TM-002/003整合、安装App E2E和正式发行仍未通过；后续切片就绪判定以干净提交的SOP-008收据为准。
+TM-003 `CORE-06`先在`408ebf8`固定红测的第二步失败，修复提交`eef956b`（tree`802e6c9`）的新run`tm003-core06-20261001T182500Z`为`source_check` 1/1、四步和清理PASS；报告SHA-256 `b6a2a8586ffbb14626858263638a7f13c690e3cf5503741bd2526cda3ea24e87`，独立结果Excel SHA-256 `4bfb058e0d0d9779a90ae61ebb207bdf0f8cec2dc6d55e813e33fcd4920f49a5`，verification回读PASS。原始红/绿报告与Excel均已复制到本工作树`.local/`，根总表登记第18批次；原27条产品TC及正式发行仍NOT_RUN。
+
+TM-004新增未执行的`TC-TM004-CORE-04/05`辅助设计：前者固定合成账号/授权源/提交端口的拒绝码、扫描中取消与隐私汇总；后者固定dev/ino来源摘要分域HMAC、三文件各自事件/诊断/游标、scope-only turn代号、异常modelId哨兵与一次SQLite事务。根总表已同步为11 Sheet、230父TC、42变体、272用例行、18批次，SHA-256 `7088db53f08bfd2391e7d93112bfa0995c7c38807eda261cb576f20dd6850525`、回读PASS；两条新辅助TC尚无程序绑定或实际运行。TM-004原20条产品TC、真实TM-002/003整合、安装App E2E和正式发行仍未通过；切片就绪判定以干净提交的SOP-008收据为准。
 
 SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc405952b79de4163` 并由总控整合入新主仓库本地 `master=6bbab2ed20878fe7fd4742967982f1d0b65c6138`。文档会话按新SOP-011/013/014/024同步[总表规范](standards/project-workbook.md)、[执行模板](templates/test-execution.md)、项目登记与Excel。TM-003已有两个CORE01/02/03与一个CORE04/05独立模块批次生成并回读；另新增未执行的CORE06跨文件generation设计。TM-001的709d UPDATE-05定向父例+13变体原始PASS已由后置固定导出器生成独立Excel并回读，为第16批次；TM-002新增一条未执行的chooser见证治理变体。根总表目前11 Sheet、228父TC、42变体、270用例行、17批次，SHA-256 `7e5b566c3247c802fa1bbadad87e23b95ed1adc33451de5e344ed17d20e3c91e`，回读PASS。TM-001仍有77父TC在该定向批次范围外，旧c291完整门禁FAIL、正式发行NOT_RUN；TM-005模块Excel仍待共享runner在其候选树接通。
 
