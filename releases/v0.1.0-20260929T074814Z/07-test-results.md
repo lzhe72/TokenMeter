@@ -157,6 +157,8 @@ UI-01修复后独立单例Excel为`.local/test-results/aux-ui01-local-343e54113b
 
 `TASK-TM001-SESSION`另一次`local-ff24478631134a96bd7d40f2bbc5e254`覆盖`SESSION-01..10`十父例及`SESSION-05#RESET/#DISABLE`两变体：12报告行PASS、44步、清理完成；SESSION-05父例由两变体派生，其余11行为真实App执行。原报告SHA-256 `ef87c7d73190c398e8bdaf92eba94b18b57413ee0804296af938af64d320670f`、独立Excel SHA-256 `887fbc4bda8d617928a0f1b4d27f880046bb6e6ac39e5aadc9420625535093f2`，verification回读PASS；审计SHA-256 `ee5af01b0b3d0512caa63b9c3d60726f0ed2a136344c1617441816acd6deb58e`仅核`SESSION-04`并PASS，不是完整审计。该批仅为同一709d候选会话功能定向；其他功能与完整发行门禁状态不变。
 
+`TASK-TM001-ADMIN`另一次`local-cd15a5fef2444f748088d1fcdd29fe0d`覆盖`ADMIN-01..06`六父例及ADMIN-02的`EMPTY/SHORT/LONG`、ADMIN-05的`SINGLE/CONCURRENT`五变体：11报告行PASS、33步、清理完成，其中9行为真实App执行、两父例由变体派生。原报告SHA-256 `884a7ac1edd31d06d1a0a69775990e1986f99935accac1b5268c9e40772153a3`，独立Excel SHA-256 `de8fa71cf53d0d4a56225ec2fbcf83d73bee875d2811b394f7b7a85ed6a27bc5`，verification回读PASS；独立审计SHA-256 `079e813e9ca0d20c4497651abdfbe11cbad299437de1f4d71a41c2b415fd3860`仅核`ADMIN-03`并PASS，不是12项完整审计。本批只证明709d管理员功能定向范围，其他TM-001功能及完整门禁未通过。
+
 [登录与改密01a](../../docs/testing/cases/01a-TM-001-login-scenarios.md)、[会话/管理/配置/升级01b](../../docs/testing/cases/01b-TM-001-session-admin-release-scenarios.md)、[交付检查01c](../../docs/testing/cases/01c-TM-001-delivery-checks.md)中的TC/变体均为本轮需求阶段基线修订。原代码先于这些精细条目存在，不能追认为先设计后开发已经完成。
 
 - `tests/test_cases.json`当前有78条本版TC：67条产品父TC具备逐编号Playwright程序，另11条交付、目录和门禁辅助TC具备固定程序并已在独立批次执行。其余31条属于后续功能规划，不能纳入本版通过数。

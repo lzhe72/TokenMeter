@@ -2,6 +2,9 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-001 709d候选`ADMIN`定向run`local-cd15a5fef2444f748088d1fcdd29fe0d`覆盖6父+5变体，11行/33步PASS、清理和Excel回读PASS；仅`ADMIN-03`独立审计PASS，作为总表第28批次。其他TM-001功能、完整审计、旧c291完整门禁FAIL与正式发行NOT_RUN保持。
+
+
 TM-003 `CORE-07`在代码候选`33b1ee1636fc8e92ecba834856769df9f112c509`独立`source_check` run`tm003-core07-20261001T200438Z`固定五步1/1、清理与Excel回读PASS，登记总表第27批次；先前固定红测FAIL原件保留。模块假能力/小文件结果不证明真实App/IPC、Keychain、任意大日志或产品E2E；程序未进入本文档树，机器绑定仍null。
 
 

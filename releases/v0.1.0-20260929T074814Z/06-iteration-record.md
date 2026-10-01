@@ -750,3 +750,5 @@ TM-001开发会话交接`709d21253a0f88bc703a431cbf3adba3df17e508`原始`local-6
 同一709d候选的`CHANGE-PASSWORD`十一父/六变体另有17行、32步PASS的独立run`local-64cdbd1050d84763928c0b6a7f30e2c3`，清理及独立Excel回读PASS，作为总表第25批次。仅`PASSWORD-05`的独立审计PASS，不能称12项全量审计已通过；其他功能和完整发行状态不变，逐原件见07。
 
 709d候选`SESSION`十父/两变体另有12行、44步PASS的独立run`local-ff24478631134a96bd7d40f2bbc5e254`，清理及独立Excel回读PASS，作为总表第26批次。独立审计仅`SESSION-04` PASS；本轮其余功能及完整门禁另验，逐原件见07。
+
+709d候选`ADMIN`六父/五变体另有11行、33步PASS的独立run`local-cd15a5fef2444f748088d1fcdd29fe0d`，清理及独立Excel回读PASS，作为总表第28批次。独立审计仅`ADMIN-03` PASS，其他功能和整版门禁另验，逐原件见07。
