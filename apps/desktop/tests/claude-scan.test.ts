@@ -172,3 +172,23 @@ test('TM004 lineage module boundary: parent evidence after a read limit verifies
   assert.equal(plan.diagnostics.filter(item => item.code === 'unverified_parent').length, 0);
   assert.equal(plan.cursors[0].committedByteOffset, bytes.length);
 });
+
+test('TM004 scan module boundary: oversized row leaves coverage incomplete with a read-limit diagnosis', async () => {
+  const bytes = Buffer.alloc(1024 * 1024 + 1, 0x78);
+  const access: ClaudeSourceScanAccess = {
+    async beginCandidateScan() { return {scanId, complete: true, candidates: [{
+      relativeName: 'project/session.jsonl', size: bytes.length,
+      candidateToken: 'a'.repeat(32), fileIdentityDigest: 'b'.repeat(64),
+    }]}; },
+    async nextCandidatePage() { throw new Error('unexpected_page'); },
+    async readCandidateChunk(_scan, _token, offset, maxBytes) {
+      return bytes.subarray(offset, offset + maxBytes);
+    },
+    cancelScan() {},
+  };
+  const plan = await scanClaudeSource(access, sourceId, secret, async () => null);
+  assert.equal(plan.calls.length, 0);
+  assert.equal(plan.cursors[0].committedByteOffset, 0);
+  assert.equal(plan.scanIncomplete, true);
+  assert.ok(plan.diagnostics.some(item => item.code === 'read_limit'));
+});

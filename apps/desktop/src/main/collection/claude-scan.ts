@@ -80,6 +80,8 @@ async function withClaudeScanLease<T>(
           if (read.cursor.committedByteOffset <= oldOffset ||
               !read.diagnostics.some(item => item.code === 'read_limit')) {
             scanIncomplete = true;
+            if (read.diagnostics.some(item => item.code === 'read_limit'))
+              diagnostics.push({code: 'read_limit', count: 1});
             diagnostics.push({code: 'incomplete_tail', count: 1});
             break;
           }
