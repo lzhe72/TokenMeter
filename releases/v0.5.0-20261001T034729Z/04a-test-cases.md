@@ -318,3 +318,31 @@
 ## 基线缺口
 
 所有产品级 TC 尚缺稳定的 Codex/Claude Code 原生日志映射、覆盖证明、客户端 schema/只读 SQL、完整逐步数据准备/重置程序、UI `data-testid` 和固定 Playwright 绑定。`TC-TM005-RANGE-10` 的两个空字段变体必须分别执行。若 TM-003/004 交付后字段/语义与本设计不同，先按 SOP-002/004 修订需求/设计及 oracle，再执行 SOP-008；不能修改预期使错误实现通过。实际输入/动作/预期和产品状态以当时提交和原始报告为准。
+
+## 无原生日志依赖的纯统计辅助TC
+
+以下三条只约束纯函数开发切片。共同输入为固定[合成fixture](../../tests/fixtures/tm005-core-slice.json)，`principal_key=synthetic-p1`、`Asia/Shanghai`当地日2026-09-29、UTC半开界 `2026-09-28T16:00:00Z` 至 `2026-09-29T16:00:00Z`。每例从新内存输入开始，调用待SOP-011固定的模块入口；不接用户日志、TM-002授权、产品Keychain、SQLite、IPC、服务或DMG。DB操作不适用，固定程序须比对JSON fixture摘要、各步返回和输入未被修改，结束只清理本例拥有的临时对象。未绑定程序时记录unexecuted，不以静态oracle脚本结果代替模块测试。
+
+### TC-TM005-CORE-01 · 双来源可信事件与半开日汇总
+
+**TASK：** `TASK-TM005-EVENT-CONTRACT`、`TASK-TM005-RANGE-QUERY`。**AC：** `AC-TM005-001`。**类型：** 辅助模块。**输入：** fixture 的A/B、另一主体C、界前D、排除上界E五条合成可信事件；身份键已由调用方保证来源限定且唯一，非原生调用ID。
+
+1. 按固定主体和当地日调用纯统计函数，断言仅选择A/B两条、UTC上界排除E、前界排除D、跨主体排除C；输入数组及键不变。
+2. 断言 input300、output30、已知total330、来源Codex110/Claude Code220、未知模型110/`sonnet-test`220；缓存读已知20但B为null所以该子项状态部分未知，缓存写整体未知，推理已知2但B未知；三个子项均不另加到330。
+3. 分别把测试副本的source改为其他值、input改为负数、缓存读设为大于input及UTC时刻改为非法文本，逐个断言拒绝且无完整零/有效汇总输出；原fixture不改。无产品DB写入，旧产品`CONTRACT-01`/`RANGE-01`仍未通过。
+
+### TC-TM005-CORE-02 · 未知用量诊断不补零
+
+**TASK：** `TASK-TM005-EVENT-CONTRACT`、`TASK-TM005-COVERAGE`。**AC：** `AC-TM005-002`。**类型：** 辅助模块。**输入：** 同一A/B已知330、fixture 的Claude Code `missing_usage` 诊断及合成双来源complete覆盖假设。
+
+1. 不带诊断运行A/B，核对已知330且没有因 `model_id=null` 丢掉A；未知模型分组110，来源两组仍分别110/220。
+2. 加入同范围诊断后运行，断言 `status=partial`、`known_tokens=330`、`total_tokens=null`；诊断本身不产生调用或零Token，模型与来源的已知小计不变。
+3. 只留该未知诊断、移除A/B运行，断言 `status=unknown`、`known_tokens=0`、`total_tokens=null`，不能把零个可信事件写成已确认零调用。产品`CONTRACT-02`、`STATE-03/05`仍需原生来源证明。
+
+### TC-TM005-CORE-03 · 声明式覆盖状态代数
+
+**TASK：** `TASK-TM005-COVERAGE`。**AC：** `AC-TM005-002`。**类型：** 辅助模块。**输入：** fixture 的五行 `coverage_algebra`；`complete` 仅是测试传入的合成假设，`product_coverage_proven=false`。
+
+1. 两来源complete且无事件/诊断，断言 `complete/known0/total0`；清空事件但不给覆盖事实，断言不得自行推为complete。
+2. 一来源missing且无可信事件，断言 `missing/known0/total null`；一来源missing且可信110，断言 `partial/known110/total null`。
+3. 两来源complete、有可信110并有未知诊断，断言 `partial/known110/total null`；仅未知诊断无可信事件，断言 `unknown/known0/total null`。不读真实来源、不生成覆盖证明，产品`STATE-02/04/06`仍BLOCKED。

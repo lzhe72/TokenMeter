@@ -1,5 +1,7 @@
 # 05 · TM-005 用量统计：详细测试用例
 
+新增 `TC-TM005-CORE-01/02/03` 的独立纯统计辅助切片详见[04a逐步用例](../../../releases/v0.5.0-20261001T034729Z/04a-test-cases.md#无原生日志依赖的纯统计辅助tc)及[合成fixture](../../../tests/fixtures/tm005-core-slice.json)。它只测试可信事件的双来源汇总、unknown与声明式coverage代数；本页原产品场景、32条产品TC及6变体仍待真实采集/App绑定，不从模块检查获取PASS。
+
 需求：`REQ-TM005`。规划版本：`0.5.0`。功能与全部用例为 **planned**，未执行产品 E2E，无 PASS 证据和发布资格。以下是待实现用例规格；步骤具体描述目标行为，缺少的程序和环境逐项列明。不能把文档完整误报为用例可执行。
 
 本轮双来源范围已确定：Codex 与 Claude Code 均必须从受支持原生日志经安装后的 App 采集。目标版本的任务拆解、[统计读取合同](../../../releases/v0.5.0-20261001T034729Z/03a-statistics-contract.md)、逐 TC 草案和规范化语义 oracle 分别见[02 拆解](../../../releases/v0.5.0-20261001T034729Z/02-breakdown.md)、[04a 逐 TC 草案](../../../releases/v0.5.0-20261001T034729Z/04a-test-cases.md)和[语义 oracle](../../../tests/fixtures/tm005-semantic-expected.json)。这些文件仍为 draft；现有 `date_ranges` 不具备原生数据或三态覆盖能力。

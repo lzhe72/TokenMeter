@@ -1,5 +1,11 @@
 # TM-005 执行记录
 
+## 2026-10-01 · 新仓库纯统计开发切片编制
+
+总控在新仓库 `/Users/lz/文档/git/TokenMeter` 恢复 TM-001 Electron 源码及当前0.2文档总表，原记录中“当前工作树缺 Electron 源码”只描述旧分支当时基点。TM-005开发会话在新分支交接纯静态 oracle 检查；它核对预先归一化的合成算术，不接原生日志、客户端SQLite、IPC或App，不授予产品TC PASS。文档会话按新SOP-008修订5，将 `TASK-TM005-EVENT-CONTRACT/RANGE-QUERY/COVERAGE` 的纯函数部分拆为 `CORE-01/02/03` 三条辅助模块TC，冻结 `tests/fixtures/tm005-core-slice.json` 的双来源可信合成事件、unknown诊断及声明式coverage状态代数。原32条产品父TC和6变体保持draft/unexecuted且绑定null；合成complete标签不证明真实连续空日覆盖。整版0.5 baseline、产品E2E和正式发行仍NOT_RUN/BLOCKED。
+
+SOP-024编制检查：`python3 scripts/check_docs.py --mode structure` 退出0（134文档、1211链接），`python3 -m unittest discover -s tests/governance -p 'test_*.py'` 退出0（457/457），`git diff --check`退出0；`python3 scripts/verify_project_workbook.py`退出0，根总表11 Sheet、222父TC、41变体、263用例行、13个原有历史批次，SHA-256 `d0bcb363a618930453b1a9cd399382132133e7b6c6d9b2671072358e21949f07`。这些是文档/治理检查，没有运行CORE模块程序或产品E2E。固定输入摘要：合成fixture `2dad1a42bc3051c8a1f820d12211c832522ba46586c3b84e00ebcd3b708470e9`，逐TC文档 `9e0fb9933801df891284b4294c95dc3933e5ea4783053d3412b5fa3dba4f3cbd`，机器用例 `cd748133c90d0d83c2d6e6d242d996fe3aeb7227b2600bb69ff954d7d777f3fc`。SOP-008独立切片的内容/依赖判定与提交SHA另记下一条；此处仅固定编制输入。
+
 ## 文档会话接管机器用例与语义oracle（2026-10-01）
 
 文档会话从TM-005源工作树接管01–06、03a/04a、32条细TC和6个固定变体；原语义oracle `tests/fixtures/tm005-semantic-expected.json` 以相同SHA-256 `a1a054e704e44cd409ce2a24bc163003c34c39f9b6cfeaf08090e10a35f375b1`复制。六个变体补有序动作、逐步预期和文件只读预期；两条聚合E2E的来源行修正为当前详细文档19/36行。TM-005代码提交`4bb7afe490e1193fb0f7cf7c4e6dee11d7d58022`新增语义oracle检查与治理负测，只证明规范化算术，不证明双来源原生日志或产品E2E。本版固定产品程序、原生数据与上一0.4稳定包仍缺，执行保持BLOCKED。

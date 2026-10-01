@@ -4,9 +4,9 @@
 
 主要查看入口：[TokenMeter项目总表.xlsx](TokenMeter项目总表.xlsx)。本页提供 Git 可审查索引，详细前置、SQL、逐步观察面和缺项见机器清单及各来源文档。
 
-当前主目录共 **219 条父用例、41 条内嵌稳定变体、694 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
+当前主目录共 **222 条父用例、41 条内嵌稳定变体、703 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
 
-设计状态：baseline_pending 52、baselined 30、designed 78、draft 30、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
+设计状态：baseline_pending 52、baselined 30、designed 78、draft 33、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
 
 本页保存用例设计，不回填运行结果；每批次实际PASS/FAIL/BLOCKED见独立测试结果Excel。新增TC不能继承旧聚合场景的结果。
 
@@ -443,7 +443,7 @@
 | TM-004 / REQ-TM004 | [TC-TM004-INCREMENTAL-03](docs/testing/cases/04-TM-004-claude-collection.md) · 跨工具同 ID 与 Claude 复制历史（TASK-TM004-INCREMENTAL，AC-001/002，E2E-001/002） | TASK-TM004-INCREMENTAL | product_e2e | 同一合成主体、各自经 UI 授权的 Codex 与 Claude 隔离根。固定本地响应使 Codex 原生 `payload.response_id` 与 Claude 主 `assistant.message.id` 字面均为 `shared-call-01`，分别有 C=11/1 与 M=100/10；Claude 原生 `--fork-session` 复制M，再有独立 Agent 子调用S=200/20（新 message.id、与父同 sessionId 但带 agentId）。另以明确标记的衍生故障数据令同一 Claude message.id 出现矛盾101/10，该行不冒称 CLI 原件。 | 1. 经安装 App 扫描C<br>2. 扫描M<br>3. 扫描 fork 复制M与 Agent S<br>4. 加入矛盾行并重扫/重启 | 1. 可信1次/total12<br>2. 可信2次/input111/output11/total122，跨工具同字面 ID 不冲突<br>3. 可信3次/input311/output31/total342<br>4. 可信仍3次/342，出现 `identity_conflict` 与覆盖不完整 | 准备：按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件<br>变更：仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行<br>核验：规划只读核对：只读同一 `principal_key` 下 `source=codex` 与 `source=claude_code` 各自事件数1/2、`source_event_key` 不同，Agent `source_scope_key` 与主来源可区分，复制M不多行，冲突不覆写原M；键与归属均不得存原生ID/完整路径；确切可执行SQL待TM-003稳定schema | baseline_pending / unexecuted<br>缺项：TM-003事务游标、身份schema和只读SQL尚未稳定或验证；本例逐步固定产品执行代码和原始结果尚未建立 |
 
 
-## TM-005 · 40 行
+## TM-005 · 43 行
 
 | 功能 / 需求 | 用例及详情 | 开发任务 | 类型 | 输入 | 操作步骤 | 独立预期 | DB 准备、变更与核验 | 设计 / 执行状态 |
 
@@ -528,6 +528,12 @@
 | TM-005 / REQ-TM005 | [TC-TM005-DATA-02](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 独立预期与边界 | TASK-TM005-DATA | governance | 语义 oracle tests/fixtures/tm005-semantic-expected.json和最终 raw 映射计划 | 1. 在产品启动前运行固定语义 oracle 检查<br>2. 对照原始字节与独立预期中的模型/字段、覆盖与 unknown 状态 | 1. 预期 seed42 语义样例 13 行/12 唯一，双来源事件集合及平移后的上海/UTC半开区间与预存摘要一致；原生映射未就绪时本例仍 BLOCKED。<br>2. 缺原生日志/覆盖样例不得标可执行。该检查不能代替产品查询。 | 准备：本例独立空客户端 SQLite 和隔离服务 SQLite；只能由固定的两来源原生日志经 App 采集，不能直接向产品库 SQL 造统计数据。<br>变更：事件、诊断与覆盖状态须与本例逐步设计预期一致；具体表和迁移由 TM-003/004 稳定合同确定。<br>核验：只读 SQLite 对照来源、稳定身份、UTC 时间、Token、覆盖和诊断；具体列名与 SQL 尚未绑定，执行前 BLOCKED。 | baseline_pending / unexecuted<br>缺项：两来源原生日志、逐步 UI/API/DB 断言、只读 SQL 和固定自动绑定尚待交付；当前不可作为产品 PASS。 |
 
 | TM-005 / REQ-TM005 | [TC-TM005-E2E-01](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 精确集合与最终安装包 | TASK-TM005-E2E | governance_gate | 固定候选 SHA、最终 DMG 与上述所有 TC 及此前已交付功能集合 | 1. 门禁从 DMG 安装的正式 App 逐 TC 运行，核对实际安装包摘要、独立输入/预期、原始结果与全部清理<br>2. 核对 TM-001→TM-004 的适用完整 E2E 及迁移/升级结果 | 1. 任一 FAIL/BLOCKED/零例/跳过/重试取绿均阻断。<br>2. 只有本机机器门禁原始复核 PASS 才可签发本版通行证。当前无程序/包/原件，状态 BLOCKED。 | 准备：本例独立空客户端 SQLite 和隔离服务 SQLite；只能由固定的两来源原生日志经 App 采集，不能直接向产品库 SQL 造统计数据。<br>变更：事件、诊断与覆盖状态须与本例逐步设计预期一致；具体表和迁移由 TM-003/004 稳定合同确定。<br>核验：只读 SQLite 对照来源、稳定身份、UTC 时间、Token、覆盖和诊断；具体列名与 SQL 尚未绑定，执行前 BLOCKED。 | baseline_pending / unexecuted<br>缺项：两来源原生日志、逐步 UI/API/DB 断言、只读 SQL 和固定自动绑定尚待交付；当前不可作为产品 PASS。 |
+
+| TM-005 / REQ-TM005 | [TC-TM005-CORE-01](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 双来源可信事件与半开日汇总 | TASK-TM005-EVENT-CONTRACT、TASK-TM005-RANGE-QUERY | source_check | fixture的A/B、跨主体C、界外D/E；synthetic-p1、Asia/Shanghai当地日2026-09-29 | 1. 按固定主体/当地日查询纯统计函数<br>2. 核对来源、模型、Token和三个子项<br>3. 逐个输入非法来源、负数、超范围缓存和坏UTC | 1. 仅A/B被选、C/D/E排除；输入数组和键不变<br>2. input300/output30/total330；Codex110/Claude220；未知模型110/sonnet-test220；缓存读20但部分未知、缓存写未知、推理2但部分未知，子项不加总<br>3. 各自被拒绝，无完整零或有效汇总输出；原fixture不变 | 准备：无产品DB写入；每例从新内存输入开始<br>变更：不适用；纯统计返回值与输入未变<br>核验：固定fixture摘要、事件筛选、各字段与状态逐步核对；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
+
+| TM-005 / REQ-TM005 | [TC-TM005-CORE-02](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 未知用量诊断不补零 | TASK-TM005-EVENT-CONTRACT、TASK-TM005-COVERAGE | source_check | fixture A/B及同范围Claude missing_usage诊断；双来源complete仅为模块合成覆盖假设 | 1. 先仅统计A/B<br>2. 加入诊断重新统计<br>3. 移除A/B仅保留诊断 | 1. 已知330，未知模型110保留，来源Codex110/Claude220<br>2. partial、known_tokens330、total_tokens=null；诊断不增调用或零Token<br>3. unknown、known_tokens0、total_tokens=null，不能写已确认零 | 准备：无产品DB写入；每例从新内存输入开始<br>变更：不适用；纯统计返回值与输入未变<br>核验：固定fixture摘要、事件筛选、各字段与状态逐步核对；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
+
+| TM-005 / REQ-TM005 | [TC-TM005-CORE-03](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 声明式覆盖状态代数 | TASK-TM005-COVERAGE | source_check | fixture五行coverage_algebra；complete仅为模块合成输入，product_coverage_proven=false | 1. 两来源complete且无事件、随后移除覆盖事实<br>2. 一来源missing，分别给空事件与可信110<br>3. 两来源complete，分别给可信110+未知诊断、仅未知诊断 | 1. 前者complete/known0/total0；后者不得自行推断complete<br>2. 空事件missing/known0/total null；可信110为partial/known110/total null<br>3. 前者partial/known110/total null；后者unknown/known0/total null | 准备：无产品DB写入；每例从新内存输入开始<br>变更：不适用；纯统计返回值与输入未变<br>核验：固定fixture摘要、事件筛选、各字段与状态逐步核对；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
 
 
 ## TM-006 · 2 行
