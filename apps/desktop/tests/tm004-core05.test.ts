@@ -6,7 +6,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {collectClaudeUsage} from '../src/main/collection/claude-event.ts';
-import {commitClaudePreparedBatch} from '../src/main/collection/claude-storage.ts';
+import {commitClaudePreparedBatch, type ClaudeScanStorePort} from '../src/main/collection/claude-storage.ts';
+import {claudeCandidateFromSource, claudeRootKey} from '../src/main/collection/claude-source.ts';
 import {UsageStore} from '../src/main/collection/usage-store.ts';
 
 const CASE = 'TC-TM004-CORE-05';
@@ -14,10 +15,11 @@ const raw = readFileSync(join(import.meta.dirname, '../../../tests/fixtures/tm00
 assert.equal(createHash('sha256').update(raw).digest('hex'),
   '6e8603354ca0e6c3e2678074b2951b052fa2e34325e1ca02e5e0304cc8c7861a');
 const fixture = JSON.parse(raw.toString('utf8')) as {
-  source_id: string; principal_key: string; secret_hex: string; expected_scope_keys: string[];
+  source_id: string; other_source_id: string; principal_key: string; secret_hex: string;
+  key_derivation: {root_key: string}; expected_scope_keys: string[];
   files: Array<{file_identity_digest: string; source_key_and_file_identity: string;
     committed_byte_offset: number; prefix_mac: string; call: {
-      canonical_call_id: string; session_id: string; agent_id: string | null;
+      canonical_call_id: string; session_id: string; agent_id: string | null; turn_id: string;
       input_tokens: number; output_tokens: number; model_id: string};
     diagnostic_codes: string[]}>;
 };
@@ -116,6 +118,54 @@ function freshTrace(): Trace { return {begin: 0, next: 0, cancel: 0, guard: 0, c
 test(CASE + ' three-file generation is atomic and replay-safe in isolated SQLite', async t => {
   const owner = ownedRoot();
   try {
+    assert.equal(claudeRootKey(fixture.source_id, secret), fixture.key_derivation.root_key);
+    assert.notEqual(claudeRootKey(fixture.other_source_id, secret), fixture.key_derivation.root_key);
+    for (const [index, item] of fixture.files.entries()) {
+      const identity = claudeCandidateFromSource(access('complete', freshTrace()), scanId,
+        fixture.source_id, {relativeName: 'synthetic-' + index + '.jsonl',
+          size: bytes[index].length, candidateToken: tokens[index],
+          fileIdentityDigest: item.file_identity_digest}, secret).fileIdentity;
+      assert.equal(identity, item.source_key_and_file_identity);
+    }
+    t.diagnostic(JSON.stringify({kind: 'step', case_id: CASE, step: 1,
+      actual: {root_key_matches_fixture: true, file_keys_match_fixture: 3,
+        other_source_changes_root_key: true}}));
+
+    const prepared = await collectClaudeUsage(access('complete', freshTrace()),
+      fixture.source_id, secret, async () => null, (batch, guard) => { guard(); return batch; });
+    assert.equal(prepared.files.length, 3);
+    for (const [index, item] of fixture.files.entries()) {
+      const file = prepared.files[index];
+      assert.equal(file.sourceKey, item.source_key_and_file_identity);
+      assert.equal(file.cursor.committedByteOffset, item.committed_byte_offset);
+      assert.deepEqual(file.events.map(event => event.canonicalCallId), [item.call.canonical_call_id]);
+      assert.deepEqual(file.diagnostics.map(diagnostic => diagnostic.code).sort(),
+        [...item.diagnostic_codes].sort());
+    }
+    assert.equal(prepared.files[2].events[0].modelId, null);
+    assert.equal(prepared.coverage.scanIncomplete, true);
+    let mapped: Parameters<ClaudeScanStorePort['commitScanBatch']>[0] | null = null;
+    const fakeStore: ClaudeScanStorePort = {commitScanBatch(batch) {
+      mapped = batch; batch.guard();
+      return {inserted: 3, duplicate: 0, conflict: 0};
+    }};
+    assert.deepEqual(commitClaudePreparedBatch(fakeStore, fixture.principal_key,
+      fixture.source_id, secret, prepared, () => {}),
+    {inserted: 3, duplicate: 0, conflict: 0});
+    assert.ok(mapped);
+    const mappedFiles = (mapped as Parameters<ClaudeScanStorePort['commitScanBatch']>[0]).files;
+    assert.deepEqual(mappedFiles.map(file => file.events[0].turnId),
+      fixture.files.map(file => file.call.turn_id));
+    assert.deepEqual(mappedFiles.map(file => file.committedByteOffset), [410, 510, 610]);
+    t.diagnostic(JSON.stringify({kind: 'step', case_id: CASE, step: 2,
+      actual: {files: prepared.files.length, accepted_calls: prepared.events.length,
+        diagnostics_by_file: prepared.files.map(file => file.diagnostics.map(item => item.code)),
+        cursor_offsets: mappedFiles.map(file => file.committedByteOffset),
+        scope_surrogates_match_fixture: true, invalid_model_id_null: true,
+        scan_incomplete: prepared.coverage.scanIncomplete}}));
+
+    const faults: Array<{variant: string; begin: number; cancel: number;
+      commit: number; entire_generation_absent: boolean}> = [];
     for (const mode of ['incomplete', 'cursor_failure', 'revoked'] as const) {
       const path = join(owner, mode, 'usage.sqlite');
       const store = new UsageStore(path);
@@ -133,10 +183,11 @@ test(CASE + ' three-file generation is atomic and replay-safe in isolated SQLite
         assert.equal(trace.commit, mode === 'cursor_failure' ? 1 : 0);
       } finally { store.close(); }
       empty(state(path));
-      t.diagnostic(JSON.stringify({kind: 'step', case_id: CASE, step: 3,
-        variant: mode, begin: trace.begin, cancel: trace.cancel, commit: trace.commit,
-        entire_generation_absent: true}));
+      faults.push({variant: mode, begin: trace.begin, cancel: trace.cancel,
+        commit: trace.commit, entire_generation_absent: true});
     }
+    t.diagnostic(JSON.stringify({kind: 'step', case_id: CASE, step: 3,
+      actual: {faults, every_generation_absent: true}}));
     const path = join(owner, 'complete', 'usage.sqlite');
     const store = new UsageStore(path);
     const trace = freshTrace();
@@ -166,10 +217,10 @@ test(CASE + ' three-file generation is atomic and replay-safe in isolated SQLite
       assert.equal(actual.events.length, 3);
       assert.deepEqual(actual.coverage.map(row => Number(row.scan_incomplete)), [1]);
       t.diagnostic(JSON.stringify({kind: 'step', case_id: CASE, step: 4,
-        calls: actual.events.length, input_tokens: 350, output_tokens: 35,
+        actual: {calls: actual.events.length, input_tokens: 350, output_tokens: 35,
         total_tokens: 385, cursor_offsets: [410, 510, 610],
         diagnostics: actual.diagnostics.length, scan_incomplete: 1,
-        replay_inserted: 0, private_values_in_db: false}));
+        replay_inserted: 0, private_values_in_db: false}}));
     } finally { store.close(); }
   } finally {
     rmSync(owner, {recursive: true});

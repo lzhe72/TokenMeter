@@ -112,7 +112,7 @@ test(`${CASE} authorized main-process trigger and transaction barrier`, async t 
   const preCancelled = new AbortController(); preCancelled.abort();
   await rejected(request, () => {}, fixture.expected_errors.cancel_before_scan, preCancelled.signal);
   t.diagnostic(JSON.stringify({kind: 'step', case_id: CASE, step: 1,
-    variants: 8, begin_candidate_scan: 0, commit_sync: 0}));
+    actual: {variants: 8, begin_candidate_scan: 0, commit_sync: 0}}));
 
   for (const [event, code] of [
     ['account_switch', fixture.expected_errors.account_switch_during_scan],
@@ -134,7 +134,7 @@ test(`${CASE} authorized main-process trigger and transaction barrier`, async t 
     assert.equal(state.trace.commit, 0);
   }
   t.diagnostic(JSON.stringify({kind: 'step', case_id: CASE, step: 2,
-    barrier_events: 3, cancel_scan_each: 1, commit_sync_each: 0}));
+    actual: {barrier_events: 3, cancel_scan_each: 1, commit_sync_each: 0}}));
 
   const healthy = fake();
   const result = await triggerClaudeCollection(request, healthy.ports);
@@ -146,7 +146,7 @@ test(`${CASE} authorized main-process trigger and transaction barrier`, async t 
     assert.equal(output.includes(sentinel), false);
   assert.deepEqual(result.diagnostics, []);
   t.diagnostic(JSON.stringify({kind: 'step', case_id: CASE, step: 3,
-    summary: result.summary, diagnostics: result.diagnostics, commit_sync: healthy.trace.commit,
-    private_sentinels_in_return: false}));
-  t.diagnostic(JSON.stringify({kind: 'cleanup', case_id: CASE, memory_state_discarded: true}));
+    actual: {summary: result.summary, diagnostics: result.diagnostics, commit_sync: healthy.trace.commit,
+      private_sentinels_in_return: false}}));
+  t.diagnostic(JSON.stringify({kind: 'cleanup', case_id: CASE, memory_reset_complete: true}));
 });
