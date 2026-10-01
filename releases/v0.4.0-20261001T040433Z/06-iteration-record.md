@@ -94,3 +94,13 @@
 
 移植工作树实际检查原件在 `.local/ci/tm004-port/`，未覆盖首次失败：`structure.log` 首次退出1，原因是 Changelog 标题附注破坏精确 release_id；更正后 `structure-02.log` 和末次 `structure-03.log` 均退出0，108文档/926链接、零结构错误。`quality-02.log` 退出1，只余 TM-004 细用例文档为 draft；这不是通过门禁。`governance.log` 首次退出1，原因是把 `current.json` 临时改到0.4.0，影响了 TM-001 门禁的版本假设；保持 current 为0.1.0后 `governance-02.log` 仍退出1，仅因新工作树缺锁定 Playwright 依赖。首次 `npm ci` 因共享 npm cache 的 EACCES 退出243；随后使用本工作树私有 `.local/npm-cache` 按 lockfile 安装361项，退出0，不修改仓库源码。末次 `governance-03.log` 为426项全部通过、退出0；`diff-check-02.log` 退出0。TM-004 的20条 TC 尚未登记到机器 `tests/test_cases.json`、根总表及固定 Playwright 程序，仍为设计草稿，不得把结构/治理通过转成产品验收。TM-002 加密 locator 的最终包测试若触及 safeStorage/Keychain，必须有与生产项分离的原生测试项、所有权和精确清理证据；当前未执行。
 总控另确认当前共享 `scripts/export_test_cases.py` 仅接受单段字母 TC ID，并以当前 release 的任务拆解核对全部 TASK；跨版本整合 TM-003/004/005 会受阻。TM-002 工作流正在修共享导出器及治理负测。本版保持 `TC-TM004-...` 稳定编号，待共享修复后再把20条细TC写入机器清单、根总表和固定程序；此依赖未解除前仍 BLOCKED。
+
+
+## 2026-10-01：可独立复核的来源投影与数据缺口（SOP-002/004/006/008/010/011/024）
+
+沿用旧分支已隔离取得的2.1.126 CLI原件，只读从六份 JSONL 投影出会话/调用身份、usage、版本及父子字段；删除正文、完整本机路径和工具结果正文。仓库保存投影、原件SHA、投影SHA、行数、独立预期及 `scripts/tm004_fixture.py`。原件仍只在本机忽略目录，投影字节不同于原件，不能据此声明通用原始格式兼容。固定数字：main 1次13/7/20；main+复制fork 2次26/14/40；Agent父两次与子一次共3次59/18/77；双内容块1次31/9/40。畸形合成SSE的原生日志0/0无法证明有效零。程序另从已提交投影确定性地产生半行、补全、同ID用量冲突、真正缺usage四份**衍生故障注入**，独立预期0→20、可信20且冲突1、缺usage可信0且诊断1；它们不是CLI原件。详细说明见[研究数据](../../tests/fixtures/tm004/README.md)。
+
+程序只在仓库 `.local/test-runs/tm004-<run-id>` 以0700/0600新建本轮数据；校验所有权标记、精确文件集合及摘要后清理。未触及用户默认 `~/.claude`、生产库、凭据、现有App或服务。实际原件在 `.local/ci/tm004-projection/receipt-02.json`：`verify-origin`、generate、verify-run、reset 均退出0；完整治理 `governance-02.log` 为429项通过/退出0；`structure-02.log` 为PASS（109文档/929链接）；`diff-02.log` 退出0。此前 `receipt.json` 保留首次窄范围验证，包含3项fixture治理通过。未运行 TM-004 Playwright、安装包或产品E2E。
+
+尝试 SOP-008 严格基线的原件 `baseline-02.log` 与 `quality-02.log` 均退出1，仅机器报 TM-004 细用例文档仍为draft；语义核对还存在未取得的改写UUID、`fork-context-ref`、嵌套Agent和有效零原件，TM-002/003稳定接口及真实SQL未到，20条TC未进最终机器清单/总表，故不得将文档改为baselined。当前 `claude_raw` 仍 planned，派生投影只是来源调查/基础数据输入；没有 TM-003 真实schema前不编造产品SQL。现有 `granular_e2e.py` 只接受 `TC-TM001-...` 并固定78父TC，`local_gate.py` 固定78父/38变体/6补充；TM-004逐TC Playwright、完整已交付双来源集合、结果Excel与独立门禁重算均未绑定，旧 TM-001 通行不能代替。共享跨版本 exporter 修复由总控工作流推进，本版保留稳定ID与20条详细TC，不删不改预期来通过检查。
+为避免 `releases/current.json` 仍指 TM-001 时只检查到其当前合同，又在本独立工作树临时将该指针置为 TM-004，分别执行目标版本 `check_docs.py --mode baseline` 与 `quality_gate.py check`，随即在 `finally` 恢复原字节并核对。原件 `.local/ci/tm004-projection/target-release-baseline-receipt.json` 与两份日志记录两命令均退出1、各13条错误，仅为本版01–06及细TC仍draft的严格基线要求；该复核不是基线PASS，也未改变提交的 current 指针。原 `baseline-02/quality-02` 是保留 TM-001 current 时的运行，各只报细TC draft，不能代表 TM-004 全部版本档案已基线。

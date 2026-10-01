@@ -2,7 +2,7 @@
 
 ## TM-004 Claude Code 采集准备（2026-10-01）
 
-[TM-004 版本档案](../releases/v0.4.0-20261001T040433Z/00-manifest.json)及[20条细化用例](testing/cases/04-TM-004-claude-collection.md)已移植到独立 Electron 工作树，基点为 TM-001 候选 `3467dc143b2e2fc71f51515f483f0ecff8637947`。原调查分支及本机 Claude Code 2.1.126 隔离原生日志证据继续保留；调查仅证明所列样本形态，不等于 TM-004 App 兼容或产品通过。TM-002/003 稳定接口、其余原生反例、SQL/数据程序和逐 TC Playwright 绑定尚缺，文档保持 draft，TM-004 产品 E2E、DMG 门禁与发布资格均为 BLOCKED。TM-001 最终候选状态见下文，不因本独立分支改变。
+[TM-004 版本档案](../releases/v0.4.0-20261001T040433Z/00-manifest.json)及[20条细化用例](testing/cases/04-TM-004-claude-collection.md)已移植到独立 Electron 工作树，基点为 TM-001 候选 `3467dc143b2e2fc71f51515f483f0ecff8637947`。原调查分支及本机 Claude Code 2.1.126 隔离原生日志证据继续保留；六份脱敏结构投影、来源摘要和独立预期已固定于仓库，但不等于原生全量产品数据；调查仅证明所列样本形态，不等于 TM-004 App 兼容或产品通过。TM-002/003 稳定接口、其余原生反例、完整产品 SQL/数据程序和逐 TC Playwright 绑定尚缺，且当前最终门禁仅覆盖 TM001 的78父/38变体/6补充，文档保持 draft，TM-004 产品 E2E、DMG 门禁与发布资格均为 BLOCKED。TM-001 最终候选状态见下文，不因本独立分支改变。
 
 ## TM-001 最终候选门禁准备（2026-10-01）
 

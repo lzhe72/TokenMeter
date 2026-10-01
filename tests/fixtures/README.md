@@ -22,3 +22,8 @@
 清理操作不接受自定义路径或数据库连接，只允许合法 run-id；拒绝符号链接、缺失或不匹配的归属标记，以及额外文件或目录。已存在的目录不会被重新生成覆盖。清理拒绝时应先确认文件归属，不要用宽泛的递归删除绕过保护。
 
 工具自测：`python3 -m unittest discover -s tests/governance -p 'test_test_data.py' -v`。完整使用与故障处理步骤见 [测试 SOP](../../docs/testing/execution.md)。
+
+
+## TM-004 来源调查投影
+
+[Claude Code 2.1.126隔离探针派生数据](tm004/README.md)保存脱敏结构投影、原件/投影SHA及独立预期；`scripts/tm004_fixture.py`只在本轮私有目录生成、核对和清理。它不是完整 `claude_raw` 产品数据集，不证明安装App E2E或供应商所有原始格式兼容。

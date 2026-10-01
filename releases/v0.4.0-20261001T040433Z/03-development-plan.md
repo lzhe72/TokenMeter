@@ -41,7 +41,7 @@ TM-003 SQLite schema 尚未提交，不能现在决定是否需 SOP-016 迁移�
 | --- | --- | --- | --- |
 | SOURCE/PARSER/LINEAGE/INCREMENTAL | `apps/desktop` 主进程来源适配器及 TM-003 存储接口 | 原始fixture驱动的解析/事务测试和真实App重扫 | BLOCKED：依赖及raw缺失 |
 | DIAGNOSTIC | preload受限IPC、React诊断视图 | 缺字段/失权真实UI断言 | BLOCKED：接口缺失 |
-| DATA/E2E | `tests/` 原始fixture与 `apps/desktop/e2e` 固定Playwright用例 | 每TC按编号单独可跑、逐步报告 | BLOCKED：安装执行器及raw缺失 |
+| DATA/E2E | `tests/` 原始fixture与 `apps/desktop/e2e` 固定Playwright用例 | 每TC按编号单独可跑、逐步报告 | BLOCKED：仅窄范围脱敏投影已固定，完整raw/SQL及逐TC安装执行绑定缺失 |
 | RELEASE | 本版档案、矩阵、总表、Changelog | structure→baseline→完整门禁 | 仅草稿编制中 |
 
 本分支只改 TM-004 拥有文件和本版文档；对共享接口先核对依赖分支后再整合，不覆盖其他需求工作树。原调查分支的基点没有 Electron 工程；当前移植分支已从 TM-001 候选 `3467dc1` 建立并保留其 `apps/desktop`。只读核对表明其 `apps/desktop/src/main/index.ts` 在 `tokenmeter:invoke` 校验发送窗口、主 frame 和自有页面，preload 的 `Bridge`/`Snapshot` 定义在 `src/shared/types.ts`，主进程模块可在 `src/main/collection/` 加入但必须沿用同级安全校验。其 `scripts/run_test_case.py` 已存在，然而 `scripts/granular_e2e.py` 的 case 解析仅接受 `TC-TM001-*` 并只映射 TM-001 Playwright spec；本版20条 TC 在候选中全部**不可执行**。后续应在总控整合后的真实基线上扩展固定用例目录、调度、证据与门禁，不能仅把 TM-004 ID 写入 manifest 当作绑定完成。该候选未运行最终 DMG 产品 E2E，且 TM-002/003 接口未稳定，不能声称 TM-004 GUI 验收可运行。下一步：[测试计划](04-test-plan.md)。

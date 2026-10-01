@@ -1,8 +1,8 @@
 # v0.4.0-20261001T040433Z — TM-004 发布预案（draft）
 
-范围：REQ-TM004 / TM-004 Claude Code 日志采集，继续继承 TM-001/002/003 已交付行为。当前本版尚无文档基线、代码、包、E2E 或发布通行证；`CHANGELOG.md` 同名标题仅为未发布计划。适用机型以最终本机 Electron 设计的已验证平台为准，目前只能声明 macOS15 Intel；其他架构不推断通过。
+范围：REQ-TM004 / TM-004 Claude Code 日志采集，继续继承 TM-001/002/003 已交付行为。当前本版尚无文档基线、产品实现代码、包、E2E 或发布通行证；`CHANGELOG.md` 同名标题仅为未发布计划。适用机型以最终本机 Electron 设计的已验证平台为准，目前只能声明 macOS15 Intel；其他架构不推断通过。
 
-候选必须在 TM-001 Electron 稳定提交及 TM-002/003 接口整合后形成；按固定锁文件构建 Electron/React/TypeScript、真实 FastAPI/隔离 SQLite 与 electron-builder DMG。所有原始来源样本、测试程序、独立 oracle 和包摘要先冻结到候选。SOP-013 基础检查后，SOP-014 从最终原DMG安装 App，运行 TM-004 全细TC及之前已交付 TC 的完整回归，逐例生成原始JSON/trace/DB只读旁证/独立Excel。SOP-017 检查实际安装、签名/Gatekeeper、升级及恢复；SOP-018 核对同一候选SHA/tree、DMG、全部结果和清理，仅机器PASS才可签发本机 `v0.4.0-20261001T040433Z.passport.json`。当前全部依赖 BLOCKED，不能制作正式原名包。
+候选必须在 TM-001 Electron 稳定提交及 TM-002/003 接口整合后形成；按固定锁文件构建 Electron/React/TypeScript、真实 FastAPI/隔离 SQLite 与 electron-builder DMG。所有原始来源样本、测试程序、独立 oracle 和包摘要先冻结到候选。SOP-013 基础检查后，SOP-014 从最终原DMG安装 App，运行 TM-004 全细TC及之前已交付 TC 的完整回归，逐例生成原始JSON/trace/DB只读旁证/独立Excel。SOP-017 检查实际安装、签名/Gatekeeper、升级及恢复；SOP-018 核对同一候选SHA/tree、DMG、全部结果和清理，仅机器PASS才可签发本机 `v0.4.0-20261001T040433Z.passport.json`。当前全部依赖 BLOCKED，不能制作正式原名包。 现有 TM-001 固定门禁仅执行其78父/38变体/6补充；须先扩展 TM-004 逐TC Playwright和最终整合树的完整集合/证据重算，旧门禁PASS不得代填本版。
 
 若已有真正稳定的上一发行包，验证从该包自动更新到本版，并核对授权、游标、账号与历史统计；若没有稳定包，准确记录并按首版隔离候选→受控高版流程检验，不把规划版本当已发布。若 schema 改动，先在隔离库按 SOP-016 备份、恢复、重复迁移及错误中断，再在 App 链路核对计数。先部署兼容服务端再推广客户端；发现未知日志误计、旧数据变化、授权越界、包签名失败或任一TC失败时停止分发，保留原始证据并按 SOP-015/021 修复恢复。
 

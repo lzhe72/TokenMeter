@@ -13,6 +13,10 @@
 
 表内细TC使用完整稳定ID。逐条输入、动作和分步预期见[04详细场景的细TC章节](../../docs/testing/cases/04-TM-004-claude-collection.md#本版细tc设计草稿)。每个 TASK 至少有一条 TC；正式基线必须把这些条目补入 `tests/test_cases.json`、`TEST_CASES.md`、总表，并与版本 manifest 核对，不能仅以本表覆盖。原有四个 E2E ID 保留为场景组，本版细TC现为20条。本机原生探针使主、单层子代理、未改写 UUID 的 `--fork-session` 及同 ID/usage 的双内容块有可追溯样本；PARSER-03 双块子样本的独立预期为31+9=40、一次调用，不能逐行累加为80。畸形合成 API 无 usage 却被 CLI 写成0/0，不能用于证明有效零。新增 SOURCE-04 将 TM-002 预览上限与内部续扫覆盖分开，新增 INCREMENTAL-03 固定跨来源同字面调用ID、Claude复制与冲突的独立数字。SOURCE-03 嵌套、LINEAGE-03 改写 UUID、LINEAGE-04 `fork-context-ref` 及 LINEAGE-05 冲突反例仍须原生样本与真实产品绑定，不能据静态字段或单次探针判通过。
 
+## 已固化的窄范围来源投影
+
+[TM-004 探针派生数据](../../tests/fixtures/tm004/README.md)保留六份2.1.126隔离 CLI 原件的脱敏结构投影、每份原件/投影摘要及独立 expected；`scripts/tm004_fixture.py` 可验证本机原件与投影、生成并精确清理本轮私有副本。主+fork 的独立预期是2次/40，Agent 父+子3次/77，双块1次/40；畸形缺usage探针产出的0/0不证明有效零。这是 SOP-002/004 的来源调查输入，尚非 `claude_raw` 完整产品数据程序，也未绑定任何安装 App TC；源格式投影不等于字节级原件。M/S/N/P 的规划数字、改写 UUID、`fork-context-ref`、嵌套子代理、有效零、半行与 SQL 仍缺，SOP-008基线保持阻断。
+
 ## 数据、账号、SQL和重置
 
 - 每例使用新0700目录和独占动态回环端口、合成 `test-alice` / 项目A、单例 SQLite 与全新 Electron profile。账号用 `tests/server/fixtures.py` 同一生产初始化流程生成，但只指向本次隔离库；不访问固定生产库、旧 App、默认49176服务，也不从真实 `~/.claude` 取数据。动态地址通过真实配置 UI 选择。
@@ -24,6 +28,10 @@
 ## 自动化与证据
 
 仓库固定入口计划为 `scripts/run_test_case.py --case-id TC-TM004-... --package-manifest <原始包清单>`。当前基点 TM-001 候选 `3467dc1` 已有此入口，但其 `granular_e2e.py` 只接受 `TC-TM001-*`、只映射 TM-001 spec，不能执行本版20条 TC；须在最终整合树按固定清单扩展 runner/Playwright/数据与门禁绑定。真正绑定后每步由 Playwright Electron 操作 DMG 安装 App，真实服务/SQLite 与授权 UI，不注入解析/认证 IPC mock。按 SOP-010 造数据，SOP-011 固定程序，SOP-014 逐TC运行并留 JSON、trace、必要截图、DB只读结果、fixture摘要与清理记录；输出独立 `TokenMeter测试结果-<run_id>.xlsx` 并汇总到项目总表。程序、SQL或 raw 证据任一缺失即 BLOCKED；测试断言失败为 FAIL，不能重试覆盖。当前暂无 run_id、包摘要或 PASS 原件。
+
+## 固定执行器与门禁的实际阻断
+
+只读核对当前 TM-001 候选：`scripts/granular_e2e.py` 的用例正则限定 `TC-TM001-...`，目录断言固定78条父TC且只映射 TM-001 Playwright spec；`scripts/local_gate.py` 把78父/38变体/6补充和 TM-001 包校验写为本版集合。当前 `scripts/run_test_case.py` 只是传递单例/全集请求，不能使 TM-004 的20条细TC可调用。SOP-011 的绑定任务须先让每个 `TC-TM004-...` 指向固定 Playwright 测试、隔离数据程序、逐步证据和只读 SQL；然后让全量目录、独立审计、Excel与机器门禁从最终整合候选的已交付功能集合冻结并重算，至少包含 TM-001、已交付 TM-002/003 与 TM-004，且不能把旧 TM-001 门禁收据当 TM-004 通过。当前上述扩展全部未实现，20条均 `automated_test=null`，产品 E2E 和发布资格 BLOCKED。共享用例导出器的跨版本 ID/TASK 缺口由总控工作流修复；在其稳定提交前不弱化本版稳定 TC ID，也不假写主清单或总表已完成。
 
 ## 进入 SOP-008 的缺项
 

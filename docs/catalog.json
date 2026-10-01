@@ -1480,7 +1480,7 @@
         "scripts/test_data.py",
         "docs/testing/strategy.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-010-test-data.md"
     },
     {
@@ -1581,6 +1581,21 @@
       ],
       "updated_at": "2026-10-01",
       "sop": "sop/SOP-022-archive-handoff.md"
+    },
+    {
+      "doc_id": "DOC-TM004-FIXTURE-README",
+      "path": "tests/fixtures/tm004/README.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.4.0-20261001T040433Z/01-requirements.md",
+        "releases/v0.4.0-20261001T040433Z/04-test-plan.md",
+        "tests/datasets.json"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
     }
   ]
 }

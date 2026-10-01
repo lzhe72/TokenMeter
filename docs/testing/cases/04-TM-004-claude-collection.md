@@ -6,7 +6,7 @@
 
 依赖功能：`TM-002`、`TM-003`。进入实现前按 [SOP-006](../../../sop/SOP-006-test-plan.md) 确定当轮版本/平台矩阵，按 [SOP-010](../../../sop/SOP-010-test-data.md) 建立数据、SQL、独立 expected 及重置程序，再按 [SOP-011](../../../sop/SOP-011-test-implementation.md) 绑定真实测试；执行遵循 [SOP-014](../../../sop/SOP-014-e2e.md)。账号只用合成测试用户，所有数据库、日志、授权和设置均隔离；不得用用户生产库造数。
 
-下面给出的规划数字用于约束独立预期，并不声称已经生成对应厂商日志。原始格式、UI标识、测试函数和SQL尚未确定的部分，必须在该功能开发前补齐；不得发明当前不存在的执行命令。未来版本的测试平台以当轮设计为准，当前v0.1.0只声明macOS15 arm64/Intel。
+下面给出的规划数字用于约束独立预期，并不声称已经生成对应厂商日志。原始格式、UI标识、测试函数和SQL尚未确定的部分，必须在该功能开发前补齐；不得发明当前不存在的执行命令。未来版本的测试平台以当轮设计为准，当前 Electron 候选仅在 macOS15 Intel 进行产品验收；其他架构尚未验证。
 
 ## E2E-TM004-001 · 主会话与子代理归属
 
@@ -126,7 +126,7 @@
 
 ### TC-TM004-DATA-01 · 原始fixture和独立oracle（TASK-TM004-DATA，AC-001–004，E2E-003）
 
-输入：固定版本 CLI/公开来源、隔离 `CLAUDE_CONFIG_DIR`、固定合成任务；禁止访问真实 `~/.claude`。步骤：①固定程序记录版本、来源、raw文件SHA与父子/fork字段证据；②另一路独立定义 M/S/N/P usage 和期望 330/165/187/385；③重建数据并比对SHA、SQL初态仅合成账号与零用量；④清理本次来源目录。类型：数据/治理检查，不能算产品 E2E。本机安全探针已有2.1.126主/单层子代理/复制历史 fork 和双内容块原件与 SHA，见本机 `.local/ci/tm004-claude-2.1.126-research/evidence-manifest.json`、`followup-evidence-manifest.json`；该探针尚非仓库固定数据程序，M/S/N/P、改写ID、嵌套、重放、SQL和安装 App 绑定未齐，故本TC仍 BLOCKED。
+输入：固定版本 CLI/公开来源、隔离 `CLAUDE_CONFIG_DIR`、固定合成任务；禁止访问真实 `~/.claude`。步骤：①固定程序记录版本、来源、raw文件SHA与父子/fork字段证据；②另一路独立定义 M/S/N/P usage 和期望 330/165/187/385；③重建数据并比对SHA、SQL初态仅合成账号与零用量；④清理本次来源目录。类型：数据/治理检查，不能算产品 E2E。本机安全探针已有2.1.126主/单层子代理/复制历史 fork 和双内容块原件与 SHA，见本机 `.local/ci/tm004-claude-2.1.126-research/evidence-manifest.json`、`followup-evidence-manifest.json`；已有[仓库固定的脱敏投影与独立预期](../../../tests/fixtures/tm004/README.md)及来源摘要核对程序，但它不是字节级原件或完整产品数据程序；M/S/N/P、改写ID、嵌套、重放、SQL和安装 App 绑定未齐，故本TC仍 BLOCKED。
 
 ### TC-TM004-E2E-01 · 安装包真实链路（TASK-TM004-E2E，AC-001–004，E2E-001/004）
 
