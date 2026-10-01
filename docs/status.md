@@ -2,6 +2,9 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-002候选`0cc4f3e6`的run`local-6ece8e342b514683a64d1cc0a9bf5282`在产品包预检因缺显式独立测试账号及排除账号而33/33 BLOCKED、零步骤，清理PASS，App未启动且未触及Keychain；较早格式错误的预检FAIL另存。该run没有固定导出的独立结果Excel/verification，因此根总表尚未登记批次；0.2真实产品E2E和正式发行未通过。
+
+
 TM-001候选`709d2125`安装原DMG的`LOGIN-01/02/03/04/08`定向真实App run`local-2aa05fb7b2754289a1d77b9ef89bd321`为5/5、11步、清理PASS，独立结果Excel回读PASS，作为总表第19批次。前次误带`--development`的独立run在清单预检处五例BLOCKED且App未启动；其原件保留。709d其余TM-001父例未运行，旧c291完整门禁FAIL与正式发行NOT_RUN。`BOOTSTRAP-03`额外合成成员的固定provision和重启绑定已在代码核实，机器目录过时的“待补”文字已修正，未改测试预期或运行结果。
 
 同一709d候选另一次`LOGIN-SESSION`定向真实App run`local-1d7d9238f9fd4d389e27cad990a6cb97`为6/6、14步、清理PASS，独立Excel回读PASS，作为总表第20批次；与第19批次分开保存。709d仍非TM-001全量回归，旧c291完整门禁FAIL及正式发行NOT_RUN。
