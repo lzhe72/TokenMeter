@@ -266,6 +266,20 @@
       "task": "TASK-TM004-LINEAGE",
       "test": "TC-TM004-CORE-05",
       "description": "多文件来源HMAC、scope代号和整代事务（合成端口/隔离SQLite模块，不代替产品TC）"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-SOURCE",
+      "test": "TC-TM004-CORE-06",
+      "description": "真实SourceAccess类与合成helper到私有UsageStore的固定辅助贯通；不代替产品TC"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-INCREMENTAL",
+      "test": "TC-TM004-CORE-06",
+      "description": "真实SourceAccess类与合成helper到私有UsageStore的固定辅助贯通；不代替产品TC"
     }
   ],
   "test_programs": [],

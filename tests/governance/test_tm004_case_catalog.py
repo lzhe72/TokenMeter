@@ -16,8 +16,9 @@ PRODUCT_EXPECTED = {
     "TC-TM004-DIAG-01", "TC-TM004-DIAG-02", "TC-TM004-DATA-01",
     "TC-TM004-E2E-01", "TC-TM004-RELEASE-01",
 }
-CORE_EXPECTED = {f"TC-TM004-CORE-0{number}" for number in range(1, 6)}
-EXPECTED = PRODUCT_EXPECTED | CORE_EXPECTED
+CORE_BOUND = {f"TC-TM004-CORE-0{number}" for number in range(1, 6)}
+CORE_PLANNED = {"TC-TM004-CORE-06"}
+EXPECTED = PRODUCT_EXPECTED | CORE_BOUND | CORE_PLANNED
 
 
 class TM004CatalogTests(unittest.TestCase):
@@ -35,7 +36,7 @@ class TM004CatalogTests(unittest.TestCase):
         for case_id, row in rows.items():
             self.assertIn(f"[{case_id}]", root_index)
             self.assertEqual(row["release_id"], RELEASE)
-            if case_id in CORE_EXPECTED:
+            if case_id in CORE_BOUND:
                 self.assertEqual(row["type"], "source_check")
                 self.assertEqual(row["design_status"], "draft")
                 binding = row["binding"]
@@ -55,6 +56,11 @@ class TM004CatalogTests(unittest.TestCase):
                 if binding["test_name"] not in program:
                     self.assertIn(f"const CASE = '{case_id}'", program)
                     self.assertIn(binding["test_name"].removeprefix(case_id), program)
+            elif case_id in CORE_PLANNED:
+                self.assertEqual(row["type"], "source_check")
+                self.assertEqual(row["design_status"], "draft")
+                self.assertIsNone(row["binding"])
+                self.assertIsNone(row["data_program"])
             else:
                 self.assertEqual(row["design_status"], "baseline_pending")
                 self.assertIsNone(row["binding"])

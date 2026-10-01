@@ -20,3 +20,5 @@
 `TASK-TM004-SOURCE` 与 `TASK-TM004-INCREMENTAL` 再拆出主进程触发端口辅助 `TC-TM004-CORE-04`：以[合成端口fixture](../../tests/fixtures/tm004-trigger-core-slice.json)固定仅`sourceId`请求、账号/来源拒绝、异步扫描期间换账号/撤权/取消、同步提交前守卫，以及成功汇总的隐私白名单。此例只验证注入假端口的调用顺序和返回，不验证真实TM-002授权、TM-003 SQLite、IPC/App或20条产品TC。
 
 `TASK-TM004-INCREMENTAL/LINEAGE` 的另一辅助 `TC-TM004-CORE-05`按[合成存储端口fixture](../../tests/fixtures/tm004-storage-port-slice.json)固定稳定来源摘要的分域HMAC、各文件事件/诊断/游标归属、Claude主/子/缺agent的scope代号以及TM-003`commitScanBatch`整代事务。只在假来源端口和自有隔离SQLite执行，真实授权、项目归属UI与产品E2E不由此通过。
+
+`TASK-TM004-SOURCE/INCREMENTAL`另有独立`TC-TM004-CORE-06`辅助切片：真实SourceAccess类经本例合成helper读取四个2.1.126去敏投影文件，两页、97字节分块，真实私有UsageStore一次事务提交；重启幂等、合成完整LF追加和页间失权/换主体/提前EOF均有固定SQL判据。输入及详细逐步预期在[用例](../../docs/testing/cases/04-TM-004-claude-collection.md)与[fixture](../../tests/fixtures/tm004-sourceaccess-store-slice.json)。不改变原20产品TC及`baseline_pending`项，真实OS选择、Keychain、IPC/App与原生未决raw另验。
