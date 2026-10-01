@@ -20108,10 +20108,21 @@
       "scenario_group": "E2E-TM003-004",
       "type": "source_check",
       "preconditions": "本例owner目录/空库；不访问真实Keychain/用户profile/App",
-      "data_program": null,
+      "data_program": "apps/desktop/tests/tm003-core08.test.ts",
       "design_status": "draft",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "tc_identity": "TC-TM003-CORE-08",
+        "execution_type": "source_check",
+        "program": "apps/desktop/tests/tm003-core08.test.ts",
+        "test_name": "TC-TM003-CORE-08 owner profile protects and preserves one identity secret",
+        "runner": "scripts/run_source_check.mjs",
+        "suite_registry": "tests/source_check_suites.json",
+        "suite": "tm003-core08",
+        "command_template": "node scripts/run_source_check.mjs --suite tm003-core08 --run-id tm003-core08-<新唯一UTC时间>",
+        "reset_kind": "owned_root",
+        "status": "implemented_pending_integrated_run"
+      },
       "aggregate_planned": false,
       "evidence": null,
       "sops": [
@@ -20173,7 +20184,7 @@
         "heading": "TC-TM003-CORE-08 · 私有身份密钥持久性与拒绝重键"
       },
       "missing": [
-        "SOP-011固定程序/数据重置绑定未交付；产品Keychain隔离和原STORE/ISOLATION仍未验"
+        "固定source_check程序与owner重置现已同树绑定；历史PASS原件归属所列旧代码候选，本次机器绑定后仍须新run。真实Keychain、安装App/IPC/产品E2E与正式发行另验。"
       ],
       "reset": "关闭本例全部DB/helper，核对owner收据，仅清理本例私有目录；保留模块原件。",
       "overall_expected": "1. 在空 owner profile 中以可用加密端口初始化密钥，求三组 principal 键。；随机源仅调用一次、32字节密钥仅在内存；密文记录0600/目录0700，无明文 key。三键逐字节等于 fixture；同账号不同 origin 和同 origin 不同账号各有不同键。尚无事件/游标/覆盖写入。\n2. 用第一主体经正式 `UsageStore` 提交 fixture A=110，关闭密钥端口与库，再用同 profile 重开并重放 A。；重开只解密原密文、不生成新密钥；第一 principal 键和 `identity_key_state` 标记不变；`usage_event` 始终一行、total110、游标不重计，第二/第三主体只读零行但状态为未核实而非产品已知零。\n3. 分别在独立复制的本例已有事件库中删除密文记录和损坏密文，再初始化。；两者均返回固定 `identity_secret_unavailable`/`identity_secret_corrupt` 停采集，随机源零调用，不创建新密文、不改事件、游标、覆盖或密钥标记；旧 A 仍可由只读库核对。\n4. 恢复原密文后让加密端口不可用，再换成另一有效32字节密钥尝试打开原库。；密钥不可用时停采集，不能明文回退；不同有效密钥被 marker 拒绝，A仍一行/110，记录和报告无密钥、密文、完整路径或原生日志正文。"
@@ -20185,10 +20196,21 @@
       "scenario_group": "E2E-TM003-004",
       "type": "source_check",
       "preconditions": "本例0700根/0600 SQLite；无真实OS选择/Keychain/App",
-      "data_program": null,
+      "data_program": "apps/desktop/tests/tm003-core09.test.ts",
       "design_status": "draft",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "tc_identity": "TC-TM003-CORE-09",
+        "execution_type": "source_check",
+        "program": "apps/desktop/tests/tm003-core09.test.ts",
+        "test_name": "TC-TM003-CORE-09 confirmed SourceAccess scans atomically by principal",
+        "runner": "scripts/run_source_check.mjs",
+        "suite_registry": "tests/source_check_suites.json",
+        "suite": "tm003-core09",
+        "command_template": "node scripts/run_source_check.mjs --suite tm003-core09 --run-id tm003-core09-<新唯一UTC时间>",
+        "reset_kind": "owned_root",
+        "status": "implemented_pending_integrated_run"
+      },
       "aggregate_planned": false,
       "evidence": null,
       "sops": [
@@ -20251,7 +20273,7 @@
         "heading": "TC-TM003-CORE-09 · 已确认来源到本机库的主进程适配"
       },
       "missing": [
-        "SOP-011固定程序/数据重置绑定未交付；OS权限/大日志/产品AUTH/SCAN/STORE仍未验"
+        "固定source_check程序与owner重置现已同树绑定；历史PASS原件归属所列旧代码候选，本次机器绑定后仍须新run。真实Keychain、安装App/IPC/产品E2E与正式发行另验。"
       ],
       "reset": "关闭本例全部DB/helper，核对owner收据，仅清理本例私有目录；保留模块原件。",
       "overall_expected": "1. 未经确认直接触发 Codex 采集，再通过 SourceAccess 的选择/预览/确认方法建立本例来源。；确认前 `beginCandidateScan/readCandidateChunk/commitScanBatch` 均0次、库空；确认记录只属第一主体，候选元数据不包含正文。\n2. 以已确认 sourceId 调用主进程适配器，读取两个完整文件并在末页守卫通过后落库；关闭重开库/来源后重扫。；完成前库空；完成后A/B两事件、input300/output30/cached60/total330、各游标410、覆盖仅在全代完成后标记；重启重扫仍两行/330，无原始路径/原生ID落库。\n3. 从独立成功库开始新代际，在 file-b 后由 SourceAccess 撤销来源再尝试提交。；旧代际被取消，守卫拒绝、提交0次；已提交A/B仍两行/330，原成功代际的coverage行保持原值，本次运行状态须标采集不可用/不完整且不能称新代际完成；旧 sourceId 不再可读。\n4. 切到 fixture 的第二主体后尝试旧 sourceId，再为第二主体确认独立来源并扫描。；旧 sourceId 在读取前拒绝、第一主体数据不出现在第二主体查询；第二主体成功扫描后各主体各两行/330，HMAC主体键不同，不能共享游标/来源能力。"
@@ -20263,10 +20285,21 @@
       "scenario_group": "E2E-TM003-001",
       "type": "source_check",
       "preconditions": "handler端口source_check；不启动真实Electron或renderer",
-      "data_program": null,
+      "data_program": "apps/desktop/tests/tm003-core10.test.ts",
       "design_status": "draft",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "tc_identity": "TC-TM003-CORE-10",
+        "execution_type": "source_check",
+        "program": "apps/desktop/tests/tm003-core10.test.ts",
+        "test_name": "TC-TM003-CORE-10 main-frame collection IPC limits input and isolates state",
+        "runner": "scripts/run_source_check.mjs",
+        "suite_registry": "tests/source_check_suites.json",
+        "suite": "tm003-core10",
+        "command_template": "node scripts/run_source_check.mjs --suite tm003-core10 --run-id tm003-core10-<新唯一UTC时间>",
+        "reset_kind": "owned_root",
+        "status": "implemented_pending_integrated_run"
+      },
       "aggregate_planned": false,
       "evidence": null,
       "sops": [
@@ -20328,7 +20361,7 @@
         "heading": "TC-TM003-CORE-10 · 主窗口 IPC 与刷新状态隔离"
       },
       "missing": [
-        "SOP-011固定程序/数据重置绑定未交付；真实ipcMain/preload/React和产品UI仍未验"
+        "固定source_check程序与owner重置现已同树绑定；历史PASS原件归属所列旧代码候选，本次机器绑定后仍须新run。真实Keychain、安装App/IPC/产品E2E与正式发行另验。"
       ],
       "reset": "关闭本例全部DB/helper，核对owner收据，仅清理本例私有目录；保留模块原件。",
       "overall_expected": "1. 分别用非主窗口 sender、子 frame、路径/账号/密钥多余字段和未确认 sourceId 调用 handler。；全部拒绝，采集/DB调用0次；不接受任意路径或由 renderer 指定 principal/secret，不返回旧主体状态。\n2. 主窗口按固定 sourceId 刷新并取 state。；只触发第一主体 Codex 采集一次，返回两事件的 input300/output30/total330、cached已知60、覆盖与诊断代码/数量；库仍两行，序列化状态无密钥、密文、路径、原生ID或正文。\n3. 同主体再刷新并取 state，随后将来源暂停/撤销。；重扫仍两行/330；暂停/撤销后刷新拒绝、旧可信330只对第一主体保留可见且标采集不可用/覆盖不完整，不能报新已知零。\n4. 切换第二主体后由旧 sender/sourceId 取 state/刷新。；旧来源被拒绝，第二主体 state 为缺失/未核实且无第一主体330；第一主体持久事件不删除，按主体只读核对隔离。"

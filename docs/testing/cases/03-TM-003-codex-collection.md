@@ -299,11 +299,11 @@
 
 **DB与重置：** handler 测试使用固定主窗口端口替身，不启动真实 Electron；只读核对 `usage_event`/`coverage`，每变体本例 owner profile，清理仅本例目录。真实 `ipcMain` 注册、preload/React 调用、已安装 App 的 sender 约束和 UI 观察仍由原产品 TC 及包级 E2E 独立验证。
 
-**切片边界：** CORE-08/09/10 的输入、异常和数值在实现前固定。实现程序、逐 TC 原始步骤、独立结果 Excel 尚未交付时绑定为 `null`、执行 `unexecuted`。TM-002 的真实目录选择/加密 locator、Keychain item 独立归属，以及任意大文件有界读取仍是产品路径阻断；TM-004 只消费共享密钥/存储适配，不修改 `index.ts` 或 collection IPC；TM-005 只负责同库只读统计查询与 React 统计页，不以本模块状态代替完整双来源统计。
+**切片边界：** CORE-08/09/10 的输入、异常和数值在实现前固定，现已绑定同树 `tm003-core08/09/10` 固定程序、owner 重置和逐步报告。旧代码候选 `2d2f70d` 的七套独立 source_check 共10/10例、39步PASS；后续 `3c07fe7` 的CORE08/09各自四步PASS，原始报告及独立Excel保留为九个不同批次。机器目录在本文档候选中保持 `execution_status=unexecuted`，这些历史原件只归属各自被测提交；新绑定后的整合候选仍需按套件重跑。TM-002 的真实目录选择/加密 locator、Keychain item 独立归属，以及任意大文件有界读取仍是产品路径阻断；TM-004 只消费共享密钥/存储适配，不修改 `index.ts` 或 collection IPC；TM-005 只负责同库只读统计查询与 React 统计页，不以本模块状态代替完整双来源统计。
 
 ## 当前执行合同
 
-每个 TC 的输入、步骤和 expected 已在此固定；程序绑定须保留来源版本、具体文件 SHA/SQL 与稳定选择器，不得为适配已有代码改弱独立预期。当前CORE-01～07由`tests/source_check_suites.json`和`scripts/run_source_check.mjs`绑定，命令为`node scripts/run_source_check.mjs --suite <suite> --run-id <新唯一UTC时间>`，每例在对应测试文件内创建并清理owner根。`AC-TM003-001` 至 `004`、四个 E2E 组和全部具体 TC 双向保持。数据与程序未实现时，`tests/feature_matrix.json` 的目标仍为 planned、`tests/datasets.json` 的 `codex_raw` 仍为 planned，产品 E2E 的实际结论只能是 BLOCKED；完成文档结构或单元测试不能改变这一事实。
+每个 TC 的输入、步骤和 expected 已在此固定；程序绑定须保留来源版本、具体文件 SHA/SQL 与稳定选择器，不得为适配已有代码改弱独立预期。当前CORE-01～10由`tests/source_check_suites.json`和`scripts/run_source_check.mjs`绑定，命令为`node scripts/run_source_check.mjs --suite <suite> --run-id <新唯一UTC时间>`，每例在对应测试文件内创建并清理owner根。`AC-TM003-001` 至 `004`、四个 E2E 组和全部具体 TC 双向保持。`tests/feature_matrix.json` 的产品目标仍为 planned、`tests/datasets.json` 的 `codex_raw` 仍为 planned，产品 E2E 的实际结论只能是 BLOCKED；完成文档结构或单元测试不能改变这一事实。
 
 ## 稳定 TC 定位
 

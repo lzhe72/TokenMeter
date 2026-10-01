@@ -2,6 +2,8 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-003 CORE01–10的固定测试现已同树绑定。对旧代码候选`2d2f70d`七套独立批次逐一回读为10/10例、39步PASS；其后`3c07fe7`的CORE08/09再各自四步PASS。九份原始报告、TAP、独立Excel和verification已复制到本文档工作树本机`.local`，逐例动作/预期、哈希和清理核对一致，登记总表第41–49批次。旧候选结果不转作当前文档候选的机器`execution_status`或产品E2E PASS；本次绑定后同树新run及真实App/Keychain/系统来源验收仍待执行。
+
 TM-005 `TC-TM005-CORE-06`五步查询辅助输入已按 SOP-008 在干净提交 `9b3cac3`（tree `2d3dbbf`）复核：结构136文档/1311链接、治理562/562、机器目录238父/766步、总表238父/42变体/40批次回读均PASS。本机收据为 `.local/docs-checks/20261002-tm005-query-view-slice/receipt.json`。此结论仅为开发切片就绪；程序绑定与执行仍空，真实App/IPC/产品E2E及发行未通过。
 
 TM-005新增CORE06五步最小查询辅助输入：真实UsageStore双来源库到同一只读事务视图，固定partial/known330、缺失日null、模型null与字面unknown_model隔离及99字符冒号模型；程序未绑定/执行。React静态组件、共享IPC/安装App和原产品TC另验。
@@ -10,16 +12,16 @@ TM-004新增CORE06五步固定辅助输入：真实SourceAccess类+合成helper�
 
 TM-002 0.2候选的七父/25个精确辅助ID已逐一绑定固定`tm002_source_check.py`程序与清理/命令；干净输入`dccf1f3`的SOP-008收据判仅此辅助绑定切片就绪，治理557/557 PASS，最新整合树待新run和独立Excel。程序绑定不填PASS，原产品21父及正式发行仍未通过。
 
-当前根项目总表已按当前文档树重生并回读PASS：11 Sheet、238父TC、42变体、40批次；SHA-256 `5eebbe4f3875d054b65c5d4557cb4e1c9d72d0eae57e92b702a8f39a517c1d5f`。模块批次只归属各自被测候选；完整产品E2E与发行均未通过。
+当前根项目总表已按当前文档树重生并回读PASS：11 Sheet、238父TC、42变体、49批次；SHA-256 `548c37d8142c3a5049c0c2d237c82fa0f9b6659e40d0551231aad9fc2227823a`。模块批次只归属各自被测候选；完整产品E2E与发行均未通过。
 
-SOP-008对干净输入`8107a06`的CORE08–10三例出具本机切片收据，结构、治理531/531、机器目录、总表及三组公开HMAC向量均通过；只准进入程序实现，三例仍未执行，整版产品与发行未通过。
+SOP-008对干净输入`8107a06`的CORE08–10三例出具本机切片收据，结构、治理531/531、机器目录、总表及三组公开HMAC向量均通过；这是当时准许进入程序实现的记录，后续辅助程序与旧候选执行见上文，整版产品与发行未通过。
 
 TM-004 CORE01–05固定TAP程序已随本地master进入文档树，三套source_check suite及五条机器绑定/总表候选输入已同步；正式逐TC运行/独立Excel尚未生成，原20产品TC与发行仍NOT_RUN。
-TM-003 正在冻结下一独立开发输入CORE-08～10：私有身份密钥、真实SourceAccess类与合成helper的主进程适配、受限collection IPC；每条四步，程序绑定与执行仍空。原27产品TC、真实系统来源/Keychain/安装App及大日志处理不由此通过，待干净提交按SOP-008出切片收据。
+TM-003当时冻结CORE-08～10独立开发输入：私有身份密钥、真实SourceAccess类与合成helper的主进程适配、受限collection IPC，每条四步；后续辅助程序绑定与旧候选执行见上文。原27产品TC、真实系统来源/Keychain/安装App及大日志处理不由此通过。
 
 TM-001 709d候选BOOTSTRAP四父例安装App定向run`local-3d36f9cbe62a4c1e889e8ea2fa476281`4/4、18步和清理PASS，12截图；原报告与独立Excel/verification逐项回读，登记根总表第36批次。本批没有独立审计，旧完整门禁FAIL及正式发行NOT_RUN保留。
 
-TM-003 CORE08在代码候选`724732d`的固定source_check四步1/1和owner清理PASS，独立Excel/verification回读，登记总表第40批次；先前真实红测FAIL原件保留。本轮文档树尚无CORE08程序同树绑定，真实Keychain/App与产品E2E、发行仍NOT_RUN。
+TM-003 CORE08在代码候选`724732d`的固定source_check四步1/1和owner清理PASS，独立Excel/verification回读，登记总表第40批次；先前真实红测FAIL原件保留。后续同树程序绑定见上文；真实Keychain/App与产品E2E、发行仍NOT_RUN。
 
 TM-004整合候选`08463b31`三套固定source_check新run：CORE01–03为3/3九步，CORE04为1/1三步，CORE05为1/1四步；各逐例清理及独立Excel/verification回读PASS，总表登记第37–39批次。原20产品TC、真实App E2E及正式发行仍NOT_RUN。
 
@@ -56,7 +58,7 @@ TM-001同一709d候选新增`LOGIN-VALIDATION`十父/十二变体22行36步与`L
 
 TM-003新增`CORE-07`主进程编排辅助输入：固定两页两文件、分块读满、HMAC键、守卫撤权与超预算安全失败；目前仅设计、程序绑定null/未执行。它不证明任意大日志或真实App/Keychain产品链路，0.3产品E2E仍NOT_RUN。
 
-`CORE-07`干净输入提交`a3e99dafa8948cdf91d733c374d25a132dc60df2`的[SOP-008收据](../.local/docs-checks/20261002-tm003-core07-slice/receipt.json)判仅该辅助切片`development_slice_ready`；structure、治理477/477、用例233/744和总表回读PASS。程序绑定及实际执行仍空，产品和发行状态不因此改变。
+`CORE-07`干净输入提交`a3e99dafa8948cdf91d733c374d25a132dc60df2`的SOP-008收据在文档会话本机忽略目录`.local/docs-checks/20261002-tm003-core07-slice/receipt.json`，判仅该辅助切片`development_slice_ready`；当时structure、治理477/477、用例233/744和总表回读PASS。后续辅助程序与运行见上文；产品和发行状态不因此改变。
 
 
 TM-002候选`0cc4f3e6`的run`local-6ece8e342b514683a64d1cc0a9bf5282`在产品包预检因缺显式独立测试账号及排除账号而33/33 BLOCKED、零步骤，清理PASS，App未启动且未触及Keychain；较早格式错误的预检FAIL另存。该run没有固定导出的独立结果Excel/verification，因此根总表尚未登记批次；0.2真实产品E2E和正式发行未通过。
@@ -67,7 +69,7 @@ TM-001候选`709d2125`安装原DMG的`LOGIN-01/02/03/04/08`定向真实App run`l
 同一709d候选另一次`LOGIN-SESSION`定向真实App run`local-1d7d9238f9fd4d389e27cad990a6cb97`为6/6、14步、清理PASS，独立Excel回读PASS，作为总表第20批次；与第19批次分开保存。709d仍非TM-001全量回归，旧c291完整门禁FAIL及正式发行NOT_RUN。
 
 
-TM-005新增尚未运行的`CORE-04/05`固定辅助输入，分别为IANA日界/纽约23与25小时和合成双来源SQLite同窗只读快照；0.5原32条产品TC及6变体不缩减。干净输入提交`986e0d382f5dbb09025460f5b041a0089797f213`（tree`ac5d73e5b697bc25ee9d8468dd1cc73345ff3318`）的[SOP-008切片收据](../.local/docs-checks/20261002-tm005-iana-sqlite-slice/receipt.json)判`development_slice_ready`：structure、治理477/477、机器目录232父/739步、总表11 Sheet/232父/42变体/274行/18批次回读PASS；总表SHA-256 `20c539a9ab8137ce4022f4e0bd2fb8b0d60ebd09c5929ab1cf4391a3cef0bc94`。TM-003当前coverage表不能证明任意历史当地日两来源连续完整覆盖，故TM-005产品`STATE-02/04`的真零判据和安装App E2E保持BLOCKED/NOT_RUN；切片仅允许固定辅助红测及实现，程序绑定和实际运行仍空。
+TM-005 `CORE-04/05`固定辅助输入分别为IANA日界/纽约23与25小时和合成双来源SQLite同窗只读快照；0.5原32条产品TC及6变体不缩减。干净输入提交`986e0d382f5dbb09025460f5b041a0089797f213`（tree`ac5d73e5b697bc25ee9d8468dd1cc73345ff3318`）的SOP-008切片收据保存在文档会话本机忽略目录`.local/docs-checks/20261002-tm005-iana-sqlite-slice/receipt.json`，判当时`development_slice_ready`：structure、治理477/477、机器目录232父/739步、总表11 Sheet/232父/42变体/274行/18批次回读PASS；总表SHA-256 `20c539a9ab8137ce4022f4e0bd2fb8b0d60ebd09c5929ab1cf4391a3cef0bc94`。后续CORE04/05辅助执行见第23/24批；TM-003当前coverage表不能证明任意历史当地日两来源连续完整覆盖，故TM-005产品`STATE-02/04`的真零判据和安装App E2E保持BLOCKED/NOT_RUN。
 
 TM-003 `CORE-06`先在`408ebf8`固定红测的第二步失败，修复提交`eef956b`（tree`802e6c9`）的新run`tm003-core06-20261001T182500Z`为`source_check` 1/1、四步和清理PASS；报告SHA-256 `b6a2a8586ffbb14626858263638a7f13c690e3cf5503741bd2526cda3ea24e87`，独立结果Excel SHA-256 `4bfb058e0d0d9779a90ae61ebb207bdf0f8cec2dc6d55e813e33fcd4920f49a5`，verification回读PASS。原始红/绿报告与Excel均已复制到本工作树`.local/`，根总表登记第18批次；原27条产品TC及正式发行仍NOT_RUN。
 

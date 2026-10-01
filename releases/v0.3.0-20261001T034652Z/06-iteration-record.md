@@ -130,3 +130,11 @@ SOP-008对干净输入提交`ff668d0de1fef3dfc162c0d2bc71825df6425511`（tree`20
 ## 2026-10-02 · CORE08开发候选模块实测
 
 真实业务红测候选`0f82c3f95116e878ba9aa081fa85ce4fb9433795`的`tm003-core08-direct-red-20261001T214000Z`报告FAIL（`identity_profile_not_implemented`），SHA-256`5d93bfe1f47074d90f730b18bfe51f2ce4d353d2c9b08f0e01d74e0c74422763`，原件保留。实现候选`724732d77e2ff26dc8db8bd5607c7eec1ae1b800`（tree`d72fa17b142c8b6d52a5786585eedbe6f7b68f30`）固定run`tm003-core08-20261001T215000Z`为1/1、四步和owner清理PASS，报告SHA-256`3a00ce16c20926b02805874f3252dd12df15bd78e4cbf2ad4d33e121db3d7423`；独立Excel/verification回读PASS，Excel SHA-256`0fbf0a9354ed16b430e034ee073e4053fcadd6c4b0b4bd9f3616311b38c9c788`。本轮文档会话只按SOP-024将第40批次摘要与本机原件入口登记根总表，不改被测候选；CORE08程序待整合到同树后绑定机器目录，真实macOS Keychain、安装App/IPC、大日志及原27条产品TC仍NOT_RUN，正式发行不可用。
+
+## 2026-10-02 · CORE-01～10历史辅助批次与同树绑定
+
+本地 master 的 TM-003 最终固定源码和 `tests/source_check_suites.json` 已进入本文档树。`TC-TM003-CORE-08/09/10`现逐条绑定 `apps/desktop/tests/tm003-core08/09/10.test.ts`、精确测试名、`run_source_check.mjs`套件、owner根重置及唯一run命令；原逐步预期未改。机器目录仍记录 `execution_status=unexecuted`，表示本次绑定文档候选尚未新run。
+
+对代码候选`2d2f70d056c32f3f207b0c966092b8fa0754ecfc`的七份固定source_check独立原件逐一核对：`tm003-core/core45/core06/core07/core08/core09/core10`分别3/3、2/2、1/1、1/1、1/1、1/1、1/1 PASS，共10例39步；每例cleanup PASS，报告与独立Excel/verification SHA逐份一致。对后续代码候选`3c07fe7fa6b3049707f10a86df4afc0f6399d0f0`的CORE08与CORE09增强测试又分别独立1/1、四步PASS，原始SHA及独立Excel均核对。九批次以各自run_id登记根总表第41–49行，保留先前CORE08候选第40批次，未合并或覆盖。原始TAP、report、Excel与verification保存在本工作树对应`.local/source-check-runs/<run_id>/`和`.local/test-results/<run_id>/`；`docs/project-register.json`逐批记录被测SHA与哈希。CORE08/09旧测试源码与当前文件SHA不同，后续增强run与当前文件SHA一致；历史结果均严格归属原被测提交。
+
+本次仅核对辅助模块，不证明真实macOS选择/Keychain、安装App IPC/React、任意大日志或27条TM-003产品TC。整合文档候选需新固定run；完整产品E2E与正式门禁仍NOT_RUN。
