@@ -6,6 +6,8 @@ SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc40
 
 TM-003新的`CORE-04/05`固定输入已写入[0.3测试计划](../releases/v0.3.0-20261001T034652Z/04-test-plan.md)及详细用例，fixture精确冻结410/750/1090字节偏移、原子事务故障注入、有效错键、完整LF增量与前缀MAC改写/截短；机器目录和总表增加两行，当前两例程序绑定null、unexecuted。独立SOP-008切片须先对干净文档候选做语义/结构/治理核对，不能因已有CORE-01/02/03的模块3/3而填通过；原27条产品TC继续未执行。
 
+上述`CORE-04/05`输入提交`ba9c782da2cd24f909e26a22c77c506627a40a2f`已按SOP-008独立判`development_slice_ready`，收据`.local/docs-checks/20261002-tm003-core45-slice-ready/receipt.json`绑定该提交/tree、fixture/详细用例/机器目录SHA：structure、治理477/477、用例227/721、总表227父+41变体/15批次均PASS。只允许无TM-002授权依赖的同步事务和合成句柄游标模块进入红测/实现；两条TC实际执行仍0，0.3整版、产品E2E及正式发行均NOT_RUN。
+
 新主仓库 `/Users/lz/文档/git/TokenMeter` 的 `master` 已将文档恢复提交 `48ca089a8569cb33ad3e97ba91b6712cc6be51d0` 集成为 `d606fbd9763447387b88f0d02a881091d0982631`；总控对该整合树执行的文档 structure、当前0.2 baseline、quality 和治理457/457均PASS。该合并只说明源码文档进入本地 master，旧仓库Git对象丢失、历史 c291 产品门禁 FAIL、各需求产品 E2E 未通过和正式发行 `NOT_RUN` 均保留。
 
 TM-003 开发分支提交 `311deedf19d54a77e4c2d5c99eaeb3a1ea45c787`（tree `b4df51097810a44ce56118e7edce0b35e525a886`）的原始收据 `.local/ci/tm003-core-20261001/receipt.json` 报 `TC-TM003-CORE-01/02/03` 模块3/3 PASS，另有桌面单元29/29、typecheck、身份向量及治理检查PASS；初次绿测因临时目录权限失败，修正后第二次绿测PASS，原记录保留。当时的产品导出器只接受聚合报告，该批次未生成模块Excel；后续`ea6b187`新运行已由独立模块导出器完成结果表与总表登记。开发代码尚未合入本文件所在文档分支，机器用例目录中的程序绑定继续为空；产品 E2E、真实授权源与正式发行均未运行。
