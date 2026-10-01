@@ -2,6 +2,12 @@
 
 本文按 SOP-014/018/022/024 汇总已保存的真实原件和当前执行结果。它是结果索引，不是手写通过报告。dev07六个聚合场景组属于历史运行，不能回填新增精细TC。首轮精细全量`local-7feea03dd72e4eddba0651cede8fd23d`为BLOCKED；新版全量`local-343e54113b0b442383e80f137013014b`为FAIL。两轮原件均保留，后续定向及新包运行不改写它们。
 
+## UPDATE-05定向探针：PASS，仅限709d候选（2026-10-02回读）
+
+原始`.local/ci/local-65796d0033704e3988cd7174dec93c81/result.json`绑定被测提交`709d21253a0f88bc703a431cbf3adba3df17e508`、tree`6309bb70540407d90c8b059b4faef15879e691f9`、`scope=granular_targeted_probe`、`release_eligible=false`：`TC-TM001-UPDATE-05`父例1 PASS及13固定变体全部PASS，26逐步记录、清理完成；77条其他TM-001父TC明确范围外。本次不是该候选全部功能回归，也不覆盖此前本地主仓库c291最终包门禁FAIL。
+
+后置导出器代码修复`de081a67734316381d598929ddd5a7814de7e264`从上述原报告生成`.local/test-results/local-65796d0033704e3988cd7174dec93c81/TokenMeter测试结果-local-65796d0033704e3988cd7174dec93c81.xlsx`，SHA-256`579dbfde25149265a97ab12bf85846b5e128d62cf4f94df7ff03b376eda16c16`；`verification.json`回读12 Sheet、父1/1及变体13/13、26步骤、77范围外，`excel-export.json`绑定原报告SHA-256`63068b93a6959fee58acbeb00dde9d6da062726df9b8de6aa0dd757b63403e48`。该修复没有重跑App或改变被测709d包。早期两次导出FAIL原件保留；本次只按SOP-024在根总表新增定向批次索引，正式发行仍NOT_RUN。
+
 ## 修复后独立候选门禁：PASS（2026-10-01）
 
 只读核对 `.local/gates/tm001-final-gate-d2db551-20261001T0904Z/gate.json`：候选 `d2db5514e3dde2abb0b039f6188ae82f1ba3d53e`，tree `3854696e6212aa68aeccfdc720add187a4f92759`，被测 DMG SHA-256 `acc86a9f04ed19fe91f1b63481988d615f5d81680602eed1305b3896bb284492`、151500334 字节。门禁 `state=PASS`、`release_eligible=true`，执行约 2882 秒；主精细 116 行为 105 PASS、11 条辅助占位 BLOCKED，95 个实际 Playwright 入口全部完成。独立辅助 11/11、审计 12/12、补充六组 6/6 均 PASS；机器 `final-product-result.json` 规范化 78 父 TC、38 变体全部 PASS。主原件的 11 条占位未改写。

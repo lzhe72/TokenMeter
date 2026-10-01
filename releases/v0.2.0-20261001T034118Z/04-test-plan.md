@@ -18,7 +18,7 @@
 
 ## TASK → TC 设计清单
 
-下表列出[详细用例基线](../../docs/testing/cases/02-TM-002-permissions.md)的 28 条父 TC，其中 20 条属于安装后产品 E2E、8 条为辅助检查；35 个稳定变体须逐一运行和记录，不能只运行父 ID 的摘要。机器清单、版本追踪和项目总表已完成同源核对及语义基线复核。每条 TC 的固定程序、数据生成/重置与真实结果尚不存在；表格摘要不能代替逐条规格。
+下表列出[详细用例基线](../../docs/testing/cases/02-TM-002-permissions.md)的 28 条父 TC，其中 20 条属于安装后产品 E2E、8 条为辅助检查；36 个稳定变体须逐一运行和记录，不能只运行父 ID 的摘要。机器清单、版本追踪和项目总表已完成同源核对及语义基线复核。每条 TC 的固定程序、数据生成/重置与真实结果尚不存在；表格摘要不能代替逐条规格。
 
 | TC | TASK | 场景组 | 独立判据 |
 | --- | --- | --- | --- |
@@ -51,7 +51,7 @@
 | `TC-TM002-EVIDENCE-01` | RUNNER | 辅助 | 每条产品 TC 的原始操作、独立预期、文件审计、安装包和清理证据缺一即 FAIL/BLOCKED。 |
 | `TC-TM002-DELIVERY-01` | DELIVERY | 父门禁派生辅助 | 固定父门禁先核对最终包、上一schema 2稳定归档原包与真实升级、TM-001 与除本例外的 TM-002 全部原件，再计算本例状态；本例不能预填 PASS 作为门禁启动前提。 |
 
-`SELECT-01/02/04`、`PREVIEW-01` 至 `PREVIEW-04`、`CONSENT`、`STATE` 属 `E2E-TM002-001`；`SELECT-03` 与 `ACCESS-01` 至 `ACCESS-05` 属 `E2E-TM002-002`；`STORE-01`、`ACCESS-06`、`LIMIT-01` 等 8 条辅助 TC 分别验证加密恢复失败、分页契约、预览边界、数据、目录、安全和门禁，不作为产品 E2E 计数。35 个稳定变体分别分配给 SELECT-02（3）、PREVIEW-04（3）、CONSENT-03（2）、CONSENT-04（3）、STATE-01（2）、STORE-01（3）、ACCESS-06（3）、SECURITY-01（7）、CATALOG-01（3）、EVIDENCE-01（6）；有变体的父 ID 不替代其变体实际运行。每个 TASK 至少一条 TC。稳定 TC 须与[详细用例基线](../../docs/testing/cases/02-TM-002-permissions.md)、机器目录、验收清单、场景矩阵、数据集和项目总表双向核对；场景矩阵只登记两组 E2E ID，不将每条 TC 当新场景组。
+`SELECT-01/02/04`、`PREVIEW-01` 至 `PREVIEW-04`、`CONSENT`、`STATE` 属 `E2E-TM002-001`；`SELECT-03` 与 `ACCESS-01` 至 `ACCESS-05` 属 `E2E-TM002-002`；`STORE-01`、`ACCESS-06`、`LIMIT-01` 等 8 条辅助 TC 分别验证加密恢复失败、分页契约、预览边界、数据、目录、安全和门禁，不作为产品 E2E 计数。36 个稳定变体分别分配给 SELECT-02（3）、PREVIEW-04（3）、CONSENT-03（2）、CONSENT-04（3）、STATE-01（2）、STORE-01（3）、ACCESS-06（3）、SECURITY-01（7）、CATALOG-01（3）、EVIDENCE-01（7）；有变体的父 ID 不替代其变体实际运行。每个 TASK 至少一条 TC。稳定 TC 须与[详细用例基线](../../docs/testing/cases/02-TM-002-permissions.md)、机器目录、验收清单、场景矩阵、数据集和项目总表双向核对；场景矩阵只登记两组 E2E ID，不将每条 TC 当新场景组。
 
 ## 数据库、网络与输出边界
 

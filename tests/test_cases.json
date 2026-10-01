@@ -9996,7 +9996,7 @@
       "type": "security_unit",
       "scenario_group": null,
       "input": "七个独立变体：B路径攻击使用独占短根R=/tmp/t2-<8位十六进制>、R/A/a.jsonl与R/B/b.jsonl；ABSOLUTE/FILE_URL/DOTDOT分别调用tokenmeter:invoke(previewSource,{selectionId:B绝对路径/file URL/../B/b.jsonl})，TOKEN调用同method并传未签发UUID；三竞态保持原输入。路径字串事前断言≤64，仅本例拥有A/B。",
-      "preconditions": "每变体独立run_id与owner marker，已验证S1/Alice、无pending选择；A/B位于独占短根，初态无已确认来源；主frame调用真实业务IPC handler。受控竞态用Promise屏障；不连接服务或SQLite，不充当真实面板产品证据。",
+      "preconditions": "每变体独立run_id与owner marker，已验证S1/Alice、无pending选择；A/B位于独占短根R；profile另位于当前用户独占、realpath化的0700私有临时目录，不使用world-writable /tmp祖先；初态无已确认来源；主frame调用真实业务IPC handler。受控竞态用Promise屏障；不连接服务或SQLite，不充当真实面板产品证据。",
       "steps": [
         {
           "step": 1,
@@ -10024,7 +10024,7 @@
         }
       ],
       "db_operations": {
-        "prepare": "七变体各自短根R=/tmp/t2-<8位十六进制>、A/B/profile及owner marker；恶意字串≤64，实际业务previewSource IPC、受控异步屏障和隔离文件；无服务/DB，SQL不适用。",
+        "prepare": "七变体各自短根R=/tmp/t2-<8位十六进制>、R只放A/B；profile在独立realpath化的用户私有0700临时目录；owner marker；恶意字串≤64，实际业务previewSource IPC、受控异步屏障和隔离文件；无服务/DB，SQL不适用。",
         "expected_changes": "不适用：辅助检查不写服务业务库。",
         "verification": "不适用：本例按内存输入、自有副本或原始结果核验，没有 DB 连接或 SQL。",
         "read_only_checks": [],
@@ -10045,7 +10045,7 @@
       ],
       "aggregate_planned": false,
       "evidence": null,
-      "reset": "七变体各自独立 run_id、owner marker 和 R；只清理各自 A/B/profile，保存时序及失败原件。",
+      "reset": "七变体各自独立 run_id、owner marker 和 R及独立私有profile；只清理各自 A/B/profile，保存时序及失败原件。",
       "sops": [
         "SOP-006",
         "SOP-011"
@@ -10544,8 +10544,8 @@
       ],
       "type": "governance_unit",
       "scenario_group": null,
-      "input": "固定程序只在本例私有目录生成合成原始报告及隔离副本，绝不改真实产品报告。稳定变体 TC-TM002-EVIDENCE-01#COMPLETE 为结构完整的合成输入；TC-TM002-EVIDENCE-01#MISSING_STEP 只删除步骤 2 的逐步事件；TC-TM002-EVIDENCE-01#MISSING_PICKER 只删除唯一的真实面板事件；TC-TM002-EVIDENCE-01#MISSING_FS 只删除该 TC 的来源访问审计；TC-TM002-EVIDENCE-01#WRONG_PACKAGE 将 package manifest SHA256 改为 64 个字符 0；TC-TM002-EVIDENCE-01#FAILED_CLEANUP 将 cleanup.completed 改为 false。各变体从同一完整合成母版单独构造，不叠加。",
-      "preconditions": "固定程序只在本例私有目录生成合成原始报告及隔离副本，绝不改真实产品报告。稳定变体 TC-TM002-EVIDENCE-01#COMPLETE 为结构完整的合成输入；TC-TM002-EVIDENCE-01#MISSING_STEP 只删除步骤 2 的逐步事件；TC-TM002-EVIDENCE-01#MISSING_PICKER 只删除唯一的真实面板事件；TC-TM002-EVIDENCE-01#MISSING_FS 只删除该 TC 的来源访问审计；TC-TM002-EVIDENCE-01#WRONG_PACKAGE 将 package manifest SHA256 改为 64 个字符 0；TC-TM002-EVIDENCE-01#FAILED_CLEANUP 将 cleanup.completed 改为 false。各变体从同一完整合成母版单独构造，不叠加。",
+      "input": "固定程序只在本例私有目录生成合成原始报告及隔离副本，绝不改真实产品报告。稳定变体 TC-TM002-EVIDENCE-01#COMPLETE 为结构完整的合成输入；TC-TM002-EVIDENCE-01#MISSING_STEP 只删除步骤 2 的逐步事件；TC-TM002-EVIDENCE-01#MISSING_PICKER 只删除唯一的真实面板事件；`TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS`仅从picker-01.json删除chooser_confirm_button并更新该旁证摘要、其它原报告字段不变；TC-TM002-EVIDENCE-01#MISSING_FS 只删除该 TC 的来源访问审计；TC-TM002-EVIDENCE-01#WRONG_PACKAGE 将 package manifest SHA256 改为 64 个字符 0；TC-TM002-EVIDENCE-01#FAILED_CLEANUP 将 cleanup.completed 改为 false。各变体从同一完整合成母版单独构造，不叠加。",
+      "preconditions": "固定程序只在本例私有目录生成合成原始报告及隔离副本，绝不改真实产品报告。稳定变体 TC-TM002-EVIDENCE-01#COMPLETE 为结构完整的合成输入；TC-TM002-EVIDENCE-01#MISSING_STEP 只删除步骤 2 的逐步事件；TC-TM002-EVIDENCE-01#MISSING_PICKER 只删除唯一的真实面板事件；`TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS`仅从picker-01.json删除chooser_confirm_button并更新该旁证摘要、其它原报告字段不变；TC-TM002-EVIDENCE-01#MISSING_FS 只删除该 TC 的来源访问审计；TC-TM002-EVIDENCE-01#WRONG_PACKAGE 将 package manifest SHA256 改为 64 个字符 0；TC-TM002-EVIDENCE-01#FAILED_CLEANUP 将 cleanup.completed 改为 false。各变体从同一完整合成母版单独构造，不叠加。",
       "steps": [
         {
           "step": 1,
@@ -10560,8 +10560,8 @@
           "action": "独立复核器读取本变体",
           "expected_ui": "不适用：不操作产品 UI",
           "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
-          "expected_file": "#MISSING_STEP、#MISSING_PICKER、#MISSING_FS、#WRONG_PACKAGE、#FAILED_CLEANUP 均分别返回非 PASS 与对应缺项原因，缺 FS 时 UI 无 B 不可补证",
-          "expected": "#COMPLETE 仅结构核对通过且 release_eligible=false，不能签产品通行证；#MISSING_STEP、#MISSING_PICKER、#MISSING_FS、#WRONG_PACKAGE、#FAILED_CLEANUP 均分别返回非 PASS 与对应缺项原因，缺 FS 时 UI 无 B 不可补证；无网络/DB 操作。"
+          "expected_file": "#MISSING_STEP、#MISSING_PICKER、#MISSING_CHOOSER_WITNESS、#MISSING_FS、#WRONG_PACKAGE、#FAILED_CLEANUP 均分别返回非 PASS 与对应缺项原因，缺 FS 时 UI 无 B 不可补证",
+          "expected": "#COMPLETE 仅结构核对通过且 release_eligible=false，不能签产品通行证；#MISSING_STEP、#MISSING_PICKER、#MISSING_CHOOSER_WITNESS、#MISSING_FS、#WRONG_PACKAGE、#FAILED_CLEANUP 均分别返回非 PASS 与对应缺项原因，缺 FS 时 UI 无 B 不可补证；无网络/DB 操作。；缺chooser见证时独立复核器须非零退出/FAIL并指出native picker event不可信，通用面板事件不能补证。"
         },
         {
           "step": 3,
@@ -10696,6 +10696,39 @@
               "expected_api_db": "无网络/DB 操作。",
               "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
               "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS",
+          "input": "完整合成母版独立副本中仅删除picker-01.json的chooser_confirm_button，重算该picker_events旁证描述摘要；其余原报告/步骤/事件保持。",
+          "expected": "独立verify_tm002_evidence非零退出且FAIL，错误指出native picker event不可信；不因通用面板事件而通过。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从完整合成母版建立本例独占副本，仅删除picker-01.json的chooser_confirm_button并重算该旁证SHA，保留其它字段及母版摘要",
+              "expected_ui": "不适用：证据治理测试，无产品UI。",
+              "expected_api_db": "无服务/DB；SQL不适用。",
+              "expected_file": "完整母版不变，副本唯一语义变化是缺chooser确认按钮见证；picker事件仍存在且摘要与副本相符。",
+              "expected": "完整母版不变，副本仅缺chooser确认按钮见证；picker事件仍存在且摘要与副本相符；无产品UI/服务/DB。"
+            },
+            {
+              "step": 2,
+              "action": "固定独立复核器读取该副本",
+              "expected_ui": "不适用：不操作产品UI。",
+              "expected_api_db": "无网络/DB操作。",
+              "expected_file": "verify_tm002_evidence非零退出、FAIL，明确指出native picker event不可信；不能因其它通用面板事件或摘要已重算而PASS。",
+              "expected": "verify_tm002_evidence非零退出、FAIL并指出native picker event不可信；通用面板事件不补证；无产品UI/网络/DB。"
+            },
+            {
+              "step": 3,
+              "action": "按变体独立保留首次复核输出与输入摘要，只清理本例owner副本",
+              "expected_ui": "不适用：不操作产品UI。",
+              "expected_api_db": "无网络/DB操作。",
+              "expected_file": "原始母版与其它变体不覆盖，失败原件和清理记录保留。",
+              "expected": "原始母版与其它变体不覆盖，失败原件和清理记录保留；无产品UI/网络/DB。"
             }
           ]
         },
@@ -12944,7 +12977,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/05-TM-005-usage-statistics.md",
-        "line": 21,
+        "line": 23,
         "heading": "E2E-TM005-001 · 日期筛选、趋势和明细"
       },
       "missing": [
@@ -13009,7 +13042,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/05-TM-005-usage-statistics.md",
-        "line": 38,
+        "line": 40,
         "heading": "E2E-TM005-002 · 时区、月边界与缺失值"
       },
       "missing": [
@@ -16687,7 +16720,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 207,
+        "line": 251,
         "heading": "TC-TM003-SOURCE-01"
       },
       "missing": [
@@ -16740,7 +16773,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 211,
+        "line": 255,
         "heading": "TC-TM003-DATA-01"
       },
       "missing": [
@@ -16795,7 +16828,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 215,
+        "line": 259,
         "heading": "TC-TM003-PARSE-01"
       },
       "missing": [
@@ -16858,7 +16891,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 219,
+        "line": 263,
         "heading": "TC-TM003-SCAN-01"
       },
       "missing": [
@@ -16943,7 +16976,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 223,
+        "line": 267,
         "heading": "TC-TM003-STORE-01"
       },
       "missing": [
@@ -17006,7 +17039,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 227,
+        "line": 271,
         "heading": "TC-TM003-UI-01"
       },
       "missing": [
@@ -17059,7 +17092,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 231,
+        "line": 275,
         "heading": "TC-TM003-SOURCE-02"
       },
       "missing": [
@@ -17114,7 +17147,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 235,
+        "line": 279,
         "heading": "TC-TM003-PARSE-02"
       },
       "missing": [
@@ -17181,7 +17214,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 239,
+        "line": 283,
         "heading": "TC-TM003-MODEL-01"
       },
       "missing": [
@@ -17252,7 +17285,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 243,
+        "line": 287,
         "heading": "TC-TM003-DEDUP-01"
       },
       "missing": [
@@ -17323,7 +17356,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 247,
+        "line": 291,
         "heading": "TC-TM003-BRANCH-01"
       },
       "missing": [
@@ -17394,7 +17427,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 251,
+        "line": 295,
         "heading": "TC-TM003-NAMESPACE-01"
       },
       "missing": [
@@ -17449,7 +17482,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 255,
+        "line": 299,
         "heading": "TC-TM003-PRIVACY-01"
       },
       "missing": [
@@ -17509,7 +17542,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 259,
+        "line": 303,
         "heading": "TC-TM003-DATA-02"
       },
       "missing": [
@@ -17572,7 +17605,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 263,
+        "line": 307,
         "heading": "TC-TM003-SCAN-02"
       },
       "missing": [
@@ -17639,7 +17672,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 267,
+        "line": 311,
         "heading": "TC-TM003-SCAN-03"
       },
       "missing": [
@@ -17706,7 +17739,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 271,
+        "line": 315,
         "heading": "TC-TM003-WINDOW-01"
       },
       "missing": [
@@ -17789,7 +17822,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 275,
+        "line": 319,
         "heading": "TC-TM003-COVERAGE-OVERFLOW-01"
       },
       "missing": [
@@ -17844,7 +17877,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 279,
+        "line": 323,
         "heading": "TC-TM003-UI-02"
       },
       "missing": [
@@ -17899,7 +17932,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 283,
+        "line": 327,
         "heading": "TC-TM003-BOUNDARY-01"
       },
       "missing": [
@@ -17962,7 +17995,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 287,
+        "line": 331,
         "heading": "TC-TM003-AUTH-01"
       },
       "missing": [
@@ -18033,7 +18066,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 291,
+        "line": 335,
         "heading": "TC-TM003-AUTH-02"
       },
       "missing": [
@@ -18117,7 +18150,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 295,
+        "line": 339,
         "heading": "TC-TM003-ISOLATION-01"
       },
       "missing": [
@@ -18186,7 +18219,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 299,
+        "line": 343,
         "heading": "TC-TM003-MIGRATE-01"
       },
       "missing": [
@@ -18256,7 +18289,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 303,
+        "line": 347,
         "heading": "TC-TM003-E2E-01"
       },
       "missing": [
@@ -18322,7 +18355,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 307,
+        "line": 351,
         "heading": "TC-TM003-E2E-02"
       },
       "missing": [
@@ -18385,7 +18418,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 311,
+        "line": 355,
         "heading": "TC-TM003-GOV-01"
       },
       "missing": [
@@ -18451,7 +18484,7 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 315,
+        "line": 359,
         "heading": "TC-TM003-CORE-01"
       }
     },
@@ -18513,7 +18546,7 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 319,
+        "line": 363,
         "heading": "TC-TM003-CORE-02"
       }
     },
@@ -18573,8 +18606,238 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 323,
+        "line": 367,
         "heading": "TC-TM003-CORE-03"
+      }
+    },
+    {
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "scenario_group": "E2E-TM003-003",
+      "type": "source_check",
+      "preconditions": "seed303；固定tests/fixtures/tm003-core-storage-cursor.json；本例0700 owner根和0600空SQLite；仅公开32字节测试密钥；不调用TM-002授权、产品profile/Keychain、真实App或服务",
+      "data_program": null,
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "id": "TC-TM003-CORE-04",
+      "title": "同步批次原子提交与密钥标记",
+      "task_ids": [
+        "TASK-TM003-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM003-002",
+        "AC-TM003-003"
+      ],
+      "input": "header+A=410字节、补B=750字节；A100/10/cached20、B200/20/cached40；公开key1=00..1f及不同有效key2=20..3f；owner SQLite上的INSERT和UPDATE失败触发器",
+      "steps": [
+        {
+          "step": 1,
+          "action": "key1提交A事件+游标410+prefixMAC+不完整覆盖；关闭重开库",
+          "expected": "一行A，(count,input,output,cached)=(1,100,10,20)，total110，诊断0，cursor410，key1标记，scan_incomplete=1；重开不变",
+          "expected_ui": "",
+          "expected_api_db": "一行A，(count,input,output,cached)=(1,100,10,20)，total110，诊断0，cursor410，key1标记，scan_incomplete=1；重开不变"
+        },
+        {
+          "step": 2,
+          "action": "仅在本例库建source_cursor INSERT及UPDATE的BEFORE RAISE(ABORT)触发器，再提交B+invalid_record诊断+游标750+完整覆盖",
+          "expected": "批次失败且全回滚；仍仅A/total110/诊断0/cursor410/原MAC/key1标记/scan_incomplete=1；重开仍相同",
+          "expected_ui": "",
+          "expected_api_db": "批次失败且全回滚；仍仅A/total110/诊断0/cursor410/原MAC/key1标记/scan_incomplete=1；重开仍相同"
+        },
+        {
+          "step": 3,
+          "action": "删除两触发器，重试同一B批次并重开库",
+          "expected": "B仅新增一次；(2,300,30,60)、total330、invalid_record诊断1、cursor750及新MAC、scan_incomplete=0；重开不重计",
+          "expected_ui": "",
+          "expected_api_db": "B仅新增一次；(2,300,30,60)、total330、invalid_record诊断1、cursor750及新MAC、scan_incomplete=0；重开不重计"
+        },
+        {
+          "step": 4,
+          "action": "以另一有效32字节key2打开并尝试重扫A及提交C",
+          "expected": "明确密钥标记不匹配并停采集；A/B两行/total330/诊断1/cursor750/覆盖/key1标记均不变，无key2重键或已知零",
+          "expected_ui": "",
+          "expected_api_db": "明确密钥标记不匹配并停采集；A/B两行/total330/诊断1/cursor750/覆盖/key1标记均不变，无key2重键或已知零"
+        }
+      ],
+      "db_operations": {
+        "prepare": "新建本例owner SQLite；业务行只由模块API插入；步骤2在本例库创建两条失败触发器",
+        "expected_changes": "步骤1 A+cursor/coverage/key标记原子提交；步骤2全回滚；步骤3 B+一诊断+cursor/coverage原子提交；步骤4不变",
+        "verification": "每步只读usage_event数量与SUM、collection_diagnostic代码数、source_cursor offset/prefix_mac、coverage.scan_incomplete、identity_key_state.key_marker；关闭重开复查；仅清理owner库",
+        "read_only_checks": [
+          "usage_event count/input/output/cached",
+          "collection_diagnostic code/count",
+          "source_cursor committed_byte_offset/prefix_mac",
+          "coverage scan_incomplete",
+          "identity_key_state key_marker"
+        ]
+      },
+      "missing": [
+        "同步commitBatch、密钥标记和固定source_check程序尚未绑定；产品STORE-01仍BLOCKED"
+      ],
+      "source": {
+        "path": "docs/testing/cases/03-TM-003-codex-collection.md",
+        "line": 203,
+        "heading": "TC-TM003-CORE-04 · 同步批次原子提交与密钥标记"
+      }
+    },
+    {
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "scenario_group": "E2E-TM003-003",
+      "type": "source_check",
+      "preconditions": "seed303；固定tests/fixtures/tm003-core-storage-cursor.json；本例0700 owner根和0600空SQLite；仅公开32字节测试密钥；不调用TM-002授权、产品profile/Keychain、真实App或服务",
+      "data_program": null,
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "id": "TC-TM003-CORE-05",
+      "title": "追加、半行、前缀改写与截短游标",
+      "task_ids": [
+        "TASK-TM003-SCAN",
+        "TASK-TM003-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM003-001",
+        "AC-TM003-003"
+      ],
+      "input": "fixture header+A410、+B750、+C1090；B半行；A.padding 0→1同长度原地改写且mtime不变；合成稳定文件身份恒定，可变快照digest随修改；公开key1",
+      "steps": [
+        {
+          "step": 1,
+          "action": "已打开owner文件写header+A完整LF并同步提交",
+          "expected": "A一行total110，cursor410，保存对410字节prefixMAC及稳定身份，输出不含路径/正文/密钥",
+          "expected_ui": "",
+          "expected_api_db": "A一行total110，cursor410，保存对410字节prefixMAC及稳定身份，输出不含路径/正文/密钥"
+        },
+        {
+          "step": 2,
+          "action": "只追加B前半行无LF，更新可变快照digest，稳定身份不变后扫描",
+          "expected": "B不提交；A一行total110，cursor410，前缀MAC相同，无cursor_reset",
+          "expected_ui": "",
+          "expected_api_db": "B不提交；A一行total110，cursor410，前缀MAC相同，无cursor_reset"
+        },
+        {
+          "step": 3,
+          "action": "补齐B+LF并追加C完整LF，再改变可变digest，稳定身份不变后扫描",
+          "expected": "只消费B/C；(count,input,output,cached)=(3,600,60,120)，total660，cursor1090，A不重计，无cursor_reset",
+          "expected_ui": "",
+          "expected_api_db": "只消费B/C；(count,input,output,cached)=(3,600,60,120)，total660，cursor1090，A不重计，无cursor_reset"
+        },
+        {
+          "step": 4,
+          "action": "把已读A.padding字节0原地改为1，维持长度1090和mtime，稳定身份不变后扫描",
+          "expected": "fixture新旧SHA不同；prefixMAC不符，cursor_reset且从0重扫；A/B/C唯一三行、total660、旧行不删，coverage.missing_before=1",
+          "expected_ui": "",
+          "expected_api_db": "fixture新旧SHA不同；prefixMAC不符，cursor_reset且从0重扫；A/B/C唯一三行、total660、旧行不删，coverage.missing_before=1"
+        },
+        {
+          "step": 5,
+          "action": "把同文件截短到header+A的410字节后扫描",
+          "expected": "长度小于游标而从0重扫；历史A/B/C三行与total660保留；cursor410，coverage缺口为真，B/C不填零不删除",
+          "expected_ui": "",
+          "expected_api_db": "长度小于游标而从0重扫；历史A/B/C三行与total660保留；cursor410，coverage缺口为真，B/C不填零不删除"
+        }
+      ],
+      "db_operations": {
+        "prepare": "新建owner文件/空SQLite；模块读取固定原始行；不访问TM-002目录能力",
+        "expected_changes": "A/B/C仅通过正式模块API入库；追加推进完整LF游标；改写/截短重扫仅改变游标和覆盖缺口、不删可信旧行",
+        "verification": "只读按(principal_key,source,source_event_key)核对唯一三行及SUM、source_cursor offset/prefix_mac、coverage.missing_before、cursor_reset诊断；比较fixture新旧SHA/长度/mtime；结束仅清理owner资源",
+        "read_only_checks": [
+          "usage_event unique count/input/output/cached",
+          "source_cursor committed_byte_offset/prefix_mac",
+          "coverage missing_before",
+          "cursor_reset diagnostics"
+        ]
+      },
+      "missing": [
+        "稳定生产文件身份由TM-002后续合同决定；模块只使用合成稳定身份；产品SCAN-02/03仍BLOCKED"
+      ],
+      "source": {
+        "path": "docs/testing/cases/03-TM-003-codex-collection.md",
+        "line": 216,
+        "heading": "TC-TM003-CORE-05 · 追加、半行、前缀改写与截短游标"
+      }
+    },
+    {
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "scenario_group": "E2E-TM003-003",
+      "type": "source_check",
+      "preconditions": "seed303；固定tests/fixtures/tm003-core-storage-cursor.json；本例0700 owner根和0600空SQLite；仅公开32字节测试密钥；不调用TM-002授权、产品profile/Keychain、真实App或服务",
+      "data_program": null,
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "id": "TC-TM003-CORE-06",
+      "title": "多文件代际一次提交与全回滚",
+      "task_ids": [
+        "TASK-TM003-SCAN",
+        "TASK-TM003-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM003-001",
+        "AC-TM003-003"
+      ],
+      "input": "固定tm003-core-generation.json：同一generation两页file-a/file-b，各header+完整LF调用、各410字节；第1页complete=false，末页complete=true；owner空SQLite、公开key1、假scan capability/guard；四步各新空库。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "只读第1页file-a并验证LF/版本/SHA，末页未到达",
+          "expected": "A仅内存暂存；commitScanBatch调用0次，事件/游标/诊断/覆盖无本代际行，complete=false不称完整",
+          "expected_ui": "",
+          "expected_api_db": "四表本代际行均0；无完整覆盖"
+        },
+        {
+          "step": 2,
+          "action": "新库重建完整两页及稳定正文；在owner库对第二条source_cursor INSERT注入RAISE(ABORT)，guard通过后同步commitScanBatch",
+          "expected": "批次失败并全回滚：A/B事件、两个游标、诊断、覆盖、首次key标记均0或不存在；重开库仍空",
+          "expected_ui": "",
+          "expected_api_db": "usage_event/source_cursor/collection_diagnostic/coverage行0、identity_key_state无新标记"
+        },
+        {
+          "step": 3,
+          "action": "新库验证完整两页，file-b字节复核后在guard/事务前模拟capability撤权或cancel",
+          "expected": "guard拒绝或取消，cancelScan调用1次，commitScanBatch调用0次；暂存清空，事件/两个游标/诊断/覆盖/密钥标记均未提交",
+          "expected_ui": "",
+          "expected_api_db": "全部本代际行0，未生成完整覆盖"
+        },
+        {
+          "step": 4,
+          "action": "新库/新generation保持两文件稳定且末页complete=true，guard通过后同步提交一次；重启同库重扫",
+          "expected": "A/B唯一两行，(count,input,output,cached,total)=(2,300,30,60,330)；两游标各410及prefixMAC、coverage.scan_incomplete=0；重启不重复，不输出路径/正文/密钥",
+          "expected_ui": "",
+          "expected_api_db": "usage_event两行、source_cursor两行各410、coverage完整；重扫无新事件"
+        }
+      ],
+      "db_operations": {
+        "prepare": "每路径独立owner 0700根/0600空SQLite；事件只由正式模块API提交；步骤2仅创建本例游标失败触发器",
+        "expected_changes": "未完成无提交；第二游标失败或guard撤权全代际回滚；完整稳定代际原子提交A/B两个事件、两个游标和覆盖",
+        "verification": "逐步只读usage_event唯一键/聚合、source_cursor数量及偏移/prefixMAC、collection_diagnostic、coverage和identity_key_state；重开验证失败仍空、成功不重计；owner清理",
+        "read_only_checks": [
+          "usage_event count/input/output/cached/total",
+          "source_cursor count/offset/prefix_mac",
+          "collection_diagnostic count",
+          "coverage scan_incomplete",
+          "identity_key_state marker"
+        ]
+      },
+      "missing": [
+        "固定source_check程序未绑定；假capability不证明TM002真实授权或产品App/IPC E2E"
+      ],
+      "source": {
+        "path": "docs/testing/cases/03-TM-003-codex-collection.md",
+        "line": 230,
+        "heading": "TC-TM003-CORE-06 · 多文件代际一次提交与全回滚"
       }
     },
     {
@@ -18891,7 +19154,7 @@
           "action": "首行后追加第二完整行",
           "expected_ui": "不适用；纯reader模块",
           "expected_api_db": "不适用；无产品DB或API",
-          "expected": "快照digest变化但稳定身份/前缀MAC相同，续读只第二调用，无cursor_reset"
+          "expected": "候选size/mtime变化但TM-002 dev/ino摘要与前缀MAC不变，续读只第二调用，无cursor_reset；入库来源键须由sourceId分域HMAC"
         },
         {
           "step": 2,
@@ -18913,7 +19176,7 @@
         "line": 178,
         "heading": "TC-TM004-CORE-02 · 前缀MAC、变更和密钥失败"
       },
-      "overall_expected": "1. 首行后追加第二完整行；快照digest变化但稳定身份/前缀MAC相同，续读只第二调用，无cursor_reset\n2. 同长度前缀改写、截短及稳定身份变更；分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符\n3. 秘密无效或读中源变化；拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密"
+      "overall_expected": "1. 首行后追加第二完整行；size/mtime变化但TM-002 dev/ino摘要和前缀MAC相同，续读只第二调用，无cursor_reset\n2. 同长度前缀改写、截短及稳定身份变更；分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符\n3. 秘密无效或读中源变化；拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密"
     },
     {
       "feature_id": "TM-004",
@@ -18982,6 +19245,295 @@
         "heading": "TC-TM004-CORE-03 · 损坏完整行与未知结构"
       },
       "overall_expected": "1. 读三条完整LF行；仅合法2.1.126一条调用13/7=20；invalid_utf8及unsupported_version各一次\n2. 核对游标、重复读取及隐私；游标到三行LF末，MAC匹配且完成；重复读取0；输出无路径、正文、秘密\n3. 追加无LF坏字节再补LF；未补LF前偏移不动且未完成；补LF后仅诊断推进，无伪调用"
+    },
+    {
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "type": "source_check",
+      "preconditions": "仅合成fixture及注入假账号快照、TM-002候选扫描端口、TM-003同步提交端口；每个负例重置内存状态；不访问真实账号、Keychain、日志、SQLite、服务、IPC或App。",
+      "db_operations": {
+        "prepare": "无产品DB；每子变体新建假端口与计数器",
+        "expected_changes": "无SQLite；只观察假同步提交次数及数值",
+        "verification": "逐步断言扫描、取消、守卫、提交次数与返回白名单；无SQL",
+        "read_only_checks": []
+      },
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "missing": [
+        "SOP-011固定模块程序尚未绑定；真实TM-002/003与原20条产品TC仍BLOCKED或未执行"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "丢弃本子变体拥有的假端口/候选缓冲；保留原始模块报告，不清理非本例资源。",
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-013"
+      ],
+      "id": "TC-TM004-CORE-04",
+      "title": "授权主体与扫描事务触发",
+      "task_ids": [
+        "TASK-TM004-SOURCE",
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-004"
+      ],
+      "input": "tests/fixtures/tm004-trigger-core-slice.json；固定UUID、M=100/10、各错误码、三种屏障事件及成功返回形状",
+      "steps": [
+        {
+          "step": 1,
+          "action": "拒绝路径字段、无效主体/来源和预先取消的请求",
+          "expected_ui": "不适用；纯主进程端口模块",
+          "expected_api_db": "不适用；无真实API或产品DB",
+          "expected": "路径字段/坏UUID为invalid_collection_request；账号不可用为collection_unavailable；异主体来源为source_not_authorized；预先取消为collection_cancelled；均扫描0、提交0"
+        },
+        {
+          "step": 2,
+          "action": "扫描开始后在固定屏障分别换账号、撤权和取消",
+          "expected_ui": "不适用；纯主进程端口模块",
+          "expected_api_db": "不适用；无真实API或产品DB",
+          "expected": "换账号/撤权为collection_stale，取消为collection_cancelled；每次cancelScan、commitSync=0、缓冲不外露"
+        },
+        {
+          "step": 3,
+          "action": "健康主体和授权世代扫描完整M并通过提交守卫",
+          "expected_ui": "不适用；纯主进程端口模块",
+          "expected_api_db": "不适用；无真实API或产品DB",
+          "expected": "commitSync恰一次；返回summary{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]，无私密哨兵/原生标识"
+        }
+      ],
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "line": 198,
+        "heading": "TC-TM004-CORE-04 · 授权主体与扫描事务触发"
+      },
+      "overall_expected": "1. 拒绝路径字段、无效主体/来源和预先取消的请求；路径字段/坏UUID为invalid_collection_request；账号不可用为collection_unavailable；异主体来源为source_not_authorized；预先取消为collection_cancelled；均扫描0、提交0\n2. 扫描开始后在固定屏障分别换账号、撤权和取消；换账号/撤权为collection_stale，取消为collection_cancelled；每次cancelScan、commitSync=0、缓冲不外露\n3. 健康主体和授权世代扫描完整M并通过提交守卫；commitSync恰一次；返回summary{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]，无私密哨兵/原生标识"
+    },
+    {
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "type": "source_check",
+      "preconditions": "仅合成解析后fixture、注入假来源端口和本例0700独占目录内0600隔离SQLite；固定32字节测试秘密；不读取用户日志、Keychain、服务、IPC或App。",
+      "db_operations": {
+        "prepare": "每故障子场景新建本例空SQLite；故障注入只在本例库设置第二游标写入RAISE(ABORT)",
+        "expected_changes": "成功一次事务新增三事件、三个游标、三诊断与根覆盖；失败和撤权零提交",
+        "verification": "只读查询usage_event、source_cursor、collection_diagnostic、coverage的数量/键/数值；核对源键和scope HMAC向量及无原生标识；关闭并核对SQLite/WAL无合成prompt/路径哨兵",
+        "read_only_checks": []
+      },
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "missing": [
+        "SOP-011固定存储适配程序与真实TM-002/003集成尚未绑定；原20条产品TC仍BLOCKED或未执行"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "关闭SQLite句柄，核对owner marker后只删除本例独占目录；保留原始模块报告。",
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-013"
+      ],
+      "id": "TC-TM004-CORE-05",
+      "title": "多文件来源键与整代持久映射",
+      "task_ids": [
+        "TASK-TM004-INCREMENTAL",
+        "TASK-TM004-LINEAGE"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-002",
+        "AC-TM004-004"
+      ],
+      "input": "tests/fixtures/tm004-storage-port-slice.json；合成M100/10、S200/20、Q50/5，三文件HMAC/游标/诊断与隔离SQLite；异常model_id哨兵与invalid_model_id诊断",
+      "steps": [
+        {
+          "step": 1,
+          "action": "计算三个文件来源键、根键及换源/追加/替换向量",
+          "expected_ui": "不适用；合成来源/隔离SQLite模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名"
+        },
+        {
+          "step": 2,
+          "action": "构造完整三文件generation并核对文件归属与turnId代号",
+          "expected_ui": "不适用；合成来源/隔离SQLite模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交"
+        },
+        {
+          "step": 3,
+          "action": "分别在新库注入第二游标写失败与guard撤权",
+          "expected_ui": "不适用；合成来源/隔离SQLite模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲"
+        },
+        {
+          "step": 4,
+          "action": "稳定末页通过guard后一次同步commitScanBatch并重扫",
+          "expected_ui": "不适用；合成来源/隔离SQLite模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识"
+        }
+      ],
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "line": 206,
+        "heading": "TC-TM004-CORE-05 · 多文件来源键与整代持久映射"
+      },
+      "overall_expected": "1. 计算三个文件来源键、根键及换源/追加/替换向量；64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名\n2. 构造完整三文件generation并核对文件归属与turnId代号；a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交\n3. 分别在新库注入第二游标写失败与guard撤权；每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲\n4. 稳定末页通过guard后一次同步commitScanBatch并重扫；唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识"
+    },
+    {
+      "feature_id": "TM-005",
+      "requirement_id": "REQ-TM005",
+      "release_id": "v0.5.0-20261001T034729Z",
+      "type": "source_check",
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-013"
+      ],
+      "id": "TC-TM005-CORE-04",
+      "title": "IANA当地日半开UTC界",
+      "task_ids": [
+        "TASK-TM005-RANGE-QUERY"
+      ],
+      "ac_ids": [
+        "AC-TM005-001"
+      ],
+      "input": "tests/fixtures/tm005-iana-core-slice.json；上海/UTC与纽约春秋四日、三种无效输入",
+      "preconditions": "纯函数只读fixture；不改系统时钟、不访问日志、数据库、IPC、服务或App。",
+      "db_operations": {
+        "prepare": "无DB",
+        "expected_changes": "无DB或系统时间变化",
+        "verification": "固定IANA各日UTC半开界、23/25小时、边界包含关系及错误码；无SQL",
+        "read_only_checks": []
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "转换上海与UTC固定当地日",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "仅CORE-05本例隔离SQLite只读旁证；无产品API",
+          "expected": "分别得到fixture固定24小时UTC半开界，传入事件UTC时刻不变"
+        },
+        {
+          "step": 2,
+          "action": "转换纽约春秋DST当地日及四类边界时刻",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "仅CORE-05本例隔离SQLite只读旁证；无产品API",
+          "expected": "春23小时/秋25小时；before/at_end排除，at_start/before_end纳入"
+        },
+        {
+          "step": 3,
+          "action": "分别提交无效时区、无效日和非规范日期",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "仅CORE-05本例隔离SQLite只读旁证；无产品API",
+          "expected": "invalid_timezone或invalid_local_day；无默认UTC范围/成功零"
+        }
+      ],
+      "source": {
+        "path": "releases/v0.5.0-20261001T034729Z/04a-test-cases.md",
+        "line": 354,
+        "heading": "TC-TM005-CORE-04 · IANA当地日半开UTC界"
+      },
+      "missing": [
+        "SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行"
+      ],
+      "reset": "仅释放本例内存对象并保留模块报告。",
+      "overall_expected": "1. 转换上海与UTC固定当地日；分别得到fixture固定24小时UTC半开界，传入事件UTC时刻不变\n2. 转换纽约春秋DST当地日及四类边界时刻；春23小时/秋25小时；before/at_end排除，at_start/before_end纳入\n3. 分别提交无效时区、无效日和非规范日期；invalid_timezone或invalid_local_day；无默认UTC范围/成功零"
+    },
+    {
+      "feature_id": "TM-005",
+      "requirement_id": "REQ-TM005",
+      "release_id": "v0.5.0-20261001T034729Z",
+      "type": "source_check",
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-013"
+      ],
+      "id": "TC-TM005-CORE-05",
+      "title": "双来源隔离SQLite同窗只读快照",
+      "task_ids": [
+        "TASK-TM005-EVENT-CONTRACT",
+        "TASK-TM005-RANGE-QUERY"
+      ],
+      "ac_ids": [
+        "AC-TM005-001",
+        "AC-TM005-002"
+      ],
+      "input": "tests/fixtures/tm005-sqlite-snapshot-slice.json；A/B双来源330、C异主体、D/E界外、F并发后新快照+55",
+      "preconditions": "本例0700目录/0600空SQLite由TM003 UsageStore.commitBatch固定种入合成A–E；WAL；仅本例合成密钥与主体；不读原生日志或访问App/服务。",
+      "db_operations": {
+        "prepare": "固定准备程序仅在本例owner SQLite经UsageStore.commitBatch提交A–E；启用WAL并记录前态",
+        "expected_changes": "查询零写入；另一连接固定提交F后旧读事务仍330，新读事务385",
+        "verification": "只读usage_event按主体/source/UTC半开界核对事件、来源/模型/明细/日点与子项未知数；coverage不能证明完整空日",
+        "read_only_checks": []
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "固定插入A–E并开启同一读事务",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "仅CORE-05本例隔离SQLite只读旁证；无产品API",
+          "expected": "选A/B两调用，input300/output30/total330；C/D/E分别被主体或半开界排除，查询零写"
+        },
+        {
+          "step": 2,
+          "action": "在同一读事务取来源、模型、明细与逐日点",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "仅CORE-05本例隔离SQLite只读旁证；无产品API",
+          "expected": "Codex110/Claude220；未知模型110/sonnet-test220；明细A/B和日点330；缓存读known20+unknown1，子项不加总"
+        },
+        {
+          "step": 3,
+          "action": "另一连接提交F后复查旧快照，再开新快照",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "仅CORE-05本例隔离SQLite只读旁证；无产品API",
+          "expected": "旧事务各视图仍A/B和330；新事务A/B/F三调用、input350/output35/total385、Codex165/Claude220"
+        },
+        {
+          "step": 4,
+          "action": "查询空日及隐私边界",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "仅CORE-05本例隔离SQLite只读旁证；无产品API",
+          "expected": "现有coverage不证明当地空日完整，不能报产品零；库/WAL/输出无原生ID、路径、正文或秘密"
+        }
+      ],
+      "source": {
+        "path": "releases/v0.5.0-20261001T034729Z/04a-test-cases.md",
+        "line": 362,
+        "heading": "TC-TM005-CORE-05 · 双来源隔离SQLite同窗只读快照"
+      },
+      "missing": [
+        "SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行"
+      ],
+      "reset": "关闭全部DB连接，核对owner marker后只删除本例独占目录；保留原始SQL与模块报告。",
+      "overall_expected": "1. 固定插入A–E并开启同一读事务；选A/B两调用，input300/output30/total330；C/D/E分别被主体或半开界排除，查询零写\n2. 在同一读事务取来源、模型、明细与逐日点；Codex110/Claude220；未知模型110/sonnet-test220；明细A/B和日点330；缓存读known20+unknown1，子项不加总\n3. 另一连接提交F后复查旧快照，再开新快照；旧事务各视图仍A/B和330；新事务A/B/F三调用、input350/output35/total385、Codex165/Claude220\n4. 查询空日及隐私边界；现有coverage不证明当地空日完整，不能报产品零；库/WAL/输出无原生ID、路径、正文或秘密"
     }
   ]
 }

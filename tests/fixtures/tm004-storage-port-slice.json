@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "fixture_id": "tm004-storage-port-v1",
+  "scope": "synthetic_multi_file_mapping_and_isolated_sqlite_module",
+  "source_id": "11111111-2222-4333-8444-555555555555",
+  "other_source_id": "99999999-2222-4333-8444-555555555555",
+  "principal_key": "4444444444444444444444444444444444444444444444444444444444444444",
+  "secret_hex": "4242424242424242424242424242424242424242424242424242424242424242",
+  "key_derivation": {
+    "encoding": "uint32be byte length followed by bytes for each field",
+    "root_fields": [
+      "claude-root-v1",
+      "source_id as UTF-8"
+    ],
+    "file_fields": [
+      "claude-file-v1",
+      "source_id as UTF-8",
+      "file_identity_digest as 32 raw bytes"
+    ],
+    "root_key": "d2352bec25764143879a7ed7d41af612437b9dd0a59abb8d4cc99b93e2a921d4"
+  },
+  "files": [
+    {
+      "label": "a",
+      "file_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_key_and_file_identity": "7073b9a14e0b3dda8878a86204da11dfd37fc2fdb5cc786f58abfa7bc298b7b3",
+      "committed_byte_offset": 410,
+      "prefix_mac": "1111111111111111111111111111111111111111111111111111111111111111",
+      "call": {
+        "canonical_call_id": "msg-m",
+        "session_id": "session-01",
+        "agent_id": null,
+        "turn_id": "claude-main-v1",
+        "input_tokens": 100,
+        "output_tokens": 10,
+        "model_id": "claude-sonnet-4-6"
+      },
+      "diagnostic_codes": [
+        "invalid_json"
+      ]
+    },
+    {
+      "label": "b",
+      "file_identity_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_key_and_file_identity": "723eb87a28a1ae29641ec4ca2465df3b9e51cc85492c89d99873d7165e27ab9b",
+      "committed_byte_offset": 510,
+      "prefix_mac": "2222222222222222222222222222222222222222222222222222222222222222",
+      "call": {
+        "canonical_call_id": "msg-s",
+        "session_id": "session-01",
+        "agent_id": "agent-01",
+        "turn_id": "claude-agent-v1:agent-01",
+        "input_tokens": 200,
+        "output_tokens": 20,
+        "model_id": "claude-sonnet-4-6"
+      },
+      "diagnostic_codes": [
+        "unsupported_version"
+      ]
+    },
+    {
+      "label": "c",
+      "file_identity_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "source_key_and_file_identity": "4047011cd6f1934dab5ed75ee429d9a5447f4c4b180b619b64211f71e1d1470c",
+      "committed_byte_offset": 610,
+      "prefix_mac": "3333333333333333333333333333333333333333333333333333333333333333",
+      "call": {
+        "canonical_call_id": "msg-q",
+        "session_id": "session-01",
+        "agent_id": null,
+        "is_sidechain": true,
+        "turn_id": "claude-unverified-v1:msg-q",
+        "input_tokens": 50,
+        "output_tokens": 5,
+        "model_id": "SYNTHETIC-PROMPT-SENTINEL /synthetic/private/source.jsonl"
+      },
+      "diagnostic_codes": [
+        "unverified_parent",
+        "invalid_model_id"
+      ]
+    }
+  ],
+  "expected_scope_keys": [
+    "7d38de78d97a5d649e077d8b7c5bc1065ba649e439a13d00b99b1144bd6eb891",
+    "cc09110d458f652e993427ab1bad244be8fe0c5c40dfed3864364636c9c2b541",
+    "19720eb7c8a11a44651a32d7fb989216d84871b167a2ec5ee5335d9da16d0083"
+  ],
+  "expected_aggregate": {
+    "calls": 3,
+    "input_tokens": 350,
+    "output_tokens": 35,
+    "total_tokens": 385,
+    "cursors": 3,
+    "diagnostics": 4,
+    "scan_incomplete": true
+  },
+  "privacy": "All native-like IDs are synthetic and only enter main-process memory; persistent SQLite stores HMAC keys, numbers and diagnostic codes. No vendor raw fixture or product E2E is claimed.",
+  "model_id_rule": {
+    "accepted_pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+    "invalid_value_result": null,
+    "invalid_diagnostic": "invalid_model_id"
+  }
+}

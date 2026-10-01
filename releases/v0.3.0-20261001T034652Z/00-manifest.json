@@ -258,6 +258,27 @@
       "task": "TASK-TM003-IDENTITY",
       "test": "TC-TM003-CORE-03",
       "description": "公开向量身份去重与冲突"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-STORE",
+      "test": "TC-TM003-CORE-04",
+      "description": "同步SQLite事件/诊断/游标/覆盖原子提交与有效错键拒绝"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-CORE-05",
+      "description": "完整LF追加与keyed前缀MAC改写/截短重扫"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-CORE-06",
+      "description": "两文件同generation末页完成后一次事务提交、第二游标失败或撤权全回滚"
     }
   ],
   "program_bindings_status": "planned",

@@ -1,5 +1,11 @@
 # TM-005 执行记录
 
+## 2026-10-02 · IANA与双来源SQLite辅助输入
+
+总控和TM-005开发会话要求在继续产品链路前先固定下一独立TASK/TC切片。文档会话按SOP-002–008、024增加`TC-TM005-CORE-04/05`：CORE04以固定上海/UTC/纽约春秋IANA当地日及无效输入验证UTC半开界、23/25小时和严格错误；CORE05使用TM-003已提交`UsageStore`接口只在本例隔离SQLite种入合成Codex/Claude事件，验证当前主体/半开UTC界、同一读事务中来源/模型/明细/日点一致，WAL另一连接提交前后旧快照330/新快照385。实际TM-003`coverage`表只有`missing_before/scan_incomplete/last_scan_at_utc`等字段，无法证明任意完整空日；该产品判据及原32父TC/6变体保留draft/BLOCKED。两条辅助TC程序绑定null、实际未运行，不使用原生日志或安装App。输入见03/03a/04/04a、两份新fixture、manifest与机器用例；干净输入提交及SOP-008收据待随后记录。
+
+编制检查`check_docs.py --mode structure`退出0（134份登记文档、1254链接）、用例目录232例/739步生成并回读、根Excel11 Sheet/232父+42变体/274行/18批次回读PASS，SHA-256 `20c539a9ab8137ce4022f4e0bd2fb8b0d60ebd09c5929ab1cf4391a3cef0bc94`。首次生成目录因新增说明把`E2E-TM005-001/002`来源标题各后移2行而FAIL，已将机器来源行由21/38更正为23/40并在新运行PASS；不改产品预期或旧结果。以上只是文档/总表一致性，不是模块或产品PASS。
+
 ## 2026-10-02 · CORE-01 UTC界输入纠错
 
 开发会话指出已提交纯统计实现由调用方直接传`start_utc/end_exclusive_utc`，原CORE-01“按当地日调用”措辞可能误导为同函数负责IANA换算。核对冻结fixture同时给出`timezone/local_day`与UTC界后，文档会话明确CORE-01只按固定UTC半开界筛选、输入主体及事件；`Asia/Shanghai`当地日到UTC、纽约春秋23/25小时日界另设固定辅助TC，不把现有模块3/3当日期转换PASS。原32条产品TC/6变体及RANGE-11真实App判据不变；03a、04a、机器目录和总表随本纠错重新核对，旧SOP-008切片收据只对应此前文本，新内容需新的切片收据。
@@ -186,3 +192,9 @@ TM-003/004 的身份是设计可读，不是已稳定的 `usage_event` 运行时
 该次目录检查也真实 FAIL：新增详细说明使 `E2E-TM005-001/002` 的来源标题从第 17/34 行移到 19/36 行，机器目录仍保留旧行号。已修正两个来源行并重新生成根清单；修复后的独立复查另存下一收据。上述治理和总表结果只证明设计资料内部一致；两来源原生数据、真实 SQLite/IPC、安装包 Playwright E2E、完整回归和 SOP-017/018 仍未执行，文档基线与发布资格均 BLOCKED。
 
 修复后收据 `.local/tm005-catalog-final-20261001T094336Z/`：structure 退出 0，目录导出器 `--check` 退出 0，项目总表回读退出 0，`git diff --check` 退出 0；绑定预检仍按设计退出 2/BLOCKED。单独调用 `quality_gate.validate_manifest(ROOT)` 返回零错误、features 12/cases 37/implemented 0/test_bindings 6；这项诊断不绕过完整 quality gate 的 16 条 draft 错误，也不表示任何产品用例已执行。
+
+## 2026-10-02 · CORE-04/05 辅助切片输入与核准
+
+在已登记的32条产品父TC和6个变体之外，固定`TC-TM005-CORE-04`三步IANA半开日界与`TC-TM005-CORE-05`四步双来源SQLite只读快照，分别关联`TASK-TM005-RANGE-QUERY`及`TASK-TM005-EVENT-CONTRACT`。输入为`tests/fixtures/tm005-iana-core-slice.json`和`tests/fixtures/tm005-sqlite-snapshot-slice.json`；后者仅用本例拥有的合成库，经TM-003`UsageStore.commitBatch`种子、WAL读事务和另一连接提交验证同窗一致性。审查TM-003实际`coverage`物理字段后修正03a旧拟议表述：现有表无法证明任意历史完整空日，产品真零仍待上游来源事实。
+
+最初新增详细章节使E2E-TM005-001/002机器目录来源行偏移，导出检查真实失败；已修正至23/40行，保留该失败于本机检查输出。冻结输入提交`986e0d382f5dbb09025460f5b041a0089797f213`、tree`ac5d73e5b697bc25ee9d8468dd1cc73345ff3318`。SOP-008收据`.local/docs-checks/20261002-tm005-iana-sqlite-slice/receipt.json`逐文件保存SHA：structure退出0、治理477/477、机器目录232父/739步CURRENT、总表11 Sheet/232父/42变体/274行/18批次回读PASS（SHA-256 `20c539a9ab8137ce4022f4e0bd2fb8b0d60ebd09c5929ab1cf4391a3cef0bc94`）、diff检查退出0，语义审查判仅两条辅助用例`development_slice_ready`。程序绑定仍null、执行`unexecuted`；整版0.5基线及quality未运行，真实App/原生日志产品E2E与正式门禁均NOT_RUN。
