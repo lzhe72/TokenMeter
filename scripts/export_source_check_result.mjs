@@ -145,10 +145,11 @@ const requireBundled = createRequire(path.join(root, '.local/workbook/loader.cjs
 const {Workbook, SpreadsheetFile, FileBlob} = await import(requireBundled.resolve('@oai/artifact-tool'));
 const wb = Workbook.create();
 function safe(value) {
-  const text = value == null ? '' : typeof value === 'string' ? value : JSON.stringify(value);
+  let text = value == null ? '' : typeof value === 'string' ? value : JSON.stringify(value);
+  if (/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/.test(text)) text += ' UTC';
   return /^[=+@]/.test(text) ? `'${text}` : text;
 }
-function sheet(name, title, headers, rows, widths) {
+function sheet(name, title, headers, rows, widths, rowHeight = 34) {
   const sh = wb.worksheets.add(name);
   sh.showGridLines = false;
   sh.getRange('A2').values = [[title]];
@@ -159,7 +160,7 @@ function sheet(name, title, headers, rows, widths) {
   area.format.font = {name: 'Arial', size: 10, color: '#243247'};
   area.format.verticalAlignment = 'center';
   area.format.wrapText = true;
-  area.format.rowHeight = 34;
+  area.format.rowHeight = rowHeight;
   const head = sh.getRangeByIndexes(3, 0, 1, headers.length);
   head.format.fill = '#234C78';
   head.format.font = {name: 'Arial', size: 10, bold: true, color: '#FFFFFF'};
@@ -177,17 +178,18 @@ const overview = [
   ['产品 E2E', 'NOT_RUN'], ['发行门禁', 'NOT_RUN'], ['原报告 SHA-256', sha(reportBytes)],
 ];
 sheet('00运行概览', 'TokenMeter 模块检查结果', ['项目', '实际值'], overview, [28, 90]);
-sheet('01逐例结果', '固定 TC 运行结果',
+const caseSheet = sheet('01逐例结果', '固定 TC 运行结果',
   ['TC', '设计标题', '类型', '状态', '步骤数', '清理', '固定测试程序', 'TAP 原件'],
   cases.map(item => [item.case_id, designMap.get(item.case_id).title, 'source_check', item.state,
     item.steps.length, item.cleanup, report.source.test_file, 'raw-test.tap']),
   [27, 38, 18, 16, 14, 16, 52, 25]);
+caseSheet.getRange(`D5:F${4 + cases.length}`).format.horizontalAlignment = 'center';
 sheet('02逐步实测', '逐步预期与实际断言',
   ['TC', '步骤', '固定动作', '预期', '实测', '状态', '原始原件'],
   cases.flatMap(item => item.steps.map(step => [item.case_id, step.step, step.action, step.expected,
     step.actual === null ? '缺失' : JSON.stringify(step.actual), step.actual === null ? 'BLOCKED' : item.state,
     'raw-test.tap'])),
-  [27, 10, 54, 82, 94, 16, 24]);
+  [27, 10, 54, 82, 94, 16, 24], 105);
 sheet('03证据与清理', '原件及清理', ['项目', '路径或状态', 'SHA-256', '字节'], [
   ['固定程序', report.source.test_file, report.source.test_sha256, ''],
   ['固定运行器', report.source.runner, report.source.runner_sha256, ''],
