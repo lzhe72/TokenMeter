@@ -11,6 +11,8 @@
 5. 缺少对应 SOP，或内容有冲突、缺失、不可执行时，先按照 [SOP-000](sop/SOP-000-maintenance.md) 修订规范，再继续原工作。
 6. 明确的用户指令优先；发生冲突时，在本轮执行记录中登记指令及影响，并同步更新规范。
 
+SOP 维护由本项目的「SOP」管理会话（thread ID `01a0f5a5-63f7-76b0-aa53-ac6befec91ef`）统一负责。其他会话需要新增、修改或删除 SOP 时，先通知该会话并提供缺口、依据和受影响流程；依赖修订的步骤待规范同步后继续。详见 [SOP-000](sop/SOP-000-maintenance.md)。
+
 最高规则：**规范驱动文档，文档驱动设计、开发、测试、发布和迭代；每一步都必须有 SOP。**
 
 ## 项目与阅读入口
@@ -29,49 +31,36 @@
 
 ## 必须遵守的完成标准
 
-1. 每项功能先登记需求 ID、可验收行为、E2E 用例、测试用户/数据生成程序、执行 SOP，再写实现。使用 [功能模板](docs/templates/feature.md)。
-2. 功能、测试、数据程序、SOP 同次提交。不能把“测试后补”作为完成状态。
-3. Codex 必须自动编写和执行测试、收集结果、判定门禁；SOP 是可执行操作说明，不能依赖人工勾选“通过”。
-4. 每次产品迭代、修复、预发布、正式发布都执行全部已交付功能 E2E 回归。单元测试、接口测试、截图和构建成功均不能替代产品 E2E。
-5. 测试失败、跳过、零用例、缺少环境/数据/报告、证据与提交或安装包不匹配，全部阻断。不得使用 `continue-on-error`、`|| true`、排除失败用例或反复重试取绿放行。
-6. 修复问题先增加稳定复现用例，再修实现，再执行回归。使用 [修复模板](docs/templates/bugfix.md)。
-7. 不手写通过报告，不伪造厂商日志兼容性，不将合成数据工具的自测宣称为 App E2E。
-8. 文档基线后先按 SOP-009 建立真实 App、服务、数据库初始化和原生测试 target/runner 的工程骨架，不要求预先存在业务红测或产品 PASS。缺 Xcode、GUI 或执行器只阻断依赖它们的构建、运行和验收；可继续有独立验证条件的源码、fixture、测试编写和文档任务。分别记录完成与 BLOCKED，禁止认证旁路或伪造业务结果。生产签名/公证与发布凭据属于 SOP-017/018 前提，不能作为开始开发的前提。
-9. 只有对应 `distribution_profile`（内部或公开）的发布门禁为 `PASS` 才能正式分发安装包、部署服务端或更新 appcast。TM-001 已接入真实原生执行器，当前实现与运行结果以 [docs/status.md](docs/status.md) 为准；迭代通过不替代最终 DMG 安装升级、全平台及受保护发布条件。公开 profile 另要求 Developer ID 与公证；内部 profile 使用 `internal-release.yml` 验证同一最终DMG的两平台完整六例并签发通行证，实际缺证据时仍为BLOCKED。
+1. 在需求阶段先写功能点，再拆具体 TASK，再基于每个 TASK 设计逐条 TC（实际输入、有序动作、逐步预期、DB操作、类型、数据/重置和 SOP）；文档基线后才开发。按已定 TC 执行并逐项记录，不能根据现有代码倒推预期。规则见[任务与用例规范](docs/standards/test-cases.md)，根目录[全部用例](TEST_CASES.md)。功能/测试/数据/规范同轮交付。
+2. 用户2026-09-30明确：Electron + React/TypeScript + Vite/electron-vite；Playwright Electron真实桌面E2E；electron-builder打包。默认在本机完成开发、全量测试和发行，无需完整Xcode。详见[当前设计](docs/architecture/01-electron-local.md)。旧Swift/XCUITest证据仅作历史。
+3. 每次迭代/修复/发布执行目标及此前已交付功能全部E2E。本轮TM-001六个场景组及其细化必测 TC 全部覆盖；最终DMG安装后的正式App贯通UI、IPC、真实服务与隔离SQLite。单元/API/mock/截图不能替代产品E2E。
+4. 失败、跳过、零例、缺环境/报告、重试取绿、证据与提交/包不匹配均阻断。禁止手填通过、认证旁路、删除失败用例、continue-on-error或伪造数据。
+5. 修复先稳定复现，再修实现和完整回归；每步保存真实输出。文档完成、实现完成、产品通过分别记录。
+6. 文档基线后建立真实工程和测试骨架，缺条件仅阻断依赖任务；未来命令标不可执行，不伪装已实现。
+7. 只有本机机器门禁复核原始结果和最终包PASS才发通行证。当前实测范围macOS15 Intel，其他平台未验证；同uid本地证据不宣称第三方不可篡改证明。
+8. 用户授权自动提交与发布：各需求分支先由总控在本地`master`按适用门禁集成，对最终整合树完成必需产品E2E和发布门禁后，由总控统一推送远端`master`；PR只在远端策略要求时使用，不重复索取授权。Git只保存源码/文档/版本追踪；DMG的可见入口统一为仓库根`dmg/<release_id>/`，开发/候选包文件名标记未发布，只有门禁PASS后才放正式原名包；ZIP、原始报告、通行证按版本归档在本机。二进制及归档原件不上传GitHub Release或Git。Actions完整测试仅用户明确要求多环境时启动。2026-10-01已移除远端`master`旧Actions必需检查，保留PR、管理员执行及禁止强推/删除等保护；本机最终候选门禁不因此降低。
+9. 测试不得访问用户生产库、默认凭据、现有App或占用服务；动态独占端口经真实配置UI设置。只终止自己创建的进程、只清理取得所有权的目录。
+
+10. 测试必须是仓库中固化、可按TC编号重复执行的代码。输入、动作、预期和断言在运行前确定；AI只能调用这些代码并分析原始结果，不能以临场操作、看图判断或手填结果代替测试。缺自动化绑定或缺可执行判据为BLOCKED。
 
 ## 当前可执行命令
 
-在仓库根目录执行以下治理检查，Python 3.10+ 无需第三方包；代码签名工具自测还需要 `openssl` 命令：
+先执行治理检查：
 
 ```sh
 python3 scripts/check_docs.py --mode structure
 python3 scripts/check_docs.py --mode baseline
 python3 scripts/quality_gate.py check
 python3 -m unittest discover -s tests/governance -p 'test_*.py'
-python3 scripts/test_data.py generate --run-id demo --seed 42
-python3 scripts/test_data.py reset --run-id demo
 ```
 
-服务端和原生门禁需先按 [SOP-009](sop/SOP-009-environment.md) 在隔离环境安装锁定依赖，再执行 [SOP-013](sop/SOP-013-build-and-check.md) 的基础回归和 [SOP-014](sop/SOP-014-e2e.md) 的原生流程：
-
-```sh
-python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
-python3 -m pytest tests/server -q
-python3 scripts/test_device_credentials.py
-python3 scripts/test_endpoint_configuration.py
-python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
-python3 scripts/quality_gate.py iteration
-python3 scripts/quality_gate.py release  # 公开profile诊断；内部发布按SOP-018的独立工作流
-```
-
-Swift 凭据和地址配置边界检查可在有 Command Line Tools 的本机 macOS 执行，但不能替代原生用例。现有六例原生门禁要求两台 GitHub Mac 各自有完整 Xcode 与已登录桌面；TM-001 第004例的隔离临时签名和更新源在执行 App 的同一台 Mac 上运行，默认回环地址 `http://127.0.0.1:49177/appcast.xml`，无需公网隧道。`127.0.0.1` 始终指正在运行 App 的那台 Mac，远端 runner 不是用户本机。用户本机仅有 Command Line Tools 且 AX 权限未授时不声称本机原生 E2E 通过，也不改系统证书信任/TCC；该状态不替代或阻断远端六例有效结果。缺实际运行条件返回 BLOCKED，不静默修改用户机器。门禁对实际原始结果判定，不能为变绿跳过用例或删除阻断。
-
-编制期间用 `--mode structure` 检查草稿并返回原步骤；SOP-001–007 齐全后经 SOP-008 执行 `--mode baseline` 和质量检查。无参数默认严格基线模式，结构通过不代表基线完成。文档检查、引用检查、自测和造数操作仅检查规范或生成隔离数据。
+服务端使用隔离venv和server/requirements-dev.txt，按SOP-013执行pytest。Electron、打包、安装E2E与本机gate入口以[架构执行合同](docs/architecture/01-electron-local.md)和SOP-009/013/014/017/018为准，计划中的程序完成绑定前保持BLOCKED。不要执行旧CI发布或XCUITest当作当前门禁。
 
 ## 数据与实现约束
 
 - 只读取用户授权的日志目录，不改写其他工具的配置或原始日志。
 - 不保存/上传提示词、回复、代码、API key 或完整本机路径；只保留用量及必要去重元数据。
+- TM-002 已确定使用 macOS 原生目录选择器与 App 强制的读取范围；App 内撤销及系统访问失效不宣称为沙盒持久授权或 TCC 撤销。重启恢复所需可解析目录 locator 的本机保存边界仍待用户决定，决定前不得持久化该信息或将依赖它的验收标为基线。
 - 累计计数、缓存子项、会话分支、子代理及重复同步必须有专门用例；未知值不能用零掩盖。
 - 测试只使用隔离目录与合成账号。不能扫描开发者真实 `~/.codex`、`~/.claude` 生成测试数据。
 - 时间统一存 UTC，团队默认 Asia/Shanghai；费用以价格版本计算，并标注估算。
@@ -80,12 +69,14 @@ Swift 凭据和地址配置边界检查可在有 Command Line Tools 的本机 ma
 
 ## 文档、Git 与交接
 
+- 用户统一查看入口为根目录 `TokenMeter项目总表.xlsx`；测试用例一例一行汇总，每次实际测试单独生成 `TokenMeter测试结果-<run_id>.xlsx`，总表仅登记批次摘要和文件入口。按[总表规范](docs/standards/project-workbook.md)同步需求、任务、用例、版本及稳定ID，总表随Git提交；详细运行结果留本机且不覆盖历史。腾讯在线表格未更新，用户已改为本地Excel。
+
 - 统一编号使用 `vMAJOR.MINOR.PATCH-YYYYMMDDTHHMMSSZ`，在立项时分配 UTC 时间；贯穿版本档案、Changelog 标题、commit、通行证和最终 tag。见 [版本规范](docs/standards/versioning.md)。
 - 分支使用 `codex/<release_id>/<功能名>`，commit 标题带 `[release_id][TM-编号]`；一个可验收功能一个版本，修复升补丁版本。不要把每个中间提交都当作发布。
 - 每次行为、数据、接口、命令改变时，同步相关 docs、用例矩阵和 CHANGELOG.md。架构取舍记录原因。
 - 长任务在 docs/status.md 保留已完成项、未完成项、实际测试命令、结果和阻塞项，便于新会话接续。
 - 完成汇报写清：改了什么、实际执行了什么、结果/证据在哪里、产品 E2E 是否通过、是否具备发布资格。
 - 对测试和质量门禁的改动同样需要回归，不能仅通过修改期望值消除失败。
-- 用户已授权后续工作由 Codex 自行提交、推送、创建 PR，并在适用检查通过后合并；按 SOP-019 核对候选 SHA、检查和远端结果，不再重复索取授权。授权不等于允许跳过产品 E2E 或发布门禁。
+- 用户已授权后续工作由总控在本地`master`整合各需求分支，并在最终整合候选的适用检查通过后统一推送远端`master`；按 SOP-019 核对最终候选 SHA/tree、原始门禁和远端读回，不再重复索取授权。远端若强制PR，遵守保护规则并记录阻断；授权不等于允许跳过产品 E2E 或发布门禁。
 
 文件名使用 `AGENTS.md`。Codex 的目录级指令读取行为见 [官方说明](https://learn.chatgpt.com/docs/agent-configuration/agents-md)。

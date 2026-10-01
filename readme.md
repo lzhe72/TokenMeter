@@ -1,8 +1,18 @@
 # TokenMeter
 
-macOS 团队模型用量监控工具。首版读取 Codex、Claude Code 本地日志，展示 Token、估算费用和团队统计。
+> 2026-09-30当前执行基线：[Electron本机设计](docs/architecture/01-electron-local.md)。Electron/React/TypeScript、Vite/electron-vite、Playwright Electron、electron-builder；本机开发/全量测试/打包，当前仅macOS15 Intel实测范围。Git保存源码/文档/版本；DMG、更新包、报告和通行证只存本地，Actions仅明确多环境要求时启用。旧流程在历史提交与明确标记的历史设计中查询。每项功能真实E2E与发布门禁不变。
 
-**当前正在验收第一个功能 TM-001：账号、登录与最小更新器。SwiftUI App、FastAPI 服务及原生测试程序已建立；实际测试结果见[当前状态](docs/status.md)。产品尚未发布。**
+macOS 团队模型用量监控工具。产品目标是读取 Codex、Claude Code 本地日志，展示 Token、估算费用和团队统计；当前0.1.0交付账号与更新基础，采集和统计按后续功能迭代。
+
+**当前正在验收第一个功能 TM-001：账号、登录与最小更新器。Electron客户端、FastAPI与SQLite服务及本机开发DMG已建立；最新开发包六组E2E为五组PASS、升级004 FAIL，新增精细TC未执行。实际证据见[当前状态](docs/status.md)。产品尚未发布。**
+
+## 项目查看入口
+
+[TokenMeter项目总表.xlsx](TokenMeter项目总表.xlsx)按Sheet查看需求、功能、开发任务、用例汇总（输入、预期、DB操作、类型）、测试批次和发布版本。总表随Git版本维护；每次测试单独生成结果Excel，总表的“06测试批次”记录本机详细报告位置。
+
+- [根目录用例集合](TEST_CASES.md)
+- [当前版本全流程导航](releases/v0.1.0-20260929T074814Z/README.md)
+- [总表维护规范](docs/standards/project-workbook.md)
 
 ## 开发入口
 
@@ -38,15 +48,17 @@ python3 -m venv .local/venv
 .local/venv/bin/python scripts/bootstrap_sqlite.py verify
 ```
 
-在执行原生测试的 Mac 上使用同一已安装依赖的环境运行产品门禁；该 Mac 还需完整 Xcode、登录桌面及隔离的更新签名环境：
+Electron依赖与构建在apps/desktop执行（使用Node24/npm11与锁文件）：
 
 ```sh
-.local/venv/bin/python scripts/quality_gate.py iteration
-.local/venv/bin/python scripts/quality_gate.py release
+npm ci --cache ../../.local/npm-cache
+npm run runtime:install
+npm run build
+npm test
 ```
 
-门禁自动初始化真实测试库、构建 App、逐例执行原生 UI，并复核原始 `xcresult`。缺环境输出 `BLOCKED`，断言失败输出 `FAIL`，均返回非零。完整开发矩阵通过才可验收；v0.1.0 正式发布还需最终签名、公证、完整支持矩阵、隔离的生产 SQLite 验证和受保护流程。测试数据或服务端测试通过不能替代原生验收。
+最终包先按SOP-017用local_package.py在干净候选构建，再按SOP-014/018执行local_gate.py。各脚本`--help`提供真实参数；开发包已联调但升级004失败，精细TC绑定和正式候选门禁仍未完成，实际进展见状态页。quality_gate.py在local_electron配置下必须提供`--package-manifest`和新的`--output`，不允许落回旧XCUITest结果。
 
-当前本机只有 Command Line Tools，可继续开发、运行 SQLite 服务和安装预览 App；在本机运行原生门禁会得到 `BLOCKED`，无需先安装 Xcode 才能推进本版。PR 的 [quality.yml](.github/workflows/quality.yml) 在 GitHub 托管的 macOS 15 Apple Silicon 与 Intel 上选择 Xcode 16.4，针对同一提交自动运行六例真实 App E2E，并上传原始结果。CI 的 `127.0.0.1:49176` 是 runner 自己的隔离服务，不连接本机生产库。远端迭代结果与本机预览分别记录，正式发布仍走最终安装包和发布门禁；详见[测试执行参考](docs/testing/execution.md)与[当前状态](docs/status.md)。
+完整门禁从原DMG安装真实App，贯通UI、IPC、API和SQLite并复核六例原始结果；基础测试不替代E2E。无需完整Xcode，当前验收仅此macOS15 Intel。现有App、生产数据库和49176服务不作为测试资源。
 
-structure 支持逐步编写草稿；baseline 验收完整计划。验收规格、独立清单和用例双向校验。常规 CI 执行 iteration，候选 CI 按完整 SHA 在创建 Tag 前执行 release；远端保护与可信签发仍待接通，详见[发布门禁](docs/standards/release.md)。
+仓库根目录的[dmg安装包目录](dmg/README.md)按版本保存本机安装包。现有v0.1.0文件标记为开发包；门禁通过后，正式DMG原名放在`dmg/<release_id>/`，同目录`release-archive/`保存原包与报告/通行证归档。DMG和原始证据不提交Git，Git保存代码、文档和版本。工作流默认无push/PR触发；多环境测试需要用户明确要求后建立矩阵。安装说明见[本地安装](docs/releases/02-installation.md)，每功能test case见[详细用例](docs/testing/cases/README.md)。

@@ -4,6 +4,8 @@
 
 | 要做的事 | 阅读入口 |
 | --- | --- |
+| 统一查看项目全流程 | [项目总表Excel](../TokenMeter项目总表.xlsx)、[版本导航](../releases/v0.1.0-20260929T074814Z/README.md) |
+| 查看所有用例集合 | [根目录TEST_CASES](../TEST_CASES.md)、[任务与用例规范](standards/test-cases.md) |
 | 确定文档规范 | [文档标准](standards/documentation.md)、[元数据登记](catalog.json) |
 | 定义和执行任一步骤 | [SOP 总索引](../sop/README.md)：先查工作，再完整读独立文件 |
 | 理解全流程顺序 | [全流程框架](lifecycle.md) |
@@ -15,8 +17,8 @@
 | 查看或初始化 SQLite 库、执行造数 SQL | [数据库目录与操作](../database/README.md)、[测试数据 SOP](../sop/SOP-010-test-data.md) |
 | 开发或修复功能 | [开发流程](standards/development.md)、[功能模板](templates/feature.md)、[修复模板](templates/bugfix.md) |
 | 按功能查测试用例、步骤与独立预期 | [详细用例总索引](testing/cases/README.md) |
-| 验证最终内部安装包 | [v0.1.0内部发布设计](releases/01-internal-v0.1.0.md)、[安装与本机服务](releases/02-installation.md) |
-| 编写/运行 E2E | [测试策略](testing/strategy.md)、[原生 E2E SOP](../sop/SOP-014-e2e.md)、[数据集登记](../tests/datasets.json) |
+| 验证最终内部安装包 | [Electron 本机设计](architecture/01-electron-local.md)、[本版发布预案](../releases/v0.1.0-20260929T074814Z/05-release-plan.md)、[安装与本机服务](releases/02-installation.md) |
+| 编写/运行 E2E | [测试策略](testing/strategy.md)、[产品 E2E SOP](../sop/SOP-014-e2e.md)、[数据集登记](../tests/datasets.json) |
 | 判定能否发布 | [发布门禁](standards/release.md) |
 | 安排版本 | [路线图](roadmap.md)、[变更日志](../CHANGELOG.md) |
 | 按版本追踪需求到发布 | [版本命名与索引](standards/versioning.md)、[当前版本档案](../releases/current.json) |

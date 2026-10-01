@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.1.0-20260929T074814Z",
+  "parent_id": "TC-TM001-UPDATE-05",
+  "variants": [
+    {"id":"TC-TM001-UPDATE-05#BYTES","parent_id":"TC-TM001-UPDATE-05","step_numbers":[1,5],"input_ref":"合法已签ZIP、清单bytes加一","expected_ref":"update_integrity_failed；原App、进程和数据库不变","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#SHA","parent_id":"TC-TM001-UPDATE-05","step_numbers":[1,5],"input_ref":"合法已签ZIP、清单SHA单字符不符","expected_ref":"update_integrity_failed；原App、进程和数据库不变","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#TRUNCATED","parent_id":"TC-TM001-UPDATE-05","step_numbers":[1,5],"input_ref":"合法已签ZIP只传前半段，清单仍登记原大小和摘要","expected_ref":"update_integrity_failed；原App、进程和数据库不变","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#ZIP_LIMIT_METADATA","parent_id":"TC-TM001-UPDATE-05","step_numbers":[1,5],"input_ref":"更新清单bytes=536870913","expected_ref":"检查阶段update_metadata_invalid、零ZIP下载及零交接","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#ZIP_LIMIT_HEADER","parent_id":"TC-TM001-UPDATE-05","step_numbers":[1,5],"input_ref":"清单合法，但ZIP响应Content-Length=536870913","expected_ref":"下载前update_integrity_failed、零ZIP正文及零交接","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#UNPACK_LIMIT","parent_id":"TC-TM001-UPDATE-05","step_numbers":[1,5],"input_ref":"合法Ed签名ZIP中央目录声明解压2147483649字节","expected_ref":"ZIP枚举时update_bundle_invalid、零交接","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#INFO_VERSION","parent_id":"TC-TM001-UPDATE-05","step_numbers":[2,5],"input_ref":"合法已签101包，元数据版本改为0.1.2","expected_ref":"内部Info版本不一致导致update_bundle_invalid","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#INFO_BUILD","parent_id":"TC-TM001-UPDATE-05","step_numbers":[2,5],"input_ref":"合法已签101包，元数据build改为102","expected_ref":"内部Info build不一致导致update_bundle_invalid","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#BUNDLE_ID","parent_id":"TC-TM001-UPDATE-05","step_numbers":[3,5],"input_ref":"同证书重新签名、错误bundle ID完整App ZIP，再以固定Ed密钥签ZIP","expected_ref":"通过Ed和ZIP检查，Info bundle ID触发update_bundle_invalid","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#PATH_ESCAPE","parent_id":"TC-TM001-UPDATE-05","step_numbers":[4,5],"input_ref":"合法Ed签名ZIP含TokenMeter.app/../../路径","expected_ref":"解包前update_bundle_invalid、外部哨兵不变","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#SYMLINK_PARENT","parent_id":"TC-TM001-UPDATE-05","step_numbers":[4,5],"input_ref":"合法Ed签名ZIP含符号链接目录和其子文件","expected_ref":"解包前update_bundle_invalid、外部哨兵不变","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#CERT_MISMATCH","parent_id":"TC-TM001-UPDATE-05","step_numbers":[3,5],"input_ref":"同bundle ID、同版本但第二临时自签代码证书的完整有效App，以固定Ed密钥签ZIP","expected_ref":"Ed和自身codesign通过、候选DR拒绝，UI显示update_bundle_invalid，原App不变","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"},
+    {"id":"TC-TM001-UPDATE-05#DR_MISMATCH","parent_id":"TC-TM001-UPDATE-05","step_numbers":[3,5],"input_ref":"Info和证书均匹配、CodeDirectory identifier不同的完整有效App，以固定Ed密钥签ZIP","expected_ref":"Ed和自身codesign通过、候选DR拒绝，UI显示update_bundle_invalid，原App不变","fixture_kind":"D-UPDATE-VALIDATION","binding_status":"bound"}
+  ]
+}

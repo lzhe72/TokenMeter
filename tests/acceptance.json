@@ -6,7 +6,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "有效账号可登录；首次改密生效；默认自动登录经 /v1/me 恢复，关闭后仅内存会话且重启回登录；退出后的凭据不能继续访问",
+      "criterion": "有效账号可登录；首次改密生效；默认自动登录经 /v1/me 恢复，关闭后仅内存会话且重启回登录；退出后的凭据不能继续访问；登录与自动登录15秒超时可重试，迟到响应不覆盖新操作；异常凭据拒绝读取并提示重新登录",
       "data_requirements": [
         "account_roles",
         "forced_password_change",
@@ -18,7 +18,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "成员只能查看本人身份且不能调用管理员账号管理；停用账号不能登录，UI 显示对应错误",
+      "criterion": "成员只能查看本人身份且不能调用管理员账号管理；停用账号不能登录，UI 显示对应错误；账号忽略大小写且拒绝空白；账号或来源5分钟内连续5次失败后限流，窗口结束恢复",
       "data_requirements": [
         "account_roles",
         "forced_password_change",
@@ -42,7 +42,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "最小更新器随首个产品版本交付；默认更新源为本机 http://127.0.0.1:49177/appcast.xml，管理页可配置并保留手动覆盖；仅回环允许 HTTP、非回环必须 HTTPS，非法 URL 被拒绝；无效签名拒绝并保留原版，有效包经 Sparkle 安装重启且自动登录经服务确认恢复账号状态",
+      "criterion": "最小更新器随首个产品版本交付；默认更新源为本机 http://127.0.0.1:49177/version.json，管理页可配置并保留手动覆盖；仅回环允许 HTTP、非回环必须 HTTPS，非法 URL 被拒绝；无效签名拒绝并保留原版，有效包经Ed25519及App签名校验、Electron原生更新器安装重启且自动登录经服务确认恢复账号状态；ZIP最大512 MiB、解压最大2 GiB，校验失败保留当前版本",
       "data_requirements": [
         "valid_eddsa",
         "invalid_eddsa",

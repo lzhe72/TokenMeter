@@ -103,6 +103,17 @@ class GateTests(unittest.TestCase):
                                      automated_test="tests/product_case.py", native_test="ProductUITests/FirstFeatureTests/testBehavior")
         return feature, feature["cases"][0]
 
+    def test_electron_binding_uses_real_case_identity(self):
+        feature, case = self.activate_first()
+        case.pop("native_test")
+        case.update(engine="playwright_electron", test_identity=case["id"])
+        self.assertEqual(self.errors(), [])
+        case["test_identity"] = "E2E-TM001-999"
+        self.assertTrue(any("test_identity" in error for error in self.errors()))
+        case["test_identity"] = case["id"]
+        case["engine"] = "unknown"
+        self.assertTrue(any("engine" in error for error in self.errors()))
+
     def test_planned_manifest_passes_traceability_only_with_correct_counts(self):
         errors, counts = gate.validate_manifest(self.root)
         self.assertEqual(errors, [])

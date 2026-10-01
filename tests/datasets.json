@@ -139,11 +139,11 @@
     },
     {
       "id": "tm001_update_packages",
-      "description": "TM-001候选到受控高版本升级；程序生成临时EdDSA密钥及有效/无效签名包；本版要求执行Mac固定49177回环源，源码改造与真实E2E结果分别记录，不能因生成器存在就称新行为通过。",
+      "description": "固定签名候选与受控101 ZIP、同机动态回环version.json四阶段源；数据程序存在不等于真实App升级已通过。密钥只由本机打包读取，测试源仅处理已签名包。",
       "status": "available",
-      "generator": "tests/e2e/update_source.py",
+      "generator": "scripts/local_e2e.py",
       "capabilities": [
-        "https_feed",
+        "loopback_feed",
         "valid_eddsa",
         "invalid_eddsa",
         "candidate_upgrade"

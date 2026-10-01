@@ -1,88 +1,18 @@
-name: TokenMeter release candidate
+name: TokenMeter manual environment request
 
 on:
   workflow_dispatch:
-    inputs:
-      candidate_sha:
-        description: Full 40-character candidate commit SHA to validate before creating a Tag
-        required: true
-        type: string
 
 permissions:
   contents: read
 
 jobs:
-  candidate:
-    # Diagnostic candidate run; final supported matrix remains a release requirement.
-    runs-on: macos-15
-    timeout-minutes: 60
-    # The environment's remote protection must be configured and verified separately.
-    environment: release-validation
-    env:
-      TM_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
-      TM_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+  explicit-environment-required:
+    runs-on: ubuntu-latest
     steps:
-      - name: Require default-branch dispatch and exact branch commit before checkout
-        shell: bash
+      - name: Explain current local execution policy
         run: |
-          test "$GITHUB_EVENT_NAME" = workflow_dispatch
-          test "$GITHUB_REF" = "refs/heads/$TM_DEFAULT_BRANCH"
-          [[ "$TM_CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.candidate_sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - name: Validate candidate identity before running checks
-        run: >-
-          python3 scripts/candidate_gate.py
-          --candidate-sha "$TM_CANDIDATE_SHA"
-          --event "$GITHUB_EVENT_NAME"
-          --workflow-ref "$GITHUB_REF"
-          --default-branch "$TM_DEFAULT_BRANCH"
-          --dispatch-sha "$GITHUB_SHA"
-      - name: Select the documented native toolchain
-        run: sudo xcode-select --switch /Applications/Xcode_16.4.app/Contents/Developer
-      - name: Install locked service and test dependencies
-        run: |
-          python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt
-      - name: Install pinned HTTPS test tunnel
-        shell: bash
-        run: |
-          set -euo pipefail
-          case "$(uname -m)" in
-            arm64) archive=cloudflared-darwin-arm64.tgz; digest=587c2cfb1c230fe36c7fa7727da78be459dae028cabe8c001291999350f07095 ;;
-            x86_64) archive=cloudflared-darwin-amd64.tgz; digest=d1155d0837487f261183b15c1eab6c4ebcad9dc49b94675f1524c3564cea3977 ;;
-            *) exit 2 ;;
-          esac
-          mkdir -p "$RUNNER_TEMP/tokenmeter-tools"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/$archive" \
-            "https://github.com/cloudflare/cloudflared/releases/download/2026.9.3/$archive"
-          printf '%s  %s\n' "$digest" "$RUNNER_TEMP/$archive" | shasum -a 256 --check
-          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/tokenmeter-tools"
-          test -x "$RUNNER_TEMP/tokenmeter-tools/cloudflared"
-          echo "$RUNNER_TEMP/tokenmeter-tools" >> "$GITHUB_PATH"
-      - name: Validate baseline and test governance tooling
-        run: |
-          python3 scripts/check_docs.py --mode baseline
-          python3 scripts/quality_gate.py check
-          python3 -m unittest discover -s tests/governance -p 'test_*.py' -v
-          python3 -m pytest tests/server -q
-          python3 -m unittest discover -s apps/macos/tests -p 'test_*.py' -v
-      - name: Execute release gate before Tag creation
-        # Final signing/notarization, full supported matrix and protected issuance remain BLOCKED.
-        run: python3 scripts/quality_gate.py release
-      - name: Retain actual candidate evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: candidate-${{ inputs.candidate_sha }}-${{ github.run_attempt }}
-          path: .local/e2e/
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 90
-    # No Tag, Release, passport issuance, upload credentials, or deployment in this workflow.
+          echo "BLOCKED: TokenMeter builds, tests and archives DMG locally."
+          echo "Multi-environment execution needs a separately defined and tested matrix."
+          echo "See docs/architecture/01-electron-local.md and SOP-014. No release assets are uploaded."
+          exit 2

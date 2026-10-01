@@ -86,46 +86,16 @@ class CandidateGateTests(unittest.TestCase):
         self.assertEqual("candidate_context_only", result["scope"])
         self.assertFalse(result["release_eligible"])
 
-    def test_workflows_validate_before_tag(self):
-        regular = (REPO / ".github/workflows/quality.yml").read_text()
-        self.assertNotIn("tags:", regular)
-        self.assertIn("python3 scripts/quality_gate.py iteration", regular)
-        dispatch = (REPO / ".github/workflows/release-candidate.yml").read_text()
-        self.assertIn("workflow_dispatch:", dispatch)
-        self.assertIn("environment: release-validation", dispatch)
-        self.assertIn("ref: ${{ inputs.candidate_sha }}", dispatch)
-        self.assertIn('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"', dispatch)
-        self.assertLess(dispatch.index('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"'),
-                        dispatch.index("actions/checkout@v4"))
-        self.assertIn('--dispatch-sha "$GITHUB_SHA"', dispatch)
-        self.assertIn("python3 scripts/quality_gate.py release", dispatch)
-        self.assertLess(dispatch.index("scripts/candidate_gate.py"), dispatch.index("scripts/quality_gate.py release"))
-        self.assertNotIn("contents: write", dispatch)
-        self.assertNotIn("continue-on-error:", dispatch)
-
-    def test_environment_diagnostic_cannot_replace_pr_gate_or_package(self):
-        workflow = (REPO / ".github/workflows/quality.yml").read_text()
-        self.assertIn("environment_probe_only:", workflow)
-        self.assertIn("type: boolean\n        required: false\n        default: false", workflow)
-        product_condition = "github.event_name != 'workflow_dispatch' || inputs.environment_probe_only != true"
-        diagnostic_condition = "github.event_name == 'workflow_dispatch' && inputs.environment_probe_only == true"
-        steps = workflow.split("      - name: ")
-        product = next(step for step in steps if step.startswith("Execute product gate\n"))
-        diagnostic = next(step for step in steps if step.startswith("Diagnose isolated environment only\n"))
-        self.assertIn("if: ${{ " + product_condition + " }}", product)
-        self.assertIn("python3 scripts/quality_gate.py iteration", product)
-        self.assertIn("if: ${{ " + diagnostic_condition + " }}", diagnostic)
-        self.assertIn("python3 scripts/native_environment.py", diagnostic)
-        self.assertNotIn("quality_gate.py", diagnostic)
-        # Test builds now contain a runner-owned credential directory and cannot
-        # be repackaged as an installable local preview on another machine.
-        self.assertNotIn("package_preview_dmg.py", workflow)
-        self.assertIn("python3 scripts/test_device_credentials.py", workflow)
-        # Distinct check and artifact identities prevent READY being mistaken for product PASS.
-        distinct_name = diagnostic_condition + " && 'environment-diagnostic' || 'product-e2e'"
-        self.assertEqual(2, workflow.count(distinct_name))
-        self.assertIn("runner: [macos-15, macos-15-intel]", workflow)
-        self.assertNotIn("continue-on-error:", workflow)
+    def test_retired_ci_cannot_create_tags_or_publish_assets(self):
+        for filename in ("quality.yml", "release-candidate.yml", "internal-release.yml"):
+            workflow = (REPO / ".github/workflows" / filename).read_text()
+            self.assertIn("workflow_dispatch:", workflow)
+            self.assertIn("BLOCKED:", workflow)
+            self.assertIn("exit 2", workflow)
+            self.assertNotIn("contents: write", workflow)
+            self.assertNotIn("upload-artifact", workflow)
+            self.assertNotIn("internal_publish.py", workflow)
+            self.assertNotIn("continue-on-error:", workflow)
 
 
 if __name__ == "__main__":

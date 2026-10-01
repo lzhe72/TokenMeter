@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Serve an already released, hash-verified candidate on this Mac's loopback.
 
-The operator must obtain these assets from the protected GitHub Release. This
-loader validates their binding; it does not issue or authenticate a passport.
+Input is a completed local version directory created by local_release.py.
+This loader checks candidate bytes and passport binding. It does not issue a
+passport or claim same-uid local files provide independent authentication.
 """
 import argparse
 import base64
@@ -11,7 +12,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import re
-from xml.sax.saxutils import escape
 
 
 def digest(path):
@@ -23,6 +23,7 @@ def digest(path):
 
 
 def safe_file(root, relative):
+    if not isinstance(relative,str):raise ValueError('Invalid release asset path')
     path = root / relative
     if (not isinstance(relative, str) or not relative or Path(relative).is_absolute()
             or '..' in Path(relative).parts or any(p.is_symlink() for p in (path, *path.parents))
@@ -32,13 +33,20 @@ def safe_file(root, relative):
 
 
 def load_release(root):
-    root = Path(root).resolve()
-    manifest_path = safe_file(root, 'package-manifest.json')
+    root = Path(root).absolute()
+    if any(p.is_symlink() for p in (root,*root.parents)) or (root/'INCOMPLETE.json').exists():
+        raise ValueError('Incomplete or unsafe local archive')
+    index=json.loads(safe_file(root,'release-index.json').read_text())
+    manifest_path = safe_file(root, 'package/package-manifest.json')
     manifest = json.loads(manifest_path.read_text())
     rid = manifest.get('release_id', '')
     if not re.fullmatch(r'v\d+\.\d+\.\d+-\d{8}T\d{6}Z', rid):
         raise ValueError('Invalid release ID')
-    passport = json.loads(safe_file(root, rid+'.passport.json').read_text())
+    passport = json.loads(safe_file(root, 'evidence/'+rid+'.passport.json').read_text())
+    if (index.get('state')!='PASS' or index.get('release_id')!=rid or index.get('candidate_sha')!=manifest.get('candidate_sha') or index.get('github_release') is not False
+        or manifest.get('schema_version')!=2 or manifest.get('scope')!='final_package'
+        or passport.get('schema_version')!=2 or passport.get('storage')!='local_only' or passport.get('github_release') is not False):
+        raise ValueError('Not a completed local Electron release')
     if (passport.get('state') != 'PASS' or passport.get('release_eligible') is not True
             or manifest.get('distribution_profile') != 'internal'
             or passport.get('distribution_profile') != 'internal'
@@ -48,7 +56,7 @@ def load_release(root):
             or passport.get('package_manifest_sha256') != digest(manifest_path)):
         raise ValueError('Release passport does not bind this internal candidate')
     artifact = manifest['artifacts']['candidate_zip']
-    archive = safe_file(root, artifact['path'])
+    archive = safe_file(root/'package', artifact['path'])
     if digest(archive) != artifact['sha256'] or archive.stat().st_size != artifact['bytes']:
         raise ValueError('Candidate zip differs from the tested release')
     signature = manifest['signatures']['candidate_ed_signature']
@@ -60,31 +68,27 @@ def load_release(root):
     return {'manifest': manifest, 'archive': archive.read_bytes(), 'signature': signature}
 
 
-def routes_for(bundle):
-    manifest, payload, signature = bundle['manifest'], bundle['archive'], bundle['signature']
-    app = manifest['app']
-    feed = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">'
-        '<channel><title>TokenMeter internal updates</title><item>'
-        f'<title>{escape(manifest["release_id"])}</title>'
-        f'<sparkle:version>{escape(app["build"])}</sparkle:version>'
-        f'<sparkle:shortVersionString>{escape(app["version"])}</sparkle:shortVersionString>'
-        f'<sparkle:minimumSystemVersion>{escape(app["minimum_macos"])}</sparkle:minimumSystemVersion>'
-        f'<enclosure url="http://127.0.0.1:49177/candidate.zip" sparkle:edSignature="{signature}" '
-        f'length="{len(payload)}" type="application/octet-stream" />'
-        '</item></channel></rss>\n').encode()
-    return {'/appcast.xml': ('application/xml', feed),
-            '/candidate.zip': ('application/octet-stream', payload),
-            '/healthz': ('application/json', json.dumps({'release_id': manifest['release_id'],
-                'candidate_sha': manifest['candidate_sha'], 'build': app['build']}).encode())}
+def routes_for(bundle, port=49177):
+    if type(port) is not int or not 1024<=port<=65535:
+        raise ValueError('Invalid loopback server port')
+    manifest,payload,signature=bundle['manifest'],bundle['archive'],bundle['signature']
+    app=manifest['app']
+    metadata={'schema_version':1,'version':app['version'],'build':app['build'],
+              'url':f'http://127.0.0.1:{port}/candidate.zip','sha256':hashlib.sha256(payload).hexdigest(),
+              'bytes':len(payload),'ed25519_signature':signature}
+    return {'/version.json':('application/json',json.dumps(metadata).encode()),
+            '/candidate.zip':('application/octet-stream',payload),
+            '/healthz':('application/json',json.dumps({'release_id':manifest['release_id'],
+                'candidate_sha':manifest['candidate_sha'],'build':app['build']}).encode())}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--release-dir', type=Path, required=True)
+    parser.add_argument('--port',type=int,default=49177)
     args = parser.parse_args()
     try:
-        routes = routes_for(load_release(args.release_dir))
+        routes = routes_for(load_release(args.release_dir),args.port)
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
                 route = routes.get(self.path)
@@ -100,8 +104,8 @@ def main():
                 self.wfile.write(body)
             def log_message(self, *_args):
                 pass
-        with ThreadingHTTPServer(('127.0.0.1', 49177), Handler) as server:
-            print('TokenMeter updates: http://127.0.0.1:49177/appcast.xml', flush=True)
+        with ThreadingHTTPServer(('127.0.0.1', args.port), Handler) as server:
+            print(f'TokenMeter updates: http://127.0.0.1:{args.port}/version.json', flush=True)
             try:
                 server.serve_forever()
             except KeyboardInterrupt:

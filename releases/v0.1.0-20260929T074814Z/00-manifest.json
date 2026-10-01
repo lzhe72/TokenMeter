@@ -175,9 +175,636 @@
       "task": "TASK-TM001-REVIEW",
       "test": "TEST-TM001-GOVERNANCE",
       "description": "TM-001完整开发与验收追踪"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-AUTH",
+      "test": "TC-TM001-LOGIN-01",
+      "description": "有效预置成员首次登录"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-AUTH",
+      "test": "TC-TM001-LOGIN-02",
+      "description": "未知账号与已有账号的正确密码"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-AUTH",
+      "test": "TC-TM001-LOGIN-03",
+      "description": "正确账号与错误密码"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-AUTH",
+      "test": "TC-TM001-LOGIN-04",
+      "description": "账号和密码同时错误"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-05",
+      "description": "用户名为空"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-06",
+      "description": "密码为空"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-07",
+      "description": "账号和密码均为空"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-AUTH",
+      "test": "TC-TM001-LOGIN-08",
+      "description": "停用账号输入正确密码"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-09",
+      "description": "长度合法的单字符错误密码"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-SESSION",
+      "test": "TC-TM001-LOGIN-10",
+      "description": "已改密成员正常登录"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-SESSION",
+      "test": "TC-TM001-LOGIN-11",
+      "description": "管理员首次登录的权限限制与正常登录"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-SESSION",
+      "test": "TC-TM001-LOGIN-12",
+      "description": "成员不能因登录请求或界面操作获得管理员权限"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-SESSION",
+      "test": "TC-TM001-LOGIN-13",
+      "description": "连接在认证前失败及恢复"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-SESSION",
+      "test": "TC-TM001-LOGIN-14",
+      "description": "服务故障响应不能当作登录成功"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-SESSION",
+      "test": "TC-TM001-LOGIN-15",
+      "description": "请求超时与再次操作"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-RATE",
+      "test": "TC-TM001-LOGIN-16",
+      "description": "连续错误尝试的限制与恢复"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-17",
+      "description": "用户名长度越界"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-18",
+      "description": "用户名字符非法"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-19",
+      "description": "合法用户名最短、最长及允许字符"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-20",
+      "description": "正确的128字符密码可登录"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-21",
+      "description": "129字符登录密码拒绝且不得截断认证"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-LOGIN-VALIDATION",
+      "test": "TC-TM001-LOGIN-22",
+      "description": "大小写及首尾空白的归一规则"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-01",
+      "description": "当前密码错误"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-02",
+      "description": "两次新密码不一致"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-03",
+      "description": "新密码只有11字符"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-04",
+      "description": "新密码等于当前密码"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-05",
+      "description": "改密成功并撤销全部旧会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-06",
+      "description": "恰好12字符的新密码"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-07",
+      "description": "恰好128字符的新密码"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-08",
+      "description": "129字符的新密码"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-09",
+      "description": "改密表单必填字段"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-10",
+      "description": "改密请求发送前断网"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CHANGE-PASSWORD",
+      "test": "TC-TM001-PASSWORD-11",
+      "description": "当前密码上界与越界"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-PERSIST",
+      "test": "TC-TM001-SESSION-01",
+      "description": "默认开启并安全保存当前会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-PERSIST",
+      "test": "TC-TM001-SESSION-02",
+      "description": "凭据保存失败不能显示登录成功"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-RESTORE",
+      "test": "TC-TM001-SESSION-03",
+      "description": "重启必须等待真实服务确认"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-RESTORE",
+      "test": "TC-TM001-SESSION-04",
+      "description": "离线或超时不得沿用缓存身份"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-RESTORE",
+      "test": "TC-TM001-SESSION-05",
+      "description": "已失效的持久会话被拒绝并清理"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-MEMORY",
+      "test": "TC-TM001-SESSION-06",
+      "description": "关闭自动登录仅保留内存会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-EXPIRY",
+      "test": "TC-TM001-SESSION-07",
+      "description": "固定30天有效期与精确到期边界"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-LOGOUT",
+      "test": "TC-TM001-SESSION-08",
+      "description": "在线退出撤销当前会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CONFIG-LOCKS",
+      "test": "TC-TM001-SESSION-09",
+      "description": "离线退出待确认与重试"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-LOGOUT",
+      "test": "TC-TM001-SESSION-09",
+      "description": "离线退出待确认与重试"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-SESSION-PERSIST",
+      "test": "TC-TM001-SESSION-10",
+      "description": "拒绝非受保护凭据对象"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-ADMIN-RESET",
+      "test": "TC-TM001-ADMIN-01",
+      "description": "重置成员密码并撤销全部旧会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-ADMIN-RESET",
+      "test": "TC-TM001-ADMIN-02",
+      "description": "无效重置输入不能修改账号"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-ADMIN-STATUS",
+      "test": "TC-TM001-ADMIN-03",
+      "description": "停用成员立即拒绝登录及旧会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-ADMIN-STATUS",
+      "test": "TC-TM001-ADMIN-04",
+      "description": "启用不复活已撤销会话"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-ADMIN-GUARD",
+      "test": "TC-TM001-ADMIN-05",
+      "description": "自停用与最后活动管理员保护"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-ADMIN-AUDIT",
+      "test": "TC-TM001-ADMIN-06",
+      "description": "审计展示正确对象且不泄露敏感值"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-BOOTSTRAP-INIT",
+      "test": "TC-TM001-BOOTSTRAP-01",
+      "description": "空库只预置管理员，生成SQL可检查"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-BOOTSTRAP-INIT",
+      "test": "TC-TM001-BOOTSTRAP-02",
+      "description": "首登强制改密与管理权限切换"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-BOOTSTRAP-PRESERVE",
+      "test": "TC-TM001-BOOTSTRAP-03",
+      "description": "重启或重复首建不覆盖已有数据"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-BOOTSTRAP-RESTORE",
+      "test": "TC-TM001-BOOTSTRAP-04",
+      "description": "从真实备份恢复并由App使用恢复库"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CONFIG-API",
+      "test": "TC-TM001-CONFIG-01",
+      "description": "首次默认值与无凭据访问边界"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CONFIG-API",
+      "test": "TC-TM001-CONFIG-02",
+      "description": "API URL校验与规范化"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CONFIG-API",
+      "test": "TC-TM001-CONFIG-03",
+      "description": "两套服务、密码与持久会话互不混用"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CONFIG-UPDATE",
+      "test": "TC-TM001-CONFIG-04",
+      "description": "更新地址边界及固定公钥"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CONFIG-UPDATE",
+      "test": "TC-TM001-CONFIG-05",
+      "description": "成对校验、取消、持久化及恢复默认"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CONFIG-LOCKS",
+      "test": "TC-TM001-CONFIG-06",
+      "description": "登录、待退出和更新进行中的配置锁定"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE-DISCOVER",
+      "test": "TC-TM001-UPDATE-01",
+      "description": "自动发现与确认安装分离"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE-VERIFY",
+      "test": "TC-TM001-UPDATE-02",
+      "description": "非回环HTTP下载URL在请求前拒绝"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE-VERIFY",
+      "test": "TC-TM001-UPDATE-03",
+      "description": "非法重定向在跟随前拒绝"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE-VERIFY",
+      "test": "TC-TM001-UPDATE-04",
+      "description": "坏Ed25519签名拒绝原生交接"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE-VERIFY",
+      "test": "TC-TM001-UPDATE-05",
+      "description": "元数据、ZIP与签名App身份全部匹配"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE-INSTALL",
+      "test": "TC-TM001-UPDATE-06",
+      "description": "有效包由Squirrel替换并自主重启"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE-INSTALL",
+      "test": "TC-TM001-UPDATE-07",
+      "description": "升级保留profile、用户覆盖及服务确认身份"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UPDATE-ISOLATION",
+      "test": "TC-TM001-UPDATE-08",
+      "description": "同机源和ShipIt状态有归属才运行/清理"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UI-CONSISTENCY",
+      "test": "TC-TM001-UI-01",
+      "description": "最小窗口和深浅色布局"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UI-CONSISTENCY",
+      "test": "TC-TM001-UI-02",
+      "description": "配置弹窗键盘和焦点"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-UI-CONSISTENCY",
+      "test": "TC-TM001-UI-03",
+      "description": "安装包图标与窗口一致"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CASE-CATALOG",
+      "test": "TC-TM001-CATALOG-01",
+      "description": "完整字段和唯一编号"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CASE-CATALOG",
+      "test": "TC-TM001-CATALOG-02",
+      "description": "重复编号与缺字段拒绝"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CASE-CATALOG",
+      "test": "TC-TM001-CATALOG-03",
+      "description": "总表与源清单保持一致"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CASE-RECORDS",
+      "test": "TC-TM001-RECORDS-01",
+      "description": "逐TC逐步采集成功结果"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CASE-RECORDS",
+      "test": "TC-TM001-RECORDS-02",
+      "description": "失败与未执行步骤分别记录"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CASE-GATE",
+      "test": "TC-TM001-GATE-01",
+      "description": "必测TC精确集合验证"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CASE-GATE",
+      "test": "TC-TM001-GATE-02",
+      "description": "计划未完成不得签发"
+    },
+    {
+      "requirement": "REQ-TM001",
+      "feature": "TM-001",
+      "task": "TASK-TM001-CASE-GATE",
+      "test": "TC-TM001-GATE-03",
+      "description": "同一候选完整证据的有效路径"
     }
   ],
   "test_programs": [
+    "tests/server/test_auth.py",
+    "tests/server/test_database.py",
+    "tests/server/test_bootstrap_sqlite.py",
+    "tests/server/test_network.py",
+    "apps/desktop/e2e/tm001.spec.ts",
+    "apps/desktop/e2e/playwright.config.ts",
+    "apps/desktop/e2e/granular-login.spec.ts",
+    "apps/desktop/e2e/granular-account.spec.ts",
+    "apps/desktop/e2e/granular-config.spec.ts",
+    "apps/desktop/e2e/granular-update.spec.ts",
+    "apps/desktop/e2e/granular-update-validation.spec.ts",
+    "apps/desktop/e2e/granular-auxiliary.spec.ts",
+    "apps/desktop/tests/security.test.ts",
+    "apps/desktop/tests/updater.test.ts",
+    "scripts/local_package.py",
+    "scripts/local_e2e.py",
+    "scripts/granular_e2e.py",
+    "scripts/granular_auxiliary.py",
+    "scripts/audit_granular_evidence.py",
+    "scripts/granular_gate.py",
+    "scripts/check_granular_bindings.py",
+    "scripts/granular_test_result.py",
+    "scripts/local_gate.py",
+    "scripts/local_release.py",
+    "scripts/local_distribution.py",
+    "tests/governance/test_local_gate.py",
+    "tests/governance/test_local_package.py",
+    "tests/governance/test_local_release.py",
+    "tests/governance/test_local_distribution.py",
+    "tests/governance/test_local_execution_policy.py",
+    "tests/governance/test_local_e2e.py",
+    "apps/desktop/tests/discovery.test.ts",
+    "apps/desktop/tests/visual_fixture.py",
+    "apps/desktop/tests/hig.visual.cjs",
+    "tests/governance/test_release_registry.py",
+    "tests/governance/test_test_case_catalog.py"
+  ],
+  "test_data_program": "tests/server/fixtures.py",
+  "test_sop": "sop/SOP-014-e2e.md",
+  "gate_commands": {
+    "metadata": "python3 scripts/quality_gate.py check",
+    "iteration": ".local/venv-tm001/bin/python scripts/quality_gate.py iteration --package-manifest <candidate/package-manifest.json> --output <new-gate-directory>",
+    "release": ".local/venv-tm001/bin/python scripts/quality_gate.py release --package-manifest <candidate/package-manifest.json> --output <new-gate-directory>",
+    "documentation": "python3 scripts/check_docs.py --mode baseline",
+    "documentation_structure": "python3 scripts/check_docs.py --mode structure"
+  },
+  "publication": {
+    "planned_git_tag": "v0.1.0-20260929T074814Z",
+    "expected_passport_asset": "v0.1.0-20260929T074814Z.passport.json",
+    "passport_policy": "issued_locally_after_verified_final_package_e2e",
+    "state": "not_published",
+    "asset_storage": "local_only",
+    "github_release": false
+  },
+  "lookup_command": "python3 scripts/release_registry.py show --release-id v0.1.0-20260929T074814Z",
+  "sop_index": "sop/README.md",
+  "document_catalog": "docs/catalog.json",
+  "program_bindings_status": "ready",
+  "distribution_profile": "internal",
+  "test_case_index": "docs/testing/cases/README.md",
+  "test_case_documents": [
+    "docs/testing/cases/01-TM-001-accounts.md",
+    "docs/testing/cases/01a-TM-001-login-scenarios.md",
+    "docs/testing/cases/01b-TM-001-session-admin-release-scenarios.md",
+    "docs/testing/cases/01c-TM-001-delivery-checks.md"
+  ],
+  "internal_release_design": "docs/architecture/01-electron-local.md",
+  "internal_release_configuration": "releases/v0.1.0-20260929T074814Z/local-release.json",
+  "release_workflow": null,
+  "retrospective": "docs/retrospectives/2026-09-29--2026-09-30-tokenmeter.md",
+  "execution_profile": "local_electron",
+  "execution_bindings_status": "ready",
+  "execution_design": "docs/architecture/01-electron-local.md",
+  "legacy_test_programs": [
     "tests/server/test_auth.py",
     "tests/server/test_database.py",
     "tests/server/test_bootstrap_sqlite.py",
@@ -209,33 +836,20 @@
     "tests/governance/test_local_distribution.py",
     "scripts/internal_package_e2e.py"
   ],
-  "test_data_program": "tests/server/fixtures.py",
-  "test_sop": "sop/SOP-014-e2e.md",
-  "gate_commands": {
-    "metadata": "python3 scripts/quality_gate.py check",
-    "iteration": "python3 scripts/quality_gate.py iteration",
-    "release": "gh workflow run internal-release.yml --ref master -f candidate_sha=<protected-master-full-sha>",
-    "documentation": "python3 scripts/check_docs.py --mode baseline",
-    "documentation_structure": "python3 scripts/check_docs.py --mode structure",
-    "release_public_diagnostic": "python3 scripts/quality_gate.py release"
+  "test_case_catalog": "tests/test_cases.json",
+  "test_case_collection": "TEST_CASES.md",
+  "project_workbook": "TokenMeter项目总表.xlsx",
+  "project_register": "docs/project-register.json",
+  "execution_bindings_note": "78条TM-001父TC、38条变体、95个真实Playwright入口及11条独立辅助用例均有固定程序；正式本机父门禁顺序核验精细原件、辅助原件、独立审计和六组补充E2E。绑定就绪不代表最终干净候选已通过或可以发行。",
+  "delivery_documents": {
+    "index": "releases/v0.1.0-20260929T074814Z/README.md",
+    "feature_points": "releases/v0.1.0-20260929T074814Z/01a-feature-points.md",
+    "test_results": "releases/v0.1.0-20260929T074814Z/07-test-results.md",
+    "release_record": "releases/v0.1.0-20260929T074814Z/08-release-record.md"
   },
-  "publication": {
-    "planned_git_tag": "v0.1.0-20260929T074814Z",
-    "expected_passport_asset": "v0.1.0-20260929T074814Z.passport.json",
-    "passport_policy": "issued_only_by_protected_ci_after_verified_product_e2e",
-    "state": "not_published"
-  },
-  "lookup_command": "python3 scripts/release_registry.py show --release-id v0.1.0-20260929T074814Z",
-  "sop_index": "sop/README.md",
-  "document_catalog": "docs/catalog.json",
-  "program_bindings_status": "ready",
-  "distribution_profile": "internal",
-  "test_case_index": "docs/testing/cases/README.md",
-  "test_case_documents": [
-    "docs/testing/cases/01-TM-001-accounts.md"
-  ],
-  "internal_release_design": "docs/releases/01-internal-v0.1.0.md",
-  "internal_release_configuration": "releases/v0.1.0-20260929T074814Z/internal-release.json",
-  "release_workflow": ".github/workflows/internal-release.yml",
-  "retrospective": "docs/retrospectives/2026-09-29--2026-09-30-tokenmeter.md"
+  "workbook_generator": "scripts/export_project_workbook.mjs",
+  "test_case_collection_generator": "scripts/export_test_cases.py",
+  "test_result_exporter": "scripts/export_test_result.mjs",
+  "test_result_export_bridge": "scripts/test_result_export.py",
+  "test_result_storage": ".local/test-results/<run_id>/TokenMeter测试结果-<run_id>.xlsx"
 }
