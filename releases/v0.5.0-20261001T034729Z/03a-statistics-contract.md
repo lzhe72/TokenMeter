@@ -3,6 +3,16 @@
 **release_id：** `v0.5.0-20261001T034729Z`
 **状态：** draft / baseline_pending。逻辑合同供 TM-003/004 交接核对；实际表、字段与原生日志版本尚未锁定。
 
+## 无原生日志依赖的纯统计开发切片
+
+本节只冻结 `TASK-TM005-EVENT-CONTRACT`、`TASK-TM005-RANGE-QUERY`、`TASK-TM005-COVERAGE` 中独立的纯函数部分及 `TC-TM005-CORE-01/02/03`。输入不是来源原生日志或产品 SQLite 行，而是固定 `tests/fixtures/tm005-core-slice.json` 中的合成 `TrustedUsageEvent`：`principal_key`、`source=codex|claude_code`、不含原生ID的测试 `source_event_key`、UTC时间、`model_id|null`、非负整数 input/output 与可为 null 的缓存读/写、推理子项。输入已经由调用方判为可信且在 `(principal_key,source,source_event_key)` 上唯一；模块只做统计，不重新推断上游身份或继承。只接收固定两个来源；未知来源、负数、子项超出总项或不合法UTC时刻应拒绝，不能默认为0。
+
+在固定主体 `synthetic-p1` 和 `Asia/Shanghai` 的 `2026-09-29` 半开当地日中，A（Codex 100/10、未知模型）与 B（Claude Code 200/20、`sonnet-test`）的可信已知合计为330，来源分别110/220，模型分别 `unknown_model=110`/`sonnet-test=220`；另一主体 C=10 必须排除。A 的缓存读20、推理2是 input/output 的子项，不加到330；B 的缓存读和两来源缓存写为 null 时，相应子项输出保持未知而非0。固定当地日 UTC 界为 `2026-09-28T16:00:00Z` 至 `2026-09-29T16:00:00Z`，边界外事件不得纳入。
+
+`UsageDiagnostic` 只含主体、来源、UTC时间和 `missing_usage` 等代码，不携带伪造Token。与 A/B 同范围的一个未知用量诊断使状态为 `partial`、`known_tokens=330`、`total_tokens=null`；只留未知诊断且无可信事件为 `unknown`，不能写零。`CoverageFact` 在此切片是**测试程序显式给出的合成假设**，两个来源分别标 `complete` 或 `missing`；模块不得自己把空事件列表变成完整覆盖。两来源合成 complete 且无事件/诊断时可输出 `complete/0`；任一来源 missing 且无可信事件时输出 `missing/null`；有可信110时输出 `partial/known110/total null`。这只验证状态代数，完全不证明真实来源任意连续空日可覆盖，`TC-TM005-STATE-02/04/06` 仍需上游持久证据、真实App与固定产品程序。
+
+切片的非目标：读取TM-002授权根、解析TM-003/004原生日志、创建或迁移客户端SQLite、驱动 Electron IPC/UI、证明 `safeStorage` Keychain 隔离或真实日期覆盖、把静态 oracle 当产品PASS。`CORE-01/02/03` 的程序绑定当前为空，实际运行unexecuted；SOP-008仅对这三条及其固定 fixture 做独立内容核对，整版文档继续draft。若上游最终事件字段或身份口径改变并影响纯函数输入，先撤销切片就绪并修订固定TC。
+
 ## 输入边界
 
 TM-005 同时读取 TM-003 Codex 和 TM-004 Claude Code 已去重、已持久化的结果。两分支已对齐的**设计字段**为 `principal_key`、`source`（`codex` / `claude_code`）、`source_event_key`、`source_scope_key`、`occurred_at_utc`、`model_id|null`、`input_tokens`、`output_tokens`、`cached_input_tokens|null`、`cache_write_input_tokens|null`、`reasoning_output_tokens|null`、`source_version`、`identity_scheme_version`；实际 SQLite/IPC 尚未交付。当前登录账号的已验证归属、UTC 时间、安全非负整数 input/output、三个缓存/推理子项的已知/未知状态和必要诊断均须可核对。缓存读取及写入是 input 的子项，推理是 output 的子项；已知值各须处于对应总项的 `[0,input]` 或 `[0,output]` 范围。任一缺失子项保持 `null`/未知，不能拿 0 代替。模型未知可为 `model_id=null`，用量若可信仍须计入未知模型组。不能仅凭文本相同或文件名去重；无法核实去重或字段含义的记录保留诊断，不纳入可信完整合计，也不能伪造为 0。

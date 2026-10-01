@@ -31,7 +31,7 @@
 | 02 | [TM-002 首次授权](02-TM-002-permissions.md) | E2E-TM002-001–002，2组；28条父TC、35个稳定变体 | 设计已过SOP-008基线；固定fixture、自动化与产品E2E尚未执行 |
 | 03 | [TM-003 Codex采集](03-TM-003-codex-collection.md) | E2E-TM003-001–004，4组；原27条逐项TC加3条无授权模块辅助TC | draft、unexecuted；隔离研究样例已有，正式数据/程序与本版SOP-008未完成 |
 | 04 | [TM-004 Claude Code采集](04-TM-004-claude-collection.md) | 4组、20条细TC | draft/unexecuted；已见部分2.1.126原生形态，零值、嵌套与完整来源仍待证据 |
-| 05 | [TM-005 用量统计](05-TM-005-usage-statistics.md) | 2组、32条细TC、6变体 | draft/unexecuted；语义oracle已登记，双来源原生与产品绑定待建 |
+| 05 | [TM-005 用量统计](05-TM-005-usage-statistics.md) | 2组、原32条产品细TC与新增3条纯统计辅助TC、6变体 | 整版draft/unexecuted；辅助切片待SOP-008独立核对，双来源原生与产品绑定待建 |
 | 06 | [TM-006 费用估算](06-TM-006-cost-estimates.md) | E2E-TM006-001–002，2例 | planned，基础价格样例可生成，扩展数据待建 |
 | 07 | [TM-007 团队同步](07-TM-007-team-sync.md) | E2E-TM007-001–004，4例 | planned，缺故障fixture/同步与权限绑定 |
 | 08 | [TM-008 CSV导出](08-TM-008-csv-export.md) | E2E-TM008-001–002，2例 | planned，缺导出数据/自动化 |
