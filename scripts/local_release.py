@@ -58,10 +58,30 @@ def publish_final_dmg(archive_dir,release_id,descriptor,*,dmg_root=None):
     marker=archive_dir/'INCOMPLETE.json'
     gate.require(not marker.exists() and not marker.is_symlink(),'Incomplete release archive')
     receipt=gate.read_json(gate.safe_path(archive_dir,'release-index.json'))
-    gate.require(receipt.get('state')=='PASS' and receipt.get('release_id')==release_id
+    gate.require(isinstance(receipt,dict) and isinstance(receipt.get('files'),dict),
+                 'Invalid release archive index')
+    gate.require(receipt.get('schema_version')==2 and receipt.get('state')=='PASS'
+                 and receipt.get('release_id')==release_id
                  and receipt.get('dmg')=='package/'+filename
-                 and receipt.get('files',{}).get('package/'+filename)==descriptor.get('sha256'),
+                 and receipt['files'].get('package/'+filename)==descriptor.get('sha256')
+                 and receipt.get('dmg_sha256')==descriptor.get('sha256')
+                 and isinstance(receipt.get('milestone_sha'),str)
+                 and gate.re.fullmatch(r'[0-9a-f]{40}',receipt['milestone_sha'])
+                 and isinstance(receipt.get('milestone_tree'),str)
+                 and gate.re.fullmatch(r'[0-9a-f]{40}',receipt['milestone_tree'])
+                 and receipt.get('milestone_sha')==receipt.get('candidate_sha')==receipt.get('git_head')
+                 and receipt.get('milestone_tree')==receipt.get('candidate_tree')
+                 and isinstance(receipt.get('master_tip_sha'),str)
+                 and gate.re.fullmatch(r'[0-9a-f]{40}',receipt['master_tip_sha'])
+                 and receipt.get('remote_source_state')=='PENDING'
+                 and receipt.get('github_release') is False,
                  'Release archive does not authorize this DMG')
+    for relative,field in (('package/package-manifest.json','package_manifest_sha256'),
+                           ('evidence/'+release_id+'.passport.json','passport_sha256')):
+        digest=receipt.get(field)
+        gate.require(receipt['files'].get(relative)==digest,
+                     'Release index source digest differs')
+        gate.checked_file(archive_dir,{'path':relative,'sha256':digest})
     source=gate.checked_file(archive_dir/'package',descriptor)
     version_dir=existing_or_new_directory((ROOT/'dmg' if dmg_root is None else Path(dmg_root))/release_id)
     target=version_dir/filename
@@ -135,8 +155,54 @@ def verify_inputs(gate_dir,manifest):
     gate.require(final_descriptor==final_result,'Final product result differs from originals')
     return result,passport,report,package
 
-def archive(gate_dir,manifest,destination):
+def _git_result(*args):
+    return subprocess.run(['git',*args],cwd=ROOT,text=True,capture_output=True,check=False)
+
+def verify_local_milestone(result,passport,package,*,milestone_sha,milestone_tree,expected_master_tip=None):
+    """Bind the tested original to one clean, locally integrated commit."""
+    sha_pattern=r'[0-9a-f]{40}'
+    for name,value in (('milestone SHA',milestone_sha),('milestone tree',milestone_tree),
+                       ('candidate SHA',result.get('candidate_sha')),('candidate tree',result.get('candidate_tree'))):
+        gate.require(isinstance(value,str) and gate.re.fullmatch(sha_pattern,value),f'Invalid {name}')
+    gate.require(result['candidate_sha']==milestone_sha and result['candidate_tree']==milestone_tree,
+                 'Explicit local milestone differs from tested candidate')
+    for name,source in (('passport',passport),('package',package)):
+        gate.require(isinstance(source,dict) and source.get('release_id')==result.get('release_id')
+                     and source.get('candidate_sha')==milestone_sha
+                     and source.get('candidate_tree')==milestone_tree,
+                     f'{name} does not belong to the local milestone')
+    rid=result.get('release_id')
+    gate.require(isinstance(rid,str) and gate.re.fullmatch(r'v\d+\.\d+\.\d+-\d{8}T\d{6}Z',rid),
+                 'Invalid local milestone release ID')
+    current=gate.read_json(ROOT/'releases/current.json')
+    version=gate.read_json(ROOT/'releases'/rid/'00-manifest.json')
+    gate.require(current.get('release_id')==rid and version.get('release_id')==rid,
+                 'Checked-out version does not own the release')
+    status=_git_result('status','--porcelain')
+    gate.require(status.returncode==0 and not status.stdout.strip(),'Local milestone checkout is not clean')
+    head=_git_result('rev-parse','--verify','HEAD^{commit}')
+    tree=_git_result('rev-parse','--verify','HEAD^{tree}')
+    candidate_tree=_git_result('rev-parse','--verify',milestone_sha+'^{tree}')
+    gate.require(all(item.returncode==0 for item in (head,tree,candidate_tree))
+                 and head.stdout.strip()==milestone_sha
+                 and tree.stdout.strip()==milestone_tree
+                 and candidate_tree.stdout.strip()==milestone_tree,
+                 'Local checkout SHA/tree differs from tested milestone')
+    master=_git_result('rev-parse','--verify','refs/heads/master^{commit}')
+    if master.returncode!=0:raise gate.Blocked('Local master ref is unavailable')
+    master_tip=master.stdout.strip()
+    gate.require(bool(gate.re.fullmatch(sha_pattern,master_tip)),'Invalid local master ref')
+    ancestry=_git_result('merge-base','--is-ancestor',milestone_sha,'refs/heads/master')
+    if ancestry.returncode==1:raise gate.Invalid('Tested milestone is not an ancestor of local master')
+    if ancestry.returncode!=0:raise gate.Blocked('Cannot verify local master ancestry')
+    if expected_master_tip is not None:
+        gate.require(master_tip==expected_master_tip,'Local master advanced while archiving')
+    return {'milestone_sha':milestone_sha,'milestone_tree':milestone_tree,'master_tip_sha':master_tip}
+
+def archive(gate_dir,manifest,destination,*,milestone_sha,milestone_tree):
     result,passport,report,package=verify_inputs(gate_dir,manifest)
+    milestone=verify_local_milestone(result,passport,package,
+                                     milestone_sha=milestone_sha,milestone_tree=milestone_tree)
     destination=new_directory(destination)
     marker=destination/'INCOMPLETE.json'
     gate.write_new(marker,{'release_id':result['release_id'],'state':'COPYING','started_at':time.time()})
@@ -177,12 +243,18 @@ def archive(gate_dir,manifest,destination):
     readme=destination/'INSTALL.txt'
     readme.write_text('TokenMeter '+result['release_id']+'\n\n安装包：package/'+dmg_name+'\n平台：macOS 15 / Intel (x64)\n更新试验101仅供测试，不是稳定安装包。\n\nAPI默认 http://127.0.0.1:49176；更新源默认 http://127.0.0.1:49177/version.json。\n新生产库初始管理员 admin / 123456，首次登录须改密；已有生产库保持原密码。\n替换已有App前请退出并保存备份。此包为内部自签，未宣称Apple公证。\n',encoding='utf-8');os.chmod(readme,0o600)
     index['INSTALL.txt']=gate.sha256(readme)
-    receipt={'schema_version':1,'release_id':result['release_id'],'state':'PASS','candidate_sha':result['candidate_sha'],
-             'candidate_tree':result['candidate_tree'],'git_head':gate.git('rev-parse','HEAD'),'run_id':result['run_id'],
+    receipt={'schema_version':2,'release_id':result['release_id'],'state':'PASS','candidate_sha':result['candidate_sha'],
+             'candidate_tree':result['candidate_tree'],'git_head':milestone_sha,'run_id':result['run_id'],
              'dmg':'package/'+dmg_name,'passport':'evidence/'+result['release_id']+'.passport.json',
-             'files':index,'app_trees':app_trees,'archived_at':time.time(),'github_release':False}
+             'passport_sha256':index['evidence/'+result['release_id']+'.passport.json'],
+             'package_manifest_sha256':index['package/package-manifest.json'],
+             'dmg_sha256':index['package/'+dmg_name],
+             'files':index,'app_trees':app_trees,'archived_at':time.time(),'github_release':False,
+             'remote_source_state':'PENDING',**milestone}
     for name,digest in index.items():gate.checked_file(destination,{'path':name,'sha256':digest})
     verify_inputs(destination/'evidence',package_dir/'package-manifest.json')
+    verify_local_milestone(result,passport,package,milestone_sha=milestone_sha,
+                            milestone_tree=milestone_tree,expected_master_tip=milestone['master_tip_sha'])
     gate.write_new(destination/'release-index.json',receipt)
     marker.unlink()
     installation_dmg=publish_final_dmg(destination,result['release_id'],package['artifacts']['dmg'])
@@ -205,16 +277,26 @@ def main(argv=None):
     p.add_argument('action',choices=['verify','archive','status'])
     p.add_argument('--gate-dir',type=Path,required=True);p.add_argument('--package-manifest',type=Path,required=True)
     p.add_argument('--output',type=Path);p.add_argument('--pr',type=int)
+    p.add_argument('--milestone-sha');p.add_argument('--milestone-tree')
     a=p.parse_args(argv)
     try:
         if a.action=='verify':
-            result,*_=verify_inputs(a.gate_dir,a.package_manifest);answer={'state':'PASS','release_id':result['release_id'],'candidate_sha':result['candidate_sha'],'scope':'local_originals_reverified'}
+            gate.require(a.milestone_sha is not None and a.milestone_tree is not None,
+                         'Local milestone SHA/tree are required')
+            result,passport,_,package=verify_inputs(a.gate_dir,a.package_manifest)
+            milestone=verify_local_milestone(result,passport,package,
+                milestone_sha=a.milestone_sha,milestone_tree=a.milestone_tree)
+            answer={'state':'PASS','release_id':result['release_id'],'candidate_sha':result['candidate_sha'],
+                    'scope':'local_originals_and_milestone_reverified',**milestone}
         elif a.action=='status':
             gate.require(a.pr is not None,'--pr is required');answer=post_status(a.gate_dir,a.package_manifest,a.pr)
         else:
+            gate.require(a.milestone_sha is not None and a.milestone_tree is not None,
+                         'Local milestone SHA/tree are required')
             result,*_=verify_inputs(a.gate_dir,a.package_manifest)
             target=a.output or ROOT/'dmg'/result['release_id']/'release-archive'
-            answer=archive(a.gate_dir,a.package_manifest,target)
+            answer=archive(a.gate_dir,a.package_manifest,target,
+                           milestone_sha=a.milestone_sha,milestone_tree=a.milestone_tree)
         print(json.dumps(answer,ensure_ascii=False));return 0
     except (OSError,ValueError,KeyError,TypeError,subprocess.SubprocessError) as e:
         print(json.dumps({'state':'BLOCKED' if isinstance(e,(gate.Blocked,FileNotFoundError)) else 'FAIL','release_eligible':False,'error':str(e)},ensure_ascii=False));return 2 if isinstance(e,(gate.Blocked,FileNotFoundError)) else 1
