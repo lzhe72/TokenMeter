@@ -1,0 +1,698 @@
+{
+  "schema_version": 1,
+  "kind": "independent_normalized_semantic_oracle",
+  "status": "design_only",
+  "reference_utc": "2026-09-29T04:00:00Z",
+  "default_timezone": "Asia/Shanghai",
+  "raw_log_compatibility_verified": false,
+  "note": "Hand-enumerated from scripts/test_data.py events; no Codex or Claude Code raw fixture and no product E2E binding. One duplicate today-gpt row is excluded.",
+  "periods_shanghai": {
+    "today": {
+      "start": "2026-09-29",
+      "end_exclusive": "2026-09-30",
+      "event_ids": [
+        "today-gpt",
+        "today-sonnet",
+        "today-qwen",
+        "today-glm",
+        "today-unknown"
+      ],
+      "input_tokens": 15000,
+      "cached_input_tokens": 1700,
+      "output_tokens": 1500,
+      "reasoning_output_tokens": 170,
+      "total_tokens": 16500,
+      "cache_write_input_tokens": null,
+      "cache_write_status": "unknown_in_normalized_fixture"
+    },
+    "yesterday": {
+      "start": "2026-09-28",
+      "end_exclusive": "2026-09-29",
+      "event_ids": [
+        "yesterday"
+      ],
+      "total_tokens": 110
+    },
+    "last7": {
+      "start": "2026-09-23",
+      "end_exclusive": "2026-09-30",
+      "event_ids": [
+        "today-gpt",
+        "today-sonnet",
+        "today-qwen",
+        "today-glm",
+        "today-unknown",
+        "yesterday",
+        "day7"
+      ],
+      "total_tokens": 17380
+    },
+    "last15": {
+      "start": "2026-09-15",
+      "end_exclusive": "2026-09-30",
+      "event_ids": [
+        "today-gpt",
+        "today-sonnet",
+        "today-qwen",
+        "today-glm",
+        "today-unknown",
+        "yesterday",
+        "day7",
+        "custom-start",
+        "custom-end",
+        "day15"
+      ],
+      "total_tokens": 27830
+    },
+    "last30": {
+      "start": "2026-08-31",
+      "end_exclusive": "2026-09-30",
+      "event_ids": [
+        "today-gpt",
+        "today-sonnet",
+        "today-qwen",
+        "today-glm",
+        "today-unknown",
+        "yesterday",
+        "day7",
+        "custom-start",
+        "custom-end",
+        "day15",
+        "day30"
+      ],
+      "total_tokens": 31130
+    },
+    "custom": {
+      "start": "2026-09-20",
+      "end_exclusive": "2026-09-22",
+      "event_ids": [
+        "custom-start"
+      ],
+      "total_tokens": 2200
+    }
+  },
+  "today_models_shanghai": {
+    "gpt-5": {
+      "event_ids": [
+        "today-gpt"
+      ],
+      "total_tokens": 1100
+    },
+    "sonnet-test": {
+      "event_ids": [
+        "today-sonnet"
+      ],
+      "total_tokens": 2200
+    },
+    "qwen-test": {
+      "event_ids": [
+        "today-qwen"
+      ],
+      "total_tokens": 3300
+    },
+    "glm-test": {
+      "event_ids": [
+        "today-glm"
+      ],
+      "total_tokens": 4400
+    },
+    "unknown-model": {
+      "event_ids": [
+        "today-unknown"
+      ],
+      "total_tokens": 5500
+    }
+  },
+  "nonempty_days_shanghai": {
+    "2026-08-30": {
+      "event_ids": [
+        "outside30"
+      ],
+      "total_tokens": 11000
+    },
+    "2026-08-31": {
+      "event_ids": [
+        "day30"
+      ],
+      "total_tokens": 3300
+    },
+    "2026-09-15": {
+      "event_ids": [
+        "day15"
+      ],
+      "total_tokens": 1650
+    },
+    "2026-09-20": {
+      "event_ids": [
+        "custom-start"
+      ],
+      "total_tokens": 2200
+    },
+    "2026-09-22": {
+      "event_ids": [
+        "custom-end"
+      ],
+      "total_tokens": 6600
+    },
+    "2026-09-23": {
+      "event_ids": [
+        "day7"
+      ],
+      "total_tokens": 770
+    },
+    "2026-09-28": {
+      "event_ids": [
+        "yesterday"
+      ],
+      "total_tokens": 110
+    },
+    "2026-09-29": {
+      "event_ids": [
+        "today-gpt",
+        "today-sonnet",
+        "today-qwen",
+        "today-glm",
+        "today-unknown"
+      ],
+      "total_tokens": 16500
+    }
+  },
+  "utc_checks": {
+    "today": {
+      "start": "2026-09-29",
+      "end_exclusive": "2026-09-30",
+      "event_ids": [
+        "today-sonnet",
+        "today-qwen",
+        "today-glm",
+        "today-unknown"
+      ],
+      "total_tokens": 15400
+    },
+    "yesterday": {
+      "start": "2026-09-28",
+      "end_exclusive": "2026-09-29",
+      "event_ids": [
+        "yesterday",
+        "today-gpt"
+      ],
+      "total_tokens": 1210
+    },
+    "last7": {
+      "start": "2026-09-23",
+      "end_exclusive": "2026-09-30",
+      "total_tokens": 16610
+    },
+    "last30": {
+      "start": "2026-08-31",
+      "end_exclusive": "2026-09-30",
+      "total_tokens": 27830
+    }
+  },
+  "state_cases": {
+    "uncovered": {
+      "expected": "missing_not_zero",
+      "fixture_status": "not_built"
+    },
+    "covered_empty": {
+      "expected": "zero",
+      "fixture_status": "not_built"
+    },
+    "unknown_usage": {
+      "expected": "unknown_not_zero",
+      "fixture_status": "not_built"
+    }
+  },
+  "state_algebra_design": [
+    {
+      "id": "both-covered-empty",
+      "codex_coverage": "complete",
+      "claude_coverage": "complete",
+      "trusted_totals": [],
+      "unknown_events": 0,
+      "expected_status": "complete",
+      "expected_total_tokens": 0,
+      "raw_fixture_status": "not_built"
+    },
+    {
+      "id": "one-source-uncovered-empty",
+      "codex_coverage": "complete",
+      "claude_coverage": "missing",
+      "trusted_totals": [],
+      "unknown_events": 0,
+      "expected_status": "missing",
+      "expected_total_tokens": null,
+      "raw_fixture_status": "not_built"
+    },
+    {
+      "id": "one-source-uncovered-known",
+      "codex_coverage": "complete",
+      "claude_coverage": "missing",
+      "trusted_totals": [
+        110
+      ],
+      "unknown_events": 0,
+      "expected_status": "partial",
+      "expected_known_tokens": 110,
+      "expected_total_tokens": null,
+      "raw_fixture_status": "not_built"
+    },
+    {
+      "id": "both-covered-known-and-unknown",
+      "codex_coverage": "complete",
+      "claude_coverage": "complete",
+      "trusted_totals": [
+        110
+      ],
+      "unknown_events": 1,
+      "expected_status": "partial",
+      "expected_known_tokens": 110,
+      "expected_total_tokens": null,
+      "raw_fixture_status": "not_built"
+    },
+    {
+      "id": "both-covered-unknown-only",
+      "codex_coverage": "complete",
+      "claude_coverage": "complete",
+      "trusted_totals": [],
+      "unknown_events": 1,
+      "expected_status": "unknown",
+      "expected_total_tokens": null,
+      "raw_fixture_status": "not_built"
+    }
+  ],
+  "fork_history_design": {
+    "status": "baseline_pending",
+    "source": "claude_code",
+    "observed_version": "2.1.126",
+    "observed_forked_from_field": "absent_in_one_isolated_cli_run",
+    "parent_call": {
+      "id": "M",
+      "input_tokens": 100,
+      "output_tokens": 10
+    },
+    "fork_new_call": {
+      "id": "N",
+      "input_tokens": 50,
+      "output_tokens": 5
+    },
+    "expected_when_lineage_is_verified": {
+      "unique_calls": 2,
+      "total_tokens": 165
+    },
+    "when_lineage_cannot_be_verified": "separate_negative_case_required; fixed positive TC remains BLOCKED before run",
+    "raw_fixture_status": "await_tm004_final_evidence",
+    "observed_copied_fields": [
+      "uuid",
+      "message.id",
+      "usage"
+    ]
+  },
+  "subagent_usage_design": {
+    "status": "baseline_pending",
+    "source": "claude_code",
+    "observed_version": "2.1.126",
+    "observed_raw_shape": "parent and subagents/agent-*.jsonl each contain independent usage records",
+    "parent_call": {
+      "id": "M",
+      "input_tokens": 100,
+      "output_tokens": 10
+    },
+    "subagent_call": {
+      "id": "S",
+      "input_tokens": 200,
+      "output_tokens": 20
+    },
+    "expected_when_identity_is_verified": {
+      "unique_calls": 2,
+      "total_tokens": 330
+    },
+    "when_identity_cannot_be_verified": "diagnose_uncertain; do not double count parent references or discard trusted child usage",
+    "raw_fixture_status": "await_tm004_final_evidence",
+    "observed_same_session_id_as_parent": true,
+    "observed_child_fields": [
+      "agentId",
+      "isSidechain"
+    ]
+  },
+  "codex_native_usage_design": {
+    "status": "baseline_pending",
+    "source": "codex",
+    "observed_version": "0.158.0-alpha.2.1",
+    "source_probe_commit": "fecd35c5bba967773e3d535ada02f7522989ef02",
+    "source_probe_state": "SOURCE_PROBE_PASS_only",
+    "raw_jsonl_sha256": "3b30cfa81c0c29a80f1bfc1de5bf823db01a9a85636e41ec58dfdd00f0436d08",
+    "response_id": "tm003-native-probe-response-1",
+    "input_tokens": 100,
+    "cached_input_tokens": 20,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 10,
+    "reasoning_output_tokens": 2,
+    "total_tokens": 110,
+    "rule": "cache read/write and reasoning are subitems; turn/thread cumulative snapshots do not add calls",
+    "product_fixture_status": "await_tm003_final_parser_and_e2e"
+  },
+  "codex_fork_cumulative_design": {
+    "status": "baseline_pending",
+    "source_probe_state": "BLOCKED_on_original_assertion",
+    "parent_calls": [
+      {
+        "id": "A",
+        "input_tokens": 100,
+        "output_tokens": 10
+      },
+      {
+        "id": "B",
+        "input_tokens": 200,
+        "output_tokens": 20
+      }
+    ],
+    "fork_file_new_call": {
+      "id": "C",
+      "input_tokens": 300,
+      "output_tokens": 30,
+      "thread_token_usage_total": 660
+    },
+    "expected_when_source_identity_is_verified": {
+      "unique_calls": 3,
+      "total_tokens": 660,
+      "new_tokens_from_fork": 330
+    },
+    "raw_fixture_status": "await_tm003_final_fork_contract"
+  },
+  "claude_same_message_multiple_lines_design": {
+    "status": "baseline_pending",
+    "observed_version": "2.1.126",
+    "observed_shape": "two assistant JSONL rows can share message.id and full usage for one API message",
+    "design_call": {
+      "input_tokens": 31,
+      "output_tokens": 9
+    },
+    "expected_when_call_identity_is_verified": {
+      "unique_calls": 1,
+      "total_tokens": 40
+    },
+    "raw_fixture_status": "await_tm004_final_identity_contract",
+    "observed_commit": "dda5ccb"
+  },
+  "claude_zero_ambiguity_design": {
+    "status": "baseline_pending",
+    "observed_version": "2.1.126",
+    "observed_shape": "CLI may write numeric zero usage when synthetic API omits usage entirely",
+    "without_additional_proof": "unknown_not_confirmed_zero",
+    "raw_fixture_status": "await_tm004_final_zero_unknown_contract",
+    "observed_raw_usage": {
+      "input_tokens": 0,
+      "output_tokens": 0
+    }
+  },
+  "cross_source_id_collision_design": {
+    "status": "baseline_pending",
+    "native_call_id": "shared-native-id-1",
+    "codex_call": {
+      "id": "A",
+      "input_tokens": 100,
+      "output_tokens": 10
+    },
+    "claude_call": {
+      "id": "B",
+      "input_tokens": 200,
+      "output_tokens": 20
+    },
+    "claude_same_source_replay_count": 1,
+    "expected_when_source_identity_is_verified": {
+      "unique_calls": 2,
+      "total_tokens": 330,
+      "per_source_totals": {
+        "codex": 110,
+        "claude_code": 220
+      }
+    },
+    "sqlite_evidence": "two distinct source-qualified identities; replay adds none",
+    "raw_fixture_status": "await_tm003_tm004_final_namespaced_identity"
+  },
+  "shared_identity_draft": {
+    "status": "frozen_cross_branch_design_not_product",
+    "formula": "HMAC-SHA256(local_secret,length_prefix([usage-identity-v1,source,provider_call_scope,canonical_call_id]))",
+    "sources": {
+      "codex": {
+        "scope": "provider-response",
+        "id_field": "token_usage_record.payload.response_id"
+      },
+      "claude_code": {
+        "scope": "provider-message",
+        "id_field": "assistant.message.id"
+      }
+    },
+    "excluded_from_unique_key": [
+      "agentId",
+      "sessionId",
+      "threadId"
+    ],
+    "proposed_sqlite_pk": [
+      "principal_key",
+      "source",
+      "source_event_key"
+    ],
+    "proposed_columns": [
+      "principal_key",
+      "source",
+      "source_event_key",
+      "source_scope_key",
+      "occurred_at_utc",
+      "model_id",
+      "input_tokens",
+      "output_tokens",
+      "cached_input_tokens",
+      "cache_write_input_tokens",
+      "reasoning_output_tokens",
+      "source_version",
+      "identity_scheme_version"
+    ],
+    "identity_scheme_version": "usage-identity-v1",
+    "source_version": "verified_cli_version_separate_from_identity_version"
+  },
+  "claude_unverified_inheritance_design": {
+    "status": "baseline_pending",
+    "first_trusted": {
+      "id": "shared-claude-id-1",
+      "input_tokens": 100,
+      "output_tokens": 10,
+      "model": "model-a"
+    },
+    "second_cross_agent_same_id": {
+      "input_tokens": 100,
+      "output_tokens": 10,
+      "model": "model-a",
+      "copy_relation": "unproven"
+    },
+    "expected_known_tokens": 110,
+    "expected_total_tokens": null,
+    "expected_diagnostic": "unverified_inheritance_only",
+    "expected_coverage": "incomplete",
+    "raw_fixture_status": "await_tm004_final_contract",
+    "sqlite_evidence": "first trusted event plus sanitized diagnostic code/count/source_scope_key; no raw ID or path"
+  },
+  "claude_identity_conflict_design": {
+    "status": "baseline_pending",
+    "first_trusted": {
+      "id": "conflict-claude-id-1",
+      "model": "model-a",
+      "input_tokens": 100,
+      "output_tokens": 10
+    },
+    "variants": [
+      {
+        "id": "usage_conflict",
+        "second_input_tokens": 200,
+        "second_output_tokens": 20,
+        "second_model": "model-a"
+      },
+      {
+        "id": "model_conflict",
+        "second_input_tokens": 100,
+        "second_output_tokens": 10,
+        "second_model": "model-b"
+      }
+    ],
+    "expected_known_tokens": 110,
+    "expected_diagnostic": "identity_conflict",
+    "preserve": "first_trusted_event",
+    "raw_fixture_status": "await_tm004_final_contract"
+  },
+  "claude_paged_coverage_design": {
+    "status": "baseline_pending",
+    "candidate_files_at_least": 1025,
+    "scan_pages_at_least": 5,
+    "preview_limit_files": 1000,
+    "first_page_trusted_call": {
+      "id": "A",
+      "input_tokens": 100,
+      "output_tokens": 10
+    },
+    "later_page_trusted_call": {
+      "id": "B",
+      "input_tokens": 200,
+      "output_tokens": 20
+    },
+    "expected_before_completion": {
+      "known_tokens": 110,
+      "coverage": "incomplete"
+    },
+    "expected_after_verified_full_scan": {
+      "known_tokens": 330,
+      "coverage": "according_to_verified_interval"
+    },
+    "expected_after_between_page_revocation": {
+      "known_tokens": 110,
+      "coverage": "incomplete",
+      "do_not_read_later_page": true
+    },
+    "fixture_status": "await_tm002_paging_tm004_scan_contract"
+  },
+  "period_source_totals_design": {
+    "status": "normalized_semantics_only",
+    "today": {
+      "codex": 9900,
+      "claude_code": 6600,
+      "total_tokens": 16500
+    },
+    "last30": {
+      "codex": 14630,
+      "claude_code": 16500,
+      "total_tokens": 31130
+    },
+    "raw_fixture_status": "not_built"
+  },
+  "unknown_model_design": {
+    "status": "baseline_pending",
+    "calls": [
+      {
+        "source": "codex",
+        "model_id": null,
+        "input_tokens": 100,
+        "output_tokens": 10
+      },
+      {
+        "source": "claude_code",
+        "model_id": "sonnet-test",
+        "input_tokens": 200,
+        "output_tokens": 20
+      }
+    ],
+    "expected_unique_calls": 2,
+    "expected_total_tokens": 330,
+    "expected_model_totals": {
+      "unknown_model": 110,
+      "sonnet-test": 220
+    },
+    "raw_fixture_status": "await_tm003_tm004_model_contract",
+    "anchor_utc_times": [
+      "2026-09-29T01:00:00Z",
+      "2026-09-29T02:00:00Z"
+    ],
+    "run_date_transform": "shift both instants by identical whole UTC days to the run day anchor"
+  },
+  "dst_boundary_design": {
+    "status": "baseline_pending",
+    "timezone": "America/New_York",
+    "variants": [
+      {
+        "id": "TC-TM005-RANGE-11#SPRING",
+        "local_day": "2026-03-08",
+        "start_utc": "2026-03-08T05:00:00Z",
+        "end_exclusive_utc": "2026-03-09T04:00:00Z",
+        "hours": 23,
+        "inside_event_tokens": [
+          10,
+          20
+        ],
+        "expected_unique_calls": 2,
+        "expected_total_tokens": 30,
+        "events": [
+          {
+            "id": "S0",
+            "occurred_at_utc": "2026-03-08T04:59:59Z",
+            "source": "codex",
+            "input_tokens": 5,
+            "output_tokens": 1,
+            "included": false
+          },
+          {
+            "id": "S1",
+            "occurred_at_utc": "2026-03-08T05:00:00Z",
+            "source": "codex",
+            "input_tokens": 9,
+            "output_tokens": 1,
+            "included": true
+          },
+          {
+            "id": "S2",
+            "occurred_at_utc": "2026-03-09T03:59:59Z",
+            "source": "claude_code",
+            "input_tokens": 18,
+            "output_tokens": 2,
+            "included": true
+          },
+          {
+            "id": "S3",
+            "occurred_at_utc": "2026-03-09T04:00:00Z",
+            "source": "claude_code",
+            "input_tokens": 27,
+            "output_tokens": 3,
+            "included": false
+          }
+        ]
+      },
+      {
+        "id": "TC-TM005-RANGE-11#FALL",
+        "local_day": "2026-11-01",
+        "start_utc": "2026-11-01T04:00:00Z",
+        "end_exclusive_utc": "2026-11-02T05:00:00Z",
+        "hours": 25,
+        "inside_event_tokens": [
+          40,
+          50
+        ],
+        "expected_unique_calls": 2,
+        "expected_total_tokens": 90,
+        "events": [
+          {
+            "id": "F0",
+            "occurred_at_utc": "2026-11-01T03:59:59Z",
+            "source": "codex",
+            "input_tokens": 5,
+            "output_tokens": 1,
+            "included": false
+          },
+          {
+            "id": "F1",
+            "occurred_at_utc": "2026-11-01T04:00:00Z",
+            "source": "codex",
+            "input_tokens": 36,
+            "output_tokens": 4,
+            "included": true
+          },
+          {
+            "id": "F2",
+            "occurred_at_utc": "2026-11-02T04:59:59Z",
+            "source": "claude_code",
+            "input_tokens": 45,
+            "output_tokens": 5,
+            "included": true
+          },
+          {
+            "id": "F3",
+            "occurred_at_utc": "2026-11-02T05:00:00Z",
+            "source": "claude_code",
+            "input_tokens": 54,
+            "output_tokens": 6,
+            "included": false
+          }
+        ]
+      }
+    ],
+    "outside_events": "S0/S3/F0/F3 excluded at fixed UTC boundaries",
+    "raw_fixture_status": "not_built"
+  }
+}

@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.3.0-20261001T034652Z",
+  "version": "0.3.0",
+  "created_at": "2026-10-01T03:46:52Z",
+  "kind": "product_feature",
+  "feature_ids": [
+    "TM-003"
+  ],
+  "documents": {
+    "requirements": "releases/v0.3.0-20261001T034652Z/01-requirements.md",
+    "breakdown": "releases/v0.3.0-20261001T034652Z/02-breakdown.md",
+    "development_plan": "releases/v0.3.0-20261001T034652Z/03-development-plan.md",
+    "test_plan": "releases/v0.3.0-20261001T034652Z/04-test-plan.md",
+    "release_plan": "releases/v0.3.0-20261001T034652Z/05-release-plan.md",
+    "iteration_record": "releases/v0.3.0-20261001T034652Z/06-iteration-record.md"
+  },
+  "global_design": "docs/design-plan.md",
+  "lifecycle": "docs/lifecycle.md",
+  "documentation_standard": "docs/standards/documentation.md",
+  "changelog": "CHANGELOG.md",
+  "changelog_heading": "v0.3.0-20261001T034652Z",
+  "traceability": [
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SOURCE",
+      "test": "TC-TM003-SOURCE-01",
+      "description": "受控版本来源与字段核验"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-FIXTURE",
+      "test": "TC-TM003-DATA-01",
+      "description": "固定原生形状数据与独立预期"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-PARSE",
+      "test": "TC-TM003-PARSE-01",
+      "description": "三响应与缓存子项计量"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-SCAN-01",
+      "description": "追加补扫重启移动去重"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-STORE",
+      "test": "TC-TM003-STORE-01",
+      "description": "事件与游标持久化"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-UI",
+      "test": "TC-TM003-UI-01",
+      "description": "可信总量与未知来源展示"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SOURCE",
+      "test": "TC-TM003-SOURCE-02",
+      "description": "无响应身份累计记录降级"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-PARSE",
+      "test": "TC-TM003-PARSE-02",
+      "description": "损坏及缺字段记录隔离"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-PARSE",
+      "test": "TC-TM003-MODEL-01",
+      "description": "模型标识与未知模型保留"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-IDENTITY",
+      "test": "TC-TM003-DEDUP-01",
+      "description": "相同响应重放和身份冲突"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-IDENTITY",
+      "test": "TC-TM003-BRANCH-01",
+      "description": "累计快照新会话与分支"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-IDENTITY",
+      "test": "TC-TM003-NAMESPACE-01",
+      "description": "跨来源同字面调用身份、重放及不明继承"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-STORE",
+      "test": "TC-TM003-PRIVACY-01",
+      "description": "原文哨兵不得入库和报告"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-FIXTURE",
+      "test": "TC-TM003-DATA-02",
+      "description": "半行字节数据与归属清理"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-SCAN-02",
+      "description": "半行补全后只计一次"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-SCAN-03",
+      "description": "截断后的重读与新事件"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-WINDOW-01",
+      "description": "首次30天UTC采集窗口"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-COVERAGE-OVERFLOW-01",
+      "description": "超过预览上限的授权内部分页、完整性及撤销"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-UI",
+      "test": "TC-TM003-UI-02",
+      "description": "源清理后的覆盖缺口"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SCAN",
+      "test": "TC-TM003-BOUNDARY-01",
+      "description": "未授权根和越界链接拒绝"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-AUTH",
+      "test": "TC-TM003-AUTH-01",
+      "description": "确认前与失效时停读"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-AUTH",
+      "test": "TC-TM003-AUTH-02",
+      "description": "重新授权后的去重补扫"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-AUTH",
+      "test": "TC-TM003-ISOLATION-01",
+      "description": "已验证主体切换时来源和采集状态隔离"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-MIGRATE",
+      "test": "TC-TM003-MIGRATE-01",
+      "description": "客户端库迁移和恢复"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-E2E",
+      "test": "TC-TM003-E2E-01",
+      "description": "固定逐项入口和证据审计"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-E2E",
+      "test": "TC-TM003-E2E-02",
+      "description": "最终DMG真实链路和清理"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-RELEASE",
+      "test": "TC-TM003-GOV-01",
+      "description": "追踪总表与门禁拒绝"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-E2E",
+      "test": "E2E-TM003-001",
+      "description": "四个稳定采集场景组之一，组内按具体TC独立判定"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-E2E",
+      "test": "E2E-TM003-002",
+      "description": "四个稳定采集场景组之一，组内按具体TC独立判定"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-E2E",
+      "test": "E2E-TM003-003",
+      "description": "四个稳定采集场景组之一，组内按具体TC独立判定"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-E2E",
+      "test": "E2E-TM003-004",
+      "description": "四个稳定采集场景组之一，组内按具体TC独立判定"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-PARSE",
+      "test": "TC-TM003-CORE-01",
+      "description": "完整LF增量与累计快照解析"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-PARSE",
+      "test": "TC-TM003-CORE-02",
+      "description": "累计空值及非法用量诊断"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-IDENTITY",
+      "test": "TC-TM003-CORE-03",
+      "description": "公开向量身份去重与冲突"
+    }
+  ],
+  "program_bindings_status": "planned",
+  "test_programs": [],
+  "test_data_program": null,
+  "test_sop": "sop/SOP-014-e2e.md",
+  "publication": {
+    "planned_git_tag": "v0.3.0-20261001T034652Z",
+    "expected_passport_asset": "v0.3.0-20261001T034652Z.passport.json",
+    "passport_policy": "issued_locally_after_verified_final_package_e2e",
+    "state": "not_published",
+    "asset_storage": "local_only",
+    "github_release": false
+  },
+  "sop_index": "sop/README.md",
+  "document_catalog": "docs/catalog.json",
+  "test_case_index": "docs/testing/cases/README.md",
+  "test_case_document": "docs/testing/cases/03-TM-003-codex-collection.md",
+  "test_case_catalog": "tests/test_cases.json",
+  "project_workbook": "TokenMeter项目总表.xlsx",
+  "execution_profile": "local_electron",
+  "delivery_documents": {
+    "index": "releases/v0.3.0-20261001T034652Z/README.md",
+    "test_results": "releases/v0.3.0-20261001T034652Z/07-test-results.md",
+    "release_record": "releases/v0.3.0-20261001T034652Z/08-release-record.md"
+  },
+  "test_case_design": "tests/tm003_case_design.json"
+}

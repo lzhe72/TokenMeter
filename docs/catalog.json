@@ -1338,7 +1338,7 @@
       "doc_id": "DOC-TEST-CASES-TM-002",
       "path": "docs/testing/cases/02-TM-002-permissions.md",
       "type": "plan",
-      "status": "draft",
+      "status": "baselined",
       "applicable_release": "v0.2.0-20261001T034118Z",
       "base_release": null,
       "inputs": [
@@ -1353,15 +1353,16 @@
       "doc_id": "DOC-TEST-CASES-TM-003",
       "path": "docs/testing/cases/03-TM-003-codex-collection.md",
       "type": "plan",
-      "status": "baselined",
-      "applicable_release": "all",
-      "base_release": null,
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
       "inputs": [
-        "tests/feature_matrix.json",
-        "tests/acceptance.json",
-        "docs/testing/strategy.md"
+        "releases/v0.3.0-20261001T034652Z/01-requirements.md",
+        "releases/v0.3.0-20261001T034652Z/02-breakdown.md",
+        "releases/v0.3.0-20261001T034652Z/04-test-plan.md",
+        "tests/acceptance.json"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
@@ -1532,7 +1533,7 @@
       "doc_id": "DOC-RELEASES-V0-2-0-20261001T034118Z-REQUIREMENTS",
       "path": "releases/v0.2.0-20261001T034118Z/01-requirements.md",
       "type": "plan",
-      "status": "draft",
+      "status": "baselined",
       "applicable_release": "v0.2.0-20261001T034118Z",
       "base_release": "v0.1.0-20260929T074814Z",
       "inputs": [
@@ -1546,7 +1547,7 @@
       "doc_id": "DOC-RELEASES-V0-2-0-20261001T034118Z-BREAKDOWN",
       "path": "releases/v0.2.0-20261001T034118Z/02-breakdown.md",
       "type": "plan",
-      "status": "draft",
+      "status": "baselined",
       "applicable_release": "v0.2.0-20261001T034118Z",
       "base_release": "v0.1.0-20260929T074814Z",
       "inputs": [
@@ -1559,7 +1560,7 @@
       "doc_id": "DOC-RELEASES-V0-2-0-20261001T034118Z-DEVELOPMENT-PLAN",
       "path": "releases/v0.2.0-20261001T034118Z/03-development-plan.md",
       "type": "plan",
-      "status": "draft",
+      "status": "baselined",
       "applicable_release": "v0.2.0-20261001T034118Z",
       "base_release": "v0.1.0-20260929T074814Z",
       "inputs": [
@@ -1573,7 +1574,7 @@
       "doc_id": "DOC-RELEASES-V0-2-0-20261001T034118Z-TEST-PLAN",
       "path": "releases/v0.2.0-20261001T034118Z/04-test-plan.md",
       "type": "plan",
-      "status": "draft",
+      "status": "baselined",
       "applicable_release": "v0.2.0-20261001T034118Z",
       "base_release": "v0.1.0-20260929T074814Z",
       "inputs": [
@@ -1587,7 +1588,7 @@
       "doc_id": "DOC-RELEASES-V0-2-0-20261001T034118Z-RELEASE-PLAN",
       "path": "releases/v0.2.0-20261001T034118Z/05-release-plan.md",
       "type": "plan",
-      "status": "draft",
+      "status": "baselined",
       "applicable_release": "v0.2.0-20261001T034118Z",
       "base_release": "v0.1.0-20260929T074814Z",
       "inputs": [
@@ -1601,11 +1602,329 @@
       "doc_id": "DOC-RELEASES-V0-2-0-20261001T034118Z-ITERATION-RECORD",
       "path": "releases/v0.2.0-20261001T034118Z/06-iteration-record.md",
       "type": "record",
-      "status": "draft",
+      "status": "baselined",
       "applicable_release": "v0.2.0-20261001T034118Z",
       "base_release": "v0.1.0-20260929T074814Z",
       "inputs": [
         "releases/v0.2.0-20261001T034118Z/01-requirements.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-022-archive-handoff.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-2-0-20261001T034118Z-LOCAL-RELEASE",
+      "path": "releases/v0.2.0-20261001T034118Z/local-release.json",
+      "type": "plan",
+      "status": "baselined",
+      "applicable_release": "v0.2.0-20261001T034118Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.2.0-20261001T034118Z/05-release-plan.md",
+        "releases/v0.1.0-20260929T074814Z/local-release.json",
+        "releases/v0.2.0-20261001T034118Z/00-manifest.json"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-007-release-plan.md"
+    },
+    {
+      "doc_id": "DOC-V030-01",
+      "path": "releases/v0.3.0-20261001T034652Z/01-requirements.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/product/README.md",
+        "tests/acceptance.json"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-002-requirements.md"
+    },
+    {
+      "doc_id": "DOC-V030-02",
+      "path": "releases/v0.3.0-20261001T034652Z/02-breakdown.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.3.0-20261001T034652Z/01-requirements.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-003-feature-breakdown.md"
+    },
+    {
+      "doc_id": "DOC-V030-03",
+      "path": "releases/v0.3.0-20261001T034652Z/03-development-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.3.0-20261001T034652Z/01-requirements.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-004-technical-design.md"
+    },
+    {
+      "doc_id": "DOC-V030-04",
+      "path": "releases/v0.3.0-20261001T034652Z/04-test-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.3.0-20261001T034652Z/01-requirements.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-V030-05",
+      "path": "releases/v0.3.0-20261001T034652Z/05-release-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.3.0-20261001T034652Z/01-requirements.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-007-release-plan.md"
+    },
+    {
+      "doc_id": "DOC-V030-06",
+      "path": "releases/v0.3.0-20261001T034652Z/06-iteration-record.md",
+      "type": "record",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.3.0-20261001T034652Z/01-requirements.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-022-archive-handoff.md"
+    },
+    {
+      "doc_id": "DOC-V030-README",
+      "path": "releases/v0.3.0-20261001T034652Z/README.md",
+      "type": "index",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.3.0-20261001T034652Z/00-manifest.json",
+        "releases/v0.3.0-20261001T034652Z/06-iteration-record.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
+      "doc_id": "DOC-V030-07_TEST_RESULTS",
+      "path": "releases/v0.3.0-20261001T034652Z/07-test-results.md",
+      "type": "record",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.3.0-20261001T034652Z/00-manifest.json",
+        "releases/v0.3.0-20261001T034652Z/06-iteration-record.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-014-e2e.md"
+    },
+    {
+      "doc_id": "DOC-V030-08_RELEASE_RECORD",
+      "path": "releases/v0.3.0-20261001T034652Z/08-release-record.md",
+      "type": "record",
+      "status": "draft",
+      "applicable_release": "v0.3.0-20261001T034652Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "releases/v0.3.0-20261001T034652Z/00-manifest.json",
+        "releases/v0.3.0-20261001T034652Z/06-iteration-record.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-018-release-gate.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-01-REQUIREMENTS-MD",
+      "path": "releases/v0.4.0-20261001T040433Z/01-requirements.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.3.0-20261001T034652Z",
+      "inputs": [
+        "releases/v0.4.0-20261001T040433Z/00-manifest.json"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-002-requirements.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-02-BREAKDOWN-MD",
+      "path": "releases/v0.4.0-20261001T040433Z/02-breakdown.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.3.0-20261001T034652Z",
+      "inputs": [
+        "releases/v0.4.0-20261001T040433Z/01-requirements.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-003-feature-breakdown.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-03-DEVELOPMENT-PLAN-MD",
+      "path": "releases/v0.4.0-20261001T040433Z/03-development-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.3.0-20261001T034652Z",
+      "inputs": [
+        "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-005-development-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-04-TEST-PLAN-MD",
+      "path": "releases/v0.4.0-20261001T040433Z/04-test-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.3.0-20261001T034652Z",
+      "inputs": [
+        "releases/v0.4.0-20261001T040433Z/03-development-plan.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-05-RELEASE-PLAN-MD",
+      "path": "releases/v0.4.0-20261001T040433Z/05-release-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.3.0-20261001T034652Z",
+      "inputs": [
+        "releases/v0.4.0-20261001T040433Z/04-test-plan.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-007-release-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-06-ITERATION-RECORD-MD",
+      "path": "releases/v0.4.0-20261001T040433Z/06-iteration-record.md",
+      "type": "record",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.3.0-20261001T034652Z",
+      "inputs": [
+        "releases/v0.4.0-20261001T040433Z/05-release-plan.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-022-archive-handoff.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-5-0-20261001T034729Z-01-REQUIREMENTS-MD",
+      "path": "releases/v0.5.0-20261001T034729Z/01-requirements.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.5.0-20261001T034729Z",
+      "base_release": "v0.4.0-20261001T040433Z",
+      "inputs": [
+        "releases/v0.5.0-20261001T034729Z/00-manifest.json"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-002-requirements.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-5-0-20261001T034729Z-02-BREAKDOWN-MD",
+      "path": "releases/v0.5.0-20261001T034729Z/02-breakdown.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.5.0-20261001T034729Z",
+      "base_release": "v0.4.0-20261001T040433Z",
+      "inputs": [
+        "releases/v0.5.0-20261001T034729Z/01-requirements.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-003-feature-breakdown.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-5-0-20261001T034729Z-03-DEVELOPMENT-PLAN-MD",
+      "path": "releases/v0.5.0-20261001T034729Z/03-development-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.5.0-20261001T034729Z",
+      "base_release": "v0.4.0-20261001T040433Z",
+      "inputs": [
+        "releases/v0.5.0-20261001T034729Z/02-breakdown.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-005-development-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-5-0-20261001T034729Z-03A-STATISTICS-CONTRACT-MD",
+      "path": "releases/v0.5.0-20261001T034729Z/03a-statistics-contract.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.5.0-20261001T034729Z",
+      "base_release": "v0.4.0-20261001T040433Z",
+      "inputs": [
+        "releases/v0.5.0-20261001T034729Z/03-development-plan.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-004-technical-design.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-5-0-20261001T034729Z-04-TEST-PLAN-MD",
+      "path": "releases/v0.5.0-20261001T034729Z/04-test-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.5.0-20261001T034729Z",
+      "base_release": "v0.4.0-20261001T040433Z",
+      "inputs": [
+        "releases/v0.5.0-20261001T034729Z/03-development-plan.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-5-0-20261001T034729Z-04A-TEST-CASES-MD",
+      "path": "releases/v0.5.0-20261001T034729Z/04a-test-cases.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.5.0-20261001T034729Z",
+      "base_release": "v0.4.0-20261001T040433Z",
+      "inputs": [
+        "releases/v0.5.0-20261001T034729Z/04-test-plan.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-5-0-20261001T034729Z-05-RELEASE-PLAN-MD",
+      "path": "releases/v0.5.0-20261001T034729Z/05-release-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.5.0-20261001T034729Z",
+      "base_release": "v0.4.0-20261001T040433Z",
+      "inputs": [
+        "releases/v0.5.0-20261001T034729Z/04-test-plan.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-007-release-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-5-0-20261001T034729Z-06-ITERATION-RECORD-MD",
+      "path": "releases/v0.5.0-20261001T034729Z/06-iteration-record.md",
+      "type": "record",
+      "status": "draft",
+      "applicable_release": "v0.5.0-20261001T034729Z",
+      "base_release": "v0.4.0-20261001T040433Z",
+      "inputs": [
+        "releases/v0.5.0-20261001T034729Z/05-release-plan.md"
       ],
       "updated_at": "2026-10-01",
       "sop": "sop/SOP-022-archive-handoff.md"

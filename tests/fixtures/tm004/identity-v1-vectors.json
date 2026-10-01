@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "identity_scheme_version": "usage-identity-v1",
+  "test_secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "encoding": "Four fields in order; each UTF-8 byte string prefixed by unsigned 32-bit big-endian byte length; concatenate; HMAC-SHA256; lowercase hex.",
+  "vectors": [
+    {
+      "label": "codex_shared",
+      "source": "codex",
+      "provider_call_scope": "provider-response",
+      "canonical_call_id": "shared-call-01",
+      "field_byte_lengths": [
+        17,
+        5,
+        17,
+        14
+      ],
+      "preimage_hex": "0000001175736167652d6964656e746974792d763100000005636f6465780000001170726f76696465722d726573706f6e73650000000e7368617265642d63616c6c2d3031",
+      "source_event_key_hex": "afd67bd0cad0227b3e7b5ac132bb9b3ed492073983b9c16a0c9cc24dd3008051"
+    },
+    {
+      "label": "claude_shared",
+      "source": "claude_code",
+      "provider_call_scope": "provider-message",
+      "canonical_call_id": "shared-call-01",
+      "field_byte_lengths": [
+        17,
+        11,
+        16,
+        14
+      ],
+      "preimage_hex": "0000001175736167652d6964656e746974792d76310000000b636c617564655f636f64650000001070726f76696465722d6d6573736167650000000e7368617265642d63616c6c2d3031",
+      "source_event_key_hex": "bf222a85ab2209f72ff82c21b7172c9315448b3e1d5bf4503a3c76b30c46cad1"
+    },
+    {
+      "label": "claude_multiblock",
+      "source": "claude_code",
+      "provider_call_scope": "provider-message",
+      "canonical_call_id": "msg_tm004_synthetic_multiblock_001",
+      "field_byte_lengths": [
+        17,
+        11,
+        16,
+        34
+      ],
+      "preimage_hex": "0000001175736167652d6964656e746974792d76310000000b636c617564655f636f64650000001070726f76696465722d6d657373616765000000226d73675f746d3030345f73796e7468657469635f6d756c7469626c6f636b5f303031",
+      "source_event_key_hex": "d9385490f1e5bb71769ab1616351175f6027462df2ecc5f9fc0054eedee291d1"
+    },
+    {
+      "label": "claude_unicode_composed",
+      "source": "claude_code",
+      "provider_call_scope": "provider-message",
+      "canonical_call_id": "msg-é-🧪",
+      "field_byte_lengths": [
+        17,
+        11,
+        16,
+        11
+      ],
+      "preimage_hex": "0000001175736167652d6964656e746974792d76310000000b636c617564655f636f64650000001070726f76696465722d6d6573736167650000000b6d73672dc3a92df09fa7aa",
+      "source_event_key_hex": "098b1d01e3f5663f34257376629337d3521cbd162a8339c8257b69e2f5160b33"
+    },
+    {
+      "label": "claude_unicode_decomposed",
+      "source": "claude_code",
+      "provider_call_scope": "provider-message",
+      "canonical_call_id": "msg-é-🧪",
+      "field_byte_lengths": [
+        17,
+        11,
+        16,
+        12
+      ],
+      "preimage_hex": "0000001175736167652d6964656e746974792d76310000000b636c617564655f636f64650000001070726f76696465722d6d6573736167650000000c6d73672d65cc812df09fa7aa",
+      "source_event_key_hex": "3447b07bb35943b04f16f884cde2cedca8a8493ea6e12a9075e5eebfed91f370"
+    }
+  ],
+  "limits": [
+    "Public deterministic test secret only, never use in product profile.",
+    "Provider ID is exact string, no trim/casefold/Unicode normalization.",
+    "Unpaired surrogate or byte length exceeding uint32 is invalid."
+  ]
+}

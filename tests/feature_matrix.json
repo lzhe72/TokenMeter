@@ -135,7 +135,7 @@
         {
           "id": "E2E-TM003-001",
           "scenario": "追加已验证版本日志，重扫、重启、移动文件",
-          "expected": "用量与独立预期一致，同一源事件只计一次",
+          "expected": "已确认授权根内经验证版本原生完整行增量采集；A/B/C可信 input600、output60、total660、cached read120，重扫、重启和同根移动后唯一响应仍3；未知或越界来源不计量",
           "data_program": null,
           "dataset": "codex_raw",
           "sop": "sop/SOP-014-e2e.md",
@@ -145,7 +145,7 @@
         {
           "id": "E2E-TM003-002",
           "scenario": "累计值重置、重复 token_count、分支恢复、未知格式",
-          "expected": "不直接逐行累加最近用量；继承历史不重复；不可核实数据有诊断且不污染可信总量",
+          "expected": "只按有稳定 response_id 的逐响应 usage 计量，不逐行相加累计快照；重复、继承历史与矛盾身份不重复计；示例可信总量220，无法核实格式/回退显示诊断且不污染可信值；跨来源同字面 ID 分别计量，不明继承与矛盾 ID 标覆盖不完整；本机身份密钥不可用时保留既有可信事件并停采集，恢复原密钥或经核验迁移前不得新建密钥重扫旧日志",
           "data_program": null,
           "dataset": "codex_raw",
           "sop": "sop/SOP-014-e2e.md",
@@ -154,8 +154,8 @@
         },
         {
           "id": "E2E-TM003-003",
-          "scenario": "追加半行后完成写入，并清理旧源日志",
-          "expected": "不吞掉随后完整事件；已采集统计保留；缺失历史有提示",
+          "scenario": "半行补全、首次30天窗口和旧源清理",
+          "expected": "未闭合半行不消费；补全后 A/B total165 且重启不重计；首次30天窗口仅计29天前事件、不计31天前事件，无效 UTC 时间只诊断；源文件清理后保留已采集事件并显示不可证明的历史覆盖缺口；超过预览上限仍续扫末端第1001个候选，页间撤权或目录变动令旧 generation 全部暂定页与结果回滚，重新从头扫描；候选树 complete 后另证正文稳定完整",
           "data_program": null,
           "dataset": "codex_raw",
           "sop": "sop/SOP-014-e2e.md",
@@ -164,8 +164,8 @@
         },
         {
           "id": "E2E-TM003-004",
-          "scenario": "Codex 目录撤销授权后重新授权，重复扫描已有日志并追加新事件",
-          "expected": "恢复后已有源事件不重复计数，新事件仅计一次，结果与独立预期一致",
+          "scenario": "来源失效、重新确认与已验证主体切换隔离",
+          "expected": "授权失效或已验证 origin+account.id 切换时立即停读并隔离来源与用量；真实重新确认后只补入新响应。A/B恢复前 total330，补入C并重放A后唯一3、total660，刷新重启保持；O1/U1、O1/U2、O2/同ID成员不得混看事件。",
           "data_program": null,
           "dataset": "codex_raw",
           "sop": "sop/SOP-014-e2e.md",

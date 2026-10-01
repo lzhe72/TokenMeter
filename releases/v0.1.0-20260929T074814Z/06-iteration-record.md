@@ -1,5 +1,11 @@
 # v0.1.0-20260929T074814Z — 执行与交接记录
 
+## 2026-10-01 开发阶段新检查与正式发行状态
+
+用户现要求先完成 TM-001→TM-005 的功能源码和各功能已基线固定 TC 回归，总控可在开发阶段按依赖顺序整合本地 `master`，目标源码全部完成后登记远端来源。下文早期“逐版本地稳定原包后整合/推送”的顺序是当时决策和执行历史；现在完整跨需求最终包门禁、SOP-018/020、稳定包和Tag须等用户另行启动正式对外发行。c291 固定候选的门禁 FAIL 仍是实际历史原件，不会因阶段改变而重算。
+
+TM-001 开发会话交接提交 `9f06cb1bb2f116c87ab5543173e15c0613b60991` 修复私有签名输入；报告基础治理454项、服务55项、桌面26项与构建PASS，新开发DMG SHA-256 `d342c8ffa571e28aad38bc37ec682389c2c54d3791246f2a828bd85c024d523d`。后续定向App运行仍出现ENOSPC与FAIL/BLOCKED，开发会话报告两批摘要为0 PASS/14 FAIL及9 PASS/2 FAIL/3 BLOCKED；完整run_id和原始报告需在其工作树读回，文档会话尚不把摘要填入根总表批次。旧14/14定向PASS属于另一候选，不覆盖新失败。当前功能回归未完成，正式发行完整门禁NOT_RUN、没有正式稳定0.1原包。
+
 ## 输入与目标
 
 用户要求完成首个功能，并实际验证“第一版SOP→文档驱动”流程。按001分配版本0.1.0，UTC立项时间2026-09-29T07:48:14Z；基线为master合并提交548c582，保留0.0.1档案。目标TM-001包含全部四个既定验收场景。
@@ -712,20 +718,20 @@ SOP管理会话提交 `afee30d28f9952559dacd895b2313298045b635d` 与 `090d8081f2
 
 TM-001开发会话的代码提交`fbab99b13022d7178a96dc344fb5ff9db8dd85f0`已由总控合入本地`master` `4bdeb13abb581c6b5650ed937db661d81079bb4f`；这是文档候选整合前的master状态，后续文档合并会产生新的最终里程碑SHA/tree。`scripts/local_release.py verify/archive`现在要求`--milestone-sha`与`--milestone-tree`，在干净的被测提交检出中核对HEAD与候选精确相等、该提交为本地master祖先、原包/通行证同源。归档收据schema2记录里程碑SHA/tree、master tip及原DMG/manifest/passport摘要，`remote_source_state=PENDING`，远端登记仍为后续独立步骤。该代码分支局部23/23、治理433/433 PASS，总控整合树治理亦433/433 PASS；这些均不是整合后最终包E2E或SOP-018/020实际通过。独立`d2db551`PASS不能借给新的最终树；总控须先冻结新SHA/tree再构建、运行与归档。
 
-### 2026-10-01：SOP-019 远端源码检查点与本地 master 门禁失败
+### 2026-10-01：远端源码检查点规则交接，不改变被测里程碑
 
-SOP 会话提交 `1bc01e38e8de5ab2786a2b5207dbaff434206156`，总控已在本地 `master` 以 `3ce5e06654369c03a23e89d6775381dac596e6c6` 合入 SOP-019 修订11及索引。本会话从该实际树另建独立文档分支，只同步适用于当前0.1的非 SOP Git 规范、状态、机器SOP快照和项目总表；`releases/current.json` 保持0.1，TM-002/003后续基线不借此并入。远端同名功能分支或单一integration镜像的代码检查点只表示已提交源码可读回；此次文档工作没有执行推送，也没有核实`remote_code_saved=true`。本机产品/稳定发行、远端`master`、Tag分开记录。
+用户新增多会话源码版本管理要求；SOP 会话在独立分支提交`1bc01e38e8de5ab2786a2b5207dbaff434206156`，SOP-019修订11及索引更新。文档会话将其内容接入独立文档工作树，按SOP-024同步AGENTS、开发/版本/发布规范、架构、状态、Changelog及总表SOP快照。新规则允许每个需求独立worktree的干净WIP/候选提交普通快进保存远端同名功能分支并读回SHA/tree，总控可选单一integration镜像；两者只记`remote_code_saved`和真实检查状态，不代表本机产品或发行PASS。五版逐版本地`master`门禁/稳定包与最后一次受保护远端`master`PR、逐版Tag仍各自核对。
 
-总控独立整合树 `c2911bc65d55579fcf71e5ba11db87357a01a5e4`、tree `d4555b207b50e7cbe313b54ba9bfec1b7fdccb54` 的首次最终包门禁已于2026-10-01 12:02:59Z结束为FAIL，原件 `.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/{gate.json,granular/result.json}`。精细原始116项91 PASS/14 FAIL/11 BLOCKED；UPDATE-05父项及13变体缺私有签名输入，11项为辅助占位。独立结果Excel `TokenMeter测试结果-local-0512d4fc44544eba97f9d1ae79cbfc37.xlsx` 由固定程序新建并回读PASS，报告模型78父TC为66 PASS/1 FAIL/11 BLOCKED、38变体25 PASS/13 FAIL；它是原件整理，不改变产品FAIL。根总表追加第13批并标明被测SHA，不覆盖旧12批。
+本次仅为规范和文档编制，未由文档会话推送功能分支或整合镜像，未改总控正在执行最终包门禁的本地`master`候选`c2911bc65d55579fcf71e5ba11db87357a01a5e4`。SOP分支的治理454/454 PASS仅证明该规范提交的适用检查；本版实际E2E、通行证、SOP-020归档及远端状态仍以总控原件和后续读回为准。
 
-TM-001开发会话根因调查指出，原执行器把签名输入指向旧worktree的`.local`；新整合树缺该目录，13变体在App启动前失败。正在修为门禁显式必填`--key-dir`，长跑前核对ZIP Ed25519签名和p12公证书指纹，并透传至精细与单例回放；缺环境BLOCKED、真实FAIL保留TC摘要。此时修复尚未形成新固定候选或产品PASS，0.1无SOP-020稳定原包，下一次门禁必须重建并完整重跑。
+文档分支按SOP-024实际运行`check_docs.py --mode structure`和`--mode baseline`、`quality_gate.py check`、`export_test_cases.py --check`，均退出0；当前0.2指针下119份登记文档、1092链接，用例164条/521步，质量检查明确`release_eligible=false`。项目总表11个Sheet、199行用例、12个历史批次已导出并回读PASS，SHA-256 `5f735736bb2a63759f9ab6d35e7ad3a1a0db66aad3cb753676978c1b90439613`；07发布版本新增远端功能分支代码、本机产品/稳定包、远端master、Tag独立列，均按未核实/待办如实显示。原始检查`.local/docs-checks/20261001-remote-checkpoint-docs/`；这不是0.1被测master上的产品回归。当时完整治理回归仍受旧TM-001变体跨版本程序错误影响，代码修复已由TM-002会话另交。
 
-文档会话同步SOP-009修订20、010修订16、014修订26、018修订16、019修订12到架构、测试策略、UPDATE-05详细用例、发布规范及机器登记。新SOP要求`--key-dir`目录祖先路径安全、uid/权限核对，按原ZIP字节重签名比对清单，p12仅提公有证书比对指纹；私有内容、密码和完整路径不得进入报告。预检不等于产品PASS，对有效包缺私有输入为本次前置BLOCKED；公开配置、原ZIP或包清单自身不一致为候选完整性FAIL。原c291的13变体FAIL不重分类。SOP-019另要求记录实际Git可执行文件路径/版本，HTTP 400或超时后先读回精确远端ref/SHA/tree，无法读回不得记代码已保存。本次是非SOP文档更新；固定实现、负测、最终候选完整产品门禁另待核对，发行资格仍为否。
+### 2026-10-01：跨版本治理修复及本地 master 首次门禁 FAIL
 
-TM-001开发会话交接：`883bf567b16d57527acdb887537699a082c53c97`定向真实App run `local-67f0e7832e284f2d8986b03c0da716b3`为14/14 PASS、清理完成，原件`.local/ci/local-67f0e7832e284f2d8986b03c0da716b3/result.json`在该开发worktree。它未覆盖c291旧FAIL，也不是本地master全量门禁；祖先路径安全检查与报告/普通输出中的绝对私有路径脱敏仍需代码修复与负测。文档侧实际运行：`python3 scripts/export_test_cases.py`生成137父TC/437步骤，根总表导出11 Sheet、137父TC/35变体/172行、13历史批次，SHA-256 `ee4ad2d5682e5bff156ca271b2b1c53d2d3a530274049640af2c84f591aab89e`；`python3 scripts/check_docs.py --mode structure`、`--mode baseline`、`scripts/quality_gate.py check`、`scripts/verify_project_workbook.py`、`scripts/export_test_cases.py --check`均退出0，回读总表11/137/35/172/13且`release_eligible=false`。`python3 -m unittest discover -s tests/governance -p 'test_*.py'`454/454 PASS，原始输出`.local/git-doc-sync-governance-after-sop.log`。这些是文档/治理核对，不是产品E2E或发行PASS。
+文档会话将 TM-002 的代码修复 `ca0c43b` 拣选为本树 `dcf215f`；跨版本治理完整重跑退出 0，457/457 PASS，原件 `.local/docs-checks/20261001-remote-checkpoint-docs/governance-after-ca0.log`。首次 9 项 ERROR 保留在原日志，这一治理 PASS 不代替产品 E2E。
 
-SOP会话再交付010修订16与018修订16，明确先检查公开配置、原ZIP与包清单：自身不一致为候选完整性FAIL；对已核对的有效包，私有seed/p12缺失、不安全或身份不符为App启动前BLOCKED。文档会话同步机器登记、详细用例和总表，不改变c291原件。重导出的根总表SHA-256为`89b7481b51adb882655d693de5c35ec551654a2bfec768275a884aee92896599`，11 Sheet、137父TC/35变体/172行及13批次；`scripts/verify_project_workbook.py`回读PASS、`release_eligible=false`。结构、基线、质量与用例导出检查均退出0；治理`python3 -m unittest discover -s tests/governance -p 'test_*.py'`退出0，454/454 PASS，原始输出`.local/git-doc-sync-governance-after-classification.log`。本轮未运行完整产品E2E。
+总控独立整合树本地 `master` 固定候选 `c2911bc65d55579fcf71e5ba11db87357a01a5e4`、tree `d4555b207b50e7cbe313b54ba9bfec1b7fdccb54` 的首次最终包门禁已于 2026-10-01 12:02:59Z 结束为 **FAIL**。原件 `.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/{gate.json,granular/result.json}`（位于总控整合工作树）显示 `release_eligible=false`，精细原始 116 项为 91 PASS/14 FAIL/11 BLOCKED。UPDATE-05 父项与 13 个签名校验变体因 `Internal signing inputs are unavailable` 失败；11 个 BLOCKED 为辅助占位，后续程序未因本次 FAIL 被视为通过。该固定候选无 SOP-018 PASS、无 SOP-020 稳定原包；独立 `d2db551` 的 PASS 仍是另一候选历史结果。
 
-本 0.1 独立文档树的结构、严格基线、追踪质量、用例导出检查均退出0；110份登记文档、1031链接，137条父用例/437步，质量检查只授`traceability_only`且`release_eligible=false`。根项目总表导出及回读退出0：11个Sheet、137父用例、35变体、172用例行、13测试批次，SHA-256 `30aef388608450d0d9b8dc89752ac56ff6905a2f9e6917b76634ef4b95c37dc0`。首次导表因本工作树缺打包运行时而退出1，复用已配置的本机工作簿依赖后在本树新目录重跑通过；失败日志`.local/git-doc-sync-workbook.log`、成功日志`.local/git-doc-sync-workbook-success.log`均留存。这些是SOP-024/008文档与Excel核对，不是c291被测树的产品重跑。
+文档会话用固定 `scripts/granular_test_result.py` 从本次原件导出独立 `TokenMeter测试结果-local-0512d4fc44544eba97f9d1ae79cbfc37.xlsx`；导出程序退出 0、表格回读 PASS，产品状态仍 FAIL。结果模型为 78 父 TC 中 66 PASS/1 FAIL/11 BLOCKED，38 个变体 25 PASS/13 FAIL；导出副本与总控整合树原件摘要一致，文件保存在本工作树 `.local/test-results/local-0512d4fc44544eba97f9d1ae79cbfc37-reviewed/`。根总表新增这一失败批次并标注被测 SHA，未覆盖此前 12 批。TM-001 开发会话正在按 SOP-015 修复签名输入缺口；下次门禁必须使用新固定候选、真实重跑并保留本次失败。
 
-完整治理首次执行454项中1个环境ERROR：独立树未安装锁定的Playwright依赖，原件`.local/git-doc-sync-governance.log`。在本树按`apps/desktop/package-lock.json`执行`npm ci --cache ../../.local/npm-cache`退出0，安装日志`.local/git-doc-sync-npm-ci.log`；随后相同完整治理命令退出0、454/454 PASS，原件`.local/git-doc-sync-governance-after-npm.log`。没有把首次ERROR改写为PASS，也没有据此宣称产品E2E通过。
+根总表此次重新导出与 `python3 scripts/verify_project_workbook.py` 回读均退出 0：11 Sheet、164 父 TC、35 变体、199 用例行、13 测试批次，SHA-256 `fa36939ff901254b9bce7775d194943ceccc3c7e41d64680c0ab1b4b22701a5d`。`product_tests_executed=false`、`release_eligible=false` 是导表范围声明；最新批次的原始 FAIL 不因导表成功改变。最终导出日志 `.local/docs-checks/20261001-remote-checkpoint-docs/workbook-after-tm002-progress.log`（首次纳入失败批次日志 `workbook-after-c291-fail.log` 保留），导表不是 c291 的被测候选输入。

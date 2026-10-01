@@ -614,7 +614,7 @@ UI 保存对应 trace/截图及断言事件；API 记录方法、路径、状态
 
 **类型：** 组件及E2E/负向/完整性和包身份。**输入：** bytes/SHA/ZIP/Info版本build/bundleID/代码证书/DR/路径逃逸各单一故障。
 
-**前置/数据：** D-UPDATE及按下表由`granular_update_validation_fixture.py`独立生成的13条负面变体；绑定见`tests/granular_update_variants.json`。固定runner须接收`--key-dir <绝对受限目录>`，按SOP-009/010先检查路径、权限、归属及原ZIP/清单的Ed25519签名和p12公有证书指纹一致，再读取同一原候选身份制作受控负例。公开配置、原ZIP和包清单自身矛盾属候选完整性FAIL；对已核对的有效包，私有输入缺失、不安全或身份不符时App启动前记本次前置BLOCKED。私有内容、密码和完整路径不入报告；预检PASS不代替产品断言。原c291批次FAIL不改写。SOP-009/010/013/014/017；RESET。
+**前置/数据：** D-UPDATE及按下表由`granular_update_validation_fixture.py`独立生成的13条负面变体；绑定见`tests/granular_update_variants.json`，Ed25519私钥仅由受控打包器读取。SOP-010/013/014/017；RESET。
 已确认规则：ZIP最大512 MiB（536870912字节），解压内容最大2 GiB（2147483648字节），边界本身允许、超过即拒绝；大小、摘要、签名或包身份校验失败均保留当前版本。
 
 | 步骤 | 动作 | 预期结果 |
