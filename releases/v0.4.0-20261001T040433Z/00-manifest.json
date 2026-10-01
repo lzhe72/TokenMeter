@@ -217,6 +217,27 @@
       "task": "TASK-TM004-INCREMENTAL",
       "test": "TC-TM004-INCREMENTAL-03",
       "description": "跨来源同ID与Claude复制历史；TM-003身份键/产品绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-INCREMENTAL",
+      "test": "TC-TM004-CORE-01",
+      "description": "完整LF、半行与限额续读（纯reader辅助模块，不代替产品TC）"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-INCREMENTAL",
+      "test": "TC-TM004-CORE-02",
+      "description": "前缀MAC、变更和密钥失败（纯reader辅助模块，不代替产品TC）"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-PARSER",
+      "test": "TC-TM004-CORE-03",
+      "description": "损坏完整行与未知结构（纯reader辅助模块，不代替产品TC）"
     }
   ],
   "test_programs": [],
