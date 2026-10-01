@@ -1,5 +1,10 @@
 # v0.1.0-20260929T074814Z — 实际测试结果
 
+## 2026-10-02 · 709d配置与更新三次定向原件
+
+TM-001同一709d源码/DMG候选：`CONFIG-01..06`独立run`local-a9e4d3d99b6f4997b2f5df32a8d95563`六父/27步、清理PASS，六项审计PASS；`UPDATE-01..04`run`local-6f929a978dc54f608824992e10d7ef1b`四父/15步、清理PASS，仅UPDATE-01/04审计PASS；`UPDATE-06..08`run`local-8c8930fe7be44ef88bdf56a41b74900c`三父/15步、清理PASS，仅UPDATE-07审计PASS。三批结果表和verification均逐份回读PASS，原始报告与Excel在`.local/ci/<run_id>/`及`.local/test-results/<run_id>/`，总表分别登记第29–31批次。UPDATE-05父例/13变体已单独登记第16批次，8父+13变体的局部结果不可合并伪称最终完整门禁。旧c291完整门禁FAIL、其余功能与正式发行状态不变。
+
+
 本文按 SOP-014/018/022/024 汇总已保存的真实原件和当前执行结果。它是结果索引，不是手写通过报告。dev07六个聚合场景组属于历史运行，不能回填新增精细TC。首轮精细全量`local-7feea03dd72e4eddba0651cede8fd23d`为BLOCKED；新版全量`local-343e54113b0b442383e80f137013014b`为FAIL。两轮原件均保留，后续定向及新包运行不改写它们。
 
 ## UPDATE-05定向探针：PASS，仅限709d候选（2026-10-02回读）
@@ -152,6 +157,12 @@ UI-01修复后独立单例Excel为`.local/test-results/aux-ui01-local-343e54113b
 同一709d候选另有独立`TASK-TM001-LOGIN-SESSION` run`local-1d7d9238f9fd4d389e27cad990a6cb97`，固定`LOGIN-10/11/12/13/14/15`六父例、14步全部PASS、零FAIL/BLOCKED、清理完成。原报告SHA-256 `b4c5cc8c3c0b9ef4ad6d2e4a965cc665952142424af50b207f50aa513e7f9e45`，独立结果Excel SHA-256 `c53f52fc2e7f961e433121934e211f1f1cd917ce6d34c6dc37d6a4ef27715bdb`，verification回读PASS。两个run分别保留，不拼接为一次完整回归；709d未测的其他父例及旧完整门禁FAIL不变。
 
 同包的`TASK-TM001-LOGIN-VALIDATION`另有run`local-5e076fa3d05b4d949877333a3b5339e0`：`LOGIN-05/06/07/09/17/18/19/20/21/22`十父例及17/18/19/22下12个固定变体，共22报告行PASS、36步、清理完成；其中4个父例由变体结果派生，18个是真实App执行。原报告SHA-256 `addde7aa03203f15ef8aa5b480714b5408024618c207a7032c1be9f8560085ea`，独立Excel SHA-256 `495242667704e4639a8a8389646afcfc96d28d79f991881df4d0bbef66f8669b`，verification回读PASS。`TASK-TM001-LOGIN-RATE`的`LOGIN-16`另一次run`local-09f2c4fd672848a9a68ba851a5d7b3c9`为一父例/三步真实App PASS、清理完成；原报告SHA-256 `f3793197707de6e877e80ad6e542a8131b8ccd226bd0ff7ca615fdffba34cbb2`，独立Excel SHA-256 `654629131838f9f937f4f0c6ed44e6ece9373792f9313ccd2dad368088ddb0c4`，verification回读PASS。四个登录任务在709d候选分别定向覆盖了22父例与12变体；TM-001其余功能、完整门禁及正式发行均不能由四批单独PASS推定。
+
+`TASK-TM001-CHANGE-PASSWORD`另一次`local-64cdbd1050d84763928c0b6a7f30e2c3`覆盖`PASSWORD-01..11`十一父例和09/11下六变体：17报告行PASS、32步、清理完成，其中15次真实App执行、两父例由变体派生。原报告SHA-256 `687c5b5ebaa6f2a2befd85fe794c0aa3d69b47b8d125e739f3cf2387503f2282`，独立Excel SHA-256 `bc69c4011029b3d25e2a3047a0e9272c77f1d8ec0a7b75d2c491753306250418`，verification回读PASS；独立审计`.local/ci/local-64cdbd1050d84763928c0b6a7f30e2c3-audit/audit.json` SHA-256 `3aa2f3aee06aab191f974899825e84dda3099583aa857fb435f63ac1248792fb`仅核`PASSWORD-05`并PASS，不是12项完整审计。该批只证明709d候选改密功能定向范围；其他TM-001功能、旧完整门禁与正式发行不变。
+
+`TASK-TM001-SESSION`另一次`local-ff24478631134a96bd7d40f2bbc5e254`覆盖`SESSION-01..10`十父例及`SESSION-05#RESET/#DISABLE`两变体：12报告行PASS、44步、清理完成；SESSION-05父例由两变体派生，其余11行为真实App执行。原报告SHA-256 `ef87c7d73190c398e8bdaf92eba94b18b57413ee0804296af938af64d320670f`、独立Excel SHA-256 `887fbc4bda8d617928a0f1b4d27f880046bb6e6ac39e5aadc9420625535093f2`，verification回读PASS；审计SHA-256 `ee5af01b0b3d0512caa63b9c3d60726f0ed2a136344c1617441816acd6deb58e`仅核`SESSION-04`并PASS，不是完整审计。该批仅为同一709d候选会话功能定向；其他功能与完整发行门禁状态不变。
+
+`TASK-TM001-ADMIN`另一次`local-cd15a5fef2444f748088d1fcdd29fe0d`覆盖`ADMIN-01..06`六父例及ADMIN-02的`EMPTY/SHORT/LONG`、ADMIN-05的`SINGLE/CONCURRENT`五变体：11报告行PASS、33步、清理完成，其中9行为真实App执行、两父例由变体派生。原报告SHA-256 `884a7ac1edd31d06d1a0a69775990e1986f99935accac1b5268c9e40772153a3`，独立Excel SHA-256 `de8fa71cf53d0d4a56225ec2fbcf83d73bee875d2811b394f7b7a85ed6a27bc5`，verification回读PASS；独立审计SHA-256 `079e813e9ca0d20c4497651abdfbe11cbad299437de1f4d71a41c2b415fd3860`仅核`ADMIN-03`并PASS，不是12项完整审计。本批只证明709d管理员功能定向范围，其他TM-001功能及完整门禁未通过。
 
 [登录与改密01a](../../docs/testing/cases/01a-TM-001-login-scenarios.md)、[会话/管理/配置/升级01b](../../docs/testing/cases/01b-TM-001-session-admin-release-scenarios.md)、[交付检查01c](../../docs/testing/cases/01c-TM-001-delivery-checks.md)中的TC/变体均为本轮需求阶段基线修订。原代码先于这些精细条目存在，不能追认为先设计后开发已经完成。
 

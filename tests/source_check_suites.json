@@ -4,25 +4,78 @@
     "tm003-core": {
       "release_id": "v0.3.0-20261001T034652Z",
       "file": "apps/desktop/tests/tm003-core.test.ts",
-      "cases": ["TC-TM003-CORE-01", "TC-TM003-CORE-02", "TC-TM003-CORE-03"],
+      "cases": [
+        "TC-TM003-CORE-01",
+        "TC-TM003-CORE-02",
+        "TC-TM003-CORE-03"
+      ],
       "reset_kind": "owned_root"
     },
     "tm003-core45": {
       "release_id": "v0.3.0-20261001T034652Z",
       "file": "apps/desktop/tests/tm003-core45.test.ts",
-      "cases": ["TC-TM003-CORE-04", "TC-TM003-CORE-05"],
+      "cases": [
+        "TC-TM003-CORE-04",
+        "TC-TM003-CORE-05"
+      ],
       "reset_kind": "owned_root"
     },
     "tm003-core06": {
       "release_id": "v0.3.0-20261001T034652Z",
       "file": "apps/desktop/tests/tm003-core06.test.ts",
-      "cases": ["TC-TM003-CORE-06"],
+      "cases": [
+        "TC-TM003-CORE-06"
+      ],
       "reset_kind": "owned_root"
     },
     "tm003-core07": {
       "release_id": "v0.3.0-20261001T034652Z",
       "file": "apps/desktop/tests/tm003-core07.test.ts",
-      "cases": ["TC-TM003-CORE-07"],
+      "cases": [
+        "TC-TM003-CORE-07"
+      ],
+      "reset_kind": "owned_root"
+    },
+    "tm005-core04": {
+      "release_id": "v0.5.0-20261001T034729Z",
+      "file": "apps/desktop/tests/tm005-iana.test.ts",
+      "cases": [
+        "TC-TM005-CORE-04"
+      ],
+      "reset_kind": "memory_only"
+    },
+    "tm005-core05": {
+      "release_id": "v0.5.0-20261001T034729Z",
+      "file": "apps/desktop/tests/tm005-sqlite-snapshot.test.ts",
+      "cases": [
+        "TC-TM005-CORE-05"
+      ],
+      "reset_kind": "owned_root"
+    },
+    "tm004-core": {
+      "release_id": "v0.4.0-20261001T040433Z",
+      "file": "apps/desktop/tests/tm004-core.test.ts",
+      "cases": [
+        "TC-TM004-CORE-01",
+        "TC-TM004-CORE-02",
+        "TC-TM004-CORE-03"
+      ],
+      "reset_kind": "owned_root"
+    },
+    "tm004-core04": {
+      "release_id": "v0.4.0-20261001T040433Z",
+      "file": "apps/desktop/tests/tm004-core04.test.ts",
+      "cases": [
+        "TC-TM004-CORE-04"
+      ],
+      "reset_kind": "memory_only"
+    },
+    "tm004-core05": {
+      "release_id": "v0.4.0-20261001T040433Z",
+      "file": "apps/desktop/tests/tm004-core05.test.ts",
+      "cases": [
+        "TC-TM004-CORE-05"
+      ],
       "reset_kind": "owned_root"
     }
   }

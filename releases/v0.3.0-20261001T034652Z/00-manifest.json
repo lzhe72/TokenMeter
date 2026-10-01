@@ -286,6 +286,27 @@
       "task": "TASK-TM003-SCAN",
       "test": "TC-TM003-CORE-07",
       "description": "主进程假来源能力跨页/分块采集、守卫失效与整代提交；仅source_check"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-SECRET",
+      "test": "TC-TM003-CORE-08",
+      "description": "私有加密身份密钥持久/错键拒绝与主体HMAC；仅source_check"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-WIRING",
+      "test": "TC-TM003-CORE-09",
+      "description": "真实SourceAccess类+合成helper到UsageStore确认/撤销/换主体；仅source_check"
+    },
+    {
+      "requirement": "REQ-TM003",
+      "feature": "TM-003",
+      "task": "TASK-TM003-IPC",
+      "test": "TC-TM003-CORE-10",
+      "description": "主窗口受限collection处理函数与刷新状态隔离；仅source_check"
     }
   ],
   "program_bindings_status": "planned",

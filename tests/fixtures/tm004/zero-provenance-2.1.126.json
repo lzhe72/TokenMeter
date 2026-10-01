@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "source_version": "Claude Code 2.1.126",
+  "cli_binary_sha256": "49a90c474383a9eda11310bd71f7ea6bb91361ec99443b733cb5003f6e703ccb",
+  "research_run_id": "20261001T1130Z",
+  "source_kind": "isolated CLI with prewritten synthetic loopback SSE",
+  "valid_provider_zero_proven": false,
+  "native_usage_indistinguishable": true,
+  "cases": [
+    {
+      "mode": "explicit_zero",
+      "upstream_usage_field_present": true,
+      "upstream_input_tokens": 0,
+      "upstream_output_tokens": 0,
+      "synthetic_sse_sha256": "1a9425684633488b8240786b7d58caeeeafd6b1ec013bd74ca835856b576c4da",
+      "native_jsonl_sha256": "f9a6a0ecdad4b6442f41152a73c44fc06411fc3d287a8479ac70228770f24f30",
+      "native_assistant_usage": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0
+      }
+    },
+    {
+      "mode": "omitted_usage",
+      "upstream_usage_field_present": false,
+      "upstream_input_tokens": null,
+      "upstream_output_tokens": null,
+      "synthetic_sse_sha256": "561f42fb85d466ba924c80edb6562b52584232dc0c72ab30b646922c21b87a6e",
+      "native_jsonl_sha256": "d516da3f88ccf036679f9243979fc5c6241c0463479ec800a47ed3ce9e52fd30",
+      "native_assistant_usage": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0
+      }
+    }
+  ]
+}

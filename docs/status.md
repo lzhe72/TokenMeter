@@ -2,6 +2,39 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+当前根项目总表已按合并候选重生并回读PASS：11 Sheet、236父TC、42变体、35批次；SHA-256 `ddc2d04b4119481f48969265cf84e87e4e01dcdb272e47367064ca9690d76de8`。TM003新三例仍未绑定/执行，TM004五例虽已绑定仍待新run；完整产品E2E与发行均未通过。
+
+SOP-008对干净输入`8107a06`的CORE08–10三例出具本机切片收据，结构、治理531/531、机器目录、总表及三组公开HMAC向量均通过；只准进入程序实现，三例仍未执行，整版产品与发行未通过。
+
+TM-004 CORE01–05固定TAP程序已随本地master进入文档树，三套source_check suite及五条机器绑定/总表候选输入已同步；正式逐TC运行/独立Excel尚未生成，原20产品TC与发行仍NOT_RUN。
+TM-003 正在冻结下一独立开发输入CORE-08～10：私有身份密钥、真实SourceAccess类与合成helper的主进程适配、受限collection IPC；每条四步，程序绑定与执行仍空。原27产品TC、真实系统来源/Keychain/安装App及大日志处理不由此通过，待干净提交按SOP-008出切片收据。
+
+本地master新纳入的TM-004 fixture README已由文档会话登记`DOC-FIXTURE-TM004-README`并从0.4测试计划链接；仅修复整合树“未登记Markdown”结构阻断，不改变测试或产品状态。
+
+TM-001 709d候选的CONFIG六父、UPDATE-01..04四父、UPDATE-06..08三父分别在三次真实App定向run中PASS，共57步，独立Excel/verification及所列独立审计均回读，登记总表第29–31批次。UPDATE-05另见第16批次；旧完整门禁FAIL与正式发行NOT_RUN保留。
+
+TM-003同树绑定候选`2324173`重新执行CORE01–07四套固定source_check，合计7/7、27步，四份独立Excel回读PASS，登记第32–35批次；治理全量511/511 PASS。本结果只证明辅助模块，0.3产品E2E与正式门禁仍NOT_RUN。
+
+TM-003 的 `CORE-01`～`CORE-07`固定模块测试、套件注册表和 `run_source_check.mjs` 已随本地 master 合入本文档候选树；机器用例现逐条绑定程序、测试名、owner 重置和独立命令，`TEST_CASES.md`与总表同步。先前各模块 PASS 原件仍只证明原候选；本次绑定后的整合树尚未新run，产品 App/IPC/真实授权和正式发行仍NOT_RUN。文档树 `.local` 目录权限曾使治理两例在前置安全检查失败，改回 owner 0700 后该两例重跑2/2 PASS；全量治理首次509/511，权限恢复后整合树复核511/511 PASS。
+
+TM-001 709d候选`ADMIN`定向run`local-cd15a5fef2444f748088d1fcdd29fe0d`覆盖6父+5变体，11行/33步PASS、清理和Excel回读PASS；仅`ADMIN-03`独立审计PASS，作为总表第28批次。其他TM-001功能、完整审计、旧c291完整门禁FAIL与正式发行NOT_RUN保持。
+
+
+TM-003 `CORE-07`在代码候选`33b1ee1636fc8e92ecba834856769df9f112c509`独立`source_check` run`tm003-core07-20261001T200438Z`固定五步1/1、清理与Excel回读PASS，登记总表第27批次；先前固定红测FAIL原件保留。模块假能力/小文件结果不证明真实App/IPC、Keychain、任意大日志或产品E2E；该句记录当时文档树状态，后续本地master整合后已补齐同树机器绑定。
+
+
+TM-001 709d候选`SESSION`功能定向run`local-ff24478631134a96bd7d40f2bbc5e254`覆盖10父+2变体，12行/44步PASS、清理和Excel回读PASS；仅`SESSION-04`独立审计PASS，作为总表第26批次。其余TM-001功能、完整审计及正式发行仍按原阻断。
+
+
+[10月1日晚至2日复盘续篇](retrospectives/2026-10-01--2026-10-02-followup.md)已将Git恢复、模块与产品报表边界、TM002预检、TM005真零、TM003大文件与远端读回等10例（RET-042–051）按问题、决策、方案、实测结果和经验逐条记录；未完成行动仍按各版本阻断状态追踪。
+
+
+[项目会话体系](project-sessions.md)已逐一核对TM-003/004/005开发会话的实际ID与标题，补齐五需求开发会话、文档/SOP/总控分工及当前交接索引。旧2026-10-01队列保留为历史快照，不用其中旧数量表示当前进度。
+
+
+TM-001 709d候选`CHANGE-PASSWORD`独立真实App run`local-64cdbd1050d84763928c0b6a7f30e2c3`覆盖11父+6变体，17行/32步PASS、清理和Excel回读PASS；仅`PASSWORD-05`独立审计PASS，登记总表第25批次。其他TM-001功能、完整审计、旧c291完整门禁FAIL及正式发行NOT_RUN保持。
+
+
 TM-005代码候选`259cf768`的`CORE-04/05`两次独立`source_check`各1/1、三/四步、清理及独立Excel回读PASS，作为总表第23/24批次。代码同名远端功能分支已由push与GitHub API读回同SHA/tree；Git ls-remote曾因443不可达失败。测试程序尚未并入本文档树，机器目录绑定保持null；0.5产品TC、真实App/原生日志E2E和正式发行仍NOT_RUN。
 
 TM-001同一709d候选新增`LOGIN-VALIDATION`十父/十二变体22行36步与`LOGIN-RATE`单父三步两次真实App定向PASS，独立Excel均回读，分列总表第21/22批次。四批登录任务合计22父+12变体已按各自run通过；其余TM-001功能尚未验收，旧c291完整门禁FAIL与正式发行NOT_RUN。

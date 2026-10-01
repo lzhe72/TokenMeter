@@ -35,6 +35,7 @@ import local_e2e as base
 from granular_service_fixture import ServiceFixture
 import tm002_fixture as sources
 import verify_tm002_evidence as evidence_audit
+import tm002_product_result_export as product_export
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -679,6 +680,7 @@ def execute(args) -> int:
                                         for case in cases if case["id"] not in variants_by_parent},
               "state": "BLOCKED", "release_eligible": False, "cleanup_completed": False}
     code_paths = [ROOT / path for path in ("scripts/granular_permissions.py", "scripts/verify_tm002_evidence.py",
+                 "scripts/tm002_product_result_export.py", "scripts/export_tm002_product_result.mjs",
                  "scripts/tm002_fixture.py",
                  "scripts/tm002_keychain_probe.swift",
                  "scripts/local_e2e.py", "scripts/granular_service_fixture.py",
@@ -805,7 +807,8 @@ def execute(args) -> int:
                 report["state"] = "FAIL"
                 report["evidence_audit_reason"] = "Fixed TM-002 report evidence audit failed: " + "; ".join(audit["errors"])
             base.write_json(output / "result.json", report)
-    return 0 if report["state"] == "PASS" else 1
+    export_receipt = product_export.export_result(output / "result.json", output)
+    return 0 if report["state"] == "PASS" and export_receipt["state"] == "PASS" else 1
 
 
 def main(argv=None) -> int:

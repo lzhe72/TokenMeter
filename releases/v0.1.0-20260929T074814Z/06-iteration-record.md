@@ -1,5 +1,10 @@
 # v0.1.0-20260929T074814Z — 执行与交接记录
 
+## 2026-10-02 · 709d配置与更新三次定向原件
+
+TM-001同一709d源码/DMG候选：`CONFIG-01..06`独立run`local-a9e4d3d99b6f4997b2f5df32a8d95563`六父/27步、清理PASS，六项审计PASS；`UPDATE-01..04`run`local-6f929a978dc54f608824992e10d7ef1b`四父/15步、清理PASS，仅UPDATE-01/04审计PASS；`UPDATE-06..08`run`local-8c8930fe7be44ef88bdf56a41b74900c`三父/15步、清理PASS，仅UPDATE-07审计PASS。三批结果表和verification均逐份回读PASS，原始报告与Excel在`.local/ci/<run_id>/`及`.local/test-results/<run_id>/`，总表分别登记第29–31批次。UPDATE-05父例/13变体已单独登记第16批次，8父+13变体的局部结果不可合并伪称最终完整门禁。旧c291完整门禁FAIL、其余功能与正式发行状态不变。
+
+
 ## 2026-10-01 开发阶段新检查与正式发行状态
 
 用户现要求先完成 TM-001→TM-005 的功能源码和各功能已基线固定 TC 回归，总控可在开发阶段按依赖顺序整合本地 `master`，目标源码全部完成后登记远端来源。下文早期“逐版本地稳定原包后整合/推送”的顺序是当时决策和执行历史；现在完整跨需求最终包门禁、SOP-018/020、稳定包和Tag须等用户另行启动正式对外发行。c291 固定候选的门禁 FAIL 仍是实际历史原件，不会因阶段改变而重算。
@@ -746,3 +751,9 @@ TM-001开发会话交接`709d21253a0f88bc703a431cbf3adba3df17e508`原始`local-6
 同候选新增另一次`LOGIN-SESSION`定向run`local-1d7d9238f9fd4d389e27cad990a6cb97`六父例/14步真实App PASS、清理及独立Excel回读PASS，作为总表第20批次。与上一`LOGIN-AUTH`第19批次分开登记，不能拼成整版门禁。
 
 709d候选再有`LOGIN-VALIDATION`十父/十二变体22行、36步的独立run`local-5e076fa3d05b4d949877333a3b5339e0`和`LOGIN-RATE`单父/三步的run`local-09f2c4fd672848a9a68ba851a5d7b3c9`；两者原报告、独立Excel及verification均回读PASS，分列总表第21/22批次。四批累计覆盖709d登录任务22父+12变体，但并非一次TM-001全功能回归，旧c291完整门禁FAIL和正式发行NOT_RUN保持；逐批SHA与派生父例口径见07。
+
+同一709d候选的`CHANGE-PASSWORD`十一父/六变体另有17行、32步PASS的独立run`local-64cdbd1050d84763928c0b6a7f30e2c3`，清理及独立Excel回读PASS，作为总表第25批次。仅`PASSWORD-05`的独立审计PASS，不能称12项全量审计已通过；其他功能和完整发行状态不变，逐原件见07。
+
+709d候选`SESSION`十父/两变体另有12行、44步PASS的独立run`local-ff24478631134a96bd7d40f2bbc5e254`，清理及独立Excel回读PASS，作为总表第26批次。独立审计仅`SESSION-04` PASS；本轮其余功能及完整门禁另验，逐原件见07。
+
+709d候选`ADMIN`六父/五变体另有11行、33步PASS的独立run`local-cd15a5fef2444f748088d1fcdd29fe0d`，清理及独立Excel回读PASS，作为总表第28批次。独立审计仅`ADMIN-03` PASS，其他功能和整版门禁另验，逐原件见07。

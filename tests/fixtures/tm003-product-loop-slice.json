@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "purpose": "TM-003 CORE-08/09/10 isolated main-process preparation, never a product E2E substitute",
+  "public_test_key_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "principal_scheme": "HMAC-SHA256 over uint32BE-length-prefixed strict UTF-8 fields [usage-principal-v1, canonical origin, account.id]",
+  "identities": [
+    {
+      "origin": "http://127.0.0.1:64800",
+      "account_id": "member-0001",
+      "principal_key": "508352ac03ff15516a25bc6315a88f9414e6a41e22d534904d29b3b05e9f35f9"
+    },
+    {
+      "origin": "http://127.0.0.1:64801",
+      "account_id": "member-0001",
+      "principal_key": "7224c50cab93182a1ef637111dd8d3c3ecea65a48ebba634794b1e1e733a8d99"
+    },
+    {
+      "origin": "http://127.0.0.1:64800",
+      "account_id": "member-0002",
+      "principal_key": "05a364542d4b2a1b95a2dc4cf82a143a04e679b190158217eb8a83c7d9a88e6f"
+    }
+  ],
+  "confirmed_source_id": "11111111-2222-4333-8444-555555555555",
+  "unconfirmed_source_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+  "codex_generation_fixture": "tests/fixtures/tm003-main-collector-slice.json",
+  "expected_codex": {"calls": 2, "input_tokens": 300, "output_tokens": 30, "cached_input_tokens": 60, "total_tokens": 330},
+  "owner_profile_mode": "0700",
+  "owner_secret_file_mode": "0600",
+  "owner_sqlite_file_mode": "0600",
+  "secret_file": "collection/identity-secret-v1.json",
+  "sqlite_file": "collection/usage-v1.sqlite"
+}

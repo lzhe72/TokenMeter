@@ -193,7 +193,7 @@
 
 ## 主进程触发的隔离辅助切片
 
-固定输入为[触发端口合成fixture](../../../tests/fixtures/tm004-trigger-core-slice.json)。仅以注入的账号快照、TM-002候选扫描端口和TM-003提交端口验证主进程编排；端口调用、取消、守卫和返回字段须由固定程序逐步断言。每个负例从全新内存状态开始，不访问真实账号、Keychain、日志、SQLite、服务、IPC、renderer或安装App；DB操作不适用，合成提交端口只记录调用次数及数值。程序绑定尚未建立，本切片不赋予原20条产品TC通过状态。
+固定输入为[触发端口合成fixture](../../../tests/fixtures/tm004-trigger-core-slice.json)。仅以注入的账号快照、TM-002候选扫描端口和TM-003提交端口验证主进程编排；端口调用、取消、守卫和返回字段须由固定程序逐步断言。每个负例从全新内存状态开始，不访问真实账号、Keychain、日志、SQLite、服务、IPC、renderer或安装App；DB操作不适用，合成提交端口只记录调用次数及数值。同树固定程序和suite已绑定，整合候选待新run/独立Excel；本切片不赋予原20条产品TC通过状态。
 
 ### TC-TM004-CORE-04 · 授权主体与扫描事务触发
 
@@ -211,3 +211,5 @@
 2. 假扫描完整三个文件后，构成一次`commitScanBatch`输入，文件a/b/c分别且仅分别拥有自己的M/S/Q、`invalid_json`/`unsupported_version`/`unverified_parent`诊断及410/510/610游标；c另带异常`model_id`哨兵，只有符合fixture中有界模型标识规则的值可保留，异常值置`null`并在c增加`invalid_model_id`诊断，不得把哨兵写入SQLite/WAL。不得把扁平调用/诊断列表全挂第一文件。M的`turnId`代号为`claude-main-v1`，S为`claude-agent-v1:agent-01`，Q为`claude-unverified-v1:msg-q`并保持父归属未核实；三种代号仅参与`source_scope_key`本机HMAC，原生session/agent/call ID不作SQLite列值。未到末页或任一文件正文不稳定时`commitScanBatch=0`。
 3. 在新库分别注入第二游标写入失败、guard拒绝/撤权：每次整代事务回滚或未开始，三文件事件/游标/诊断/覆盖/密钥标记均不存在，`cancelScan`执行且缓冲清空；不能把前两文件的成功留在库中。
 4. 稳定末页且guard通过时同步调用`commitScanBatch`恰一次：只读SQLite见三唯一调用、input350/output35/total385、三个来源键及410/510/610游标、四种诊断按文件归属，根覆盖`scan_incomplete=1`（Q父归属未核实），三个`source_scope_key`等于fixture向量，重扫不增加事件。完整SQLite及WAL/返回序列化无异常模型哨兵、原生session/agent/call ID、相对名、完整路径、正文和秘密。这里仅核对合成端口+隔离SQLite；真实TM-002授权、安装App UI/IPC、服务及原产品`LINEAGE/INCREMENTAL/SOURCE`仍须各自E2E。
+
+CORE-01～05的程序、精确测试名、suite、清理类型和独立命令以`tests/test_cases.json`机器绑定为准。当前仅绑定就绪；既有分散Node日志不补录为固定`source_check`批次，待干净整合候选新run与Excel/verification回读。原20条产品TC和正式发行不因此通过。
