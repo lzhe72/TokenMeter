@@ -14,12 +14,14 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import re
 import secrets
 import shutil
 import stat
 import struct
 import subprocess
 import sys
+import tempfile
 import threading
 from datetime import datetime, timezone
 from urllib.request import Request, ProxyHandler, build_opener
@@ -63,30 +65,154 @@ def _owned_directory(path: Path) -> Path:
 
 
 def _read_config(package: dict, update_zip: Path) -> dict:
+    if not isinstance(package, dict):
+        raise ValueError("Unexpected local release manifest")
     release_id = package.get("release_id")
-    if not isinstance(release_id, str) or not release_id.startswith("v0.1.0-"):
+    if not isinstance(release_id, str) or not re.fullmatch(r"v0\.1\.0-\d{8}T\d{6}Z", release_id):
         raise ValueError("Unexpected local release manifest")
     root = Path(__file__).resolve().parents[1]
     config_path = root / "releases" / release_id / "local-release.json"
-    config = json.loads(config_path.read_text(encoding="utf-8"))
-    if package.get("artifacts", {}).get("update_zip", {}).get("sha256") != digest(update_zip):
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise ValueError("Local release trust config is unavailable or invalid") from error
+    try:
+        descriptor = package["artifacts"]["update_zip"]
+        actual_digest = digest(update_zip)
+        actual_bytes = update_zip.stat().st_size
+        package_certificate = package["app"]["certificate_sha256"]
+    except (KeyError, TypeError, OSError):
+        raise ValueError("Candidate update artifact or identity is unavailable") from None
+    if not isinstance(descriptor, dict):
+        raise ValueError("Candidate update artifact descriptor is invalid")
+    if descriptor.get("sha256") != actual_digest:
         raise ValueError("Update ZIP differs from current package manifest")
-    if package["artifacts"]["update_zip"]["bytes"] != update_zip.stat().st_size:
+    if descriptor.get("bytes") != actual_bytes:
         raise ValueError("Update ZIP length differs from package manifest")
-    if config["update_public_key"] is None or config["certificate_sha256"] != package["app"]["certificate_sha256"]:
+    if (not isinstance(config, dict) or config.get("update_public_key") is None
+            or config.get("certificate_sha256") != package_certificate):
         raise ValueError("Local release trust anchors differ from package")
     return config
 
 
+class SigningInputsUnavailable(ValueError):
+    """Private signing prerequisites cannot safely validate this package."""
+
+
+def _secure_ancestor_chain(path: Path, seen: frozenset[Path] = frozenset()) -> None:
+    """Check the lexical chain and every target of an allowed system symlink."""
+    path = Path(os.path.normpath(path))
+    if not path.is_absolute():
+        raise SigningInputsUnavailable("Internal signing input path is not absolute")
+    current = Path(path.anchor)
+    components = path.parts[1:]
+    for index, component in enumerate(components):
+        current /= component
+        try:
+            details = current.lstat()
+        except OSError:
+            raise SigningInputsUnavailable("Internal signing input path is unavailable") from None
+        if stat.S_ISLNK(details.st_mode):
+            if details.st_uid != 0 or current in seen:
+                raise SigningInputsUnavailable("Internal signing input path has an unsafe symlink")
+            target = Path(os.readlink(current))
+            if not target.is_absolute():
+                target = current.parent / target
+            _secure_ancestor_chain(target.joinpath(*components[index + 1:]), seen | {current})
+            return
+        if not stat.S_ISDIR(details.st_mode) or details.st_uid not in (0, os.getuid()):
+            raise SigningInputsUnavailable("Internal signing input path has an unsafe ancestor")
+        mode = details.st_mode
+        if mode & 0o022 and not (details.st_uid == 0 and mode & stat.S_ISVTX):
+            raise SigningInputsUnavailable("Internal signing input path has a writable ancestor")
+
+
 def _check_key_dir(key_dir: Path) -> Path:
-    key_dir = Path(os.path.abspath(key_dir))
-    if key_dir.is_symlink() or not key_dir.is_dir() or key_dir.stat().st_uid != os.getuid():
-        raise ValueError("Internal signing inputs are unavailable")
+    key_dir = Path(key_dir)
+    if not key_dir.is_absolute() or ".." in key_dir.parts:
+        raise SigningInputsUnavailable("Internal signing input path is not absolute")
+    _secure_ancestor_chain(key_dir)
+    try:
+        directory = key_dir.lstat()
+    except OSError:
+        raise SigningInputsUnavailable("Internal signing inputs are unavailable") from None
+    if (not stat.S_ISDIR(directory.st_mode) or directory.st_uid != os.getuid()
+            or stat.S_IMODE(directory.st_mode) != 0o700):
+        raise SigningInputsUnavailable("Internal signing input directory is unsafe")
     for name in ("seed", "codesign.p12", "password"):
         item = key_dir / name
-        if item.is_symlink() or not item.is_file() or item.stat().st_uid != os.getuid() or stat.S_IMODE(item.stat().st_mode) & 0o077:
-            raise ValueError("Internal signing input ownership or permissions are unsafe")
+        try:
+            details = item.lstat()
+        except OSError:
+            raise SigningInputsUnavailable("Internal signing input is unavailable") from None
+        if (not stat.S_ISREG(details.st_mode) or details.st_uid != os.getuid()
+                or stat.S_IMODE(details.st_mode) != 0o600):
+            raise SigningInputsUnavailable("Internal signing input ownership or permissions are unsafe")
     return key_dir
+
+
+def _verify_public_update_signature(update_zip: Path, config: dict, package: dict) -> None:
+    """Reject a contradictory public package before inspecting private inputs."""
+    try:
+        public = base64.b64decode(config["update_public_key"], validate=True)
+        signature = base64.b64decode(package["signatures"]["update_ed_signature"], validate=True)
+    except (KeyError, TypeError, ValueError):
+        raise ValueError("Package update signature or public key is invalid") from None
+    if len(public) != 32 or len(signature) != 64:
+        raise ValueError("Package update signature or public key is invalid")
+    script = ("const fs=require('node:fs'),c=require('node:crypto');"
+              "try { const pub=Buffer.from(process.argv[1],'base64'),sig=Buffer.from(process.argv[2],'base64');"
+              "const key=c.createPublicKey({key:Buffer.concat([Buffer.from('302a300506032b6570032100','hex'),pub]),"
+              "format:'der',type:'spki'});"
+              "process.exit(c.verify(null,fs.readFileSync(process.argv[3]),key,sig)?0:2);"
+              "} catch { process.exit(3); }")
+    try:
+        result = subprocess.run(["node", "-e", script, config["update_public_key"],
+                                 package["signatures"]["update_ed_signature"], str(update_zip)],
+                                capture_output=True, timeout=60, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        raise SigningInputsUnavailable("Public signature verifier is unavailable") from None
+    if result.returncode == 2:
+        raise ValueError("Original update ZIP signature differs from package public identity")
+    if result.returncode:
+        raise SigningInputsUnavailable("Public signature verifier could not complete")
+
+
+def validate_signing_inputs(key_dir: Path, package: dict, update_zip: Path) -> dict:
+    """Bind restricted private inputs to the unchanged candidate ZIP and manifest.
+
+    The returned receipt contains public hashes only. Neither the input path nor
+    private material is copied to reports or generated update-source responses.
+    """
+    update_zip = Path(update_zip)
+    config = _read_config(package, update_zip)
+    _verify_public_update_signature(update_zip, config, package)
+    keys = _check_key_dir(key_dir)
+    with tempfile.TemporaryDirectory(prefix="tm-update-signing-check-") as directory:
+        scratch = Path(directory)
+        try:
+            signed = sign_archive(update_zip, keys, config, scratch)
+        except (OSError, ValueError, subprocess.SubprocessError):
+            raise SigningInputsUnavailable("Internal update seed differs from candidate identity") from None
+        if signed != package["signatures"]["update_ed_signature"]:
+            raise SigningInputsUnavailable("Internal update seed differs from candidate identity")
+        certificate = scratch / "public.pem"
+        der = scratch / "public.der"
+        for command in (["openssl", "pkcs12", "-in", str(keys / "codesign.p12"),
+                         "-passin", "file:" + str(keys / "password"), "-clcerts", "-nokeys",
+                         "-out", str(certificate)],
+                        ["openssl", "x509", "-in", str(certificate), "-outform", "DER", "-out", str(der)]):
+            try:
+                result = subprocess.run(command, capture_output=True, timeout=60, check=False)
+            except (OSError, subprocess.TimeoutExpired):
+                raise SigningInputsUnavailable("Internal code signing certificate is unavailable") from None
+            if result.returncode:
+                raise SigningInputsUnavailable("Internal code signing certificate differs from candidate identity")
+        if digest(der) != package["app"]["certificate_sha256"]:
+            raise SigningInputsUnavailable("Internal code signing certificate differs from candidate identity")
+    return {"schema_version": 1, "state": "PASS", "scope": "signing-input-preflight",
+            "update_zip_sha256": package["artifacts"]["update_zip"]["sha256"],
+            "certificate_sha256": package["app"]["certificate_sha256"]}
 
 
 def _small_signed_zip(target: Path, kind: str, info: bytes) -> None:
@@ -442,12 +568,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--package-manifest", type=Path, required=True)
     parser.add_argument("--update-zip", type=Path, required=True)
-    parser.add_argument("--keys", type=Path, required=True)
+    parser.add_argument("--key-dir", type=Path, required=True)
     parser.add_argument("--variant", choices=sorted(IMPLEMENTED), required=True)
     parser.add_argument("--owned-output", type=Path, required=True)
     args = parser.parse_args()
     package = json.loads(args.package_manifest.read_text(encoding="utf-8"))
-    fixture = ValidationFixture(args.update_zip, package, args.owned_output, args.variant, args.keys)
+    validate_signing_inputs(args.key_dir, package, args.update_zip)
+    fixture = ValidationFixture(args.update_zip, package, args.owned_output, args.variant, args.key_dir)
     try:
         result = {"schema_version": 1, "scope": "negative-update-fixture-non-gui",
                   "variant_id": args.variant, "state": "PASS",
