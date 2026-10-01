@@ -7119,133 +7119,3711 @@
     },
     {
       "id": "E2E-TM002-001",
-      "title": "首次授权、预览与确认",
+      "title": "选择、预览、意愿与恢复",
       "feature_id": "TM-002",
       "requirement_id": "REQ-TM002",
-      "task_ids": [],
+      "task_ids": [
+        "TASK-TM002-PICKER",
+        "TASK-TM002-PREVIEW",
+        "TASK-TM002-CONSENT",
+        "TASK-TM002-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e_group",
+      "input": "system_permissions 合成 Codex/Claude A 与通常未选 B；分别真实选择/取消、显式预览、独立意愿、重启/换账号/换 origin；SELECT-02#REPLACE_CONFIRMED 唯一例外：同账号工具从已确认 Codex A 经真实面板原子替换为 B。",
+      "preconditions": "最终DMG安装后App、真实隔离服务/SQLite、每个子TC独占0700 profile/A/B、已验证合成Alice/Bob；见详细文档共同合同。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "经真实登录与身份验证，打开原生目录面板选择/取消 A；替换变体从 A 真实选择 B 并确认",
+          "expected_ui": "原生选择只产生待确认状态；取消不落盘",
+          "expected_api_db": "未确认无来源记录；无TM002服务业务写入",
+          "expected_file": "普通变体按 F0/FR 审计且未选 B 零访问；替换变体按详细 TC 核对 B 暂选和原子提交。",
+          "expected": "UI：原生选择只产生待确认状态；取消不落盘；API/DB：未确认无来源记录；无TM002服务业务写入；文件/进程：普通变体按 F0/FR 审计且未选 B 零访问；替换变体按详细 TC 核对 B 暂选和原子提交。"
+        },
+        {
+          "step": 2,
+          "action": "仅在显式预览核对候选/上限，确认前新增文件并观察",
+          "expected_ui": "UI仅显示A的相对候选，截断标不完整，确认前无后台读取",
+          "expected_api_db": "无路径/正文/用量上传或TM002写入",
+          "expected_file": "FP只读A元数据，正文零读取，确认前后台零读取",
+          "expected": "UI：UI仅显示A的相对候选，截断标不完整，确认前无后台读取；API/DB：无路径/正文/用量上传或TM002写入；文件/进程：FP只读A元数据，正文零读取，确认前后台零读取"
+        },
+        {
+          "step": 3,
+          "action": "分别设置采集与未来同步意愿并明确确认",
+          "expected_ui": "意愿独立保存；true/false启用、false/true暂停；默认同步false",
+          "expected_api_db": "只在确认后私有保存来源，无上传",
+          "expected_file": "普通变体只为确认启用的 A 建立 allowlist；替换变体提交后只保留 B，旧 A 代际失效；暂停态停读。",
+          "expected": "UI：意愿独立保存；true/false启用、false/true暂停；默认同步false；API/DB：只在确认后私有保存来源，无上传；文件/进程：普通变体只为确认启用的 A 建立 allowlist；替换变体提交后只保留 B，旧 A 代际失效；暂停态停读。"
+        },
+        {
+          "step": 4,
+          "action": "重启或切换账号/origin，经真实/v1/me验证后刷新",
+          "expected_ui": "只恢复匹配origin/account.id的来源与意愿",
+          "expected_api_db": "认证sessions/audit例外按NDA，无TM002写入",
+          "expected_file": "主进程只恢复匹配身份的当前根；普通变体 A、替换变体 B，非当前根零访问。",
+          "expected": "UI：只恢复匹配origin/account.id的来源与意愿；API/DB：认证sessions/audit例外按NDA，无TM002写入；文件/进程：主进程只恢复匹配身份的当前根；普通变体 A、替换变体 B，非当前根零访问。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；场景组只汇总子TC；每条子TC独占数据和运行结果。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "E2E-TM002-001 · 选择、预览、意愿与恢复",
+        "line": 23
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "组内产品TC的原生面板驱动、主进程allowlist/文件审计、数据程序及逐步证据尚未绑定；本组不替代子TC判定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "overall_expected": "逐条子TC核对真实面板、App来源范围控制、撤销/失效/恢复；不声明沙盒或TCC授权。",
+      "release_id": "v0.2.0-20261001T034118Z"
+    },
+    {
+      "id": "E2E-TM002-002",
+      "title": "撤销、失效与重新选择",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "task_ids": [
+        "TASK-TM002-PICKER",
+        "TASK-TM002-ACCESS"
+      ],
+      "ac_ids": [
+        "AC-TM002-002"
+      ],
+      "type": "product_e2e_group",
+      "input": "system_permissions自有A/B；分别用UI移除、POSIX chmod 000、同路径新inode、原生面板取消/重选构造独立输入。",
+      "preconditions": "最终DMG安装后App、真实隔离服务/SQLite、每个子TC独占0700 profile/A/B、已验证合成Alice/Bob；见详细文档共同合同。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "在本例来源上触发UI撤销、真实POSIX拒读或同路径inode替换",
+          "expected_ui": "UI显示无来源或需重新选择，登录/配置保持可用",
+          "expected_api_db": "权限探针/dev-inode证明失效输入；无TM002写入",
+          "expected_file": "主进程撤销/失效A allowlist，后续停读",
+          "expected": "UI：UI显示无来源或需重新选择，登录/配置保持可用；API/DB：权限探针/dev-inode证明失效输入；无TM002写入；文件/进程：主进程撤销/失效A allowlist，后续停读"
+        },
+        {
+          "step": 2,
+          "action": "触发受控刷新并重启；恢复文件权限后再尝试刷新",
+          "expected_ui": "维持需重选，不能将未知显示为完整的0候选",
+          "expected_api_db": "真实/v1/me仅恢复身份，无路径/用量上传",
+          "expected_file": "旧来源不因重启或POSIX恢复而复活，A/B后续零访问",
+          "expected": "UI：维持需重选，不能将未知显示为完整的0候选；API/DB：真实/v1/me仅恢复身份，无路径/用量上传；文件/进程：旧来源不因重启或POSIX恢复而复活，A/B后续零访问"
+        },
+        {
+          "step": 3,
+          "action": "通过真实原生面板取消，或重选A并明确确认",
+          "expected_ui": "取消仍停读；重选确认后恢复来源与A相对候选",
+          "expected_api_db": "observer证实新的showOpenDialog结果；无TM002写入",
+          "expected_file": "仅新选择加确认重建A allowlist，B零访问",
+          "expected": "UI：取消仍停读；重选确认后恢复来源与A相对候选；API/DB：observer证实新的showOpenDialog结果；无TM002写入；文件/进程：仅新选择加确认重建A allowlist，B零访问"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；场景组只汇总子TC；每条子TC独占数据和运行结果。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "E2E-TM002-002 · 撤销、失效与重新选择",
+        "line": 227
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "组内产品TC的原生面板驱动、主进程allowlist/文件审计、数据程序及逐步证据尚未绑定；本组不替代子TC判定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "overall_expected": "逐条子TC核对真实面板、App来源范围控制、撤销/失效/恢复；不声明沙盒或TCC授权。",
+      "release_id": "v0.2.0-20261001T034118Z"
+    },
+    {
+      "id": "TC-TM002-SELECT-01",
+      "title": "首次从原生面板选择 A",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PICKER"
+      ],
       "ac_ids": [
         "AC-TM002-001"
       ],
       "type": "product_e2e",
-      "input": "数据集 `system_permissions`；全新测试账号登录；专用临时根有待授权目录A与未授权目录B，分别含可识别的合成日志与唯一哨兵文件；不得使用真实 ~/.codex 或 ~/.claude。system_permissions 尚缺目录/授权状态生成及清理程序；相关原始日志须待TM-003/004确认版本后生成。",
-      "preconditions": "数据集 `system_permissions`；全新测试账号登录；专用临时根有待授权目录A与未授权目录B，分别含可识别的合成日志与唯一哨兵文件；不得使用真实 ~/.codex 或 ~/.claude。system_permissions 尚缺目录/授权状态生成及清理程序；相关原始日志须待TM-003/004确认版本后生成。",
+      "scenario_group": "E2E-TM002-001",
+      "input": "全新 profile、S1 的 Alice 已真实登录且经身份验证；A/B 如共同 fixture，尚无已确认来源。实际输入为工具 codex、原生目录面板中的 A。",
+      "preconditions": "全新 profile、S1 的 Alice 已真实登录且经身份验证；A/B 如共同 fixture，尚无已确认来源。实际输入为工具 codex、原生目录面板中的 A。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
       "steps": [
         {
           "step": 1,
-          "action": "从首次启动引导打开系统目录选择器，只选择A；先不确认持续采集。",
-          "expected_ui": "",
-          "expected_api_db": "",
-          "expected": "本步独立预期待细化；整体预期：未确认前不得开始持续扫描；预览和后续读取范围均不包含B。重启保留A与真实同意状态。是否产生用量在采集版本另验，不能要求授权版本依赖尚未实现的解析器。"
+          "action": "从首次引导点击“选择 Codex 目录”",
+          "expected_ui": "出现等待系统选择状态",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "observer 见原生 showOpenDialog 被调用一次；文件 F0",
+          "expected": "UI 出现等待系统选择状态；observer 见原生 showOpenDialog 被调用一次。文件 F0；网络/DB ND0。"
         },
         {
           "step": 2,
-          "action": "查看预览，逐项核对显示的候选文件只来自A；在A和B各追加一个不同哨兵事件，观察确认前读取记录。",
-          "expected_ui": "",
-          "expected_api_db": "",
-          "expected": "本步独立预期待细化；整体预期：未确认前不得开始持续扫描；预览和后续读取范围均不包含B。重启保留A与真实同意状态。是否产生用量在采集版本另验，不能要求授权版本依赖尚未实现的解析器。"
+          "action": "在真实 macOS 目录面板中选本例 A 并确认",
+          "expected_ui": "进入待确认/可预览状态，只显示 A 的安全标签，不显示绝对路径",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 进入待确认/可预览状态，只显示 A 的安全标签，不显示绝对路径；observer 记录面板未取消且选择标签 A；文件 FR",
+          "expected": "UI 进入待确认/可预览状态，只显示 A 的安全标签，不显示绝对路径；observer 记录面板未取消且选择标签 A。文件 FR；网络/DB ND0。"
         },
         {
           "step": 3,
-          "action": "从引导明确确认采集和同步意愿；核对系统授权完成、保存目录与意愿状态。",
-          "expected_ui": "",
-          "expected_api_db": "",
-          "expected": "本步独立预期待细化；整体预期：未确认前不得开始持续扫描；预览和后续读取范围均不包含B。重启保留A与真实同意状态。是否产生用量在采集版本另验，不能要求授权版本依赖尚未实现的解析器。"
-        },
-        {
-          "step": 4,
-          "action": "退出进程并启动，检查已确认目录与意愿恢复；拒绝选择B时，确认其未进入已授权列表。",
-          "expected_ui": "",
-          "expected_api_db": "",
-          "expected": "本步独立预期待细化；整体预期：未确认前不得开始持续扫描；预览和后续读取范围均不包含B。重启保留A与真实同意状态。是否产生用量在采集版本另验，不能要求授权版本依赖尚未实现的解析器。"
+          "action": "检查尚未点产品确认",
+          "expected_ui": "没有“已授权采集”状态",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "主进程尚未建立已确认来源的读取 allowlist，私有已确认 sources 记录不存在，B 无访问，A 原始文件 SHA256 与初始清单一致",
+          "expected": "UI 没有“已授权采集”状态；主进程尚未建立已确认来源的读取 allowlist，私有已确认 sources 记录不存在，B 无访问，A 原始文件 SHA256 与初始清单一致；网络/DB ND0。"
         }
       ],
       "db_operations": {
-        "prepare": "待该功能的数据程序/SQL方案确定。",
-        "expected_changes": "待具体任务及数据设计细化。",
-        "verification": "暂无可执行数据库核验绑定。",
-        "read_only_checks": []
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；账号 SQL 及只读核对见共同 ND 定义；TM-002 不写服务 DB。独立 expected 为“暂选 A、确认记录仍无”。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
       },
-      "design_status": "planned",
+      "design_status": "baseline_pending",
       "execution_status": "unexecuted",
       "binding": null,
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
-        "line": 11,
-        "heading": "E2E-TM002-001"
+        "heading": "TC-TM002-SELECT-01 — 首次从原生面板选择 A",
+        "line": 40
       },
       "missing": [
-        "缺可重置的系统授权fixture、原生目录选择与引导UI绑定、访问范围观测方式；暂无造数SQL，权限状态须由系统授权程序创建，不以直接写数据库替代授权",
-        "独立用例身份/逐步原始证据的自动化绑定尚未接通。",
-        "未来聚合场景：具体TASK、逐步独立预期及DB准备/核验待进入该功能版本前细化。"
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
       ],
-      "aggregate_planned": true,
+      "aggregate_planned": false,
       "evidence": null,
-      "overall_expected": "未确认前不得开始持续扫描；预览和后续读取范围均不包含B。重启保留A与真实同意状态。是否产生用量在采集版本另验，不能要求授权版本依赖尚未实现的解析器。"
+      "reset": "R；账号 SQL 及只读核对见共同 ND 定义；TM-002 不写服务 DB。独立 expected 为“暂选 A、确认记录仍无”。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
     },
     {
-      "id": "E2E-TM002-002",
-      "title": "拒绝、失效与重新授权",
+      "id": "TC-TM002-SELECT-02",
+      "title": "面板取消保留当前来源状态",
       "feature_id": "TM-002",
       "requirement_id": "REQ-TM002",
-      "task_ids": [],
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PICKER"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "三个独立 profile/运行：#FIRST_CANCEL 无来源且真实面板取消；#CONFIRMED_CANCEL 已确认 Codex A true/false 后再次真实面板取消；#REPLACE_CONFIRMED 同一 S1/Alice/codex 先确认 A，真实面板选择 B 并原子确认新根。",
+      "preconditions": "三变体各自独立 run_id、R、合成 A1/A2/B1、动态独占 S1 与 SQLite；需要确认或恢复密文的变体先取得同一最终 DMG 的测试 Keychain item 原生隔离证明，目标 item 预存或身份不明时 BLOCKED。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "点击“选择 Codex 目录”",
+          "expected_ui": "UI 保持当前引导、等待面板",
+          "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+          "expected_file": "UI 保持当前引导、等待面板；observer 见 showOpenDialog 一次。文件 F0；网络/DB ND0。",
+          "expected": "UI 保持当前引导、等待面板；observer 见 showOpenDialog 一次。文件 F0；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "点击原生面板的“取消”按钮",
+          "expected_ui": "UI 返回需要选择，不显示候选/成功授权，也不崩溃",
+          "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+          "expected_file": "UI 返回需要选择，不显示候选/成功授权，也不崩溃；observer 见 canceled=true、空选中集合。文件 F0；网络/DB ND0。",
+          "expected": "UI 返回需要选择，不显示候选/成功授权，也不崩溃；observer 见 canceled=true、空选中集合。文件 F0；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "退出并重启同 profile，经 /v1/me 恢复 Alice",
+          "expected_ui": "UI 仍为无来源",
+          "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+          "expected_file": "UI 仍为无来源；没有 sources 记录、A/B 文件操作或隐式扫描；网络/DB NDA 仅允许 /v1/me。",
+          "expected": "UI 仍为无来源；没有 sources 记录、A/B 文件操作或隐式扫描；网络/DB NDA 仅允许 /v1/me。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "三变体各自 R、隔离 SQLite、seed=42 合成 Alice/Bob 与 A/B；共同账号 SQL。#FIRST_CANCEL 无来源；#CONFIRMED_CANCEL 保留旧 A；#REPLACE_CONFIRMED 原子替换为 B，独立 expected 仅 B1。TM-002 无业务 DB 写入。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit、网络 ND0/NDA、本例私有来源密文摘要与 A/B 根身份。#REPLACE_CONFIRMED 另按原子提交时间比较旧 A 停读和新 B 唯一候选；不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-SELECT-02 — 面板取消保留当前来源状态",
+        "line": 51
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。",
+        "依赖密文的变体尚缺同一最终签名 DMG 下测试 Keychain item 首次调用前不存在、身份/签名边界与正式项隔离的原生证明；预存或不明即 BLOCKED。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "三个变体各自独立 run_id 与 R；仅清理该 owner marker 的 profile、A/B、服务、隔离 DB、安装位置及能证明由本例首次创建的测试 Keychain item。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-SELECT-02#FIRST_CANCEL",
+          "input": "无来源；打开 Codex 原生目录面板并点击“取消”。",
+          "expected": "重启经 /v1/me 后仍无来源和 sources 记录，A/B 零访问。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "点击“选择 Codex 目录”",
+              "expected_ui": "UI 保持当前引导、等待面板",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 保持当前引导、等待面板；observer 见 showOpenDialog 一次。文件 F0；网络/DB ND0。",
+              "expected": "UI 保持当前引导、等待面板；observer 见 showOpenDialog 一次。文件 F0；网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "点击原生面板的“取消”按钮",
+              "expected_ui": "UI 返回需要选择，不显示候选/成功授权，也不崩溃",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 返回需要选择，不显示候选/成功授权，也不崩溃；observer 见 canceled=true、空选中集合。文件 F0；网络/DB ND0。",
+              "expected": "UI 返回需要选择，不显示候选/成功授权，也不崩溃；observer 见 canceled=true、空选中集合。文件 F0；网络/DB ND0。"
+            },
+            {
+              "step": 3,
+              "action": "退出并重启同 profile，经 /v1/me 恢复 Alice",
+              "expected_ui": "UI 仍为无来源",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 仍为无来源；没有 sources 记录、A/B 文件操作或隐式扫描；网络/DB NDA 仅允许 /v1/me。",
+              "expected": "UI 仍为无来源；没有 sources 记录、A/B 文件操作或隐式扫描；网络/DB NDA 仅允许 /v1/me。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-SELECT-02#CONFIRMED_CANCEL",
+          "input": "已确认 A 的 true/false 并刷新 A1/A2；“更换来源”面板点击“取消”。",
+          "expected": "旧 A confirmed_enabled、true/false、根身份与密文记录摘要不变；重启显式刷新仍仅 A1/A2，B 零访问。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "先在本例 profile 通过真实面板确认 A 的 true/false，显式刷新核对 {A1,A2}，记录已确认来源、密文摘要及根身份",
+              "expected_ui": "UI 显示 A 已确认",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 显示 A 已确认；文件 FE 只读 A 元数据，B 零访问；网络/DB ND0。",
+              "expected": "UI 显示 A 已确认；文件 FE 只读 A 元数据，B 零访问；网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "点击“更换来源”唤起真实 macOS 面板，然后点击原生“取消”",
+              "expected_ui": "UI 继续显示旧 A 的 confirmed_enabled/true/false，不产生暂选 B",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "observer 记录本次 showOpenDialog 与 canceled=true、空选中集合；UI 继续显示旧 A 的 confirmed_enabled/true/false，不产生暂选 B；私有记录与步骤 1 摘要相同，取消动作不触发新文件读取且 B 零访问，旧 A 的受控刷新能力仍在；网络/DB ND0。",
+              "expected": "observer 记录本次 showOpenDialog 与 canceled=true、空选中集合；UI 继续显示旧 A 的 confirmed_enabled/true/false，不产生暂选 B；私有记录与步骤 1 摘要相同，取消动作不触发新文件读取且 B 零访问，旧 A 的受控刷新能力仍在；网络/DB ND0。"
+            },
+            {
+              "step": 3,
+              "action": "退出重启并经真实 /v1/me 恢复 Alice，再显式刷新",
+              "expected_ui": "UI 仍为旧 A 的 true/false 且候选恰为 {A1,A2}",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 仍为旧 A 的 true/false 且候选恰为 {A1,A2}；密文归属与根身份未变，文件 FE 仅 A 元数据、B 零访问；网络/DB NDA 仅允许身份验证。",
+              "expected": "UI 仍为旧 A 的 true/false 且候选恰为 {A1,A2}；密文归属与根身份未变，文件 FE 仅 A 元数据、B 零访问；网络/DB NDA 仅允许身份验证。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-SELECT-02#REPLACE_CONFIRMED",
+          "input": "S1/Alice/codex 已经通过真实面板确认 A true/false 并刷新 A1/A2；再由真实面板选 B 并明确确认 true/false。",
+          "expected": "新根 B 原子确认后唯一候选为 sessions/2026/10/01/b-01.jsonl；旧 A 扫描/游标/读取能力与未提交结果失效，提交后 A 全操作零；重启仅恢复 B，服务 DB 无 TM-002 写入。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "在本例 profile 经真实面板确认 A 的采集=true/未来同步=false，显式刷新，固定 UI expected 为 `{sessions/2026/10/01/a-01.jsonl,sessions/2026/10/01/a-02.jsonl}`；记录旧扫描代际、加密记录与 A 根身份的脱敏摘要",
+              "expected_ui": "UI 显示 A confirmed_enabled",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 显示 A confirmed_enabled；文件 FE 只读 A 元数据、B 零访问；网络/DB ND0。",
+              "expected": "UI 显示 A confirmed_enabled；文件 FE 只读 A 元数据、B 零访问；网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "点击“更换来源”，固定系统 UI 自动化从真实 macOS 面板选择本例 B，尚不点产品确认",
+              "expected_ui": "UI 显示 B 待确认且旧 A 仍为已确认来源",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 显示 B 待确认且旧 A 仍为已确认来源；observer 见 showOpenDialog 返回 B，主进程只校验 B 根元数据、不枚举 B1/读正文，旧 A 密文记录及能力未改；网络/DB ND0。",
+              "expected": "UI 显示 B 待确认且旧 A 仍为已确认来源；observer 见 showOpenDialog 返回 B，主进程只校验 B 根元数据、不枚举 B1/读正文，旧 A 密文记录及能力未改；网络/DB ND0。"
+            },
+            {
+              "step": 3,
+              "action": "明确确认 B 的采集=true/未来同步=false",
+              "expected_ui": "UI 只显示 B confirmed_enabled，不再显示 A 为当前来源",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 只显示 B confirmed_enabled，不再显示 A 为当前来源；主进程先加密并原子持久替换该三元组唯一 `sources/` 记录，再切换到 B 根身份并使旧 A 扫描、游标、读取能力与未提交刷新结果失效。以提交成功的审计时间为界，其后 A 的 readdir/stat/open/read/watch 均为零；B 尚无正文读取，原始 A/B SHA256 均不变；网络/DB ND0。",
+              "expected": "UI 只显示 B confirmed_enabled，不再显示 A 为当前来源；主进程先加密并原子持久替换该三元组唯一 `sources/` 记录，再切换到 B 根身份并使旧 A 扫描、游标、读取能力与未提交刷新结果失效。以提交成功的审计时间为界，其后 A 的 readdir/stat/open/read/watch 均为零；B 尚无正文读取，原始 A/B SHA256 均不变；网络/DB ND0。"
+            },
+            {
+              "step": 4,
+              "action": "点产品“刷新候选”，并核对主进程旧 A 扫描代际已失效",
+              "expected_ui": "UI 候选恰为 `{sessions/2026/10/01/b-01.jsonl}`，不含 A1/A2",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 候选恰为 `{sessions/2026/10/01/b-01.jsonl}`，不含 A1/A2；文件 FE 仅 B 元数据，旧 A 的扫描或未提交结果不能复活且不再访问 A，B 正文 open/read=0；网络/DB ND0。",
+              "expected": "UI 候选恰为 `{sessions/2026/10/01/b-01.jsonl}`，不含 A1/A2；文件 FE 仅 B 元数据，旧 A 的扫描或未提交结果不能复活且不再访问 A，B 正文 open/read=0；网络/DB ND0。"
+            },
+            {
+              "step": 5,
+              "action": "退出重启本例同一安装后 App，经真实 `/v1/me` 验证 Alice 后显式刷新",
+              "expected_ui": "UI 恢复唯一 B、true/false，候选仍恰为 B1",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 恢复唯一 B、true/false，候选仍恰为 B1；密文记录归属与 B 根身份保持不变，旧 A 不复活且重启后 A 全操作为零，文件 FE 仅 B 元数据；网络/DB NDA 只允许身份验证，无上传。",
+              "expected": "UI 恢复唯一 B、true/false，候选仍恰为 B1；密文记录归属与 B 根身份保持不变，旧 A 不复活且重启后 A 全操作为零，文件 FE 仅 B 元数据；网络/DB NDA 只允许身份验证，无上传。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-SELECT-04",
+      "title": "Claude Code 来源选择、预览、确认与恢复",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PICKER",
+        "TASK-TM002-PREVIEW",
+        "TASK-TM002-CONSENT",
+        "TASK-TM002-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "全新 profile，S1 Alice 真实登录并已验证身份；独占 Claude A 只含 C1=projects/sample/claude-01.jsonl（31 B、固定 mtime）与非候选 projects/sample/readme.txt（内容 README 加换行，共 7 B），未选 B 含 projects/sample/claude-b-01.jsonl（31 B、标记 PRIVATE_CLAUDE_B）。工具输入为 claude_code，采集=true，未来同步意愿保留默认 false；两个根均为本例合成数据。",
+      "preconditions": "全新 profile，S1 Alice 真实登录并已验证身份；独占 Claude A 只含 C1=projects/sample/claude-01.jsonl（31 B、固定 mtime）与非候选 projects/sample/readme.txt（内容 README 加换行，共 7 B），未选 B 含 projects/sample/claude-b-01.jsonl（31 B、标记 PRIVATE_CLAUDE_B）。工具输入为 claude_code，采集=true，未来同步意愿保留默认 false；两个根均为本例合成数据。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "在来源 UI 选择工具 claude_code，点击选择目录，固定系统 UI 自动化从真实 macOS 面板选择 Claude A",
+          "expected_ui": "进入待确认",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "observer 见 showOpenDialog 一次并返回 A 标签；文件 FR、B 零访问，网络/DB ND0",
+          "expected": "UI 进入待确认；observer 见 showOpenDialog 一次并返回 A 标签；文件 FR、B 零访问，网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "点击显式预览",
+          "expected_ui": "候选集合恰为 {C1}，相对路径 projects/sample/claude-01.jsonl、大小 31 B 和固定 mtime 与独立清单一致，不出现 B 的候选、完整根路径或 PRIVATE_CLAUDE_1/B",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 候选集合恰为 {C1}，相对路径 projects/sample/claude-01.jsonl、大小 31 B 和固定 mtime 与独立清单一致，不出现 B 的候选、完整根路径或 PRIVATE_CLAUDE_1/B；文件 FP 且正文 open/read=0，B 全操作=0",
+          "expected": "UI 候选集合恰为 {C1}，相对路径 projects/sample/claude-01.jsonl、大小 31 B 和固定 mtime 与独立清单一致，不出现 B 的候选、完整根路径或 PRIVATE_CLAUDE_1/B；文件 FP 且正文 open/read=0，B 全操作=0；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "不触碰默认 false 的未来同步开关，只开启采集并明确确认",
+          "expected_ui": "显示 claude_code 来源 confirmed_enabled 与 true/false",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "私有 sources 记录首次写入 S1/Alice/claude_code 的确认态，B 与服务 DB 不变；文件仅允许确认后的 FE，网络/DB ND0",
+          "expected": "UI 显示 claude_code 来源 confirmed_enabled 与 true/false；私有 sources 记录首次写入 S1/Alice/claude_code 的确认态，B 与服务 DB 不变；文件仅允许确认后的 FE，网络/DB ND0。"
+        },
+        {
+          "step": 4,
+          "action": "退出重启同 profile，等待真实 /v1/me 验证 Alice 后打开来源并刷新",
+          "expected_ui": "仍显示 claude_code、true/false，候选集合恰为 {C1}",
+          "expected_api_db": "网络/DB NDA 仅允许 /v1/me",
+          "expected_file": "UI 仍显示 claude_code、true/false，候选集合恰为 {C1}；文件 FE 只读 Claude A 元数据、B 零访问，不上传正文、路径或用量",
+          "expected": "UI 仍显示 claude_code、true/false，候选集合恰为 {C1}；文件 FE 只读 Claude A 元数据、B 零访问，不上传正文、路径或用量；网络/DB NDA 仅允许 /v1/me。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL 只准备 Alice/Bob，TM-002 无业务 DB 写入。独立 expected 为预览集合 {C1}、确认态 true/false、重启后相同来源；只验证递归 .jsonl 元数据候选，不验证 Claude Code 原始日志解析或用量。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-SELECT-04 — Claude Code 来源选择、预览、确认与恢复",
+        "line": 72
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL 只准备 Alice/Bob，TM-002 无业务 DB 写入。独立 expected 为预览集合 {C1}、确认态 true/false、重启后相同来源；只验证递归 .jsonl 元数据候选，不验证 Claude Code 原始日志解析或用量。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-PREVIEW-01",
+      "title": "只显示 A 的候选元数据",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PREVIEW"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "S1 Alice 真实面板暂选 A，尚未确认；A 有相对路径 A1/A2 与 sessions/2026/10/01/ignore.txt，B 有 B1。递归 .jsonl 规则使 A1/A2 为候选，B1 与 ignore.txt 不在候选中。",
+      "preconditions": "S1 Alice 真实面板暂选 A，尚未确认；A 有相对路径 A1/A2 与 sessions/2026/10/01/ignore.txt，B 有 B1。递归 .jsonl 规则使 A1/A2 为候选，B1 与 ignore.txt 不在候选中。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "点击“预览”",
+          "expected_ui": "出现两个候选条目，无 b-01/ignore",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 出现两个候选条目，无 b-01/ignore；文件 FP 只允许 A 的显式元数据枚举",
+          "expected": "UI 出现两个候选条目，无 b-01/ignore；文件 FP 只允许 A 的显式元数据枚举；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "逐项读取 UI 可访问名称、大小、时间",
+          "expected_ui": "恰有 A1/A2 两个候选；相对名、25 B、2026-10-01T00:00:00Z 与独立清单一致；不显示完整根路径或 PRIVATE_A1/A2/B1。",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "两个候选的相对名/大小/时间与独立清单一致，既不显示绝对根路径，也不显示 PRIVATE_A1/PRIVATE_A2/PRIVATE_B1；文件正文 open/read 为零",
+          "expected": "两个候选的相对名/大小/时间与独立清单一致，既不显示绝对根路径，也不显示 PRIVATE_A1/PRIVATE_A2/PRIVATE_B1；文件正文 open/read 为零；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "检查私有来源记录与服务",
+          "expected_ui": "不适用：本步只读核对私有配置、服务与文件摘要，不操作 UI。",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "仍无已确认 sources 记录，无 B 访问，A/B 文件 SHA256 不变",
+          "expected": "仍无已确认 sources 记录，无 B 访问，A/B 文件 SHA256 不变；网络/DB ND0。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL；TM-002 无业务 DB 操作。独立清单恰有两个候选，相对路径 A1 和 A2，大小均 25 B、mtime=2026-10-01T00:00:00Z；显示格式未定时按可访问元数据值比较。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-PREVIEW-01 — 只显示 A 的候选元数据",
+        "line": 84
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL；TM-002 无业务 DB 操作。独立清单恰有两个候选，相对路径 A1 和 A2，大小均 25 B、mtime=2026-10-01T00:00:00Z；显示格式未定时按可访问元数据值比较。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-PREVIEW-02",
+      "title": "非候选文件不充当日志",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PREVIEW"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "S1 Alice 选 A；本例 A 只生成 sessions/2026/10/01/ignore.txt（12 B），不生成 A1/A2、文件 symlink 或目录 symlink；B 仍有 B1。所有变化仅作用于运行 App 前的本例自有 fixture。",
+      "preconditions": "S1 Alice 选 A；本例 A 只生成 sessions/2026/10/01/ignore.txt（12 B），不生成 A1/A2、文件 symlink 或目录 symlink；B 仍有 B1。所有变化仅作用于运行 App 前的本例自有 fixture。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "真实面板选 A",
+          "expected_ui": "为待确认",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "文件 FR 只允许选中 A 的根元数据校验，B 零访问",
+          "expected": "UI 为待确认；文件 FR 只允许选中 A 的根元数据校验，B 零访问；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "点击“预览”",
+          "expected_ui": "显示“0 个候选文件”空态并与读取失败区分",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 显示“0 个候选文件”空态并与读取失败区分；文件 FP，无正文读取",
+          "expected": "UI 显示“0 个候选文件”空态并与读取失败区分；ignore.txt 与 B1 均不列入，未出现 PRIVATE_B1；文件 FP，无正文读取；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "设置采集=true、同步=false 并确认",
+          "expected_ui": "可以显示已确认且当前无候选，非权限错误",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 可以显示已确认且当前无候选，非权限错误；文件 FE，网络/DB ND0",
+          "expected": "UI 可以显示已确认且当前无候选，非权限错误；受控刷新仍返回空集合，来源记录仅在确认后出现；文件 FE，网络/DB ND0。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 候选集合为空；需求草稿允许确认空目录等待未来文件。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-PREVIEW-02 — 非候选文件不充当日志",
+        "line": 95
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 候选集合为空；需求草稿允许确认空目录等待未来文件。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-PREVIEW-03",
+      "title": "符号链接不能逸出选中根",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PREVIEW"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "S1 Alice 选 A；A 中同层文件 symlink sessions/2026/10/01/link-out.jsonl 与目录 symlink sessions/2026/10/01/escape 指向本例 B；A1/A2 仍存在。",
+      "preconditions": "S1 Alice 选 A；A 中同层文件 symlink sessions/2026/10/01/link-out.jsonl 与目录 symlink sessions/2026/10/01/escape 指向本例 B；A1/A2 仍存在。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "真实面板选 A 并点击“预览”",
+          "expected_ui": "候选集合恰为 {A1,A2}",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 候选集合恰为 {A1,A2}；文件 FP 允许对 A 内链接做 lstat，但不得跟随进入 B，也不得打开目标正文",
+          "expected": "UI 候选集合恰为 {A1,A2}；文件 FP 允许对 A 内链接做 lstat，但不得跟随进入 B，也不得打开目标正文；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "检查集合与访问审计",
+          "expected_ui": "不含 sessions/2026/10/01/link-out.jsonl、sessions/2026/10/01/escape/b-01.jsonl 或 B1",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "B 的 stat/readdir/open/read 均为零，PRIVATE_B1 未出现在 UI/报告",
+          "expected": "UI 不含 sessions/2026/10/01/link-out.jsonl、sessions/2026/10/01/escape/b-01.jsonl 或 B1；B 的 stat/readdir/open/read 均为零，PRIVATE_B1 未出现在 UI/报告；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "确认采集=true、同步=false 并手动刷新",
+          "expected_ui": "候选集合仍恰为 {A1,A2}",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 候选集合仍恰为 {A1,A2}；文件 FE，B 零访问，原始文件字节不变",
+          "expected": "UI 候选集合仍恰为 {A1,A2}；文件 FE，B 零访问，原始文件字节不变；网络/DB ND0。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 只含 A 的两个普通文件，拒绝 symlink 与 B。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-PREVIEW-03 — 符号链接不能逸出选中根",
+        "line": 106
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 只含 A 的两个普通文件，拒绝 symlink 与 B。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-PREVIEW-04",
+      "title": "枚举上限与“不完整”提示",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PREVIEW"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "每个变体各用全新 S1 Alice、A/B、profile 和 run_id，真实面板选 A；A 的具体合成树由下述变体替代普通 A1/A2，B 保留未选 B1。CANDIDATES_1001 与 ENTRIES_5001 的独立预探针须证明深度未超限、正常枚举可在 2 秒内完成，才能归因于数量上限；否则该变体 BLOCKED。只操作本例自有根；上限固定为深度 8、最多 1000 候选、最多 5000 目录项、2 秒。所有预期清单在运行前固定；不借产品输出生成答案。",
+      "preconditions": "每个变体各用全新 S1 Alice、A/B、profile 和 run_id，真实面板选 A；A 的具体合成树由下述变体替代普通 A1/A2，B 保留未选 B1。CANDIDATES_1001 与 ENTRIES_5001 的独立预探针须证明深度未超限、正常枚举可在 2 秒内完成，才能归因于数量上限；否则该变体 BLOCKED。只操作本例自有根；上限固定为深度 8、最多 1000 候选、最多 5000 目录项、2 秒。所有预期清单在运行前固定；不借产品输出生成答案。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "从真实 macOS 面板选择该变体 A",
+          "expected_ui": "待确认",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "observer 记录真实选中 A；文件 FR",
+          "expected": "UI 待确认；observer 记录真实选中 A；文件 FR；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "点击显式预览",
+          "expected_ui": "候选、计数与不完整提示满足本变体独立预期",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 候选、计数与不完整提示满足本变体独立预期；文件 FP、正文零读取、B 零访问",
+          "expected": "UI 候选、计数与不完整提示满足本变体独立预期；文件 FP、正文零读取、B 零访问；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "比较该变体 manifest、UI 与主进程审计",
+          "expected_ui": "不把截断当完整空集",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "独立 manifest 与主进程访问审计一致；B 零访问、正文零读取、来源未持久确认。",
+          "expected": "UI 不把截断当完整空集；来源未确认且未落盘；网络/DB ND0。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；每变体使用 R 与共同账号 SQL；TM-002 无业务 DB 操作。每条变体都有独立 fixture manifest/expected/清理和原始结果；真实测试路径为计划中的共同产品 spec，automated_test=null。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-PREVIEW-04 — 枚举上限与“不完整”提示",
+        "line": 117
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "每变体使用 R 与共同账号 SQL；TM-002 无业务 DB 操作。每条变体都有独立 fixture manifest/expected/清理和原始结果；真实测试路径为计划中的共同产品 spec，automated_test=null。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-PREVIEW-04#CANDIDATES_1001",
+          "input": "A 根直接放 c-0000.jsonl 至 c-1000.jsonl 共 1001 个普通文件，各内容为固定 3 B 的一行空 JSON 加换行，mtime 固定；无 symlink 或其他候选。",
+          "expected": "只显示字典序前1000条 c-0000.jsonl…c-0999.jsonl、计数1000及“不完整”；c-1000.jsonl/B1均不显示，正文零读取。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "用真实 macOS 面板选本例含 c-0000.jsonl 至 c-1000.jsonl 的 A。",
+              "expected_ui": "来源处于待确认；observer 记录一次真实面板选择 A。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "只校验 A 根元数据 FR；B 全操作零，尚无 sources 记录。",
+              "expected": "来源处于待确认；observer 记录一次真实面板选择 A。；只校验 A 根元数据 FR；B 全操作零，尚无 sources 记录。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            },
+            {
+              "step": 2,
+              "action": "点击显式预览并按预先固定的 1001 项清单比对。",
+              "expected_ui": "恰显示 c-0000.jsonl 至 c-0999.jsonl 共 1000 项和“不完整”；c-1000.jsonl、B1 不显示。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "仅 A 的元数据 FP；正文 open/read/watch=0，B 全操作零；排序取完整相对路径 UTF-8 字节序。",
+              "expected": "恰显示 c-0000.jsonl 至 c-0999.jsonl 共 1000 项和“不完整”；c-1000.jsonl、B1 不显示。；仅 A 的元数据 FP；正文 open/read/watch=0，B 全操作零；排序取完整相对路径 UTF-8 字节序。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            },
+            {
+              "step": 3,
+              "action": "保存 UI、输入 manifest、截断原因与文件审计摘要。",
+              "expected_ui": "仍为待确认和“不完整”，不能显示完整的 0 个候选。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "输入 1001、显示 1000，未持久确认来源；A/B 原文件字节不变。",
+              "expected": "仍为待确认和“不完整”，不能显示完整的 0 个候选。；输入 1001、显示 1000，未持久确认来源；A/B 原文件字节不变。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-PREVIEW-04#ENTRIES_5001",
+          "input": "A 根直接放 n-0000.txt 至 n-5000.txt 共 5001 个非候选普通文件，无 .jsonl 或 symlink。",
+          "expected": "检查最多5000个目录项即停止，候选可为空但须标“不完整/尚未检查全部项目”；不能显示完整的0个日志。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "用真实 macOS 面板选本例含 n-0000.txt 至 n-5000.txt 的 A。",
+              "expected_ui": "来源处于待确认；observer 记录一次真实面板选择 A。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "只校验 A 根元数据 FR；B 全操作零，尚无 sources 记录。",
+              "expected": "来源处于待确认；observer 记录一次真实面板选择 A。；只校验 A 根元数据 FR；B 全操作零，尚无 sources 记录。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            },
+            {
+              "step": 2,
+              "action": "点击显式预览，核对 5001 项非候选目录清单。",
+              "expected_ui": "候选可以为空，但须显示“不完整/尚未检查全部项目”，不得显示完整的 0 个日志。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "最多检查 5000 个目录项即停止；仅 A 元数据 FP，B 全操作零，正文零读取。",
+              "expected": "候选可以为空，但须显示“不完整/尚未检查全部项目”，不得显示完整的 0 个日志。；最多检查 5000 个目录项即停止；仅 A 元数据 FP，B 全操作零，正文零读取。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            },
+            {
+              "step": 3,
+              "action": "保存实际检查项数、输入 manifest 与未确认状态。",
+              "expected_ui": "仍为待确认并保留“不完整”提示。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "输入恰有 5001 项，检查数不超过 5000；sources 记录不存在，A/B 内容不变。",
+              "expected": "仍为待确认并保留“不完整”提示。；输入恰有 5001 项，检查数不超过 5000；sources 记录不存在，A/B 内容不变。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-PREVIEW-04#DEPTH_9",
+          "input": "A 中 d1/d2/d3/d4/d5/d6/d7/at8.jsonl 位于相对文件深度 8，d1/d2/d3/d4/d5/d6/d7/d8/at9.jsonl 位于深度 9，各是固定 3 B 普通文件，无 symlink。",
+          "expected": "只显示深度8相对候选并标“不完整/深度截断”；深度9文件不显示、不读正文。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "用真实 macOS 面板选本例含深度 8 与深度 9 文件的 A。",
+              "expected_ui": "来源处于待确认；observer 记录一次真实面板选择 A。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "只校验 A 根元数据 FR；B 全操作零。",
+              "expected": "来源处于待确认；observer 记录一次真实面板选择 A。；只校验 A 根元数据 FR；B 全操作零。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            },
+            {
+              "step": 2,
+              "action": "点击显式预览，比较深度 8 和深度 9 的预置相对路径。",
+              "expected_ui": "只显示 d1/d2/d3/d4/d5/d6/d7/at8.jsonl，并标“不完整/深度截断”；深度 9 的 at9.jsonl 不显示。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "仅 A 的安全元数据 FP；深度 9 文件正文不开读，B 全操作零。",
+              "expected": "只显示 d1/d2/d3/d4/d5/d6/d7/at8.jsonl，并标“不完整/深度截断”；深度 9 的 at9.jsonl 不显示。；仅 A 的安全元数据 FP；深度 9 文件正文不开读，B 全操作零。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            },
+            {
+              "step": 3,
+              "action": "核对下一层被深度限制拒绝的审计和来源记录。",
+              "expected_ui": "仍为待确认，不能报告全树扫描完整。",
+              "expected_api_db": "ND0：无 TM-002 网络请求或服务 DB 写入。",
+              "expected_file": "审计有深度截断原因，sources 记录不存在，A/B 原文件不变。",
+              "expected": "仍为待确认，不能报告全树扫描完整。；审计有深度截断原因，sources 记录不存在，A/B 原文件不变。；ND0：无 TM-002 网络请求或服务 DB 写入。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-CONSENT-01",
+      "title": "预览不启动持续读取",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-CONSENT"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "S1 Alice 已通过真实面板暂选 A 并完成一次显式预览，尚未确认；随后固定 fixture 向 A 写 a-new、B 写 b-new，观察窗口为至少一个本版约定的后台补扫周期（当前设计明确 TM-002 无后台扫描）。",
+      "preconditions": "S1 Alice 已通过真实面板暂选 A 并完成一次显式预览，尚未确认；随后固定 fixture 向 A 写 a-new、B 写 b-new，观察窗口为至少一个本版约定的后台补扫周期（当前设计明确 TM-002 无后台扫描）。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "记录显式预览完成时间和 observer 序号",
+          "expected_ui": "仍为待确认",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "其后文件访问应停止于 FP 的显式动作，私有 sources 记录为空",
+          "expected": "UI 仍为待确认；其后文件访问应停止于 FP 的显式动作，私有 sources 记录为空；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "由本例 fixture 分别新增 a-new.jsonl 与 b-new.jsonl，不点刷新/确认，并等待固定 35 秒观察窗口，以覆盖产品长期约定的 30 秒补扫周期",
+          "expected_ui": "不自动新增 AN 或显示采集完成",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "该窗口内 A/B readdir/stat/open/read/watch 均为零",
+          "expected": "UI 不自动新增 AN 或显示采集完成；该窗口内 A/B readdir/stat/open/read/watch 均为零；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "退出并重启 App，经 /v1/me 恢复 Alice",
+          "expected_ui": "回到无来源，a-new 不自动预览",
+          "expected_api_db": "网络/DB NDA",
+          "expected_file": "A/B 无后台读取，未确认暂选未持久化",
+          "expected": "UI 回到无来源，a-new 不自动预览；A/B 无后台读取，未确认暂选未持久化；网络/DB NDA。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected：确认前无 watcher、定时重枚举或持久来源记录；已完成的那次显式预览不算持续读取。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-CONSENT-01 — 预览不启动持续读取",
+        "line": 127
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected：确认前无 watcher、定时重枚举或持久来源记录；已完成的那次显式预览不算持续读取。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-CONSENT-02",
+      "title": "采集开启、未来同步关闭",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-CONSENT"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "S1 Alice 真实面板选 A；采集开关=true，未来同步意愿=false；确认后才由 fixture 写 a-new/b-new。",
+      "preconditions": "S1 Alice 真实面板选 A；采集开关=true，未来同步意愿=false；确认后才由 fixture 写 a-new/b-new。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "在待确认 UI 先观察未来同步开关默认=false，只设置采集=true 而不触碰同步开关",
+          "expected_ui": "两个控件值分别为 true/false",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "尚无确认记录，文件仅 FP 的显式预览，网络/DB ND0",
+          "expected": "UI 两个控件值分别为 true/false；尚无确认记录，文件仅 FP 的显式预览，网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "点击明确确认",
+          "expected_ui": "显示已确认且采集开启、同步关闭",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "私有来源记录第一次出现且两布尔值分别为 true/false，主进程只为 S1/Alice/codex 的 A 建立已确认读取 allowlist，证明默认同步=false 未被确认流程改写，A 文件未改",
+          "expected": "UI 显示已确认且采集开启、同步关闭；私有来源记录第一次出现且两布尔值分别为 true/false，主进程只为 S1/Alice/codex 的 A 建立已确认读取 allowlist，证明默认同步=false 未被确认流程改写，A 文件未改；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "fixture 新增 a-new/b-new，点“刷新候选”",
+          "expected_ui": "候选集合恰为 {A1,A2,AN}，每条相对路径各一次，B 不出现",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 候选集合恰为 {A1,A2,AN}，每条相对路径各一次，B 不出现；主进程 allowlist 决策只允许 A，文件 FE 仅 A 元数据访问，正文零读取",
+          "expected": "UI 候选集合恰为 {A1,A2,AN}，每条相对路径各一次，B 不出现；主进程 allowlist 决策只允许 A，文件 FE 仅 A 元数据访问，正文零读取；无上传请求，网络/DB ND0。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 为 confirmed_enabled、true/false、候选只增加 A 的 a-new。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-CONSENT-02 — 采集开启、未来同步关闭",
+        "line": 138
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 为 confirmed_enabled、true/false、候选只增加 A 的 a-new。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-CONSENT-03",
+      "title": "采集关闭时两种未来同步意愿独立保存",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-CONSENT"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "两个独立全新 profile 中 S1 Alice 真实面板选择 A：#FALSE_TRUE 采集=false/未来同步=true；#FALSE_FALSE 采集=false/未来同步=false；均为 confirmed_paused。",
+      "preconditions": "两变体各自 R、独占 run_id 与合成 A/B，真实身份、原生选择、服务和隔离 SQLite 可审计。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "在待确认 UI 将采集设 false、未来同步设为本变体指定布尔值并明确确认",
+          "expected_ui": "UI 显示已确认但采集暂停，两个开关分别为该输入",
+          "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+          "expected_file": "UI 显示已确认但采集暂停，两个开关分别为该输入；私有记录保存该变体的 false/true 或 false/false，不建立刷新能力，文件 FS，网络/DB ND0。",
+          "expected": "UI 显示已确认但采集暂停，两个开关分别为该输入；私有记录保存该变体的 false/true 或 false/false，不建立刷新能力，文件 FS，网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "fixture 新增 a-new/b-new，在来源页检查刷新控件不可用，不点击不存在的刷新动作",
+          "expected_ui": "UI 保持暂停、不把“未读”显示为 0 候选",
+          "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+          "expected_file": "UI 保持暂停、不把“未读”显示为 0 候选；主进程来源能力仍为暂停，A/B 均无后续访问、无上传，文件 FS；网络/DB ND0。受限接口拒绝调用由辅助安全用例单独验证，不以本例直接 IPC 代替真实 UI。",
+          "expected": "UI 保持暂停、不把“未读”显示为 0 候选；主进程来源能力仍为暂停，A/B 均无后续访问、无上传，文件 FS；网络/DB ND0。受限接口拒绝调用由辅助安全用例单独验证，不以本例直接 IPC 代替真实 UI。"
+        },
+        {
+          "step": 3,
+          "action": "退出重启并经真实 /v1/me 恢复 Alice",
+          "expected_ui": "UI 仍为已确认暂停且显示本变体的两个布尔值",
+          "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+          "expected_file": "UI 仍为已确认暂停且显示本变体的两个布尔值；不自动读取 A/B，也不上传；文件 FS，网络/DB NDA。",
+          "expected": "UI 仍为已确认暂停且显示本变体的两个布尔值；不自动读取 A/B，也不上传；文件 FS，网络/DB NDA。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "两变体各自 R、隔离 SQLite、seed=42 合成 Alice/Bob 与 A/B；共同账号 SQL。独立 expected 为 confirmed_paused false/true 和 false/false，均不读、不上传。TM-002 无业务 DB 操作。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-CONSENT-03 — 采集关闭时两种未来同步意愿独立保存",
+        "line": 149
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "两变体各自独立 run_id 和 R；只清理各自 owner marker 的 profile、A/B、隔离 DB 与服务。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-CONSENT-03#FALSE_TRUE",
+          "input": "S1 Alice 选 A，确认采集=false、未来同步=true。",
+          "expected": "confirmed_paused false/true；刷新控件不可用，A/B 零后续读取与上传，重启仍 false/true。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "在待确认 UI 将采集设 false、未来同步设为本变体指定布尔值并明确确认",
+              "expected_ui": "UI 显示已确认但采集暂停，两个开关分别为该输入",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 显示已确认但采集暂停，两个开关分别为该输入；私有记录保存该变体的 false/true 或 false/false，不建立刷新能力，文件 FS，网络/DB ND0。",
+              "expected": "UI 显示已确认但采集暂停，两个开关分别为该输入；私有记录保存该变体的 false/true 或 false/false，不建立刷新能力，文件 FS，网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "fixture 新增 a-new/b-new，在来源页检查刷新控件不可用，不点击不存在的刷新动作",
+              "expected_ui": "UI 保持暂停、不把“未读”显示为 0 候选",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 保持暂停、不把“未读”显示为 0 候选；主进程来源能力仍为暂停，A/B 均无后续访问、无上传，文件 FS；网络/DB ND0。受限接口拒绝调用由辅助安全用例单独验证，不以本例直接 IPC 代替真实 UI。",
+              "expected": "UI 保持暂停、不把“未读”显示为 0 候选；主进程来源能力仍为暂停，A/B 均无后续访问、无上传，文件 FS；网络/DB ND0。受限接口拒绝调用由辅助安全用例单独验证，不以本例直接 IPC 代替真实 UI。"
+            },
+            {
+              "step": 3,
+              "action": "退出重启并经真实 /v1/me 恢复 Alice",
+              "expected_ui": "UI 仍为已确认暂停且显示本变体的两个布尔值",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 仍为已确认暂停且显示本变体的两个布尔值；不自动读取 A/B，也不上传；文件 FS，网络/DB NDA。",
+              "expected": "UI 仍为已确认暂停且显示本变体的两个布尔值；不自动读取 A/B，也不上传；文件 FS，网络/DB NDA。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-CONSENT-03#FALSE_FALSE",
+          "input": "另一个独立 profile 中 S1 Alice 选 A，确认采集=false、未来同步=false。",
+          "expected": "confirmed_paused false/false；刷新控件不可用，A/B 零后续读取与上传，重启仍 false/false。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "在待确认 UI 将采集设 false、未来同步设为本变体指定布尔值并明确确认",
+              "expected_ui": "UI 显示已确认但采集暂停，两个开关分别为该输入",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 显示已确认但采集暂停，两个开关分别为该输入；私有记录保存该变体的 false/true 或 false/false，不建立刷新能力，文件 FS，网络/DB ND0。",
+              "expected": "UI 显示已确认但采集暂停，两个开关分别为该输入；私有记录保存该变体的 false/true 或 false/false，不建立刷新能力，文件 FS，网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "fixture 新增 a-new/b-new，在来源页检查刷新控件不可用，不点击不存在的刷新动作",
+              "expected_ui": "UI 保持暂停、不把“未读”显示为 0 候选",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 保持暂停、不把“未读”显示为 0 候选；主进程来源能力仍为暂停，A/B 均无后续访问、无上传，文件 FS；网络/DB ND0。受限接口拒绝调用由辅助安全用例单独验证，不以本例直接 IPC 代替真实 UI。",
+              "expected": "UI 保持暂停、不把“未读”显示为 0 候选；主进程来源能力仍为暂停，A/B 均无后续访问、无上传，文件 FS；网络/DB ND0。受限接口拒绝调用由辅助安全用例单独验证，不以本例直接 IPC 代替真实 UI。"
+            },
+            {
+              "step": 3,
+              "action": "退出重启并经真实 /v1/me 恢复 Alice",
+              "expected_ui": "UI 仍为已确认暂停且显示本变体的两个布尔值",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 仍为已确认暂停且显示本变体的两个布尔值；不自动读取 A/B，也不上传；文件 FS，网络/DB NDA。",
+              "expected": "UI 仍为已确认暂停且显示本变体的两个布尔值；不自动读取 A/B，也不上传；文件 FS，网络/DB NDA。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-CONSENT-04",
+      "title": "两意愿均开启，本版仍不上传",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-CONSENT"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "三个独立 profile：#BOTH_TRUE 经真实面板确认 A true/true；#TURN_SYNC_OFF 从 true/true 经产品 UI 改成 true/false；#TURN_COLLECT_OFF_ON 从 true/false 经 updateSourceConsent UI 先改 false/false，再明确改回 true/false。TM-007 上传未交付。",
+      "preconditions": "三变体各自独立 run_id、R、S1 Alice 真实身份/面板选择、合成 A1/A2/B1、动态服务和 SQLite；密文操作先证明同一最终 DMG 的测试 Keychain item 独立且首次调用前不存在。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "设置两项开关为 true 并确认",
+          "expected_ui": "UI 同时显示采集开启与未来同步意愿开启",
+          "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+          "expected_file": "UI 同时显示采集开启与未来同步意愿开启；私有记录为 true/true，A 原文不变；网络/DB ND0。",
+          "expected": "UI 同时显示采集开启与未来同步意愿开启；私有记录为 true/true，A 原文不变；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "点“刷新候选”",
+          "expected_ui": "UI 候选集合恰为 {A1,A2}，文件 FE",
+          "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+          "expected_file": "UI 候选集合恰为 {A1,A2}，文件 FE；网络只允许 TM-001 认证流量，绝无用量、目录、路径或意愿上传；服务库无 TM-002 业务写入，ND0。",
+          "expected": "UI 候选集合恰为 {A1,A2}，文件 FE；网络只允许 TM-001 认证流量，绝无用量、目录、路径或意愿上传；服务库无 TM-002 业务写入，ND0。"
+        },
+        {
+          "step": 3,
+          "action": "退出重启并经 /v1/me 恢复",
+          "expected_ui": "UI 仍为 true/true，受控刷新集合恰为 {A1,A2} 且只读 A 元数据，B 零访问",
+          "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+          "expected_file": "UI 仍为 true/true，受控刷新集合恰为 {A1,A2} 且只读 A 元数据，B 零访问；网络/DB NDA，仍无上传。",
+          "expected": "UI 仍为 true/true，受控刷新集合恰为 {A1,A2} 且只读 A 元数据，B 零访问；网络/DB NDA，仍无上传。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "三变体各自 R、隔离 SQLite、seed=42 合成 Alice/Bob 与 A/B；共同账号 SQL。#BOTH_TRUE expected true/true；#TURN_SYNC_OFF expected true/false；#TURN_COLLECT_OFF_ON 两次完整布尔对原子持久为 false/false 再 true/false。TM-002 无服务业务写入。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；对照 sessions/audit、网络 ND0/NDA 与本例私有记录的完整布尔对、根身份/密文摘要。#TURN_COLLECT_OFF_ON 另核对旧扫描代际失效和恢复后仅 A；不向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-CONSENT-04 — 两意愿均开启，本版仍不上传",
+        "line": 160
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。",
+        "依赖密文的变体尚缺同一最终签名 DMG 下测试 Keychain item 首次调用前不存在、身份/签名边界与正式项隔离的原生证明；预存或不明即 BLOCKED。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "三变体各自独立 run_id 与 R；仅清理各自 owner marker 的 profile、A/B、服务、隔离 DB、安装位置和能证明本例创建的测试 Keychain item。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-CONSENT-04#BOTH_TRUE",
+          "input": "确认 A 的采集=true、未来同步=true，显式刷新并重启。",
+          "expected": "confirmed_enabled true/true；刷新和重启后仅 A1/A2，未来同步意愿不触发用量、目录或意愿上传。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "设置两项开关为 true 并确认",
+              "expected_ui": "UI 同时显示采集开启与未来同步意愿开启",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 同时显示采集开启与未来同步意愿开启；私有记录为 true/true，A 原文不变；网络/DB ND0。",
+              "expected": "UI 同时显示采集开启与未来同步意愿开启；私有记录为 true/true，A 原文不变；网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "点“刷新候选”",
+              "expected_ui": "UI 候选集合恰为 {A1,A2}，文件 FE",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 候选集合恰为 {A1,A2}，文件 FE；网络只允许 TM-001 认证流量，绝无用量、目录、路径或意愿上传；服务库无 TM-002 业务写入，ND0。",
+              "expected": "UI 候选集合恰为 {A1,A2}，文件 FE；网络只允许 TM-001 认证流量，绝无用量、目录、路径或意愿上传；服务库无 TM-002 业务写入，ND0。"
+            },
+            {
+              "step": 3,
+              "action": "退出重启并经 /v1/me 恢复",
+              "expected_ui": "UI 仍为 true/true，受控刷新集合恰为 {A1,A2} 且只读 A 元数据，B 零访问",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 仍为 true/true，受控刷新集合恰为 {A1,A2} 且只读 A 元数据，B 零访问；网络/DB NDA，仍无上传。",
+              "expected": "UI 仍为 true/true，受控刷新集合恰为 {A1,A2} 且只读 A 元数据，B 零访问；网络/DB NDA，仍无上传。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-CONSENT-04#TURN_SYNC_OFF",
+          "input": "独立 profile 确认 A 的 true/true 并刷新 A1/A2，随后 UI 保存 true/false。",
+          "expected": "同一已确认 A、true/false、根身份不变；密文 locator 仍可恢复，设置动作不扫描或上传；重启后仍刷新 A1/A2。允许安全重加密使密文字节变化。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "真实确认 A 的 true/true，显式刷新核对 {A1,A2} 并记录密文摘要",
+              "expected_ui": "UI 为 confirmed_enabled",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 为 confirmed_enabled；文件 FE 只读 A 元数据、B 零访问；网络/DB ND0。",
+              "expected": "UI 为 confirmed_enabled；文件 FE 只读 A 元数据、B 零访问；网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "在 UI 关闭未来同步并保存，保持采集开",
+              "expected_ui": "UI 为已确认 A 的 true/false",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 为已确认 A 的 true/false；本机来源记录保留可解密到同一 A 的 locator、根身份及采集意愿，仅未来同步意愿改变；若因密钥轮换重新加密，不要求密文字节相同；该设置动作不触发文件扫描或上传，旧 A 的受控刷新能力仍在；网络/DB ND0。",
+              "expected": "UI 为已确认 A 的 true/false；本机来源记录保留可解密到同一 A 的 locator、根身份及采集意愿，仅未来同步意愿改变；若因密钥轮换重新加密，不要求密文字节相同；该设置动作不触发文件扫描或上传，旧 A 的受控刷新能力仍在；网络/DB ND0。"
+            },
+            {
+              "step": 3,
+              "action": "退出重启并经真实 /v1/me 验证 Alice，再显式刷新",
+              "expected_ui": "UI 恢复 A 的 true/false，候选恰为 {A1,A2}",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及对应 sessions/audit；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 恢复 A 的 true/false，候选恰为 {A1,A2}；密文记录仍在且归属相同，文件 FE 仅 A、B 零访问；网络/DB NDA，仍无上传。",
+              "expected": "UI 恢复 A 的 true/false，候选恰为 {A1,A2}；密文记录仍在且归属相同，文件 FE 仅 A、B 零访问；网络/DB NDA，仍无上传。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-CONSENT-04#TURN_COLLECT_OFF_ON",
+          "input": "S1/Alice 真实面板确认 A true/false 并刷新 A1/A2；产品 UI 关闭采集保持同步 false，再明确开启采集。",
+          "expected": "关闭时 confirmed_paused false/false、旧扫描与未提交结果失效、刷新不可用且 A/B 后续零访问；再次开启后 confirmed_enabled true/false 且仅 A1/A2；两次完整布尔对原子持久，无上传。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "经真实面板确认 A 的 true/false，显式刷新",
+              "expected_ui": "UI 为 confirmed_enabled、true/false，候选恰为 `{sessions/2026/10/01/a-01.jsonl,sessions/2026/10/01/a-02.jsonl}`",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 为 confirmed_enabled、true/false，候选恰为 `{sessions/2026/10/01/a-01.jsonl,sessions/2026/10/01/a-02.jsonl}`；主进程记录当前来源/扫描代际，文件 FE 只读 A 元数据、B 零访问；网络/DB ND0。",
+              "expected": "UI 为 confirmed_enabled、true/false，候选恰为 `{sessions/2026/10/01/a-01.jsonl,sessions/2026/10/01/a-02.jsonl}`；主进程记录当前来源/扫描代际，文件 FE 只读 A 元数据、B 零访问；网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "在产品 UI 关闭采集并保存，同时保持未来同步=false",
+              "expected_ui": "UI 立即显示 confirmed_paused、false/false，刷新控件不可用",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 立即显示 confirmed_paused、false/false，刷新控件不可用；`updateSourceConsent` 一次原子提交完整布尔对，旧扫描与未提交结果的代际失效，旧刷新请求被拒绝，提交后 A/B readdir/stat/open/read/watch 为零，密文记录归属与 A 根身份不变；网络/DB ND0，无上传。",
+              "expected": "UI 立即显示 confirmed_paused、false/false，刷新控件不可用；`updateSourceConsent` 一次原子提交完整布尔对，旧扫描与未提交结果的代际失效，旧刷新请求被拒绝，提交后 A/B readdir/stat/open/read/watch 为零，密文记录归属与 A 根身份不变；网络/DB ND0，无上传。"
+            },
+            {
+              "step": 3,
+              "action": "在暂停页检查无法点击刷新，且由固定主进程审计核对旧扫描代号/游标被拒绝，不能把“未读”写成完整的 0 个候选",
+              "expected_ui": "UI 仍显示已确认但暂停、false/false",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 仍显示已确认但暂停、false/false；A/B 后续访问零，旧结果不提交到 UI；网络/DB ND0。",
+              "expected": "UI 仍显示已确认但暂停、false/false；A/B 后续访问零，旧结果不提交到 UI；网络/DB ND0。"
+            },
+            {
+              "step": 4,
+              "action": "用户再次从产品 UI 明确开启采集并保存，未来同步仍 false，然后显式点刷新",
+              "expected_ui": "UI 原子转为 confirmed_enabled、true/false，候选仍恰为 A1/A2",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 原子转为 confirmed_enabled、true/false，候选仍恰为 A1/A2；主进程重新核验当前 S1/Alice、A 根身份后才给新代际读取能力，文件 FE 只读 A 元数据、B 零访问；该设置与刷新都无上传，网络/DB ND0。",
+              "expected": "UI 原子转为 confirmed_enabled、true/false，候选仍恰为 A1/A2；主进程重新核验当前 S1/Alice、A 根身份后才给新代际读取能力，文件 FE 只读 A 元数据、B 零访问；该设置与刷新都无上传，网络/DB ND0。"
+            },
+            {
+              "step": 5,
+              "action": "退出重启并经真实 `/v1/me` 验证 Alice 后打开来源页、显式刷新",
+              "expected_ui": "UI 恢复同一 A、true/false，候选恰为 A1/A2",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 恢复同一 A、true/false，候选恰为 A1/A2；私有记录仅保存最终原子布尔对与原 A locator，B 全操作零；网络/DB NDA，仅允许身份验证且无上传。",
+              "expected": "UI 恢复同一 A、true/false，候选恰为 A1/A2；私有记录仅保存最终原子布尔对与原 A locator，B 全操作零；网络/DB NDA，仅允许身份验证且无上传。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-STATE-01",
+      "title": "同账号重启的正常恢复与损坏密文停读",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "两个独立全新 profile/run_id、同一候选最终 DMG 安装后 App、S1 Alice 经真实面板确认 A true/false、TM-001 自动登录。#NORMAL_RESTORE 保留健康密文；#CORRUPT_LOCATOR 关闭 App 后经 owner/UID/0600/普通文件/无链接检查，将本例 sources 记录唯一 locator 密文字段原子替换为固定 Base64 AAEC（3 字节 00 01 02）。两变体用隔离代理屏障原样转发真实 /v1/me。",
+      "preconditions": "每变体独立 R、合成 A/B、动态 S1/SQLite 与已验证 Alice；同一最终 DMG 在 safeStorage 首次异步调用前证明本例测试 Keychain item 身份、签名访问边界、此前不存在且与正式项分离，预存/身份不明则 BLOCKED。只损坏本例由 UI 生成且 owner marker、UID、模式、无符号/硬链接均校验通过的密文字段，不注入确认状态、不改正式 App/Keychain。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "记录确认后的 UI 状态与私有 sources 摘要，正常退出 App，并在下次启动前武装本例 /v1/me 响应屏障",
+          "expected_ui": "UI 进程退出",
+          "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+          "expected_file": "UI 进程退出；来源记录存在且归属 S1/Alice，目录/文件权限符合合同，A/B 内容 SHA256 不变；网络/DB ND0。",
+          "expected": "UI 进程退出；来源记录存在且归属 S1/Alice，目录/文件权限符合合同，A/B 内容 SHA256 不变；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "使用同一私有 profile 重启安装后 App，在 /v1/me 未完成前观察",
+          "expected_ui": "UI 不提前展示可读取 A 的已验证态",
+          "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+          "expected_file": "隔离服务屏障已截住真实 FastAPI /v1/me 响应且尚未放行时，UI 不提前展示可读取 A 的已验证态；主进程未重建可用的来源 allowlist，文件 FS，无来源访问；网络/DB NDA 只允许该身份验证请求。",
+          "expected": "隔离服务屏障已截住真实 FastAPI /v1/me 响应且尚未放行时，UI 不提前展示可读取 A 的已验证态；主进程未重建可用的来源 allowlist，文件 FS，无来源访问；网络/DB NDA 只允许该身份验证请求。"
+        },
+        {
+          "step": 3,
+          "action": "测试释放隔离服务屏障，原样转发真实 /v1/me 的 200 响应且确认 account.id 为 Alice 后，观察状态并点刷新",
+          "expected_ui": "UI 恢复 A、true/false 且非 B",
+          "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+          "expected_file": "UI 恢复 A、true/false 且非 B；主进程仅重建 S1/Alice 的 A 范围，文件 FE 只枚举 A，B 零访问；网络/DB NDA，无上传。",
+          "expected": "UI 恢复 A、true/false 且非 B；主进程仅重建 S1/Alice 的 A 范围，文件 FE 只枚举 A，B 零访问；网络/DB NDA，无上传。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "两变体各自 R、独占动态回环服务与 SQLite、seed=42 合成 Alice/Bob/A/B，执行共同账号 SQL；真实 UI 确认 A。#CORRUPT_LOCATOR 仅在 App 退出和本例记录所有权/模式核对后故意损坏自有密文字段，绝不向 DB 写来源状态。",
+        "expected_changes": "TM-002 无服务业务写入；真实 /v1/me 可产生既有 sessions/audit 副作用。#NORMAL_RESTORE 本机密文保持可恢复；#CORRUPT_LOCATOR 本机密文故意损坏后不可恢复且无读取能力。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 与真实 /v1/me、网络 NDA、本例私有记录前后摘要和 A/B 文件访问审计；损坏注入不修改服务 DB。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-STATE-01 — 同账号重启的正常恢复与损坏密文停读",
+        "line": 189
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。",
+        "依赖密文的变体尚缺同一最终签名 DMG 下测试 Keychain item 首次调用前不存在、身份/签名边界与正式项隔离的原生证明；预存或不明即 BLOCKED。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "两变体各自独立 run_id 与 R；只清理本例 owner marker 的 profile、A/B、隔离 DB/服务/安装位置与能证明由本例首次创建的测试 Keychain item，保留失败原件。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-STATE-01#NORMAL_RESTORE",
+          "input": "独立 profile 中经真实面板确认 A true/false，保留健康 0600 密文；重启时以真实 /v1/me 屏障验证身份前后。",
+          "expected": "身份未验证前停读；真实 Alice /v1/me 200 后仅 A 的 true/false 与 A1/A2 恢复，B 零访问，无上传。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "记录确认后的 UI 状态与私有 sources 摘要，正常退出 App，并在下次启动前武装本例 /v1/me 响应屏障",
+              "expected_ui": "UI 进程退出",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 进程退出；来源记录存在且归属 S1/Alice，目录/文件权限符合合同，A/B 内容 SHA256 不变；网络/DB ND0。",
+              "expected": "UI 进程退出；来源记录存在且归属 S1/Alice，目录/文件权限符合合同，A/B 内容 SHA256 不变；网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "使用同一私有 profile 重启安装后 App，在 /v1/me 未完成前观察",
+              "expected_ui": "UI 不提前展示可读取 A 的已验证态",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "隔离服务屏障已截住真实 FastAPI /v1/me 响应且尚未放行时，UI 不提前展示可读取 A 的已验证态；主进程未重建可用的来源 allowlist，文件 FS，无来源访问；网络/DB NDA 只允许该身份验证请求。",
+              "expected": "隔离服务屏障已截住真实 FastAPI /v1/me 响应且尚未放行时，UI 不提前展示可读取 A 的已验证态；主进程未重建可用的来源 allowlist，文件 FS，无来源访问；网络/DB NDA 只允许该身份验证请求。"
+            },
+            {
+              "step": 3,
+              "action": "测试释放隔离服务屏障，原样转发真实 /v1/me 的 200 响应且确认 account.id 为 Alice 后，观察状态并点刷新",
+              "expected_ui": "UI 恢复 A、true/false 且非 B",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 恢复 A、true/false 且非 B；主进程仅重建 S1/Alice 的 A 范围，文件 FE 只枚举 A，B 零访问；网络/DB NDA，无上传。",
+              "expected": "UI 恢复 A、true/false 且非 B；主进程仅重建 S1/Alice 的 A 范围，文件 FE 只枚举 A，B 零访问；网络/DB NDA，无上传。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-STATE-01#CORRUPT_LOCATOR",
+          "input": "另一个独立 profile 经真实面板确认 A true/false、刷新 A1/A2、退出后仅将本例 locator 密文字段改为固定 Base64 AAEC；同一最终 DMG 重启并释放真实 /v1/me，随后真实面板重选取消。",
+          "expected": "身份验证前无来源能力；损坏密文导致 needs_reselect、刷新不可用、旧 A 不恢复且 A/B 后续零访问；取消重选及再次重启仍停读，不把未读显示完整 0 个，不泄漏路径/密文。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "经真实面板确认 A 的 true/false，显式刷新并核对候选恰为 `{sessions/2026/10/01/a-01.jsonl,sessions/2026/10/01/a-02.jsonl}`，正常退出 App 后完成上述本例记录校验与固定密文损坏",
+              "expected_ui": "UI 进程退出",
+              "expected_api_db": "无 TM-002 服务 API、上传或业务 DB 写入（ND0）。",
+              "expected_file": "UI 进程退出；损坏前 0600 密文记录确由本次运行生成，损坏后只有该测试密文字段变化、A/B 原文 SHA256 不变；文件 FE 仅发生在退出前，之后 A/B 零访问；网络/DB ND0。",
+              "expected": "UI 进程退出；损坏前 0600 密文记录确由本次运行生成，损坏后只有该测试密文字段变化、A/B 原文 SHA256 不变；文件 FE 仅发生在退出前，之后 A/B 零访问；网络/DB ND0。"
+            },
+            {
+              "step": 2,
+              "action": "武装本例真实 `/v1/me` 响应屏障，以同一最终 DMG 的安装后 App 和同一私有 profile 重启",
+              "expected_ui": "UI 不显示 A 的可读取确认态",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "真实响应尚未交付时 UI 不显示 A 的可读取确认态；主进程不建立 A/B 来源能力，A/B readdir/stat/open/read/watch 均为零；网络/DB NDA 只允许该身份请求。",
+              "expected": "真实响应尚未交付时 UI 不显示 A 的可读取确认态；主进程不建立 A/B 来源能力，A/B readdir/stat/open/read/watch 均为零；网络/DB NDA 只允许该身份请求。"
+            },
+            {
+              "step": 3,
+              "action": "释放屏障并原样交付真实 `/v1/me` 的 Alice 200 响应，打开来源页",
+              "expected_ui": "UI 显示 `needs_reselect`/需重新选择，采集刷新不可用，不展示旧 A 候选或“完整 0 个”",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 显示 `needs_reselect`/需重新选择，采集刷新不可用，不展示旧 A 候选或“完整 0 个”；主进程拒绝损坏密文、不回退明文/缓存、旧 A allowlist 不恢复，A/B 后续访问零；私有记录只能作为无可用能力的损坏原件保留或按安全策略清除，绝不能恢复确认态；网络/DB NDA，无上传。",
+              "expected": "UI 显示 `needs_reselect`/需重新选择，采集刷新不可用，不展示旧 A 候选或“完整 0 个”；主进程拒绝损坏密文、不回退明文/缓存、旧 A allowlist 不恢复，A/B 后续访问零；私有记录只能作为无可用能力的损坏原件保留或按安全策略清除，绝不能恢复确认态；网络/DB NDA，无上传。"
+            },
+            {
+              "step": 4,
+              "action": "点击“重新选择”并在真实原生面板点系统“取消”，再退出重启且经真实 `/v1/me` 验证 Alice",
+              "expected_ui": "UI 仍需重新选择，不复活旧 A",
+              "expected_api_db": "仅允许 TM-001 身份验证请求及其 sessions/audit 副作用；无 TM-002 上传或业务 DB 写入（NDA）。",
+              "expected_file": "UI 仍需重新选择，不复活旧 A；observer 记录真实 canceled=true、空选中集合，主进程无可用来源能力，A/B 全操作零；网络/DB NDA 仅允许身份验证。保存损坏前后状态/密文摘要、原生面板、主进程停读与诊断无路径/密文证据。",
+              "expected": "UI 仍需重新选择，不复活旧 A；observer 记录真实 canceled=true、空选中集合，主进程无可用来源能力，A/B 全操作零；网络/DB NDA 仅允许身份验证。保存损坏前后状态/密文摘要、原生面板、主进程停读与诊断无路径/密文证据。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-STATE-02",
+      "title": "同服务账号隔离",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "S1 Alice 已确认 A，true/false；S1 Bob 是 fixture 的另一个有效成员，尚无来源。",
+      "preconditions": "S1 Alice 已确认 A，true/false；S1 Bob 是 fixture 的另一个有效成员，尚无来源。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Alice 查看 A 后通过真实 UI 退出",
+          "expected_ui": "返回登录",
+          "expected_api_db": "网络/DB NDA 允许 logout",
+          "expected_file": "文件 FS",
+          "expected": "UI 返回登录；来源页不再可访问且后续刷新被拒绝；文件 FS；网络/DB NDA 允许 logout。"
+        },
+        {
+          "step": 2,
+          "action": "Bob 通过真实 UI 登录 S1 并点来源页/刷新",
+          "expected_ui": "显示 Bob 无来源，A 名称、意愿与候选不可见",
+          "expected_api_db": "网络/DB NDA 允许 login/me",
+          "expected_file": "UI 显示 Bob 无来源，A 名称、意愿与候选不可见；主进程拒绝 Bob 使用 Alice 的 A 来源能力，文件 FS，A/B 无访问",
+          "expected": "UI 显示 Bob 无来源，A 名称、意愿与候选不可见；主进程拒绝 Bob 使用 Alice 的 A 来源能力，文件 FS，A/B 无访问；网络/DB NDA 允许 login/me。"
+        },
+        {
+          "step": 3,
+          "action": "Bob 退出、Alice 重新登录并经 /v1/me 验证",
+          "expected_ui": "只恢复 Alice 的 A 与 true/false",
+          "expected_api_db": "网络/DB NDA",
+          "expected_file": "UI 只恢复 Alice 的 A 与 true/false；文件 FE 仅 Alice 主动刷新 A 后出现，B 无访问",
+          "expected": "UI 只恢复 Alice 的 A 与 true/false；文件 FE 仅 Alice 主动刷新 A 后出现，B 无访问；网络/DB NDA。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL 验 Alice/Bob id；账号切换造成的 sessions/audit 变化按 NDA，TM-002 无业务 DB 操作。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-STATE-02 — 同服务账号隔离",
+        "line": 205
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL 验 Alice/Bob id；账号切换造成的 sessions/audit 变化按 NDA，TM-002 无业务 DB 操作。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-STATE-03",
+      "title": "同账号不同服务 origin 隔离",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-001",
+      "input": "S1 Alice 已确认 A，true/false；S2 为另一个动态独占回环服务与 SQLite，可登录同 id Alice，但无来源。服务地址只经 TM-001 真实配置 UI 改动。",
+      "preconditions": "S1 Alice 已确认 A，true/false；S2 为另一个动态独占回环服务与 SQLite，可登录同 id Alice，但无来源。服务地址只经 TM-001 真实配置 UI 改动。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "在 UI 将服务从 S1 改为 S2，并在 S2 真实登录 Alice",
+          "expected_ui": "不显示 S1 的 A/意愿",
+          "expected_api_db": "网络/DB NDA 仅目标 S2 认证",
+          "expected_file": "UI 不显示 S1 的 A/意愿；来源内存能力卸载，文件 FS，A/B 无访问",
+          "expected": "UI 不显示 S1 的 A/意愿；来源内存能力卸载，文件 FS，A/B 无访问；网络/DB NDA 仅目标 S2 认证。"
+        },
+        {
+          "step": 2,
+          "action": "打开来源页并尝试刷新",
+          "expected_ui": "显示 S2 无来源且无法刷新 S1 的 A",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 显示 S2 无来源且无法刷新 S1 的 A；主进程拒绝将 S1/Alice 的 allowlist 用于 S2/Alice，文件 FS，无 A/B 访问",
+          "expected": "UI 显示 S2 无来源且无法刷新 S1 的 A；主进程拒绝将 S1/Alice 的 allowlist 用于 S2/Alice，文件 FS，无 A/B 访问；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "在 UI 改回 S1 并真实登录 Alice，经 /v1/me 验证后刷新",
+          "expected_ui": "恢复 S1 的 A/true/false，文件 FE 仅 A",
+          "expected_api_db": "网络/DB NDA",
+          "expected_file": "UI 恢复 S1 的 A/true/false，文件 FE 仅 A；S2 的库与本地来源记录不接收 S1 路径或候选",
+          "expected": "UI 恢复 S1 的 A/true/false，文件 FE 仅 A；S2 的库与本地来源记录不接收 S1 路径或候选；网络/DB NDA。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；两个隔离库分别按共同账号 SQL 核验；配置与登录副作用按 NDA，TM-002 无业务 DB 操作。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-STATE-03 — 同账号不同服务 origin 隔离",
+        "line": 216
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；两个隔离库分别按共同账号 SQL 核验；配置与登录副作用按 NDA，TM-002 无业务 DB 操作。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-SELECT-03",
+      "title": "失效后选择面板取消",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PICKER"
+      ],
       "ac_ids": [
         "AC-TM002-002"
       ],
       "type": "product_e2e",
-      "input": "数据集 `system_permissions`；账号已登录；专用目录A。分别准备“从未授权”和“曾授权后权限失效”两个隔离状态，权限变更只作用于测试目录/测试域。system_permissions 生成/重置程序未实现。",
-      "preconditions": "数据集 `system_permissions`；账号已登录；专用目录A。分别准备“从未授权”和“曾授权后权限失效”两个隔离状态，权限变更只作用于测试目录/测试域。system_permissions 生成/重置程序未实现。",
+      "scenario_group": "E2E-TM002-002",
+      "input": "S1 Alice 已确认 A，采集=true/同步=false；由本例 fixture 使 A 拒读并通过受控刷新进入 needs_reselect；本例保留 A 权限拒绝状态直到观察完成。输入为重新选择面板取消。",
+      "preconditions": "S1 Alice 已确认 A，采集=true/同步=false；由本例 fixture 使 A 拒读并通过受控刷新进入 needs_reselect；本例保留 A 权限拒绝状态直到观察完成。输入为重新选择面板取消。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
       "steps": [
         {
           "step": 1,
-          "action": "干净状态打开系统选择器并取消或拒绝；返回App，检查错误/待授权状态。",
-          "expected_ui": "",
-          "expected_api_db": "",
-          "expected": "本步独立预期待细化；整体预期：拒绝不会崩溃或隐式授权；失效后停止读取，重新授权后恢复访问和持久授权。此例不证明已解析事件去重，恢复去重分别由TM-003-004/TM-004-004验证。"
+          "action": "验证失效初态",
+          "expected_ui": "显示需重新选择而非“0 个文件”",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 显示需重新选择而非“0 个文件”；刷新已停止，后续文件 FS",
+          "expected": "UI 显示需重新选择而非“0 个文件”；刷新已停止，后续文件 FS；网络/DB ND0。"
         },
         {
           "step": 2,
-          "action": "重新选择A并确认，再由fixture撤销测试目录访问或使保存授权失效；触发读取并重启App。",
-          "expected_ui": "",
-          "expected_api_db": "",
-          "expected": "本步独立预期待细化；整体预期：拒绝不会崩溃或隐式授权；失效后停止读取，重新授权后恢复访问和持久授权。此例不证明已解析事件去重，恢复去重分别由TM-003-004/TM-004-004验证。"
+          "action": "点击“重新选择”，在原生面板取消",
+          "expected_ui": "返回需重新选择，不显示恢复成功",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "observer 见真实调用及 canceled=true；文件 FS",
+          "expected": "observer 见真实调用及 canceled=true；UI 返回需重新选择，不显示恢复成功；文件 FS；网络/DB ND0。"
         },
         {
           "step": 3,
-          "action": "检查App保持响应，显示目录需要重新授权；向失效目录追加哨兵，核对没有继续读取。",
-          "expected_ui": "",
-          "expected_api_db": "",
-          "expected": "本步独立预期待细化；整体预期：拒绝不会崩溃或隐式授权；失效后停止读取，重新授权后恢复访问和持久授权。此例不证明已解析事件去重，恢复去重分别由TM-003-004/TM-004-004验证。"
-        },
-        {
-          "step": 4,
-          "action": "通过真实选择器重新授权A，确认状态恢复；再次重启并验证可读取该目录的测试文件。",
-          "expected_ui": "",
-          "expected_api_db": "",
-          "expected": "本步独立预期待细化；整体预期：拒绝不会崩溃或隐式授权；失效后停止读取，重新授权后恢复访问和持久授权。此例不证明已解析事件去重，恢复去重分别由TM-003-004/TM-004-004验证。"
+          "action": "触发手动刷新",
+          "expected_ui": "仍需重新选择且拒绝刷新",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "旧 locator 不被重新信任，A/B 无文件访问",
+          "expected": "UI 仍需重新选择且拒绝刷新；旧 locator 不被重新信任，A/B 无文件访问；网络/DB ND0。"
         }
       ],
       "db_operations": {
-        "prepare": "待该功能的数据程序/SQL方案确定。",
-        "expected_changes": "待具体任务及数据设计细化。",
-        "verification": "暂无可执行数据库核验绑定。",
-        "read_only_checks": []
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R 最终恢复 A 0700；共同账号 SQL，TM-002 无业务 DB 操作；expected 为 needs_reselect。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
       },
-      "design_status": "planned",
+      "design_status": "baseline_pending",
       "execution_status": "unexecuted",
       "binding": null,
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
-        "line": 28,
-        "heading": "E2E-TM002-002"
+        "heading": "TC-TM002-SELECT-03 — 失效后选择面板取消",
+        "line": 243
       },
       "missing": [
-        "缺拒绝/撤销的系统级fixture、权限观测与原生绑定；无业务SQL可替代该系统过程",
-        "独立用例身份/逐步原始证据的自动化绑定尚未接通。",
-        "未来聚合场景：具体TASK、逐步独立预期及DB准备/核验待进入该功能版本前细化。"
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
       ],
-      "aggregate_planned": true,
+      "aggregate_planned": false,
       "evidence": null,
-      "overall_expected": "拒绝不会崩溃或隐式授权；失效后停止读取，重新授权后恢复访问和持久授权。此例不证明已解析事件去重，恢复去重分别由TM-003-004/TM-004-004验证。"
+      "reset": "R 最终恢复 A 0700；共同账号 SQL，TM-002 无业务 DB 操作；expected 为 needs_reselect。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-ACCESS-01",
+      "title": "用户主动撤销来源",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-ACCESS"
+      ],
+      "ac_ids": [
+        "AC-TM002-002"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-002",
+      "input": "S1 Alice 已确认 A，true/false，能够受控刷新；记录 A/B 内容 SHA256。输入为 UI“移除来源”确认，以此撤销 App 对 A 的来源 allowlist 记录。",
+      "preconditions": "S1 Alice 已确认 A，true/false，能够受控刷新；记录 A/B 内容 SHA256。输入为 UI“移除来源”确认，以此撤销 App 对 A 的来源 allowlist 记录。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "在 UI 点击移除 A 并确认",
+          "expected_ui": "变为需要选择",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "主进程立即撤销 A 的 allowlist 能力，后续刷新被拒绝，私有记录清除该来源 locator/意愿；文件 FS",
+          "expected": "UI 变为需要选择；主进程立即撤销 A 的 allowlist 能力，后续刷新被拒绝，私有记录清除该来源 locator/意愿；文件 FS；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "fixture 向 A 新增 a-new，尝试刷新并等待观察窗口",
+          "expected_ui": "不恢复旧来源、不显示 a-new",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "主进程拒绝原来源的刷新请求，A/B 无文件读取/监听，文件 FS",
+          "expected": "UI 不恢复旧来源、不显示 a-new；主进程拒绝原来源的刷新请求，A/B 无文件读取/监听，文件 FS；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "正常退出重启，经 /v1/me 恢复 Alice",
+          "expected_ui": "仍无来源",
+          "expected_api_db": "网络/DB NDA",
+          "expected_file": "A/B 内容除 fixture 新增项外保持原样，旧 locator 不复活；文件 FS",
+          "expected": "UI 仍无来源；A/B 内容除 fixture 新增项外保持原样，旧 locator 不复活；文件 FS；网络/DB NDA。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 为 none、旧 locator 被清除。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-ACCESS-01 — 用户主动撤销来源",
+        "line": 254
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 为 none、旧 locator 被清除。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-ACCESS-02",
+      "title": "POSIX 拒读后停止访问",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-ACCESS"
+      ],
+      "ac_ids": [
+        "AC-TM002-002"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-002",
+      "input": "S1 Alice 已确认 A，true/false；fixture 确认 A 初始 0700，可正常刷新；随后将自有 A chmod 000，并先以同 uid 的独立探针确认 readdir 被 OS 拒绝。若无法造成真实拒读，例为 BLOCKED。",
+      "preconditions": "S1 Alice 已确认 A，true/false；fixture 确认 A 初始 0700，可正常刷新；随后将自有 A chmod 000，并先以同 uid 的独立探针确认 readdir 被 OS 拒绝。若无法造成真实拒读，例为 BLOCKED。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "受控刷新 A",
+          "expected_ui": "候选集合恰为 {A1,A2}。",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "受控刷新 A，UI 候选集合恰为 {A1,A2}；文件 FE 仅 A 元数据，B 无访问",
+          "expected": "UI 候选集合恰为 {A1,A2}；文件 FE 仅 A 元数据，B 无访问；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "fixture chmod 000 且探针确认拒读，点“刷新候选”",
+          "expected_ui": "显示需重新选择/访问失效而非“0 个文件”，登录及配置页仍响应",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 显示需重新选择/访问失效而非“0 个文件”，登录及配置页仍响应；访问尝试得到明确拒绝，主进程标记来源失效并撤销读取能力，停止后续刷新，B 零访问",
+          "expected": "UI 显示需重新选择/访问失效而非“0 个文件”，登录及配置页仍响应；访问尝试得到明确拒绝，主进程标记来源失效并撤销读取能力，停止后续刷新，B 零访问；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "fixture 先恢复 0700，再新增 a-new，但不经 picker 重选；再次点刷新/等待窗口",
+          "expected_ui": "仍需重新选择，不显示 a-new",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "文件 FS，A/B 后续访问为零",
+          "expected": "UI 仍需重新选择，不显示 a-new；文件 FS，A/B 后续访问为零；网络/DB ND0。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R 必须在 finally 恢复 A 0700 并核对 owner marker；共同账号 SQL，TM-002 无业务 DB 操作。expected 为 needs_reselect。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-ACCESS-02 — POSIX 拒读后停止访问",
+        "line": 265
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R 必须在 finally 恢复 A 0700 并核对 owner marker；共同账号 SQL，TM-002 无业务 DB 操作。expected 为 needs_reselect。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-ACCESS-03",
+      "title": "同路径新 inode 不继承旧授权",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-ACCESS"
+      ],
+      "ac_ids": [
+        "AC-TM002-002"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-002",
+      "input": "S1 Alice 已确认 A，true/false，记录根设备号与 inode；fixture 仅在自有 runRoot 中把原 A 重命名为 A-old，并在原 A 路径新建不同 inode 目录及 a-new；原 A-old 仍有 A1/A2。",
+      "preconditions": "S1 Alice 已确认 A，true/false，记录根设备号与 inode；fixture 仅在自有 runRoot 中把原 A 重命名为 A-old，并在原 A 路径新建不同 inode 目录及 a-new；原 A-old 仍有 A1/A2。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "在确认态受控刷新原 A",
+          "expected_ui": "候选集合恰为 {A1,A2}",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 候选集合恰为 {A1,A2}；文件 FE，B 无访问",
+          "expected": "UI 候选集合恰为 {A1,A2}；文件 FE，B 无访问；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "fixture 重命名原 A、新建同路径不同 inode A，先用独立 stat 证明 dev/inode 不同，再点刷新",
+          "expected_ui": "显示需重新选择，不能把新 A 的 a-new 当作既有 App 来源授权",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 显示需重新选择，不能把新 A 的 a-new 当作既有 App 来源授权；主进程发现根身份不符后标记来源失效并撤销原 allowlist 能力，新/旧 A 均不得有候选正文读取",
+          "expected": "UI 显示需重新选择，不能把新 A 的 a-new 当作既有 App 来源授权；主进程发现根身份不符后标记来源失效并撤销原 allowlist 能力，新/旧 A 均不得有候选正文读取；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "再次尝试刷新并退出重启",
+          "expected_ui": "仍需重新选择，既不显示新 A 的 a-new，也不自行追踪旧 A-old",
+          "expected_api_db": "网络/DB NDA 仅允许 /v1/me",
+          "expected_file": "UI 仍需重新选择，既不显示新 A 的 a-new，也不自行追踪旧 A-old；后续文件 FS",
+          "expected": "UI 仍需重新选择，既不显示新 A 的 a-new，也不自行追踪旧 A-old；后续文件 FS；网络/DB NDA 仅允许 /v1/me。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R 清理时分别按 owner marker 验 A-new/A-old，不能跟随链接；共同账号 SQL，TM-002 无业务 DB 操作。独立 expected 为旧根身份失效、needs_reselect。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-ACCESS-03 — 同路径新 inode 不继承旧授权",
+        "line": 276
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R 清理时分别按 owner marker 验 A-new/A-old，不能跟随链接；共同账号 SQL，TM-002 无业务 DB 操作。独立 expected 为旧根身份失效、needs_reselect。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-ACCESS-04",
+      "title": "重启后取消重新选择仍停读",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-ACCESS"
+      ],
+      "ac_ids": [
+        "AC-TM002-002"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-002",
+      "input": "S1 Alice 已确认 A 后由本例 chmod 000 真实拒读，刷新进入 needs_reselect；fixture 随后恢复 A 0700，重启 App。与 SELECT-03 的即时取消不同，本例验证失效状态持久化与重启后的取消。",
+      "preconditions": "S1 Alice 已确认 A 后由本例 chmod 000 真实拒读，刷新进入 needs_reselect；fixture 随后恢复 A 0700，重启 App。与 SELECT-03 的即时取消不同，本例验证失效状态持久化与重启后的取消。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "恢复 A 权限并正常重启，经 /v1/me 验证 Alice",
+          "expected_ui": "仍显示需重新选择，没有自动候选",
+          "expected_api_db": "网络/DB NDA",
+          "expected_file": "UI 仍显示需重新选择，没有自动候选；A/B 无来源读取，文件 FS",
+          "expected": "UI 仍显示需重新选择，没有自动候选；A/B 无来源读取，文件 FS；网络/DB NDA。"
+        },
+        {
+          "step": 2,
+          "action": "打开真实“重新选择”系统面板并取消",
+          "expected_ui": "仍需重新选择，旧来源不启用",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "observer 记录 canceled=true；文件 FS",
+          "expected": "observer 记录 canceled=true；UI 仍需重新选择，旧来源不启用；文件 FS；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "fixture 新增 a-new，点刷新",
+          "expected_ui": "拒绝旧来源刷新，不显示 a-new",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "A/B 后续访问为零，文件 FS",
+          "expected": "UI 拒绝旧来源刷新，不显示 a-new；A/B 后续访问为零，文件 FS；网络/DB ND0。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL，TM-002 无业务 DB 操作。expected 为重启后 needs_reselect，取消后仍需重新选择。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-ACCESS-04 — 重启后取消重新选择仍停读",
+        "line": 287
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL，TM-002 无业务 DB 操作。expected 为重启后 needs_reselect，取消后仍需重新选择。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-ACCESS-05",
+      "title": "真实重新选择并确认后恢复",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-ACCESS"
+      ],
+      "ac_ids": [
+        "AC-TM002-002"
+      ],
+      "type": "product_e2e",
+      "scenario_group": "E2E-TM002-002",
+      "input": "S1 Alice 曾确认 A，随后 chmod 000 拒读进入 needs_reselect；本例 fixture 恢复 A 0700 并新增 a-new，B 仍有 b-01；不直接改私有来源记录。",
+      "preconditions": "S1 Alice 曾确认 A，随后 chmod 000 拒读进入 needs_reselect；本例 fixture 恢复 A 0700 并新增 a-new，B 仍有 b-01；不直接改私有来源记录。；共同合同：本例独占profile、A/B、动态回环服务和隔离SQLite，真实身份经UI验证。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "失效态点击重新选择，由真实 macOS 面板再次选 A",
+          "expected_ui": "仅进入待确认预览，尚未恢复采集",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "observer 记录新的面板调用/选中 A；文件 FP，B 零访问",
+          "expected": "observer 记录新的面板调用/选中 A；UI 仅进入待确认预览，尚未恢复采集；文件 FP，B 零访问；网络/DB ND0。"
+        },
+        {
+          "step": 2,
+          "action": "明确设置采集=true、同步=false 并点击确认",
+          "expected_ui": "转 confirmed_enabled",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "私有来源记录更新为本次新 locator 与 true/false，旧失效能力不再可用；文件只允许确认后的 FE",
+          "expected": "UI 转 confirmed_enabled；私有来源记录更新为本次新 locator 与 true/false，旧失效能力不再可用；文件只允许确认后的 FE；网络/DB ND0。"
+        },
+        {
+          "step": 3,
+          "action": "点受控刷新",
+          "expected_ui": "候选集合恰为 {A1,A2,AN}，每条相对路径各一次，未列 B",
+          "expected_api_db": "网络/DB ND0",
+          "expected_file": "UI 候选集合恰为 {A1,A2,AN}，每条相对路径各一次，未列 B；文件 FE 仅 A 元数据，无正文打开/读取或 B 访问",
+          "expected": "UI 候选集合恰为 {A1,A2,AN}，每条相对路径各一次，未列 B；文件 FE 仅 A 元数据，无正文打开/读取或 B 访问；网络/DB ND0。"
+        },
+        {
+          "step": 4,
+          "action": "退出重启并经 /v1/me 验证，再刷新",
+          "expected_ui": "仍为 confirmed_enabled 且候选集合恰为 {A1,A2,AN}，每条相对路径各一次",
+          "expected_api_db": "网络/DB NDA",
+          "expected_file": "UI 仍为 confirmed_enabled 且候选集合恰为 {A1,A2,AN}，每条相对路径各一次；文件 FE，B 无访问",
+          "expected": "UI 仍为 confirmed_enabled 且候选集合恰为 {A1,A2,AN}，每条相对路径各一次；文件 FE，B 无访问；网络/DB NDA。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "独占动态回环服务、隔离 SQLite、seed=42 合成 Alice/Bob 与本例 A/B；R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 为新确认后候选集合 {A1,A2,AN} 每条相对路径各一次，B 零。",
+        "expected_changes": "TM-002 无服务业务写入；仅真实 TM-001 认证可改变 sessions/audit；本机来源记录依本例步骤变化。",
+        "verification": "先执行 Q-TM002-USERS；只读比较 sessions/audit 初末快照、网络 ND0/NDA、私有来源摘要。TM-002 无业务造数 SQL，不直接向 DB 写来源状态。",
+        "read_only_checks": [
+          {
+            "id": "Q-TM002-USERS",
+            "sql": "SELECT id, username, role, is_active FROM users WHERE id IN ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');"
+          },
+          {
+            "id": "Q-TM002-SESSIONS",
+            "sql": "SELECT user_id, COUNT(*) AS stored_session_count FROM sessions GROUP BY user_id ORDER BY user_id;"
+          },
+          {
+            "id": "Q-TM002-AUDIT",
+            "sql": "SELECT action, actor_id, target_id, COUNT(*) AS event_count FROM audit GROUP BY action, actor_id, target_id ORDER BY action, actor_id, target_id;"
+          }
+        ],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "共同配方 R；只清理本 run_id 和 owner marker 的 profile、A/B、服务、隔离 DB 和安装位置。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-ACCESS-05 — 真实重新选择并确认后恢复",
+        "line": 298
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002自有A/B fixture、真实原生面板驱动、主进程范围与文件审计、逐TC产品E2E程序及证据尚未绑定。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "R；共同账号 SQL；TM-002 无业务 DB 操作。独立 expected 为新确认后候选集合 {A1,A2,AN} 每条相对路径各一次，B 零。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011",
+        "SOP-014"
+      ]
+    },
+    {
+      "id": "TC-TM002-LIMIT-01",
+      "title": "2 秒枚举期限的固定时钟边界",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-PREVIEW"
+      ],
+      "ac_ids": [
+        "AC-TM002-001"
+      ],
+      "type": "unit",
+      "scenario_group": null,
+      "input": "仅在版本化单元测试中调用同一候选枚举算法，注入固定可控的单调时钟和只返回合成元数据的 FS adapter。根 A 的 adapter 按顺序提供普通相对候选 A1、A2；时钟读取序列固定为开始 0 ms、完成 A1 时 1999 ms、尝试 A2 前 2001 ms。最大枚举期限=2000 ms，深度8/1000候选/5000目录项均未触及；不调用原生面板、不启动安装后 App，也不访问用户文件。",
+      "preconditions": "仅在版本化单元测试中调用同一候选枚举算法，注入固定可控的单调时钟和只返回合成元数据的 FS adapter。根 A 的 adapter 按顺序提供普通相对候选 A1、A2；时钟读取序列固定为开始 0 ms、完成 A1 时 1999 ms、尝试 A2 前 2001 ms。最大枚举期限=2000 ms，深度8/1000候选/5000目录项均未触及；不调用原生面板、不启动安装后 App，也不访问用户文件。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "用固定单调时钟与 FS adapter 调用候选枚举",
+          "expected_ui": "不适用，原因是单元边界测试",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "adapter 首项为 A1，内容 open/read 为零，无网络/DB 操作",
+          "expected": "UI 不适用，原因是单元边界测试；adapter 首项为 A1，内容 open/read 为零，无网络/DB 操作。"
+        },
+        {
+          "step": 2,
+          "action": "在 1999 ms 接受 A1 的安全元数据；下一次检查已到 2001 ms",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "结果只含相对路径 A1、25 B 与固定 mtime",
+          "expected": "结果只含相对路径 A1、25 B 与固定 mtime；A2 未进入结果，返回 incomplete=true、reason=timeout，不返回“完整 0 个”，无网络/DB 操作。"
+        },
+        {
+          "step": 3,
+          "action": "核对时钟调用次序、adapter 调用次数、输入/输出摘要与未读正文；无真实 A/B、服务或 DB 副作用",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "不适用：不连接服务或 DB",
+          "expected_file": "此结果只证明算法对 2 秒期限的反应，不能冒充真实 macOS 目录或最终包 E2E",
+          "expected": "此结果只证明算法对 2 秒期限的反应，不能冒充真实 macOS 目录或最终包 E2E。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "输入 A1/A2 与时间序列写在固定测试源码；仅内存 adapter，无服务/SQLite/本机来源记录，SQL 不适用。每例新建测试结果目录并清理本例所有的内存状态；模拟 adapter 不代替原生面板与 App 主进程范围控制的产品证据。",
+        "expected_changes": "不适用：辅助检查不写服务业务库。",
+        "verification": "不适用：本例按内存输入、自有副本或原始结果核验，没有 DB 连接或 SQL。",
+        "read_only_checks": [],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "只清理本例 owner marker 所属辅助数据；保留失败原件。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-LIMIT-01 — 2 秒枚举期限的固定时钟边界",
+        "line": 312
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "固定单调时钟/FS adapter 单元程序和独立原始证据尚未实现；不替代真实目录产品 E2E。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "输入 A1/A2 与时间序列写在固定测试源码；仅内存 adapter，无服务/SQLite/本机来源记录，SQL 不适用。每例新建测试结果目录并清理本例所有的内存状态；模拟 adapter 不代替原生面板与 App 主进程范围控制的产品证据。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-011"
+      ]
+    },
+    {
+      "id": "TC-TM002-STORE-01",
+      "title": "密文恢复或原子写入失败的安全状态",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM002-001",
+        "AC-TM002-002"
+      ],
+      "type": "security_unit",
+      "scenario_group": null,
+      "input": "三个独立自有 0700 profile/0600 sources 密文记录、合成 S1/Alice/A/B；#KEY_UNAVAILABLE 异步密钥能力不可用；#DECRYPT_FAIL A 密文解密 Promise 拒绝；#WRITE_FAIL_KEEP_OLD 先恢复健康旧 A 且 B 加密成功，仅在本例私有 sources 原子 temp write/rename 注入固定失败。使用真实来源存储/访问代码与受控 safeStorage/文件系统故障，不访问用户 Keychain。",
+      "preconditions": "三变体各自 run_id 和 owner marker，schema 合法不透明密文记录含 origin/account.id/根身份且无明文回退字段；#WRITE_FAIL_KEEP_OLD 初态 A true/false、密文可解、身份/根健康、可刷新 A1/A2，B 暂选只由受控选择 provider 提供。无服务/SQLite。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "核对预置密文记录为 0600、归属 S1/Alice，测试适配器报告 Keychain 加密能力不可用",
+          "expected_ui": "UI 不适用，原因是存储单元测试",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "UI 不适用，原因是存储单元测试；A/B 未访问、无网络/DB 操作。",
+          "expected": "UI 不适用，原因是存储单元测试；A/B 未访问、无网络/DB 操作。"
+        },
+        {
+          "step": 2,
+          "action": "调用真实来源存储代码的恢复入口",
+          "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "返回安全错误/需重新选择，不解密或信任记录、不建立读取能力；不能尝试从普通设置、日志或记录字段取明文目录路径；A/B readdir/stat/open/read/watch 为零，无网络/DB 操作。",
+          "expected": "返回安全错误/需重新选择，不解密或信任记录、不建立读取能力；不能尝试从普通设置、日志或记录字段取明文目录路径；A/B readdir/stat/open/read/watch 为零，无网络/DB 操作。"
+        },
+        {
+          "step": 3,
+          "action": "在同一不可用条件下尝试确认新暂选 A",
+          "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "不得写入明文或弱化密文记录，也不得将来源标为已确认；对原记录的保留或安全清理由版本化存储合同决定，但不得产生可读取能力；保存脱敏错误码和文件摘要，无网络/DB 操作。",
+          "expected": "不得写入明文或弱化密文记录，也不得将来源标为已确认；对原记录的保留或安全清理由版本化存储合同决定，但不得产生可读取能力；保存脱敏错误码和文件摘要，无网络/DB 操作。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "三变体各自自有 0700 profile/0600 sources、合成 S1/Alice/A/B；前两变体受控 safeStorage 故障，#WRITE_FAIL_KEEP_OLD B 加密成功后仅 temp write/rename 失败且预置健康旧 A 原密文字节 SHA256。无服务/SQLite，SQL 不适用。",
+        "expected_changes": "不适用：辅助安全单元不写服务数据库。前两变体密钥/解密故障停读需重选；#WRITE_FAIL_KEEP_OLD 仅原子私有记录写入失败且旧 A 健康时，原 A 密文、意愿、根与能力不变，B 不生效。",
+        "verification": "不适用：无 DB 连接或 SQL；核对 sources 0600/密文摘要、状态与 A/B 审计。#WRITE_FAIL_KEEP_OLD 核对 B 加密已成功、故障仅在私有写入阶段、失败临时文件不可恢复，随后旧 A 再刷新 A1/A2，原记录字节 SHA 不变。",
+        "read_only_checks": [],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "只按 owner marker 清理本例 profile、sources 记录和 A/B；失败原件保留。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-STORE-01 — 密文恢复或原子写入失败的安全状态",
+        "line": 323
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "safeStorage 注入、真实来源存储代码安全单元绑定与每变体原始零访问证据尚未实现；不代替产品 E2E。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "三变体各自按 R 仅清理本例自有 profile、sources 记录和 A/B；保留失败原件，不访问真实用户 Keychain。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-STORE-01#KEY_UNAVAILABLE",
+          "input": "safeStorage 异步加密能力检查不可用；已预置 0600 密文记录。",
+          "expected": "恢复需重选/安全停读，A/B readdir/stat/open/read/watch 为零；确认新暂选 A 亦不得明文落盘或进入已确认态。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "核对预置密文记录为 0600、归属 S1/Alice，测试适配器报告 Keychain 加密能力不可用",
+              "expected_ui": "UI 不适用，原因是存储单元测试",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用，原因是存储单元测试；A/B 未访问、无网络/DB 操作。",
+              "expected": "UI 不适用，原因是存储单元测试；A/B 未访问、无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "调用真实来源存储代码的恢复入口",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "返回安全错误/需重新选择，不解密或信任记录、不建立读取能力；不能尝试从普通设置、日志或记录字段取明文目录路径；A/B readdir/stat/open/read/watch 为零，无网络/DB 操作。",
+              "expected": "返回安全错误/需重新选择，不解密或信任记录、不建立读取能力；不能尝试从普通设置、日志或记录字段取明文目录路径；A/B readdir/stat/open/read/watch 为零，无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "在同一不可用条件下尝试确认新暂选 A",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "不得写入明文或弱化密文记录，也不得将来源标为已确认；对原记录的保留或安全清理由版本化存储合同决定，但不得产生可读取能力；保存脱敏错误码和文件摘要，无网络/DB 操作。",
+              "expected": "不得写入明文或弱化密文记录，也不得将来源标为已确认；对原记录的保留或安全清理由版本化存储合同决定，但不得产生可读取能力；保存脱敏错误码和文件摘要，无网络/DB 操作。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-STORE-01#DECRYPT_FAIL",
+          "input": "safeStorage 能力可用，decryptStringAsync 对预置密文以固定错误拒绝。",
+          "expected": "恢复需重选/安全停读；受控刷新拒绝且不报告“完整 0 个候选”；A/B 零访问，记录与诊断不含路径、明文或密文。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "核对同样的独立密文输入，令加密能力检查成功、`decryptStringAsync` 对此记录以固定错误拒绝",
+              "expected_ui": "UI 不适用",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用；A/B 未访问，无网络/DB 操作。",
+              "expected": "UI 不适用；A/B 未访问，无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "调用真实来源存储代码的恢复入口",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "返回安全错误/需重新选择，不以密文字节、原路径缓存或明文备用字段推断目录；不建立读取能力，A/B 后续访问零，无网络/DB 操作。",
+              "expected": "返回安全错误/需重新选择，不以密文字节、原路径缓存或明文备用字段推断目录；不建立读取能力，A/B 后续访问零，无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "再请求受控刷新并检查本例配置/审计",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "刷新被拒绝且不能报告“完整 0 个候选”；记录、诊断与原始结果只含状态、错误码和摘要，不含路径、明文或密文值；无网络/DB 操作。",
+              "expected": "刷新被拒绝且不能报告“完整 0 个候选”；记录、诊断与原始结果只含状态、错误码和摘要，不含路径、明文或密文值；无网络/DB 操作。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-STORE-01#WRITE_FAIL_KEEP_OLD",
+          "input": "本例旧 A 已确认 true/false 且密文可解、身份/根健康；受控 provider 暂选 B，B encryptStringAsync 成功，仅私有 sources 原子 temp write/rename 注入固定失败。",
+          "expected": "新 B 私有记录提交失败且 B 不生效；旧 A 来源/意愿/能力及原密文字节 SHA 完全不变，可再次刷新 A1/A2；失败临时文件不可恢复，B 只有选择根校验、无候选或正文读取。密钥不可用应走另一个停读变体。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "以本例有效的 S1/Alice/codex 0600 密文记录安全恢复旧 A、采集=true/未来同步=false，显式受控刷新并核对 `{sessions/2026/10/01/a-01.jsonl,sessions/2026/10/01/a-02.jsonl}`；记录旧密文原始字节 SHA256、来源 ID、A 根身份和能力代际",
+              "expected_ui": "不适用：辅助存储/状态机单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用，原因是存储/状态机单元测试；仅 A 元数据读取，B 零访问，无网络/DB 操作。",
+              "expected": "UI 不适用，原因是存储/状态机单元测试；仅 A 元数据读取，B 零访问，无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "由受控选择 provider 提供本例 B 的暂选结果（不经 renderer 传路径），调用同一三元组的真实 `confirmSource`，观察 `encryptStringAsync` 对 B 成功；仅对本例私有 `sources/` 的原子 temp write/rename 阶段注入固定失败",
+              "expected_ui": "不适用：辅助存储/状态机单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用；返回写入错误，提交未发生，旧 A 的来源 ID、true/false、能力与 0600 密文记录原始字节 SHA256 完全不变，失败临时文件不得成为可恢复记录；B 仅允许选择时的根元数据校验，不建立 B 确认或候选读取能力，A/B 正文零读取；无网络/DB 操作。",
+              "expected": "UI 不适用；返回写入错误，提交未发生，旧 A 的来源 ID、true/false、能力与 0600 密文记录原始字节 SHA256 完全不变，失败临时文件不得成为可恢复记录；B 仅允许选择时的根元数据校验，不建立 B 确认或候选读取能力，A/B 正文零读取；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "再对旧 A 请求受控刷新",
+              "expected_ui": "不适用：辅助存储/状态机单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用；候选仍恰为 A1/A2，文件仅 A 元数据、B readdir/open/read/watch 为零，新 B 不生效；旧密文字节摘要、A 根身份与意愿仍与步骤 1 一致，未留下明文或半确认 B；保存拒绝码、前后摘要和 A/B 访问时间序列，无网络/DB 操作。",
+              "expected": "UI 不适用；候选仍恰为 A1/A2，文件仅 A 元数据、B readdir/open/read/watch 为零，新 B 不生效；旧密文字节摘要、A 根身份与意愿仍与步骤 1 一致，未留下明文或半确认 B；保存拒绝码、前后摘要和 A/B 访问时间序列，无网络/DB 操作。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-ACCESS-06",
+      "title": "内部分页游标完整性与失效",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-ACCESS"
+      ],
+      "ac_ids": [
+        "AC-TM002-001",
+        "AC-TM002-002"
+      ],
+      "type": "unit",
+      "scenario_group": null,
+      "input": "三个独立变体各在真实 A 中建立 1201 个普通 3 B 候选：根文件 a.jsonl、目录文件 a/x.jsonl、根文件 p-0000.jsonl 至 p-1198.jsonl 共 1199 个；B1 未选。完整相对路径 UTF-8 字节序应为 a.jsonl、a/x.jsonl、随后 p-*，不能按根目录项原始名字 a/ 与 a.jsonl 排序。S1/Alice/codex 已确认、采集=true，生产 C helper/主进程在真实 A 上分页 pageSize=256；#PAGE_COMPLETION 同样使用真实 helper。#TREE_CHANGED 首页面后在真实 A 增加 p-0000a.jsonl，须由生产 C helper/主进程拒绝旧游标并新扫 1202 条；不用 FS adapter 自报版本。",
+      "preconditions": "三变体各自 R、owner marker、真实 A 的 1201 文件清单与固定 mtime/3 B 内容；预先按完整相对路径计算旧树五页 256/256/256/256/177，第一页面为 a.jsonl,a/x.jsonl,p-0000…p-0253。#TREE_CHANGED 另固定新增 p-0000a.jsonl 后新树 1202 条及五页 256/256/256/256/178，其总序为第 4。辅助级无原生面板、renderer、服务、SQLite 或最终安装 App UI。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "以 S1/Alice 来源 ID 经生产 C helper/主进程在真实 A 根请求第一页",
+          "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "UI 不适用，原因是内部单元能力；按完整相对路径排序返回 `a.jsonl,a/x.jsonl,p-0000.jsonl…p-0253.jsonl` 共 256 条及受限游标，`complete=false`；不得按根目录项 `a/`、`a.jsonl` 的原始顺序先给 `a/x.jsonl`。只读 A 元数据且 B 零访问；无网络/DB 操作。",
+          "expected": "UI 不适用，原因是内部单元能力；按完整相对路径排序返回 `a.jsonl,a/x.jsonl,p-0000.jsonl…p-0253.jsonl` 共 256 条及受限游标，`complete=false`；不得按根目录项 `a/`、`a.jsonl` 的原始顺序先给 `a/x.jsonl`。只读 A 元数据且 B 零访问；无网络/DB 操作。"
+        },
+        {
+          "step": 2,
+          "action": "顺序提交每页返回的游标，直至结束",
+          "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "第 2 页恰为 p-0254…p-0509，第 3 页 p-0510…p-0765，第 4 页 p-0766…p-1021，各 256 条；第 5 页 p-1022…p-1198 共 177 条。单页均不超过 256，前四页 `complete=false`，只有第五页 `complete=true` 且无后续游标；不打开正文、B 零访问，无网络/DB 操作。",
+          "expected": "第 2 页恰为 p-0254…p-0509，第 3 页 p-0510…p-0765，第 4 页 p-0766…p-1021，各 256 条；第 5 页 p-1022…p-1198 共 177 条。单页均不超过 256，前四页 `complete=false`，只有第五页 `complete=true` 且无后续游标；不打开正文、B 零访问，无网络/DB 操作。"
+        },
+        {
+          "step": 3,
+          "action": "将五页完整相对名合并与事先固定的 1201 条清单逐项比较，`a.jsonl` 必须先于 `a/x.jsonl`，其后 p-* 各恰好一次且顺序一致；结果明确标记内部完整遍历，不能据此把 UI 的 1000 条预览标完整；保存页数、计数、完整相对名排序比较/摘要、游标摘要与文件审计，无网络/DB 操作",
+          "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "五页恰为 256/256/256/256/177；合并的 1201 个完整相对名与运行前清单逐项相同且无重漏，a.jsonl 先于 a/x.jsonl，只有末页 complete=true；B 零访问、正文 open/read=0，UI 的 1000 项预览仍不完整。",
+          "expected": "五页恰为 256/256/256/256/177；合并的 1201 个完整相对名与运行前清单逐项相同且无重漏，a.jsonl 先于 a/x.jsonl，只有末页 complete=true；B 零访问、正文 open/read=0，UI 的 1000 项预览仍不完整。；无网络/DB 操作。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "三变体各自 R，在真实 A 根建普通 a.jsonl、0700 a/ 内普通 a/x.jsonl，以及 p-0000.jsonl 至 p-1198.jsonl 1199 个普通文件；1201 候选均固定 3 B/mtime，B1 未选，S1/Alice/codex 来源已确认。预先按完整相对路径 UTF-8 字节序计算旧树五页边界，#PAGE_COMPLETION 与 #TREE_CHANGED 均调用真实 A 上的生产 C helper/主进程。#TREE_CHANGED 首页面后向已遍历真实 A 根新增 p-0000a.jsonl，新树 1202 条；用生产 C helper/主进程，不用 FS adapter 自报版本。无服务/SQLite，SQL 不适用。",
+        "expected_changes": "不适用：内部只读分页不写服务数据库；#REVOKE_CURSOR 删除本机来源密文，#TREE_CHANGED 仅向本例 A 新增 p-0000a.jsonl。",
+        "verification": "不适用：无 DB 连接或 SQL；以固定完整相对路径清单比较每页、游标、complete 与 A/B 审计。旧树必须 a.jsonl 先于 a/x.jsonl，后接 p-0000…p-1198，页边界 256/256/256/256/177。#TREE_CHANGED 旧游标 invalid/incomplete；新扫描五页 256/256/256/256/178、1202 名无重漏、p-0000a 总序第 4；只据真实目录和生产 helper/主进程判断。",
+        "read_only_checks": [],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "仅清理本例 owner marker 所属 A/B/profile 与新增文件；失败原件保留。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-ACCESS-06 — 内部分页游标完整性与失效",
+        "line": 342
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "同一生产分页代码固定绑定、可验证树版本与游标失效屏障、每变体页/文件审计证据尚未实现；不代替产品 E2E。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "三变体各按 R 仅清理本例自有 A/B/profile；#TREE_CHANGED 的 p-0000a.jsonl 亦按 owner marker 清理；失败原件保留。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-ACCESS-06#PAGE_COMPLETION",
+          "input": "真实 A 内根普通 a.jsonl、目录普通 a/x.jsonl、根内 p-0000.jsonl 至 p-1198.jsonl，共 1201 个固定 3 B 候选；生产 C helper/主进程在真实 A 上内部 pageSize=256，顺序提交受限游标。",
+          "expected": "完整相对路径 UTF-8 字节序先 a.jsonl、再 a/x.jsonl、再 p-*；五页 256/256/256/256/177，边界为首页至 p-0253、第二页 p-0254…p-0509、第三页 p-0510…p-0765、第四页 p-0766…p-1021、末页 p-1022…p-1198；前四页 complete=false，末页 complete=true，1201 名无重漏。UI 1000 条预览不能因此标完整。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "以 S1/Alice 来源 ID 经生产 C helper/主进程在真实 A 根请求第一页",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用，原因是内部单元能力；按完整相对路径排序返回 `a.jsonl,a/x.jsonl,p-0000.jsonl…p-0253.jsonl` 共 256 条及受限游标，`complete=false`；不得按根目录项 `a/`、`a.jsonl` 的原始顺序先给 `a/x.jsonl`。只读 A 元数据且 B 零访问；无网络/DB 操作。",
+              "expected": "UI 不适用，原因是内部单元能力；按完整相对路径排序返回 `a.jsonl,a/x.jsonl,p-0000.jsonl…p-0253.jsonl` 共 256 条及受限游标，`complete=false`；不得按根目录项 `a/`、`a.jsonl` 的原始顺序先给 `a/x.jsonl`。只读 A 元数据且 B 零访问；无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "顺序提交每页返回的游标，直至结束",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "第 2 页恰为 p-0254…p-0509，第 3 页 p-0510…p-0765，第 4 页 p-0766…p-1021，各 256 条；第 5 页 p-1022…p-1198 共 177 条。单页均不超过 256，前四页 `complete=false`，只有第五页 `complete=true` 且无后续游标；不打开正文、B 零访问，无网络/DB 操作。",
+              "expected": "第 2 页恰为 p-0254…p-0509，第 3 页 p-0510…p-0765，第 4 页 p-0766…p-1021，各 256 条；第 5 页 p-1022…p-1198 共 177 条。单页均不超过 256，前四页 `complete=false`，只有第五页 `complete=true` 且无后续游标；不打开正文、B 零访问，无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "将五页完整相对名合并与事先固定的 1201 条清单逐项比较，`a.jsonl` 必须先于 `a/x.jsonl`，其后 p-* 各恰好一次且顺序一致；结果明确标记内部完整遍历，不能据此把 UI 的 1000 条预览标完整；保存页数、计数、完整相对名排序比较/摘要、游标摘要与文件审计，无网络/DB 操作",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "五页恰为 256/256/256/256/177；合并的 1201 个完整相对名与运行前清单逐项相同且无重漏，a.jsonl 先于 a/x.jsonl，只有末页 complete=true；B 零访问、正文 open/read=0，UI 的 1000 项预览仍不完整。",
+              "expected": "五页恰为 256/256/256/256/177；合并的 1201 个完整相对名与运行前清单逐项相同且无重漏，a.jsonl 先于 a/x.jsonl，只有末页 complete=true；B 零访问、正文 open/read=0，UI 的 1000 项预览仍不完整。；无网络/DB 操作。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-ACCESS-06#REVOKE_CURSOR",
+          "input": "独立真实 A 初始 1201 候选，第一页按完整相对路径给 a.jsonl,a/x.jsonl,p-0000…p-0253；得到游标后经来源状态机撤销，再提交旧游标。",
+          "expected": "第一页 a.jsonl 必须先于 a/x.jsonl；撤销后旧游标拒绝、密文删除，A/B 无后续访问或余页，不能返回 complete=true，也不能把 256 条报告完整。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "从独立 1201 输入请求第一页并取得按完整相对路径排序的 `a.jsonl,a/x.jsonl,p-0000.jsonl…p-0253.jsonl` 共 256 条和游标",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用；仅 A 元数据访问，B 零访问；无网络/DB 操作。",
+              "expected": "UI 不适用；仅 A 元数据访问，B 零访问；无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "通过受限来源状态机撤销该来源，再用旧游标请求第二页",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "记录/能力立即清除，旧游标被拒绝为失效；撤销后 A/B 后续访问零，不返回余页或 `complete=true`；无网络/DB 操作。",
+              "expected": "记录/能力立即清除，旧游标被拒绝为失效；撤销后 A/B 后续访问零，不返回余页或 `complete=true`；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "核对第一页以外无结果提交、旧游标重试仍拒绝，报告为已撤销/不完整而非“完整 256 条”；密文记录已删除，原始 A/B 未改，保存状态与访问时间序列，无网络/DB 操作",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "旧刷新请求仍被拒绝，密文记录已删除，撤销后 A/B readdir/stat/open/read/watch 均为零；首 256 条不得称为完整覆盖，保留撤销前后审计和原文件哈希。",
+              "expected": "旧刷新请求仍被拒绝，密文记录已删除，撤销后 A/B readdir/stat/open/read/watch 均为零；首 256 条不得称为完整覆盖，保留撤销前后审计和原文件哈希。；无网络/DB 操作。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-ACCESS-06#TREE_CHANGED",
+          "input": "独立真实 A 初始根普通 a.jsonl、目录普通 a/x.jsonl 与 p-0000…p-1198 共 1201 候选；生产 C helper/主进程首页按完整相对路径返回前 256 后，向已遍历真实 A 根加入 p-0000a.jsonl，使其在新树总序应为第 4。",
+          "expected": "旧游标必须 invalid/incomplete，不得混页或 complete=true；新扫描按完整相对路径先 a.jsonl、a/x.jsonl、p-0000、p-0000a，随后 p-*，共 1202 名、五页 256/256/256/256/178、无重漏，仅末页 complete=true；B 零访问。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "在本例已确认的真实 A 根上用生产 C helper/主进程分页请求第一页",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用，原因是辅助内部能力测试；返回 `a.jsonl,a/x.jsonl,p-0000.jsonl…p-0253.jsonl` 共 256 条、`complete=false` 和绑定真实树状态的旧游标；根目录项原始顺序不能颠倒前两条完整相对名，仅 A 元数据访问，B 零访问；无网络/DB 操作。",
+              "expected": "UI 不适用，原因是辅助内部能力测试；返回 `a.jsonl,a/x.jsonl,p-0000.jsonl…p-0253.jsonl` 共 256 条、`complete=false` 和绑定真实树状态的旧游标；根目录项原始顺序不能颠倒前两条完整相对名，仅 A 元数据访问，B 零访问；无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "首页面完成后由本例 fixture 向已遍历的真实 A 根原子加入普通 `p-0000a.jsonl`，核对输入清单从 1201 变 1202，随后仍经生产 C helper/主进程提交旧游标",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用；旧游标返回树已变化的 `invalid/incomplete`，不得返回下一页或 `complete=true`，也不得把旧第一页与新树后续结果拼接；判据取自真实目录变化与 helper/主进程结果，不能从可控 adapter 自报版本生成 expected。B 零访问、正文零读取；无网络/DB 操作。",
+              "expected": "UI 不适用；旧游标返回树已变化的 `invalid/incomplete`，不得返回下一页或 `complete=true`，也不得把旧第一页与新树后续结果拼接；判据取自真实目录变化与 helper/主进程结果，不能从可控 adapter 自报版本生成 expected。B 零访问、正文零读取；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "废弃旧扫描并从新树开启全新内部扫描，依次提交新游标至穷尽",
+              "expected_ui": "不适用：内部辅助单元测试不操作安装后 App UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "UI 不适用；五页候选分别 256/256/256/256/178，按完整相对路径 UTF-8 字节序与预先固定的 1202 条清单逐项相同，前两条为 `a.jsonl,a/x.jsonl`，`p-0000a.jsonl` 恰好在总序第 4 位，全部无重漏，前四页 `complete=false`，仅第五页 `complete=true` 且无后续游标；B 零访问、正文 open/read=0；无网络/DB 操作。保存旧游标拒绝、新旧清单、真实 helper 与主进程审计及新增文件的本例清理结果。",
+              "expected": "UI 不适用；五页候选分别 256/256/256/256/178，按完整相对路径 UTF-8 字节序与预先固定的 1202 条清单逐项相同，前两条为 `a.jsonl,a/x.jsonl`，`p-0000a.jsonl` 恰好在总序第 4 位，全部无重漏，前四页 `complete=false`，仅第五页 `complete=true` 且无后续游标；B 零访问、正文 open/read=0；无网络/DB 操作。保存旧游标拒绝、新旧清单、真实 helper 与主进程审计及新增文件的本例清理结果。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-SECURITY-01",
+      "title": "renderer 不能传任意路径",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-ACCESS"
+      ],
+      "ac_ids": [
+        "AC-TM002-001",
+        "AC-TM002-002"
+      ],
+      "type": "security_unit",
+      "scenario_group": null,
+      "input": "七个独立变体：四个恶意 IPC 参数分别为 B 绝对路径、B 的 file:// URL、../B/sessions/2026/10/01/b-01.jsonl、伪造 selectionId 00000000-0000-4000-8000-000000000099；三个受控竞态为过期选择、撤销期间刷新、切换账号期间刷新。全部只用自有 A/B 与同一主进程业务代码。",
+      "preconditions": "每变体独立 run_id、R、S1/Alice 与合成 A/B；受控竞态使用 Promise 屏障及 Alice/Bob 身份状态，记录操作前后访问分界；不连接服务或 SQLite，不充当真实面板产品证据。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "建立已验证 Alice/窗口、记录 A/B 审计基线",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "测试 UI 不适用，原因是本例为主进程参数安全层；A/B 文件未被读取，无网络/DB 操作",
+          "expected": "测试 UI 不适用，原因是本例为主进程参数安全层；A/B 文件未被读取，无网络/DB 操作。"
+        },
+        {
+          "step": 2,
+          "action": "仅提交该变体指定的恶意参数到业务 IPC",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "主进程返回安全错误码，不返回内容、绝对路径或 locator；不存在 renderer 任意文件读取 API，A/B open/read=0、B 元数据访问=0",
+          "expected": "主进程返回安全错误码，不返回内容、绝对路径或 locator；不存在 renderer 任意文件读取 API，A/B open/read=0、B 元数据访问=0；无网络/DB 操作。"
+        },
+        {
+          "step": 3,
+          "action": "只读检查本例 sources 记录与审计",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "四个恶意参数变体均未确认来源、未修改 A/B 字节；分别保存脱敏错误码和文件审计，不记录路径或 token。",
+          "expected": "四个恶意参数变体均未确认来源、未修改 A/B 字节；分别保存脱敏错误码和文件审计，不记录路径或 token；无网络/DB 操作。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "七变体各自 R 与独立 A/B/profile；仅内存主进程 handler、受控异步屏障和隔离文件；无服务/DB，SQL 不适用。四恶意参数安全拒绝，三竞态过期结果不提交。",
+        "expected_changes": "不适用：辅助检查不写服务业务库。",
+        "verification": "不适用：本例按内存输入、自有副本或原始结果核验，没有 DB 连接或 SQL。",
+        "read_only_checks": [],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "只清理本例 owner marker 所属辅助数据；保留失败原件。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-SECURITY-01 — renderer 不能传任意路径",
+        "line": 361
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "本辅助例固定程序、变体绑定及独立原始证据尚未实现；该例不替代产品E2E。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "七变体各自独立 run_id、owner marker 和 R；只清理各自 A/B/profile，保存时序及失败原件。",
+      "sops": [
+        "SOP-006",
+        "SOP-011"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-SECURITY-01#ABSOLUTE",
+          "input": "renderer传B绝对路径",
+          "expected": "主进程安全拒绝，不返回内容、绝对路径或 locator；B 元数据/open/read=0，sources 无确认记录。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "建立已验证 S1/Alice 的主进程 IPC 环境，记录本例 A/B 审计基线；本变体输入为B 的绝对路径。",
+              "expected_ui": "不适用：主进程参数安全单元用例，无安装后 App UI。",
+              "expected_api_db": "不连接服务或 DB；SQL 不适用。",
+              "expected_file": "A/B 尚未被读取，私有来源记录不存在。",
+              "expected": "不适用：主进程参数安全单元用例，无安装后 App UI。；A/B 尚未被读取，私有来源记录不存在。；不连接服务或 DB；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "向业务 IPC 仅提交本变体的绝对路径参数。",
+              "expected_ui": "不适用：主进程参数安全单元用例。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "主进程返回安全错误码且不返回路径、locator 或正文；A/B open/read=0，B 元数据访问=0。",
+              "expected": "不适用：主进程参数安全单元用例。；主进程返回安全错误码且不返回路径、locator 或正文；A/B open/read=0，B 元数据访问=0。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "核对ABSOLUTE拒绝后的 sources 记录、A/B 哈希和独立审计。",
+              "expected_ui": "不适用：主进程参数安全单元用例。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。",
+              "expected": "不适用：主进程参数安全单元用例。；无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-SECURITY-01#FILE_URL",
+          "input": "renderer传指向B的file:// URL",
+          "expected": "主进程安全拒绝，不返回内容、绝对路径或 locator；B 元数据/open/read=0，sources 无确认记录。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "建立已验证 S1/Alice 的主进程 IPC 环境，记录本例 A/B 审计基线；本变体输入为指向 B 的 file:// URL。",
+              "expected_ui": "不适用：主进程参数安全单元用例，无安装后 App UI。",
+              "expected_api_db": "不连接服务或 DB；SQL 不适用。",
+              "expected_file": "A/B 尚未被读取，私有来源记录不存在。",
+              "expected": "不适用：主进程参数安全单元用例，无安装后 App UI。；A/B 尚未被读取，私有来源记录不存在。；不连接服务或 DB；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "向业务 IPC 仅提交本变体的file:// URL参数。",
+              "expected_ui": "不适用：主进程参数安全单元用例。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "主进程返回安全错误码且不返回路径、locator 或正文；A/B open/read=0，B 元数据访问=0。",
+              "expected": "不适用：主进程参数安全单元用例。；主进程返回安全错误码且不返回路径、locator 或正文；A/B open/read=0，B 元数据访问=0。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "核对FILE_URL拒绝后的 sources 记录、A/B 哈希和独立审计。",
+              "expected_ui": "不适用：主进程参数安全单元用例。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。",
+              "expected": "不适用：主进程参数安全单元用例。；无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-SECURITY-01#DOTDOT",
+          "input": "renderer传../B/sessions/2026/10/01/b-01.jsonl",
+          "expected": "主进程安全拒绝，不返回内容、绝对路径或 locator；B 元数据/open/read=0，sources 无确认记录。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "建立已验证 S1/Alice 的主进程 IPC 环境，记录本例 A/B 审计基线；本变体输入为../B/sessions/2026/10/01/b-01.jsonl。",
+              "expected_ui": "不适用：主进程参数安全单元用例，无安装后 App UI。",
+              "expected_api_db": "不连接服务或 DB；SQL 不适用。",
+              "expected_file": "A/B 尚未被读取，私有来源记录不存在。",
+              "expected": "不适用：主进程参数安全单元用例，无安装后 App UI。；A/B 尚未被读取，私有来源记录不存在。；不连接服务或 DB；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "向业务 IPC 仅提交本变体的越界相对路径参数。",
+              "expected_ui": "不适用：主进程参数安全单元用例。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "主进程返回安全错误码且不返回路径、locator 或正文；A/B open/read=0，B 元数据访问=0。",
+              "expected": "不适用：主进程参数安全单元用例。；主进程返回安全错误码且不返回路径、locator 或正文；A/B open/read=0，B 元数据访问=0。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "核对DOTDOT拒绝后的 sources 记录、A/B 哈希和独立审计。",
+              "expected_ui": "不适用：主进程参数安全单元用例。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。",
+              "expected": "不适用：主进程参数安全单元用例。；无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-SECURITY-01#TOKEN",
+          "input": "renderer传伪造selectionId 00000000-0000-4000-8000-000000000099",
+          "expected": "主进程安全拒绝，不返回内容、绝对路径或 locator；B 元数据/open/read=0，sources 无确认记录。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "建立已验证 S1/Alice 的主进程 IPC 环境，记录本例 A/B 审计基线；本变体输入为伪造 selectionId 00000000-0000-4000-8000-000000000099。",
+              "expected_ui": "不适用：主进程参数安全单元用例，无安装后 App UI。",
+              "expected_api_db": "不连接服务或 DB；SQL 不适用。",
+              "expected_file": "A/B 尚未被读取，私有来源记录不存在。",
+              "expected": "不适用：主进程参数安全单元用例，无安装后 App UI。；A/B 尚未被读取，私有来源记录不存在。；不连接服务或 DB；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "向业务 IPC 仅提交本变体的伪造 selectionId参数。",
+              "expected_ui": "不适用：主进程参数安全单元用例。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "主进程返回安全错误码且不返回路径、locator 或正文；A/B open/read=0，B 元数据访问=0。",
+              "expected": "不适用：主进程参数安全单元用例。；主进程返回安全错误码且不返回路径、locator 或正文；A/B open/read=0，B 元数据访问=0。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "核对TOKEN拒绝后的 sources 记录、A/B 哈希和独立审计。",
+              "expected_ui": "不适用：主进程参数安全单元用例。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。",
+              "expected": "不适用：主进程参数安全单元用例。；无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-SECURITY-01#STALE_SELECTION",
+          "input": "Alice 无来源，选择结果停在 Promise 屏障；切至 Bob 后释放 A 结果。",
+          "expected": "旧 Alice 结果拒绝，Bob 不得建暂选/确认 A；Alice/Bob 无新增来源，A/B 零读取。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "发起选择并在结果未返回时将身份切至本例 S1/Bob，确认旧选择的会话代号失效；UI 不适用，原因是竞态单元测试，尚无 sources 记录、A/B 未枚举，无网络/DB 操作",
+              "expected_ui": "UI 不适用，原因是竞态单元测试，尚无 sources 记录、A/B 未枚举，无网络/DB 操作",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "发起选择并在结果未返回时将身份切至本例 S1/Bob，确认旧选择的会话代号失效；UI 不适用，原因是竞态单元测试，尚无 sources 记录、A/B 未枚举，无网络/DB 操作。",
+              "expected": "发起选择并在结果未返回时将身份切至本例 S1/Bob，确认旧选择的会话代号失效；UI 不适用，原因是竞态单元测试，尚无 sources 记录、A/B 未枚举，无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "释放旧 Alice 选择的 A 结果；主进程按当前身份/代号拒绝过期结果，不为 Bob 建立暂选或已确认 A，也不返回 locator/绝对路径，B 零访问；无网络/DB 操作",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "释放旧 Alice 选择的 A 结果；主进程按当前身份/代号拒绝过期结果，不为 Bob 建立暂选或已确认 A，也不返回 locator/绝对路径，B 零访问；无网络/DB 操作。",
+              "expected": "释放旧 Alice 选择的 A 结果；主进程按当前身份/代号拒绝过期结果，不为 Bob 建立暂选或已确认 A，也不返回 locator/绝对路径，B 零访问；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "核对 Bob 与 Alice 本例私有记录均无新增来源，A/B 未被读取、旧选择结果已丢弃并单独保存时序证据；无网络/DB 操作",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "核对 Bob 与 Alice 本例私有记录均无新增来源，A/B 未被读取、旧选择结果已丢弃并单独保存时序证据；无网络/DB 操作。",
+              "expected": "核对 Bob 与 Alice 本例私有记录均无新增来源，A/B 未被读取、旧选择结果已丢弃并单独保存时序证据；无网络/DB 操作。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-SECURITY-01#REVOKE_DURING_REFRESH",
+          "input": "Alice 已确认 A true/false；首个 A 元数据读取后/提交前停住，撤销后释放。",
+          "expected": "撤销删密文和读取能力，旧 Promise 不提交候选或 complete=true；撤销后 A/B 后续操作为零。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "启动受控刷新，记录停点与允许的撤销前 A 元数据读取；UI 不适用，B 零访问、正文零读取，无网络/DB 操作",
+              "expected_ui": "UI 不适用，B 零访问、正文零读取，无网络/DB 操作",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "启动受控刷新，记录停点与允许的撤销前 A 元数据读取；UI 不适用，B 零访问、正文零读取，无网络/DB 操作。",
+              "expected": "启动受控刷新，记录停点与允许的撤销前 A 元数据读取；UI 不适用，B 零访问、正文零读取，无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "调用同一来源状态机撤销 A，然后释放屏障；密文记录删除、读取能力立即失效，旧刷新 Promise 不能提交候选或 `complete=true`，撤销后的 A/B readdir/stat/open/read/watch 均为零；无网络/DB 操作",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "调用同一来源状态机撤销 A，然后释放屏障；密文记录删除、读取能力立即失效，旧刷新 Promise 不能提交候选或 `complete=true`，撤销后的 A/B readdir/stat/open/read/watch 均为零；无网络/DB 操作。",
+              "expected": "调用同一来源状态机撤销 A，然后释放屏障；密文记录删除、读取能力立即失效，旧刷新 Promise 不能提交候选或 `complete=true`，撤销后的 A/B readdir/stat/open/read/watch 均为零；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "重试旧刷新请求须拒绝，保留撤销前与撤销后分界的审计、私有记录删除证据及 A/B 原文哈希；无网络/DB 操作",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "重试旧刷新请求须拒绝，保留撤销前与撤销后分界的审计、私有记录删除证据及 A/B 原文哈希；无网络/DB 操作。",
+              "expected": "重试旧刷新请求须拒绝，保留撤销前与撤销后分界的审计、私有记录删除证据及 A/B 原文哈希；无网络/DB 操作。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        },
+        {
+          "id": "TC-TM002-SECURITY-01#SWITCH_DURING_REFRESH",
+          "input": "Alice 已确认 A true/false；首个 A 元数据读取后/提交前停住，切 Bob 后释放。",
+          "expected": "Bob 不得见旧 Alice 候选或得到来源；切换后 A/B 后续零访问；Bob 请求 Alice 来源 ID 被拒绝。",
+          "steps": [
+            {
+              "step": 1,
+              "action": "启动 Alice 刷新，记录停点与身份代号；UI 不适用，只有切换前 A 元数据读取、B 零访问，无网络/DB 操作",
+              "expected_ui": "UI 不适用，只有切换前 A 元数据读取、B 零访问，无网络/DB 操作",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "启动 Alice 刷新，记录停点与身份代号；UI 不适用，只有切换前 A 元数据读取、B 零访问，无网络/DB 操作。",
+              "expected": "启动 Alice 刷新，记录停点与身份代号；UI 不适用，只有切换前 A 元数据读取、B 零访问，无网络/DB 操作。"
+            },
+            {
+              "step": 2,
+              "action": "在屏障停点卸载 Alice 能力并切至 Bob，再释放旧 Promise；旧结果不得交给 Bob 或写入其状态，Bob 无来源，切换后 A/B 后续访问零、正文零读取；无网络/DB 操作",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "在屏障停点卸载 Alice 能力并切至 Bob，再释放旧 Promise；旧结果不得交给 Bob 或写入其状态，Bob 无来源，切换后 A/B 后续访问零、正文零读取；无网络/DB 操作。",
+              "expected": "在屏障停点卸载 Alice 能力并切至 Bob，再释放旧 Promise；旧结果不得交给 Bob 或写入其状态，Bob 无来源，切换后 A/B 后续访问零、正文零读取；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "Bob 请求旧 Alice 来源 ID 的刷新被拒绝，Alice 的密文记录保留但不授予 Bob；保存前后身份与访问时序的脱敏摘要、A/B 原文哈希；无网络/DB 操作",
+              "expected_ui": "不适用：辅助单元测试不操作安装后产品 UI。",
+              "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+              "expected_file": "Bob 请求旧 Alice 来源 ID 的刷新被拒绝，Alice 的密文记录保留但不授予 Bob；保存前后身份与访问时序的脱敏摘要、A/B 原文哈希；无网络/DB 操作。",
+              "expected": "Bob 请求旧 Alice 来源 ID 的刷新被拒绝，Alice 的密文记录保留但不授予 Bob；保存前后身份与访问时序的脱敏摘要、A/B 原文哈希；无网络/DB 操作。"
+            }
+          ],
+          "execution_status": "unexecuted",
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-DATA-01",
+      "title": "fixture 仅操作自有根",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-DATA"
+      ],
+      "ac_ids": [
+        "AC-TM002-001",
+        "AC-TM002-002"
+      ],
+      "type": "governance_unit",
+      "scenario_group": null,
+      "input": "新的 run_id、自有 0700 临时根；生成参数 seed=42、mtime=2026-10-01T00:00:00Z；另准备一个无 owner marker 的隔离拒绝样本，不在用户目录。",
+      "preconditions": "新的 run_id、自有 0700 临时根；生成参数 seed=42、mtime=2026-10-01T00:00:00Z；另准备一个无 owner marker 的隔离拒绝样本，不在用户目录。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "运行计划中的生成器",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "输出初始 A/B 文件集合、25/12 B 固定字节、28 B 新增文件配方、链接、mtime、owner marker、expected 与 SHA256；文件与目录模式符合合同，无网络/DB 操作",
+          "expected": "输出初始 A/B 文件集合、25/12 B 固定字节、28 B 新增文件配方、链接、mtime、owner marker、expected 与 SHA256；文件与目录模式符合合同，无网络/DB 操作。"
+        },
+        {
+          "step": 2,
+          "action": "对自有 A 做 chmod 000、恢复 0700，再做 A→A-old/新 A 替换",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "B 与初始文件内容未改，无网络/DB 操作",
+          "expected": "独立 stat 和拒读探针产生预定状态；B 与初始文件内容未改，无网络/DB 操作。"
+        },
+        {
+          "step": 3,
+          "action": "对无 marker 根调用重置须拒绝；对有 marker 的本例根调用重置应只清理本例所有物",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "拒绝样本不受生成器清理，用户根不被触碰",
+          "expected": "拒绝样本不受生成器清理，用户根不被触碰；无网络/DB 操作。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "只写自有 fixture A/B 和 expected manifest；无服务/DB，SQL 不适用，因为数据是本地权限/文件状态。重置按 R，拒绝样本由测试自身单独清理。",
+        "expected_changes": "不适用：辅助检查不写服务业务库。",
+        "verification": "不适用：本例按内存输入、自有副本或原始结果核验，没有 DB 连接或 SQL。",
+        "read_only_checks": [],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "只清理本例 owner marker 所属辅助数据；保留失败原件。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-DATA-01 — fixture 仅操作自有根",
+        "line": 375
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "TM-002 自有 A/B fixture 生成、权限/owner 清理的固定治理程序与原始证据尚未实现。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只写自有 fixture A/B 和 expected manifest；无服务/DB，SQL 不适用，因为数据是本地权限/文件状态。重置按 R，拒绝样本由测试自身单独清理。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-010",
+        "SOP-011"
+      ]
+    },
+    {
+      "id": "TC-TM002-CATALOG-01",
+      "title": "各版本 TC 归属不能串线",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-CATALOG"
+      ],
+      "ac_ids": [
+        "AC-TM002-001",
+        "AC-TM002-002"
+      ],
+      "type": "governance_unit",
+      "scenario_group": null,
+      "input": "本例私有目录中的 catalog 临时复制品包含 TC-TM001-LOGIN-01（归属 v0.1.0-20260929T074814Z 的原 TASK）和 TC-TM002-SELECT-01（归属 v0.2.0-20261001T034118Z/TASK-TM002-PICKER）。固定变体 TC-TM002-CATALOG-01#VALID 保留这两个正确映射；TC-TM002-CATALOG-01#MISSING_TASK 只删除 TC-TM002-SELECT-01 的 task_ids 字段；TC-TM002-CATALOG-01#WRONG_RELEASE 只把 TC-TM002-SELECT-01 的 release_id 错误写成 v0.1.0-20260929T074814Z。每变体单独从原始有效样本复制，不叠加变更。",
+      "preconditions": "本例私有目录中的 catalog 临时复制品包含 TC-TM001-LOGIN-01（归属 v0.1.0-20260929T074814Z 的原 TASK）和 TC-TM002-SELECT-01（归属 v0.2.0-20261001T034118Z/TASK-TM002-PICKER）。固定变体 TC-TM002-CATALOG-01#VALID 保留这两个正确映射；TC-TM002-CATALOG-01#MISSING_TASK 只删除 TC-TM002-SELECT-01 的 task_ids 字段；TC-TM002-CATALOG-01#WRONG_RELEASE 只把 TC-TM002-SELECT-01 的 release_id 错误写成 v0.1.0-20260929T074814Z。每变体单独从原始有效样本复制，不叠加变更。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "核对临时副本 SHA 与该变体输入",
+          "expected_ui": "不适用，原因是治理检查",
+          "expected_api_db": "不适用：不连接服务或 DB",
+          "expected_file": "无 App 文件访问、网络或 DB 操作",
+          "expected": "UI 不适用，原因是治理检查；无 App 文件访问、网络或 DB 操作。"
+        },
+        {
+          "step": 2,
+          "action": "执行固定 catalog 治理检查",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "#WRONG_RELEASE 按同 ID 报 release/TASK 归属冲突且非 0",
+          "expected": "#VALID 退出码 0 且两个 TC 映射均正确；#MISSING_TASK 按 TC-TM002-SELECT-01 报缺 TASK 且非 0；#WRONG_RELEASE 按同 ID 报 release/TASK 归属冲突且非 0；无网络/DB 操作。"
+        },
+        {
+          "step": 3,
+          "action": "核对源 catalog SHA 未变、没有 TC 被静默删除，分别保存命令、退出码和该变体原始输出；无网络/DB 操作",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "核对源 catalog SHA 未变、没有 TC 被静默删除，分别保存命令、退出码和该变体原始输出",
+          "expected": "核对源 catalog SHA 未变、没有 TC 被静默删除，分别保存命令、退出码和该变体原始输出；无网络/DB 操作。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "只改自有临时副本，不改源 catalog；无服务/DB，SQL 不适用。每变体按 owner marker 清理独立副本。",
+        "expected_changes": "不适用：辅助检查不写服务业务库。",
+        "verification": "不适用：本例按内存输入、自有副本或原始结果核验，没有 DB 连接或 SQL。",
+        "read_only_checks": [],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "只清理本例 owner marker 所属辅助数据；保留失败原件。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-CATALOG-01 — 各版本 TC 归属不能串线",
+        "line": 386
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "本辅助例固定程序、变体绑定及独立原始证据尚未实现；该例不替代产品E2E。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只改自有临时副本，不改源 catalog；无服务/DB，SQL 不适用。每变体按 owner marker 清理独立副本。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-011"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-CATALOG-01#VALID",
+          "input": "临时副本保留TM001/TM002正确映射。",
+          "expected": "治理检查退出0，两TC映射正确；源catalog SHA不变。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从有效母版复制，保留 TM-001 与 TM-002 两条正确 release/TASK 映射，核对本例临时副本 SHA。",
+              "expected_ui": "不适用：目录治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "只写本例自有临时 catalog 副本；源 catalog SHA 未变。",
+              "expected": "不适用：目录治理测试，无产品 UI。；只写本例自有临时 catalog 副本；源 catalog SHA 未变。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "对本例临时副本执行固定 catalog 治理检查。",
+              "expected_ui": "不适用：目录治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "治理检查退出码 0；两条 TC 的归属均正确；不得静默删除任一 TC。",
+              "expected": "不适用：目录治理测试。；治理检查退出码 0；两条 TC 的归属均正确；不得静默删除任一 TC。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "保存 VALID 的命令、退出码和原始输出，再复核源 catalog SHA。",
+              "expected_ui": "不适用：目录治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。",
+              "expected": "不适用：目录治理测试。；源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-CATALOG-01#MISSING_TASK",
+          "input": "仅删除临时副本TC-TM002-SELECT-01的task_ids。",
+          "expected": "检查非0，按该TC报缺TASK；源catalog SHA不变。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从有效母版复制，仅删除 TC-TM002-SELECT-01 的 task_ids 字段，核对本例临时副本 SHA。",
+              "expected_ui": "不适用：目录治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "只写本例自有临时 catalog 副本；源 catalog SHA 未变。",
+              "expected": "不适用：目录治理测试，无产品 UI。；只写本例自有临时 catalog 副本；源 catalog SHA 未变。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "对本例临时副本执行固定 catalog 治理检查。",
+              "expected_ui": "不适用：目录治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "治理检查非 0，按 TC-TM002-SELECT-01 报缺 TASK；不得静默删除任一 TC。",
+              "expected": "不适用：目录治理测试。；治理检查非 0，按 TC-TM002-SELECT-01 报缺 TASK；不得静默删除任一 TC。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "保存 MISSING_TASK 的命令、退出码和原始输出，再复核源 catalog SHA。",
+              "expected_ui": "不适用：目录治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。",
+              "expected": "不适用：目录治理测试。；源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-CATALOG-01#WRONG_RELEASE",
+          "input": "仅把该TC的release_id改为v0.1.0-20260929T074814Z。",
+          "expected": "检查非0，按该TC报release/TASK归属冲突；源catalog SHA不变。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从有效母版复制，仅把 TC-TM002-SELECT-01 的 release_id 改为 v0.1.0-20260929T074814Z，核对本例临时副本 SHA。",
+              "expected_ui": "不适用：目录治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "只写本例自有临时 catalog 副本；源 catalog SHA 未变。",
+              "expected": "不适用：目录治理测试，无产品 UI。；只写本例自有临时 catalog 副本；源 catalog SHA 未变。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "对本例临时副本执行固定 catalog 治理检查。",
+              "expected_ui": "不适用：目录治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "治理检查非 0，按 TC-TM002-SELECT-01 报 release/TASK 归属冲突；不得静默删除任一 TC。",
+              "expected": "不适用：目录治理测试。；治理检查非 0，按 TC-TM002-SELECT-01 报 release/TASK 归属冲突；不得静默删除任一 TC。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "保存 WRONG_RELEASE 的命令、退出码和原始输出，再复核源 catalog SHA。",
+              "expected_ui": "不适用：目录治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。",
+              "expected": "不适用：目录治理测试。；源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。；无网络/DB 操作。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-EVIDENCE-01",
+      "title": "缺原生/文件审计不得放行",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-RUNNER"
+      ],
+      "ac_ids": [
+        "AC-TM002-001",
+        "AC-TM002-002"
+      ],
+      "type": "governance_unit",
+      "scenario_group": null,
+      "input": "固定程序只在本例私有目录生成合成原始报告及隔离副本，绝不改真实产品报告。稳定变体 TC-TM002-EVIDENCE-01#COMPLETE 为结构完整的合成输入；TC-TM002-EVIDENCE-01#MISSING_STEP 只删除步骤 2 的逐步事件；TC-TM002-EVIDENCE-01#MISSING_PICKER 只删除唯一的真实面板事件；TC-TM002-EVIDENCE-01#MISSING_FS 只删除该 TC 的来源访问审计；TC-TM002-EVIDENCE-01#WRONG_PACKAGE 将 package manifest SHA256 改为 64 个字符 0；TC-TM002-EVIDENCE-01#FAILED_CLEANUP 将 cleanup.completed 改为 false。各变体从同一完整合成母版单独构造，不叠加。",
+      "preconditions": "固定程序只在本例私有目录生成合成原始报告及隔离副本，绝不改真实产品报告。稳定变体 TC-TM002-EVIDENCE-01#COMPLETE 为结构完整的合成输入；TC-TM002-EVIDENCE-01#MISSING_STEP 只删除步骤 2 的逐步事件；TC-TM002-EVIDENCE-01#MISSING_PICKER 只删除唯一的真实面板事件；TC-TM002-EVIDENCE-01#MISSING_FS 只删除该 TC 的来源访问审计；TC-TM002-EVIDENCE-01#WRONG_PACKAGE 将 package manifest SHA256 改为 64 个字符 0；TC-TM002-EVIDENCE-01#FAILED_CLEANUP 将 cleanup.completed 改为 false。各变体从同一完整合成母版单独构造，不叠加。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "读取本变体输入并核对原始母版和变体 SHA",
+          "expected_ui": "不适用，原因是证据复核",
+          "expected_api_db": "不适用：不连接服务或 DB",
+          "expected_file": "无 App 文件访问、网络或 DB 操作",
+          "expected": "UI 不适用，原因是证据复核；无 App 文件访问、网络或 DB 操作。"
+        },
+        {
+          "step": 2,
+          "action": "独立复核器读取本变体",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "#MISSING_STEP、#MISSING_PICKER、#MISSING_FS、#WRONG_PACKAGE、#FAILED_CLEANUP 均分别返回非 PASS 与对应缺项原因，缺 FS 时 UI 无 B 不可补证",
+          "expected": "#COMPLETE 仅结构核对通过且 release_eligible=false，不能签产品通行证；#MISSING_STEP、#MISSING_PICKER、#MISSING_FS、#WRONG_PACKAGE、#FAILED_CLEANUP 均分别返回非 PASS 与对应缺项原因，缺 FS 时 UI 无 B 不可补证；无网络/DB 操作。"
+        },
+        {
+          "step": 3,
+          "action": "核对输入原件未覆盖、首次失败和复核输出按变体单独保留；无网络/DB 操作",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "无网络或数据库操作；不连接服务或 SQLite。",
+          "expected_file": "不适用：无产品来源文件访问",
+          "expected": "核对输入原件未覆盖、首次失败和复核输出按变体单独保留；无网络/DB 操作。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "只生成自有报告副本；无服务/DB，SQL 不适用。按 owner marker 独立清理，真实报告不可写。",
+        "expected_changes": "不适用：辅助检查不写服务业务库。",
+        "verification": "不适用：本例按内存输入、自有副本或原始结果核验，没有 DB 连接或 SQL。",
+        "read_only_checks": [],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "只清理本例 owner marker 所属辅助数据；保留失败原件。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-EVIDENCE-01 — 缺原生/文件审计不得放行",
+        "line": 397
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "本辅助例固定程序、变体绑定及独立原始证据尚未实现；该例不替代产品E2E。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只生成自有报告副本；无服务/DB，SQL 不适用。按 owner marker 独立清理，真实报告不可写。；仅按本例owner marker清理。",
+      "sops": [
+        "SOP-006",
+        "SOP-011"
+      ],
+      "variants": [
+        {
+          "id": "TC-TM002-EVIDENCE-01#COMPLETE",
+          "input": "完整合成报告副本。",
+          "expected": "结构通过但release_eligible=false，不签产品通行证。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从完整合成母版生成本例自有报告副本，保留结构完整的合成报告母版；核对母版/变体 SHA。",
+              "expected_ui": "不适用：证据治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "母版原件不变，本例变体仅有指定字段变化。",
+              "expected": "不适用：证据治理测试，无产品 UI。；母版原件不变，本例变体仅有指定字段变化。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "由独立复核器读取本例合成报告副本。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "只通过报告结构核对，release_eligible=false，不签产品通行证；合成报告不得被当作真实产品 PASS。",
+              "expected": "不适用：证据治理测试。；只通过报告结构核对，release_eligible=false，不签产品通行证；合成报告不得被当作真实产品 PASS。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "单独保存 COMPLETE 的输入、首次复核结果与清理记录。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
+              "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-EVIDENCE-01#MISSING_STEP",
+          "input": "只删步骤2逐步事件。",
+          "expected": "复核非PASS并指出缺步骤。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从完整合成母版生成本例自有报告副本，仅删除步骤 2 的逐步事件；核对母版/变体 SHA。",
+              "expected_ui": "不适用：证据治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "母版原件不变，本例变体仅有指定字段变化。",
+              "expected": "不适用：证据治理测试，无产品 UI。；母版原件不变，本例变体仅有指定字段变化。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "由独立复核器读取本例合成报告副本。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "返回非 PASS，并指出步骤 2 原始事件缺失；合成报告不得被当作真实产品 PASS。",
+              "expected": "不适用：证据治理测试。；返回非 PASS，并指出步骤 2 原始事件缺失；合成报告不得被当作真实产品 PASS。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "单独保存 MISSING_STEP 的输入、首次复核结果与清理记录。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
+              "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-EVIDENCE-01#MISSING_PICKER",
+          "input": "只删唯一真实面板事件。",
+          "expected": "复核非PASS并指出缺原生面板证据。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从完整合成母版生成本例自有报告副本，仅删除唯一真实面板事件；核对母版/变体 SHA。",
+              "expected_ui": "不适用：证据治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "母版原件不变，本例变体仅有指定字段变化。",
+              "expected": "不适用：证据治理测试，无产品 UI。；母版原件不变，本例变体仅有指定字段变化。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "由独立复核器读取本例合成报告副本。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "返回非 PASS，并指出原生面板证据缺失；合成报告不得被当作真实产品 PASS。",
+              "expected": "不适用：证据治理测试。；返回非 PASS，并指出原生面板证据缺失；合成报告不得被当作真实产品 PASS。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "单独保存 MISSING_PICKER 的输入、首次复核结果与清理记录。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
+              "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-EVIDENCE-01#MISSING_FS",
+          "input": "只删来源访问审计。",
+          "expected": "复核非PASS并指出缺文件审计；UI无B不可补证。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从完整合成母版生成本例自有报告副本，仅删除该 TC 的来源访问审计；核对母版/变体 SHA。",
+              "expected_ui": "不适用：证据治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "母版原件不变，本例变体仅有指定字段变化。",
+              "expected": "不适用：证据治理测试，无产品 UI。；母版原件不变，本例变体仅有指定字段变化。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "由独立复核器读取本例合成报告副本。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "返回非 PASS，并指出文件访问审计缺失；UI 无 B 不能补证；合成报告不得被当作真实产品 PASS。",
+              "expected": "不适用：证据治理测试。；返回非 PASS，并指出文件访问审计缺失；UI 无 B 不能补证；合成报告不得被当作真实产品 PASS。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "单独保存 MISSING_FS 的输入、首次复核结果与清理记录。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
+              "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-EVIDENCE-01#WRONG_PACKAGE",
+          "input": "只把package manifest SHA256改为64个0。",
+          "expected": "复核非PASS并指出包摘要不匹配。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从完整合成母版生成本例自有报告副本，仅将 package manifest SHA256 改为 64 个字符 0；核对母版/变体 SHA。",
+              "expected_ui": "不适用：证据治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "母版原件不变，本例变体仅有指定字段变化。",
+              "expected": "不适用：证据治理测试，无产品 UI。；母版原件不变，本例变体仅有指定字段变化。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "由独立复核器读取本例合成报告副本。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "返回非 PASS，并指出包摘要与实际原件不匹配；合成报告不得被当作真实产品 PASS。",
+              "expected": "不适用：证据治理测试。；返回非 PASS，并指出包摘要与实际原件不匹配；合成报告不得被当作真实产品 PASS。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "单独保存 WRONG_PACKAGE 的输入、首次复核结果与清理记录。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
+              "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
+            }
+          ]
+        },
+        {
+          "id": "TC-TM002-EVIDENCE-01#FAILED_CLEANUP",
+          "input": "只把cleanup.completed改为false。",
+          "expected": "复核非PASS并指出清理未完成。",
+          "execution_status": "unexecuted",
+          "evidence": null,
+          "steps": [
+            {
+              "step": 1,
+              "action": "从完整合成母版生成本例自有报告副本，仅将 cleanup.completed 改为 false；核对母版/变体 SHA。",
+              "expected_ui": "不适用：证据治理测试，无产品 UI。",
+              "expected_api_db": "无服务/DB 连接；SQL 不适用。",
+              "expected_file": "母版原件不变，本例变体仅有指定字段变化。",
+              "expected": "不适用：证据治理测试，无产品 UI。；母版原件不变，本例变体仅有指定字段变化。；无服务/DB 连接；SQL 不适用。"
+            },
+            {
+              "step": 2,
+              "action": "由独立复核器读取本例合成报告副本。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "返回非 PASS，并指出本例资源清理未完成；合成报告不得被当作真实产品 PASS。",
+              "expected": "不适用：证据治理测试。；返回非 PASS，并指出本例资源清理未完成；合成报告不得被当作真实产品 PASS。；无网络/DB 操作。"
+            },
+            {
+              "step": 3,
+              "action": "单独保存 FAILED_CLEANUP 的输入、首次复核结果与清理记录。",
+              "expected_ui": "不适用：证据治理测试。",
+              "expected_api_db": "无网络/DB 操作。",
+              "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
+              "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TC-TM002-DELIVERY-01",
+      "title": "最终包、升级与全量回归门禁",
+      "feature_id": "TM-002",
+      "requirement_id": "REQ-TM002",
+      "release_id": "v0.2.0-20261001T034118Z",
+      "task_ids": [
+        "TASK-TM002-DELIVERY"
+      ],
+      "ac_ids": [
+        "AC-TM002-001",
+        "AC-TM002-002"
+      ],
+      "type": "delivery_gate",
+      "scenario_group": null,
+      "input": "已锁定候选 SHA/tree、0.2.0 最终 DMG 原件/清单、上一0.1本机正式稳定DMG及其SOP-018通行证、SOP-020 schema 2 release-index.json（milestone_sha/tree、master_tip_sha、remote_source_state=PENDING、原DMG/manifest/passport摘要）、签名、同机隔离签名更新源与每例隔离服务；若没有这些前置或真实升级入口，本例为 BLOCKED，不能用开发/候选包、受控101或同源码测试高版冒充。远端源码登记与Tag可待最终统一办理。TM-001 全部已交付 TC 和 除本例外 TM-002 其余 27 条父 TC 与 35 个稳定变体的固定清单在运行前确定。",
+      "preconditions": "已锁定候选 SHA/tree、0.2.0 最终 DMG 原件/清单、上一0.1本机正式稳定DMG及其SOP-018通行证、SOP-020 schema 2 release-index.json（milestone_sha/tree、master_tip_sha、remote_source_state=PENDING、原DMG/manifest/passport摘要）、签名、同机隔离签名更新源与每例隔离服务；若没有这些前置或真实升级入口，本例为 BLOCKED，不能用开发/候选包、受控101或同源码测试高版冒充。远端源码登记与Tag可待最终统一办理。TM-001 全部已交付 TC 和 除本例外 TM-002 其余 27 条父 TC 与 35 个稳定变体的固定清单在运行前确定。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "从最终 DMG 安装并运行 TM-001 全部已交付 TC 与除本例外 TM-002 其余 27 条父 TC/35 个稳定变体的固定完整集合",
+          "expected_ui": "各产品 TC 的真实 UI 与原生面板步骤均按其独立预期完成；本门禁只汇总原始逐步结果。",
+          "expected_api_db": "网络/DB 按各产品 TC",
+          "expected_file": "原始记录覆盖 TM-001 全部已交付 TC、其他 27 条 TM-002 父 TC 及 35 个变体，各有唯一尝试、逐步断言与清理；无漏例、跳过或重试取绿；本例结果此时仍为 BLOCKED。",
+          "expected": "TM-001 全部已交付 TC、其他 27 条 TM-002 父 TC/35 变体的真实 UI、原生面板、服务与隔离 DB 由各自固定程序执行；原始记录各有唯一尝试和清理；本例结果此时仍为 BLOCKED。"
+        },
+        {
+          "step": 2,
+          "action": "由固定消费者只读核对上一0.1本机稳定原包schema 2归档/通行证/来源身份与实际摘要，负测拒绝旧schema、候选包、错误里程碑或摘要，从该原包安装，经 App 自主检查/安装 0.2.0 候选并重启，再真实选择与确认来源",
+          "expected_ui": "显示新版本、保留的 TM-001 合成账号/配置；0.2 来源初态 none，经真实面板确认 A 后同账号重启恢复",
+          "expected_api_db": "真实 /v1/me 重新验证身份；网络/DB 只按更新与认证的已定合同发生",
+          "expected_file": "上一0.1稳定原包schema 2归档的milestone_sha/tree、master_tip_sha、remote_source_state=PENDING及DMG/manifest/passport摘要、签名/通行证均一致，固定负测拒绝旧schema、候选包与错误归属；新包签名、摘要和运行中进程版本与清单一致；0.1 无来源记录，新来源密文只在0.2确认后建立",
+          "expected": "上一0.1本机稳定原包schema 2归档、里程碑来源、通行证与实际摘要一致，负测按既定拒绝，App 自主升级；0.2显示新版本、保留TM-001合成账号/配置且 /v1/me 复核身份；来源初态 none，真实面板确认A后重启恢复本版密文来源；两端包签名、摘要和进程版本吻合。"
+        },
+        {
+          "step": 3,
+          "action": "独立父门禁复读候选/包/测试源码、TM-001 全部原件、其他 27 条 TM-002 父 TC 与 35 个变体原件、升级、平台和清理，再派生本例状态",
+          "expected_ui": "不适用：不操作产品 UI",
+          "expected_api_db": "本门禁无服务业务写入；逐条核对产品 TC 的只读 DB/SQL 证据引用。",
+          "expected_file": "计算前本例为 BLOCKED 且不作为自身前置 PASS；其他各项原件一致并 PASS、且本例包/升级/证据核验 PASS 后才派生本例 PASS 并签通行证；缺项/失败/跳过/摘要不匹配则 FAIL/BLOCKED，无正式原名 DMG。",
+          "expected": "本例不自我依赖：只有 TM-001 全部、其他 27 条 TM-002 父 TC/35 变体及升级真实结果均 PASS，且本例自身包/升级/证据核验 PASS，才记本例 PASS 并由最终 gate 签发通行证；计算前为 BLOCKED；本步骤无业务 DB 写入。"
+        }
+      ],
+      "db_operations": {
+        "prepare": "每个产品 TC 由共同 R 独立准备合成账号、隔离 SQLite 与来源；本门禁只读这些运行的原始摘要及 SQL/数据证据引用，并核对最终 DMG、升级源和候选 SHA/tree。 上一稳定0.1包须有SOP-018/020原件及来源里程碑身份，远端登记可待办。 稳定升级源消费者还须有旧schema/候选包/错误里程碑和摘要的固定拒绝负测。",
+        "expected_changes": "本门禁自身无服务业务 SQL 写入；逐个产品 TC 的认证 sessions/audit 变化只按各自 NDA 与只读证据解释。",
+        "verification": "只读复核 TM-001 全部已交付 TC、其他 27 条 TM-002 父 TC/35 变体的隔离 DB/SQL 引用与原始逐步结果，并核对最终包、升级、清理和候选一致性；本例结果由这些原件派生，不连接生产库。 核对上一0.1稳定原包的通行证、归档、来源SHA/tree及真实升级链。 只读核对schema 2 release-index.json的milestone_sha/tree、master_tip_sha、remote_source_state及原件摘要。",
+        "read_only_checks": [],
+        "data_program": null,
+        "sql_program": null,
+        "reset": "只终止和清理由本次 run_id/owner marker 拥有的包验证 App、服务、安装目录、profile、A/B 与隔离 DB；失败原件保留。"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/02-TM-002-permissions.md",
+        "heading": "TC-TM002-DELIVERY-01 — 最终包、升级与全量回归门禁",
+        "line": 408
+      },
+      "missing": [
+        "SOP-000 私有加密 locator/授权语义已由 PR #4/#5 同步；本版 SOP-008 语义基线复核仍待完成。",
+        "最终包、真实升级、全量回归与独立本机 gate 的固定绑定及原始证据尚未实现；本例不替代任一产品 TC。"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "按本例 run_id/owner marker 清理安装、服务、profile、A/B 与隔离库，失败原件保留；不触碰现有 App、生产库或外部服务。",
+      "sops": [
+        "SOP-006",
+        "SOP-011",
+        "SOP-014",
+        "SOP-017",
+        "SOP-018"
+      ]
     },
     {
       "id": "E2E-TM003-001",

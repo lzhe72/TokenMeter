@@ -64,7 +64,7 @@ Playwright使用安装后的`Contents/MacOS/TokenMeter`作为executablePath，�
 
 源码形成干净候选后才执行最终包验证，机器记录候选完整SHA与tree。构建成功的开发/候选DMG以`NOT-RELEASED`文件名复制到根`dmg/<release_id>/`方便定位，原件仍按候选独立保留并接受安装测试。门禁PASS后将同一原包与原证据归档到`dmg/<release_id>/release-archive/`，并将已验证正式DMG原名放在同一版本目录，不覆盖同名旧文件。安装给用户的版本必须是该候选100，不能重新构建并借用旧报告。Git Tag可作为源码版本索引；不创建GitHub Release、不上传DMG、zip或原始报告。签名钥匙、数据库、node_modules、build输出和本地发行产物均被忽略，目录说明文件随Git保存。
 
-各需求分支由总控先按适用检查集成本地`master`，最后一个本地合并提交形成干净候选，再对这一整合树构建包并执行完整本机E2E与机器门禁。PASS后若远端保护允许直推，总控统一快进推送远端`master`并读回SHA；远端保护拒绝时记录BLOCKED，不手写检查状态、强推或删除保护。远端策略若强制PR，只能以同一已测整合候选走受控路径，并核对实际合并tree；有内容差异重新测试。实际包仍绑定原被测候选。
+各需求分支由总控按依赖顺序集成本地`master`，为每版固定不可变SHA/tree里程碑，再从该版干净里程碑构建最终包、执行完整本机E2E与机器门禁。PASS后按SOP-020先把同一原包、通行证和原始证据归档为本机正式稳定包，下一版从这份原包真实升级。全部目标版本本机稳定后，总控一次按远端保护通过受控PR登记源码，核对每版里程碑仍在远端祖先链、来源tree及Tag映射；不同则阻断相应远端登记并重新验证。原包始终绑定实际被测里程碑，远端源码登记待办不被写作本机包门禁失败，也不冒充已完成Git发布。
 
 2026-10-01按用户本机测试、Git仅做源码版本管理的决定，远端`master`旧三项GitHub Actions required checks已移除并保存前后读回；当前仍强制PR、管理员执行及对话解决，禁止强推/删除。SOP-019要求每次集成前只读核对实际保护与远端基线；本机最终候选门禁保持原要求，不将本机通行证改写成GitHub检查PASS。
 
@@ -75,7 +75,7 @@ GitHub工作流默认禁用自动触发；明确多环境需求时按当时矩�
 1. SOP索引/详细规范、AGENTS、版本01–05、功能用例与本设计同步，经structure再baseline。
 2. 客户端主进程/界面/隔离与基础失败用例；更新/打包兼容探针；六例Playwright和数据编排并行，接口按本文。
 3. 基础检查、真实App启动与业务红测后修实现；总控本地`master`整合所有需求分支，在最终干净候选上构建原包并执行完整逐TC与六组补充E2E、父gate验原件。
-4. PASS后由总控统一推送远端`master`、建立Git源码索引并完成本地版本归档；给用户本地DMG链接。FAIL/BLOCKED保留诊断并修复，不签发通行证。
+4. 本版门禁PASS后先按SOP-020在本机归档同一原包、通行证和证据，提供正式稳定DMG供下一版真实升级；全部目标版本本机完成后由总控统一按远端保护登记源码并逐版建立Tag。FAIL/BLOCKED保留诊断并修复，不签发通行证。
 
 文件所有权：客户端agent负责apps/desktop除updater/e2e；打包agent负责src/main/updater.ts与local_package.py及对应基础测试；E2E agent负责apps/desktop/e2e、local_e2e.py及其负测；整合者负责规范/文档、local_gate/local_release与Git。不得覆盖另一个agent的修改。
 
@@ -101,7 +101,7 @@ GitHub工作流默认禁用自动触发；明确多环境需求时按当时矩�
 
 基础负测至少包括漏例/重复、失败/跳过/重试取绿、fixture或原包改动、错误SHA/平台、路径越界/symlink、旧run或时间、未完成清理和零原始结果。质量入口在execution_profile=local_electron时不允许落回native_e2e；未完成绑定返回BLOCKED，完成后委托本地新门禁，保持历史profile兼容仅供明确历史测试。
 
-`local_release.py`只接收已通过本机门禁的原件，再次调用同验证逻辑核对后以独占新目录复制，保留关联的candidate/package/evidence原始层级，生成读回SHA清单。Git同步前必须核对本地`master`最终SHA/tree与被测候选一致，推送后远端`master`读回相同SHA；若远端强制PR，还须核对实际合并tree，无一致性证明则重验。Git API写成功或tag不替代本地发行验证。
+`local_release.py verify/archive`现在要求显式`--milestone-sha`和`--milestone-tree`，只接收已通过本机门禁的原件；归档前须机器核对干净检出的HEAD精确等于被测提交、本版固定的本地`master`里程碑SHA/tree及其祖先关系、原包和通行证同源，再以独占新目录复制，保留关联的candidate/package/evidence原始层级，生成schema 2读回SHA清单，记录`remote_source_state=PENDING`；该固定里程碑归属检查已由TM-001代码提交`fbab99b`提供，但仍须在最终整合树及真实原包上执行，不能以程序存在声称归档已通过。归档成功后才形成可供下一版升级的本机正式稳定包。全部目标版本完成后的远端受控PR、每版里程碑祖先/来源读回与Tag属于SOP-019后续单独步骤；远端登记收据另存，不改原归档或通行证。Git API写成功或Tag不替代本地发行验证。
 
 ## 升级后UI重连诊断接口
 

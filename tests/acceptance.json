@@ -76,16 +76,33 @@
       "feature_id": "TM-002",
       "requirement_id": "REQ-TM002",
       "spec": "docs/product/README.md",
-      "criterion": "真实系统授权完成，只读取选定目录；确认前不开始持续扫描；选择和同意状态可在重启后恢复",
-      "data_requirements": []
+      "criterion": "已验证账号通过 macOS 原生目录选择器选定来源；App 强制只读取所选目录；确认前不持续扫描，选择和两项意愿在同一身份重启后恢复",
+      "data_requirements": [
+        "native_directory_picker",
+        "selected_root_a_b",
+        "candidate_metadata",
+        "consent_state",
+        "restart_identity",
+        "access_audit",
+        "encrypted_private_locator",
+        "keychain_fault_injection",
+        "paged_candidate_scan"
+      ]
     },
     {
       "id": "AC-TM002-002",
       "feature_id": "TM-002",
       "requirement_id": "REQ-TM002",
       "spec": "docs/product/README.md",
-      "criterion": "App 不崩溃、不继续读取失效目录；重新授权后可读取目录并恢复授权状态",
-      "data_requirements": []
+      "criterion": "用户在 App 内撤销来源或所选目录失效后，App 不崩溃并停止读取；再次通过原生目录选择器选定并明确确认后恢复读取和来源状态",
+      "data_requirements": [
+        "selected_root_a_b",
+        "access_loss",
+        "reselect",
+        "access_audit",
+        "owner_cleanup",
+        "stale_selection_and_cursor"
+      ]
     },
     {
       "id": "AC-TM003-001",

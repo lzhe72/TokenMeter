@@ -94,22 +94,28 @@
       "cases": [
         {
           "id": "E2E-TM002-001",
-          "scenario": "干净安装下选择工具目录、预览候选文件并确认授权与采集/同步意愿",
-          "expected": "真实系统授权完成，只读取选定目录；确认前不开始持续扫描；选择和同意状态可在重启后恢复",
+          "scenario": "干净安装下分别选择 Codex/Claude Code 目录、预览候选文件、确认两项意愿并按身份恢复",
+          "expected": "真实 macOS 原生目录选择器完成选择，App 只读所选根；确认前无持续扫描，重启后仅同一已验证身份恢复选择和两项意愿",
           "data_program": null,
           "dataset": "system_permissions",
           "sop": "sop/SOP-014-e2e.md",
           "automated_test": null,
+          "engine": "playwright_electron",
+          "test_identity": "E2E-TM002-001",
+          "native_test": null,
           "acceptance_id": "AC-TM002-001"
         },
         {
           "id": "E2E-TM002-002",
-          "scenario": "拒绝目录授权、撤销已保存授权，然后重新授权并重启 App",
-          "expected": "App 不崩溃、不继续读取失效目录；重新授权后可读取目录并恢复授权状态",
+          "scenario": "取消目录选择、撤销已保存来源或使自有目录失效，然后经真实面板重新选择并重启 App",
+          "expected": "App 内撤销或目录失效后停止读取并提示重选；重新经原生目录面板选择并确认后恢复，App 仍可用",
           "data_program": null,
           "dataset": "system_permissions",
           "sop": "sop/SOP-014-e2e.md",
           "automated_test": null,
+          "engine": "playwright_electron",
+          "test_identity": "E2E-TM002-002",
+          "native_test": null,
           "acceptance_id": "AC-TM002-002"
         }
       ],
