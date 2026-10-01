@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash, createHmac} from 'node:crypto';
-import {chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync} from 'node:fs';
+import {chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -117,7 +117,7 @@ class Harness {
   verified = true;
   active = true;
   constructor(copyFrom?: Harness) {
-    this.owner = mkdtempSync(join(tmpdir(), 'tm004-core06-'));
+    this.owner = mkdtempSync(join(realpathSync(tmpdir()), 'tm004-core06-'));
     chmodSync(this.owner, 0o700);
     writeFileSync(join(this.owner, 'owner.marker'), ID, {mode: 0o600});
     this.profile = join(this.owner, 'profile');
