@@ -23,7 +23,7 @@ export interface ClaudeScanPlan {
   diagnostics: ClaudeDiagnostic[];
   cursors: ClaudeFileCursor[];
   files: Array<{sourceKey: string; fileIdentity: string; calls: ClaudeCall[];
-    diagnostics: ClaudeDiagnostic[]; cursor: ClaudeFileCursor}>;
+    diagnostics: ClaudeDiagnostic[]; cursor: ClaudeFileCursor; changed: boolean}>;
   scanIncomplete: boolean;
   candidateCount: number;
 }
@@ -63,6 +63,7 @@ async function withClaudeScanLease<T>(
           fileDiagnostics.push(item);
         };
         let cursor = await loadCursor(readable.fileIdentity);
+        const previousCursor = cursor;
         for (let pass = 0; pass < 1024; pass++) {
           const oldOffset = cursor?.committedByteOffset ?? 0;
           const read = await readClaudeCandidate(readable, cursor, secret);
@@ -102,7 +103,10 @@ async function withClaudeScanLease<T>(
         if (!cursor) throw new Error('claude_scan_failed');
         cursors.push(cursor);
         files.push({sourceKey: readable.fileIdentity, fileIdentity: readable.fileIdentity,
-          calls: fileCalls, diagnostics: fileDiagnostics, cursor});
+          calls: fileCalls, diagnostics: fileDiagnostics, cursor,
+          changed: !previousCursor || previousCursor.fileIdentity !== cursor.fileIdentity
+            || previousCursor.committedByteOffset !== cursor.committedByteOffset
+            || previousCursor.prefixMac !== cursor.prefixMac});
       }
       if (page.complete) {
         for (const call of calls) {
