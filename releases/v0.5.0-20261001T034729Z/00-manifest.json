@@ -299,6 +299,13 @@
       "task": "TASK-TM005-RANGE-QUERY",
       "test": "TC-TM005-CORE-05",
       "description": "合成双来源SQLite同窗只读快照模块；不替代产品TC"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-CORE-06",
+      "description": "真实UsageStore双来源物理库到同事务查询适配器、部分覆盖与模型身份；不代替产品TC"
     }
   ],
   "program_bindings_status": "planned",

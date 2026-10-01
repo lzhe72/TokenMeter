@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "fixture_id": "tm005-query-view-v1",
+  "scope": "self_contained_readonly_query_adapter_over_owned_UsageStore_only",
+  "base_fixture": "tests/fixtures/tm005-sqlite-snapshot-slice.json",
+  "base_fixture_sha256": "0fe6af3120e41b1b3cb6633a6507a265b0eef086901357c6c370058177232f12",
+  "selected_local_day": "2026-09-29",
+  "timezone": "Asia/Shanghai",
+  "start_utc": "2026-09-28T16:00:00Z",
+  "end_exclusive_utc": "2026-09-29T16:00:00Z",
+  "base_expected": {
+    "ids": [
+      "A",
+      "B"
+    ],
+    "summary": {
+      "calls": 2,
+      "input_tokens": 300,
+      "output_tokens": 30,
+      "known_tokens": 330,
+      "total_tokens": null
+    },
+    "state": "partial",
+    "sources": [
+      {
+        "source": "codex",
+        "known_tokens": 110
+      },
+      {
+        "source": "claude_code",
+        "known_tokens": 220
+      }
+    ],
+    "models": [
+      {
+        "model_id": null,
+        "known_tokens": 110
+      },
+      {
+        "model_id": "sonnet-test",
+        "known_tokens": 220
+      }
+    ],
+    "details": [
+      "A",
+      "B"
+    ],
+    "trend": [
+      {
+        "local_day": "2026-09-29",
+        "state": "partial",
+        "known_tokens": 330,
+        "total_tokens": null
+      }
+    ],
+    "cached_input": {
+      "known_tokens": 20,
+      "unknown_rows": 1
+    },
+    "cache_write_input": {
+      "known_tokens": 0,
+      "unknown_rows": 2
+    },
+    "reasoning_output": {
+      "known_tokens": 2,
+      "unknown_rows": 1
+    }
+  },
+  "collision_additions": [
+    {
+      "id": "G",
+      "principal": "selected",
+      "source": "claude_code",
+      "canonical_call_id": "tm005-literal-unknown-g",
+      "occurred_at_utc": "2026-09-29T04:00:00Z",
+      "model_id": "unknown_model",
+      "input_tokens": 30,
+      "output_tokens": 3,
+      "cached_input_tokens": null,
+      "cache_write_input_tokens": null,
+      "reasoning_output_tokens": null
+    },
+    {
+      "id": "H",
+      "principal": "selected",
+      "source": "claude_code",
+      "canonical_call_id": "tm005-colon-long-h",
+      "occurred_at_utc": "2026-09-29T05:00:00Z",
+      "model_id": "claude:ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
+      "input_tokens": 40,
+      "output_tokens": 4,
+      "cached_input_tokens": null,
+      "cache_write_input_tokens": null,
+      "reasoning_output_tokens": null
+    }
+  ],
+  "collision_expected": {
+    "ids": [
+      "A",
+      "B",
+      "G",
+      "H"
+    ],
+    "calls": 4,
+    "input_tokens": 370,
+    "output_tokens": 37,
+    "known_tokens": 407,
+    "total_tokens": null,
+    "state": "partial",
+    "sources": [
+      {
+        "source": "codex",
+        "known_tokens": 110
+      },
+      {
+        "source": "claude_code",
+        "known_tokens": 297
+      }
+    ],
+    "models": [
+      {
+        "model_id": null,
+        "known_tokens": 110
+      },
+      {
+        "model_id": "sonnet-test",
+        "known_tokens": 220
+      },
+      {
+        "model_id": "unknown_model",
+        "known_tokens": 33
+      },
+      {
+        "model_id": "claude:ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
+        "known_tokens": 44
+      }
+    ]
+  },
+  "concurrent_expected": {
+    "first_snapshot_ids": [
+      "A",
+      "B"
+    ],
+    "first_known_tokens": 330,
+    "next_snapshot_ids": [
+      "A",
+      "B",
+      "F"
+    ],
+    "next_known_tokens": 385
+  },
+  "empty_day": {
+    "local_day": "2026-10-01",
+    "start_utc": "2026-09-30T16:00:00Z",
+    "end_exclusive_utc": "2026-10-01T16:00:00Z",
+    "state": "missing",
+    "known_tokens": 0,
+    "total_tokens": null
+  },
+  "model_id_contract": "null means unknown; literal unknown_model is a distinct valid modelId; accept upstream valid [A-Za-z0-9][A-Za-z0-9._:-]{0,127}, preserve exact string. Reject invalid identifiers rather than coercing them to another group.",
+  "privacy": "Query returns only HMAC identity keys, source enum, UTC time, bounded modelId, numeric usage and partial/missing state; no native IDs, paths, prompt, response, secret or ciphertext. No IPC/renderer/installed App."
+}

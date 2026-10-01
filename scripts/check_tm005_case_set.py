@@ -15,7 +15,7 @@ PRODUCT_DETAIL = RELEASE_DIR / "04a-test-cases.md"
 PRODUCT_PARENT = re.compile(r"^### (?:`)?(TC-TM005-(?!CORE-)[A-Z0-9-]+)(?:`)? · ", re.MULTILINE)
 CORE_PARENT = re.compile(r"^### (?:`)?(TC-TM005-CORE-[A-Z0-9-]+)(?:`)? · ", re.MULTILINE)
 VARIANT = re.compile(r"TC-TM005-[A-Z0-9-]+#[A-Z][A-Z0-9_]*")
-CORE_IDS = {f"TC-TM005-CORE-0{number}" for number in range(1, 6)}
+CORE_IDS = {f"TC-TM005-CORE-0{number}" for number in range(1, 7)}
 SCENARIOS = {"E2E-TM005-001", "E2E-TM005-002"}
 
 
@@ -39,8 +39,8 @@ def expected_case_set(manifest: dict, detailed: str,
         errors.append("release manifest and product case set differ")
     if len(core_headings) != len(core):
         errors.append("duplicate CORE heading")
-    if core != CORE_IDS or traced_core != CORE_IDS or len(set(traced)) != 45:
-        errors.append("CORE auxiliary set must contain exactly five manifest and detailed cases")
+    if core != CORE_IDS or traced_core != CORE_IDS or len(set(traced)) != 46:
+        errors.append("CORE auxiliary set must contain exactly six manifest and detailed cases")
     for variant in variants:
         if variant.split("#", 1)[0] not in parents:
             errors.append("variant has no parent: " + variant)

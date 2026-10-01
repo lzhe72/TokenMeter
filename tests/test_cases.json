@@ -20418,6 +20418,90 @@
         "heading": "TC-TM004-CORE-06 · 真实SourceAccess到私有库的多文件贯通"
       },
       "overall_expected": "1. 未确认时扫描，再经真实SourceAccess选择/预览/确认并核对四文件/root键；确认前扫描/读取/库提交均0、库空；真实确认只绑定第一主体并生成随机UUID，不注入固定sourceId；fixture固定UUID的四文件/root向量核参考算法，实际UUID的键等于独立参考HMAC输出；不把路径/原摘要当库键\n2. 真实主进程采集按两页2+2及97字节片段读完四文件，末页守卫后提交；只一次同步commitScanBatch；M+fork新+Agent父/子共5唯一调用、input85/output32/total117，四游标到LF末、coverage.scan_incomplete=0，复制fork不重计、子父归属已核验，DB/WAL无原生标识或正文\n3. 关闭重开owner来源/库/helper，重扫相同四文件；本轮随机sourceId与主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源\n4. 向主文件仅追加固定合成50/5完整LF行，续扫并重扫；只新增一调用，6行、input135/output37/total172，主游标推进追加字节数，其余三游标不变，无cursor_reset，复制fork不重计\n5. 从成功库独立副本分别在第一页后撤权、换主体、子文件提前EOF；每次取消scan、commitScanBatch=0；旧6行/172、四游标/覆盖原值不变，新主体无旧事件，本轮不可用/不完整而非已知零；SQLite/WAL与owner清理核对"
+    },
+    {
+      "feature_id": "TM-005",
+      "requirement_id": "REQ-TM005",
+      "release_id": "v0.5.0-20261001T034729Z",
+      "scenario_group": "E2E-TM005-001",
+      "type": "source_check",
+      "preconditions": "本例0700私有目录/0600隔离SQLite/WAL；真实UsageStore.commitBatch种子和UsageReadSnapshot同事务只读；不访问真实App/日志/Keychain",
+      "data_program": null,
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-013"
+      ],
+      "id": "TC-TM005-CORE-06",
+      "title": "同快照双来源查询视图与模型身份",
+      "task_ids": [
+        "TASK-TM005-RANGE-QUERY"
+      ],
+      "ac_ids": [
+        "AC-TM005-001",
+        "AC-TM005-002"
+      ],
+      "input": "tests/fixtures/tm005-query-view-slice.json引用CORE05物理库种子；上海当地09-29半开UTC、A–H合成事件、字面unknown_model及99字符含冒号模型",
+      "db_operations": {
+        "prepare": "真实UsageStore.commitBatch只写本例owner空库；并发、模型补充与空日各独立副本",
+        "expected_changes": "查询零写；基础A/B已知330，F后新事务385，G/H独立分支407",
+        "verification": "只读usage_event集合/模型原值/来源/时间及SQLite/WAL隐私；事务前后表摘要与owner清理",
+        "read_only_checks": []
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "A–E仅经真实UsageStore提交到owner库，再在上海09-29 UTC半开窗开启同一只读查询事务",
+          "expected_ui": "不适用；查询辅助模块",
+          "expected_api_db": "无真实产品API；本例SQLite同一只读事务旁证",
+          "expected": "仅A/B两行、calls2、input300/output30、known330；Codex110/Claude220；state partial、total null；C异主体、D界前、E上界排除，查询零写"
+        },
+        {
+          "step": 2,
+          "action": "同一事务读模型/明细/当地日趋势及三类未知子项",
+          "expected_ui": "不适用；查询辅助模块",
+          "expected_api_db": "无真实产品API；本例SQLite同一只读事务旁证",
+          "expected": "模型null110与sonnet-test220分离，明细A/B，趋势partial/known330/total null；cached read20/未知1、cache write0/未知2、reasoning2/未知1，不加总；输出白名单无原生标识或秘密"
+        },
+        {
+          "step": 3,
+          "action": "第一事务保持时另一连接写F50/5，再分别查旧事务与新事务",
+          "expected_ui": "不适用；查询辅助模块",
+          "expected_api_db": "无真实产品API；本例SQLite同一只读事务旁证",
+          "expected": "旧事务仍A/B330；新事务A/B/F三调用input350/output35/known385、Codex165/Claude220且partial/total null；WAL不可用则BLOCKED"
+        },
+        {
+          "step": 4,
+          "action": "独立A–E库经UsageStore增加字面unknown_model的G及99字符含冒号模型H，重查同一日",
+          "expected_ui": "不适用；查询辅助模块",
+          "expected_api_db": "无真实产品API；本例SQLite同一只读事务旁证",
+          "expected": "A/B/G/H四行input370/output37/known407、Codex110/Claude297；modelId null110、sonnet-test220、字面unknown_model33、长冒号模型44互异且原值保留；仍partial/total null"
+        },
+        {
+          "step": 5,
+          "action": "查询当地10-01无事件日并核对隐私、只读与owner清理",
+          "expected_ui": "不适用；查询辅助模块",
+          "expected_api_db": "无真实产品API；本例SQLite同一只读事务旁证",
+          "expected": "missing/known0/total null，绝不成功完整零；库/WAL与输出无原生ID/路径/正文/secret/密文，仅清理本例拥有目录"
+        }
+      ],
+      "reset": "关闭本例读写DB，核对owner marker后仅清理本例私有目录/WAL；保留原报告",
+      "missing": [
+        "SOP-011固定查询适配器/逐步TAP和清理绑定未交付；真实App/IPC/UI、原生双来源和产品覆盖证明另验"
+      ],
+      "source": {
+        "path": "releases/v0.5.0-20261001T034729Z/04a-test-cases.md",
+        "line": 375,
+        "heading": "TC-TM005-CORE-06 · 同快照双来源查询视图与模型身份"
+      },
+      "overall_expected": "1. A–E仅经真实UsageStore提交到owner库，再在上海09-29 UTC半开窗开启同一只读查询事务；仅A/B两行、calls2、input300/output30、known330；Codex110/Claude220；state partial、total null；C异主体、D界前、E上界排除，查询零写\n2. 同一事务读模型/明细/当地日趋势及三类未知子项；模型null110与sonnet-test220分离，明细A/B，趋势partial/known330/total null；cached read20/未知1、cache write0/未知2、reasoning2/未知1，不加总；输出白名单无原生标识或秘密\n3. 第一事务保持时另一连接写F50/5，再分别查旧事务与新事务；旧事务仍A/B330；新事务A/B/F三调用input350/output35/known385、Codex165/Claude220且partial/total null；WAL不可用则BLOCKED\n4. 独立A–E库经UsageStore增加字面unknown_model的G及99字符含冒号模型H，重查同一日；A/B/G/H四行input370/output37/known407、Codex110/Claude297；modelId null110、sonnet-test220、字面unknown_model33、长冒号模型44互异且原值保留；仍partial/total null\n5. 查询当地10-01无事件日并核对隐私、只读与owner清理；missing/known0/total null，绝不成功完整零；库/WAL与输出无原生ID/路径/正文/secret/密文，仅清理本例拥有目录"
     }
   ]
 }

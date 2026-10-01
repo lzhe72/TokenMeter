@@ -28,3 +28,7 @@ schema 与迁移版本、覆盖证明如何由 TM-003/004 提供、不同登录�
 恢复后的新主仓库已有 TM-001 Electron 产品源码、根机器用例目录及项目总表；TM-003/004 采集、客户端用量库与 TM-005 产品绑定仍未交付，完整业务红测和产品实现依赖保持 BLOCKED。TM-005 可先按[纯统计切片合同](03a-statistics-contract.md#无原生日志依赖的纯统计开发切片)实现不接 App/数据库的统计函数：输入已经可信、来源限定且身份归属明确的 `TrustedUsageEvent` 与仅供模块测试的声明式覆盖事实；输出来源/模型汇总、已知/未知子项及 complete/partial/missing/unknown 状态。`TC-TM005-CORE-01/02/03` 的固定数据和预期见04a与测试 fixture，先经SOP-008单独切片核对，再按009–014建立真实模块红测与实现。其余32条产品TC及6变体维持 draft/unexecuted；`scripts/check_tm005_bindings.py` 在TM-005开发分支的固定预检只报告原产品绑定缺口，不能把纯模块结果代替安装App E2E。
 
 下一独立切片`CORE-04/05`分别把IANA当地日转换和已提交TM-003物理`usage_event`表的合成双来源只读快照绑定为模块任务。前者不更改系统时钟，也不解决真实采集30天窗对纽约固定DST日期的产品前置；后者由本例固定程序经TM-003提交接口种入独占SQLite，查询使用同一只读事务和UTC半开界，不从当前coverage行推断历史完整空日。两项的输入/重置/逐步判据见[04a](04a-test-cases.md#日期与双来源物理快照辅助tc)，程序当前未绑定；原产品TC仍需真实UI、服务、原生日志、隔离Keychain和安装App。
+
+### CORE-06自包含查询适配器输入
+
+查询适配器只读取本例`UsageStore.commitBatch`写出的双来源物理库，沿`UsageReadSnapshot`同一只读事务取得可信数值，再明确包装`partial/missing`状态；现有coverage三个字段不能证明历史日完整零，故有事件时`knownTokens`保留而`totalTokens=null`，空日`missing/0/null`。模型视图采用`modelId:null|string`的区分式行，不将SQL NULL与字面`unknown_model`合并；合法模型按上游`^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$`原值保留，非法值按入库合同拒绝/诊断。缓存读、写与推理均保存已知量和未知行数，子项不加到总量。同事务WAL并发查询保持行集一致；所有输出只允许HMAC键、来源、UTC、受限模型、数值和状态。固定5步/输入在`TC-TM005-CORE-06`，不改共享main/index.ts、preload/types或renderer入口；React静态组件另立CORE07输入，真实安装App/IPC/服务与原生双来源产品TC继续BLOCKED。
