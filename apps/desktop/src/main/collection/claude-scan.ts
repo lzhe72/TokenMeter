@@ -14,6 +14,10 @@ export interface ClaudeSourceScanAccess extends ConfirmedClaudeSourceAccess {
   cancelScan(scanId: string): void | Promise<void>;
 }
 
+export interface GuardedClaudeSourceScanAccess extends ClaudeSourceScanAccess {
+  commitGuard(scanId: string): Promise<() => void>;
+}
+
 export interface ClaudeScanPlan {
   calls: ClaudeCall[];
   diagnostics: ClaudeDiagnostic[];
@@ -22,11 +26,12 @@ export interface ClaudeScanPlan {
   candidateCount: number;
 }
 
-/** Produces an in-memory candidate transaction, never a partial committed result. */
-export async function scanClaudeSource(
+/** Keeps the confirmed TM-002 scan lease open through the caller's final operation. */
+async function withClaudeScanLease<T>(
   access: ClaudeSourceScanAccess, sourceId: string, secret: Buffer,
   loadCursor: (fileIdentity: string) => Promise<ClaudeFileCursor | null>,
-): Promise<ClaudeScanPlan> {
+  finish: (plan: ClaudeScanPlan, scanId: string) => Promise<T> | T,
+): Promise<T> {
   const calls: ClaudeCall[] = [];
   const diagnostics: ClaudeDiagnostic[] = [];
   const cursors: ClaudeFileCursor[] = [];
@@ -64,7 +69,8 @@ export async function scanClaudeSource(
         if (!cursor) throw new Error('claude_scan_failed');
         cursors.push(cursor);
       }
-      if (page.complete) return {calls, diagnostics, cursors, scanIncomplete, candidateCount};
+      if (page.complete)
+        return await finish({calls, diagnostics, cursors, scanIncomplete, candidateCount}, scanId);
       page = await access.nextCandidatePage(scanId);
     }
     throw new Error('claude_scan_limit');
@@ -75,4 +81,28 @@ export async function scanClaudeSource(
   } finally {
     if (scanId) await access.cancelScan(scanId);
   }
+}
+
+/** A read-only scan result. It is no longer authorized for a later SQLite commit. */
+export async function scanClaudeSource(
+  access: ClaudeSourceScanAccess, sourceId: string, secret: Buffer,
+  loadCursor: (fileIdentity: string) => Promise<ClaudeFileCursor | null>,
+): Promise<ClaudeScanPlan> {
+  return withClaudeScanLease(access, sourceId, secret, loadCursor, plan => plan);
+}
+
+/** The commit callback must run a synchronous atomic SQLite transaction with no await. */
+export async function commitClaudeSource<T>(
+  access: GuardedClaudeSourceScanAccess, sourceId: string, secret: Buffer,
+  loadCursor: (fileIdentity: string) => Promise<ClaudeFileCursor | null>,
+  commitSync: (plan: ClaudeScanPlan) => T,
+): Promise<T> {
+  return withClaudeScanLease(access, sourceId, secret, loadCursor, async (plan, scanId) => {
+    const guard = await access.commitGuard(scanId);
+    guard();
+    const result = commitSync(plan);
+    if (result !== null && typeof result === 'object' && 'then' in result)
+      throw new Error('claude_async_commit');
+    return result;
+  });
 }

@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { scanClaudeSource, type ClaudeSourceScanAccess } from '../src/main/collection/claude-scan.ts';
+import { commitClaudeSource, scanClaudeSource, type ClaudeSourceScanAccess,
+  type GuardedClaudeSourceScanAccess } from '../src/main/collection/claude-scan.ts';
 
 const sourceId = '00000000-0000-4000-8000-000000000002';
 const scanId = '00000000-0000-4000-8000-000000000001';
@@ -58,4 +59,45 @@ test('TC-TM004-SOURCE-02 module: revocation during read discards the scan plan',
   };
   await assert.rejects(scanClaudeSource(access, sourceId, secret, async () => null), /claude_read_failed/);
   assert.equal(canceled, 1);
+});
+
+test('TM004 guarded module boundary: synchronous commit runs before scan lease closes', async () => {
+  const order: string[] = [];
+  const access: GuardedClaudeSourceScanAccess = {
+    async beginCandidateScan() { order.push('begin'); return {scanId, complete: true, candidates: [{
+      relativeName: 'project/session.jsonl', size: firstLine.length,
+      candidateToken: 'a'.repeat(32), fileIdentityDigest: 'b'.repeat(64)}]}; },
+    async nextCandidatePage() { throw new Error('unexpected_page'); },
+    async readCandidateChunk(_scan, _token, offset, maxBytes) {
+      order.push('read'); return firstLine.subarray(offset, offset + maxBytes);
+    },
+    async commitGuard(id) { assert.equal(id, scanId); order.push('get-guard');
+      return () => { order.push('guard'); assert.equal(order.includes('cancel'), false); }; },
+    cancelScan() { order.push('cancel'); },
+  };
+  const result = await commitClaudeSource(access, sourceId, secret, async () => null, plan => {
+    order.push('commit');
+    assert.equal(order.includes('guard'), true);
+    assert.equal(order.includes('cancel'), false);
+    assert.equal(plan.calls.length, 1);
+    assert.equal(plan.cursors.length, 1);
+    return plan.calls[0].inputTokens + plan.calls[0].outputTokens;
+  });
+  assert.equal(result, 20);
+  assert.deepEqual(order.slice(-4), ['get-guard', 'guard', 'commit', 'cancel']);
+});
+
+test('TM004 guarded module boundary: revoked lease cannot invoke SQLite commit', async () => {
+  let commits = 0, cancels = 0;
+  const access: GuardedClaudeSourceScanAccess = {
+    async beginCandidateScan() { return {scanId, complete: true, candidates: []}; },
+    async nextCandidatePage() { throw new Error('unexpected_page'); },
+    async readCandidateChunk() { throw new Error('unexpected_read'); },
+    async commitGuard() { return () => { throw new Error('source_operation_stale'); }; },
+    cancelScan() { cancels++; },
+  };
+  await assert.rejects(commitClaudeSource(access, sourceId, secret, async () => null,
+    () => { commits++; }), /claude_scan_failed/);
+  assert.equal(commits, 0);
+  assert.equal(cancels, 1);
 });
