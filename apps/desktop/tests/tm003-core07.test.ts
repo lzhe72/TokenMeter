@@ -53,7 +53,7 @@ function candidate(index: number, mode: Mode) {
     mtimeMs: 1760000000000, fileIdentityDigest: fixture.files[index].file_identity_digest};
 }
 function fake(path: string, mode: Mode = 'normal', principal: Principal = {verified: true, key: fixture.verified_principal_key},
-  collectAllowed = true) {
+  collectAllowed = true, expectEmptyFirstPage = true) {
   const counts = {begin: 0, next: 0, reads: 0, maxRequest: 0, guard: 0, cancel: 0, commits: 0};
   let revoked = false;
   let firstPageEmpty = false;
@@ -65,7 +65,10 @@ function fake(path: string, mode: Mode = 'normal', principal: Principal = {verif
     beginCandidateScan: async (_sourceId: string) => { counts.begin++; return {scanId,
       candidates: [candidate(0, mode)], complete: false}; },
     nextCandidatePage: async (_scanId: string) => {
-      counts.next++; empty(path); firstPageEmpty = true;
+      counts.next++;
+      if (expectEmptyFirstPage) empty(path);
+      else assert.equal(state(path).count, 2);
+      firstPageEmpty = expectEmptyFirstPage;
       return {candidates: [candidate(1, mode)], complete: true};
     },
     readCandidateChunk: async (_scanId: string, token: string, offset: number, maximum: number) => {
@@ -179,7 +182,7 @@ test('TC-TM003-CORE-07 main collector stages every bounded page and aborts stale
     step(t, 4, {stale_variants: ['revoke', 'switch'], guard_calls_each: 1,
       commit_calls_each: 0, cancel_calls_each: 1, db_empty_each: true});
 
-    const replay = fake(successPath);
+    const replay = fake(successPath, 'normal', {verified: true, key: fixture.verified_principal_key}, true, false);
     try {
       await collectCodex({sourceId: source, access: replay.access, store: replay.store,
         secret, principal: () => replay.principal, stagingBudgetBytes: fixture.fixture_staging_budget_bytes});
