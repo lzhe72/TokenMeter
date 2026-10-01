@@ -332,7 +332,9 @@ class EvidenceTests(unittest.TestCase):
             for name in ('granular','auxiliary','audit'):(evidence/name).mkdir()
             manifest=root/'package-manifest.json';manifest.write_text('{}')
             dmg=root/'original.dmg';dmg.write_bytes(b'dmg')
-            release=json.loads((ROOT/'releases/current.json').read_text())['release_id']
+            # This verifier and its variant manifests are the frozen TM-001 release,
+            # even when a later feature is the repository's current release.
+            release=json.loads((ROOT/'tests/test_cases.json').read_text())['release_id']
             package={'release_id':release,'artifacts':{'dmg':gate.descriptor(dmg,root)},
                      'app':{'tree_sha256':'d'*64}}
             bound_package={'manifest_sha256':gate.sha256(manifest),'dmg_sha256':gate.sha256(dmg),

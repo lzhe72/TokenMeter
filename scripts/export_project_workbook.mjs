@@ -13,8 +13,13 @@ const read = async name => JSON.parse(await fs.readFile(path.join(root, name), '
 const context = await read('docs/project-register.json');
 const catalog = await read('tests/test_cases.json');
 const cases = catalog.cases;
+const expandedCases = cases.flatMap(parent => [
+  {case: parent, variant: null},
+  ...(parent.variants || []).map(variant => ({case: parent, variant})),
+]);
 const latestRun=(context.test_runs || []).at(-1);
-const fullRun=(context.test_runs || []).find(r=>r.run_id===context.metadata.observed_run_id);
+const currentRelease=context.metadata.release_id;
+const fullRun=(context.test_runs || []).find(r=>r.run_id===context.metadata.observed_run_id && r.release_id===currentRelease);
 const latestCaseStates=context.latest_case_states || {};
 if (!Array.isArray(cases) || new Set(cases.map(c => c.id)).size !== cases.length) throw Error('Invalid case IDs');
 const wb = Workbook.create();
@@ -32,7 +37,8 @@ const cell = value => {
 };
 const states = {designed:'已设计', baseline_pending:'预期待明确', planned:'未来规划', unexecuted:'未执行', not_run:'未执行'};
 const state = v => states[v] || v;
-const kind = v => ({normal:'正向',negative:'负向',boundary:'边界',security:'安全/权限',fault:'故障',product_e2e:'产品E2E'})[v] || v;
+const kind = v => ({normal:'正向',negative:'负向',boundary:'边界',security:'安全/权限',fault:'故障',product_e2e:'产品E2E',security_unit:'安全单元',governance_unit:'治理检查',delivery_gate:'交付门禁',unit:'单元'})[v] || v;
+const isAuxiliaryCase = c => /TC-TM001-(UI|CATALOG|RECORDS|GATE)-/.test(c.id) || ['security_unit','governance_unit','delivery_gate','unit'].includes(c.type);
 const source = c => `${c.source?.path || c.source || ''}${c.source?.line ? ':'+c.source.line : ''}`;
 const expected = c => c.overall_expected || [...new Set(c.steps.map(s => s.expected))].join('\n');
 const databaseSummary = c => {
@@ -112,15 +118,15 @@ function objects(name,title,records) {
 }
 
 const overview = table('00项目总览','TokenMeter 项目总览',['项目','当前值','说明'],[
- ['当前版本',catalog.release_id,'未发布；版本状态见07发布版本'],
+ ['当前版本',currentRelease,'未发布；版本状态见07发布版本'],
  ['需求数量',0,'01需求清单中的产品需求'],
  ['验收条件',0,'02验收条件，稳定AC编号'],
- ['已登记用例',0,'包含细化用例及未来概要场景'],
+ ['已登记用例',0,'父用例与具有稳定 ID 的变体各占一行；含未来概要场景'],
  ['测试批次',0,'06测试批次，每次运行一行，记录独立结果Excel位置'],
- ['细化产品用例',cases.filter(c=>!c.aggregate_planned&&!/TC-TM001-(UI|CATALOG|RECORDS|GATE)-/.test(c.id)).length,'逐条结果按运行批次记录；变体在独立结果Excel列出'],
- ['界面与治理检查',cases.filter(c=>/TC-TM001-(UI|CATALOG|RECORDS|GATE)-/.test(c.id)).length,'辅助检查不能替代产品E2E'],
+ ['细化产品用例',expandedCases.filter(({case: c})=>!c.aggregate_planned&&!isAuxiliaryCase(c)).length,'逐条结果按运行批次记录；稳定变体独立列出'],
+ ['界面与治理检查',expandedCases.filter(({case: c})=>isAuxiliaryCase(c)).length,'辅助检查不能替代产品E2E；稳定变体独立列出'],
  ['未来概要场景',cases.filter(c=>c.aggregate_planned).length,'进入对应功能需求阶段后继续细化'],
- ['预期待明确',cases.filter(c=>c.design_status==='baseline_pending').length,'在05测试用例筛选此状态'],
+ ['预期待明确',expandedCases.filter(({case: c})=>c.design_status==='baseline_pending').length,'在05测试用例筛选此状态'],
  ['最近完整回归',fullRun?.state || '未执行',fullRun?.summary || '尚无完整运行记录'],
  ['工作顺序','需求 → 功能点 → 开发任务 → 测试用例 → 开发 → 测试结果 → 发布','先形成任务和用例基线，再实现；不按已有代码反推预期'],
  ['更新方式','本地工作簿随Git版本维护','保留稳定编号与实际批次；没有向腾讯在线表格写入'],
@@ -137,8 +143,11 @@ objects('02验收条件','验收条件',context.acceptance_criteria);
 objects('03功能点','功能与功能点',context.features);
 objects('04开发任务','具体开发任务及历史分组',[...context.development_tasks].sort((a,b)=>Number(a.level==='historical_group')-Number(b.level==='historical_group')));
 
-const caseRows=cases.map(c=>[c.feature_id,c.id,c.title,plain(c.task_ids)||'待拆解',kind(c.type),c.input,expected(c),databaseSummary(c),state(c.design_status),state(latestCaseStates[c.id] || c.execution_status),c.aggregate_planned?'未来概要':'细化用例',source(c),context.latest_case_runs?.[c.id] || '尚未执行']);
-table('05测试用例','测试用例汇总 · 一例一行',['功能编号','用例编号','测试点','开发任务','类型','输入','预期结果','DB操作摘要','设计状态','执行状态','范围','详细设计依据','最近结果批次'],caseRows,[18,41,46,55,26,85,120,100,23,20,22,85,65],{freeze:2});
+const caseRows=expandedCases.map(({case: c, variant: v})=>{
+  const id=v?.id || c.id;
+  return [c.feature_id,id,v ? `${c.title} · 变体` : c.title,plain(c.task_ids)||'待拆解',kind(c.type),v?.input || c.input,v?.expected || expected(c),databaseSummary(c),state(c.design_status),state(latestCaseStates[id] || v?.execution_status || c.execution_status),c.aggregate_planned?'未来概要':v?'细化变体':'细化用例',source(c),context.latest_case_runs?.[id] || '尚未执行',c.release_id || catalog.release_id];
+});
+table('05测试用例','测试用例汇总 · 一例一行',['功能编号','用例编号','测试点','开发任务','类型','输入','预期结果','DB操作摘要','设计状态','执行状态','范围','详细设计依据','最近结果批次','归属版本'],caseRows,[18,41,46,55,26,85,120,100,23,20,22,85,65,52],{freeze:2});
 
 const runs=context.test_runs || [];
 const runRows=runs.map(r=>[r.run_id,r.release_id,r.scope,r.state,r.included_cases ?? (r.passed_cases+r.failed_cases+(r.blocked_cases||0)),r.passed_cases,r.failed_cases,r.blocked_cases ?? 0,r.source_commit,r.release_eligible?'是':'否',r.summary,r.result_workbook]);
@@ -175,7 +184,7 @@ table('10项目约定','项目约定与维护方式',['主题','约定'],policie
 
 overview.getRange('B6').formulas=[[`=COUNTA('01需求清单'!A5:A${(context.requirements?.length||0)+4})`]];
 overview.getRange('B7').formulas=[[`=COUNTA('02验收条件'!A5:A${(context.acceptance_criteria?.length||0)+4})`]];
-overview.getRange('B8').formulas=[[`=COUNTA('05测试用例'!B5:B${cases.length+4})`]];
+overview.getRange('B8').formulas=[[`=COUNTA('05测试用例'!B5:B${expandedCases.length+4})`]];
 overview.getRange('B9').formulas=[[`=COUNTA('06测试批次'!A5:A${Math.max(5,runs.length+4)})`]];
 wb.recalculate();
 const inspect=await wb.inspect({kind:'table',range:'00项目总览!A4:C21',include:'values,formulas',tableMaxRows:18,tableMaxCols:3,maxChars:7000});
@@ -193,15 +202,6 @@ for(const [name,range] of [['case-summary-detail','E4:J7'],['run-workbook-link',
 }
 const statusPreview=await wb.render({sheetName:'00项目总览',range:'A13:C21',scale:1.3,format:'png'});
 await fs.writeFile(path.join(out,'overview-current-status.png'),new Uint8Array(await statusPreview.arrayBuffer()));
-if(runs.length){
- const end=runs.length+4;
- const start=Math.max(5,end-2);
- for(const [name,range] of [['run-latest-identity',`A${start}:D${end}`],
-                            ['run-latest-evidence',`J${start}:L${end}`]]){
-  const preview=await wb.render({sheetName:'06测试批次',range,scale:1.3,format:'png'});
-  await fs.writeFile(path.join(out,name+'.png'),new Uint8Array(await preview.arrayBuffer()));
- }
-}
 const retrospectiveRows=sheetInfo.find(info=>info.name==='08问题复盘')?.rows || 0;
 if(retrospectiveRows){
  const end=retrospectiveRows+4;
@@ -213,5 +213,5 @@ const target=path.join(root,'TokenMeter项目总表.xlsx');
 const xlsx=await SpreadsheetFile.exportXlsx(wb);await xlsx.save(target);
 try{await fs.rename(target+'.inspect.ndjson',path.join(out,'xlsx.inspect.ndjson'));}catch(error){if(error.code!=='ENOENT')throw error;}
 const bytes=await fs.readFile(target);
-await fs.writeFile(path.join(out,'verification.json'),JSON.stringify({file:target,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),cases:cases.length,runs:runs.length,sheets:sheetInfo,product_tests_executed:false},null,2));
-console.log(JSON.stringify({file:target,cases:cases.length,runs:runs.length,sheets:sheetInfo.length,bytes:bytes.length}));
+await fs.writeFile(path.join(out,'verification.json'),JSON.stringify({file:target,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),parent_cases:cases.length,variant_cases:expandedCases.length-cases.length,case_rows:expandedCases.length,runs:runs.length,sheets:sheetInfo,product_tests_executed:false},null,2));
+console.log(JSON.stringify({file:target,parent_cases:cases.length,variant_cases:expandedCases.length-cases.length,case_rows:expandedCases.length,runs:runs.length,sheets:sheetInfo.length,bytes:bytes.length}));
