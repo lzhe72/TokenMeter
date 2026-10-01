@@ -2,7 +2,8 @@
 import json
 from pathlib import Path
 import subprocess
-import tempfile
+import secrets
+import shutil
 import unittest
 
 
@@ -15,9 +16,9 @@ EXPORTER = ROOT / "scripts/export_source_check_result.mjs"
 class SourceCheckExportContract(unittest.TestCase):
     def setUp(self):
         RUN_BASE.mkdir(parents=True, exist_ok=True, mode=0o700)
-        self.temp = tempfile.TemporaryDirectory(prefix="source-check-negative-", dir=RUN_BASE)
-        self.addCleanup(self.temp.cleanup)
-        self.run_dir = Path(self.temp.name)
+        self.run_dir = RUN_BASE / f"source-check-negative-{secrets.token_hex(8)}"
+        self.run_dir.mkdir(mode=0o700)
+        self.addCleanup(shutil.rmtree, self.run_dir)
         self.run_id = self.run_dir.name
         self.commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
         self.tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], cwd=ROOT, text=True).strip()

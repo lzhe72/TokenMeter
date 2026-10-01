@@ -45,7 +45,7 @@ const runDir = path.dirname(reportPath);
 if (report.schema_version !== 1 || report.execution_type !== 'source_check' ||
     !/^[a-z0-9][A-Za-z0-9-]{7,100}$/.test(report.run_id) || path.basename(runDir) !== report.run_id ||
     path.basename(outputDir) !== report.run_id || !['PASS', 'FAIL', 'BLOCKED'].includes(report.state) ||
-    !/^tm\d{3}-core$/.test(report.suite) || !['owned_root', 'memory_only'].includes(report.reset_kind) ||
+    !/^tm\d{3}-core(?:\d{2})?$/.test(report.suite) || !['owned_root', 'memory_only'].includes(report.reset_kind) ||
     report.product_e2e !== 'NOT_RUN' || report.release_gate !== 'NOT_RUN' ||
     !/^[0-9a-f]{40}$/.test(report.candidate_commit) || !/^[0-9a-f]{40}$/.test(report.candidate_tree))
   throw new Error('Invalid source_check report identity or execution type');
