@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import type { TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -14,6 +15,17 @@ assert.equal(fixtureSha256,
 const fixture = JSON.parse(fixtureBytes.toString('utf8'));
 assert.equal(fixture.fixture_id, 'tm005-core-slice-v1');
 assert.equal(fixture.product_coverage_proven, false);
+const CORE_01 = 'TC-TM005-CORE-01';
+const CORE_02 = 'TC-TM005-CORE-02';
+const CORE_03 = 'TC-TM005-CORE-03';
+
+function step(t: TestContext, caseId: string, number: number, actual: Record<string, unknown>): void {
+  t.diagnostic(JSON.stringify({case_id: caseId, kind: 'step', step: number, actual}));
+}
+function memoryCleanup(t: TestContext, caseId: string): void {
+  t.diagnostic(JSON.stringify({case_id: caseId, kind: 'cleanup',
+    resource_scope: 'memory_only', external_resources_created: false}));
+}
 
 function freezeDeep<T>(value: T): T {
   if (value && typeof value === 'object') {
@@ -44,12 +56,12 @@ test('TC-TM005-CORE-01: two sources, local day bounds, subtotals, and invalid in
   assert.deepEqual(summary.cacheWriteInput, {knownTokens: 0, status: 'unknown'});
   assert.deepEqual(summary.reasoningOutput, {knownTokens: 2, status: 'partial_unknown'});
   assert.deepEqual(request, before);
-  t.diagnostic(JSON.stringify({step: 1, fixtureSha256, selectedEventIds: summary.selectedEventIds,
-    unchangedInput: true}));
-  t.diagnostic(JSON.stringify({step: 2, inputTokens: summary.inputTokens, outputTokens: summary.outputTokens,
+  step(t, CORE_01, 1, {fixtureSha256, selectedEventIds: summary.selectedEventIds,
+    unchangedInput: true});
+  step(t, CORE_01, 2, {inputTokens: summary.inputTokens, outputTokens: summary.outputTokens,
     knownTokens: summary.knownTokens, sourceTotals: summary.sourceTotals, modelTotals: summary.modelTotals,
     cachedInput: summary.cachedInput, cacheWriteInput: summary.cacheWriteInput,
-    reasoningOutput: summary.reasoningOutput}));
+    reasoningOutput: summary.reasoningOutput});
   let rejected = 0;
   for (const mutate of [
     (event: any) => { event.source = 'other'; },
@@ -62,7 +74,8 @@ test('TC-TM005-CORE-01: two sources, local day bounds, subtotals, and invalid in
     assert.throws(() => summarizeUsage(input(changed)), /invalid/i);
     rejected++;
   }
-  t.diagnostic(JSON.stringify({step: 3, invalidInputsRejected: rejected, expected: 4}));
+  step(t, CORE_01, 3, {invalidInputsRejected: rejected, expected: 4});
+  memoryCleanup(t, CORE_01);
 });
 
 test('TC-TM005-CORE-02: unknown usage diagnostic never becomes zero', t => {
@@ -72,25 +85,26 @@ test('TC-TM005-CORE-02: unknown usage diagnostic never becomes zero', t => {
     {status: 'complete', known: 330, total: 330});
   assert.deepEqual(baseline.sourceTotals, {codex: 110, claude_code: 220});
   assert.deepEqual(baseline.modelTotals, {unknown_model: 110, 'sonnet-test': 220});
-  t.diagnostic(JSON.stringify({step: 1, fixtureSha256, status: baseline.status,
+  step(t, CORE_02, 1, {fixtureSha256, status: baseline.status,
     knownTokens: baseline.knownTokens, totalTokens: baseline.totalTokens,
-    sourceTotals: baseline.sourceTotals, modelTotals: baseline.modelTotals}));
+    sourceTotals: baseline.sourceTotals, modelTotals: baseline.modelTotals});
   const withUnknown = summarizeUsage(input(events, [fixture.unknown_diagnostic]));
   assert.deepEqual({status: withUnknown.status, known: withUnknown.knownTokens,
     total: withUnknown.totalTokens, calls: withUnknown.trustedCalls},
     {status: 'partial', known: 330, total: null, calls: 2});
   assert.deepEqual(withUnknown.sourceTotals, baseline.sourceTotals);
   assert.deepEqual(withUnknown.modelTotals, baseline.modelTotals);
-  t.diagnostic(JSON.stringify({step: 2, status: withUnknown.status,
+  step(t, CORE_02, 2, {status: withUnknown.status,
     knownTokens: withUnknown.knownTokens, totalTokens: withUnknown.totalTokens,
-    trustedCalls: withUnknown.trustedCalls}));
+    trustedCalls: withUnknown.trustedCalls});
   const unknownOnly = summarizeUsage(input([], [fixture.unknown_diagnostic]));
   assert.deepEqual({status: unknownOnly.status, known: unknownOnly.knownTokens,
     total: unknownOnly.totalTokens, calls: unknownOnly.trustedCalls},
     {status: 'unknown', known: 0, total: null, calls: 0});
-  t.diagnostic(JSON.stringify({step: 3, status: unknownOnly.status,
+  step(t, CORE_02, 3, {status: unknownOnly.status,
     knownTokens: unknownOnly.knownTokens, totalTokens: unknownOnly.totalTokens,
-    trustedCalls: unknownOnly.trustedCalls}));
+    trustedCalls: unknownOnly.trustedCalls});
+  memoryCleanup(t, CORE_02);
 });
 
 test('TC-TM005-CORE-03: declared coverage algebra and absent proof', t => {
@@ -105,12 +119,13 @@ test('TC-TM005-CORE-03: declared coverage algebra and absent proof', t => {
   }
   assert.deepEqual(coverageStatus(null, 0, 0, 0),
     {status: 'missing', knownTokens: 0, totalTokens: null});
-  t.diagnostic(JSON.stringify({step: 1, fixtureSha256,
+  step(t, CORE_03, 1, {fixtureSha256,
     bothCompleteEmpty: observed['both-complete-empty'],
-    absentCoverage: coverageStatus(null, 0, 0, 0)}));
-  t.diagnostic(JSON.stringify({step: 2, oneMissingEmpty: observed['one-missing-empty'],
-    oneMissingKnown: observed['one-missing-known']}));
-  t.diagnostic(JSON.stringify({step: 3,
+    absentCoverage: coverageStatus(null, 0, 0, 0)});
+  step(t, CORE_03, 2, {oneMissingEmpty: observed['one-missing-empty'],
+    oneMissingKnown: observed['one-missing-known']});
+  step(t, CORE_03, 3, {
     bothCompleteKnownUnknown: observed['both-complete-known-unknown'],
-    bothCompleteUnknownOnly: observed['both-complete-unknown-only']}));
+    bothCompleteUnknownOnly: observed['both-complete-unknown-only']});
+  memoryCleanup(t, CORE_03);
 });
