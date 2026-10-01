@@ -196,6 +196,37 @@
 | `TC-TM003-CORE-02` / `TASK-TM003-SOURCE`, `TASK-TM003-PARSE` / source_check | 1. 输入只有无响应 ID 的累计100/10与 `info=null` rate-limit 行。2. 输入合法 A，再分别输入缺 `usage`、负 input、cached111>input100、total111 四条不同 ID 的完整 LF 行。3. 输入未知 build 的完整记录。 | 1. 零可信事件，分别诊断 `unverified_cumulative`、`missing_usage`，不生成零值事件。2. 只有 A=110 一事件；四条负例依次产生 `missing_usage`、`negative_input`、`invalid_cached`、`invalid_total`，不覆写 A。3. 零新增事件、`unsupported_source_version`。无产品 DB 写入；独立枚举事件和诊断代码/数量，重置为本例新根。 | `null`；设计切片，程序未绑定、未执行；产品对应 SOURCE-02/PARSE-02 保持 BLOCKED。 |
 | `TC-TM003-CORE-03` / `TASK-TM003-IDENTITY` / source_check | 1. 用公开身份向量的32字节测试 key，经正式身份函数处理 `codex/provider-response/shared-call-01` 的 A=100/10/cached20，并写入本例临时 SQLite。2. 同 ID、同 usage 重放；再写不同 ID `shared-call-02`、相同 usage。3. 同 `shared-call-01` 写999/99冲突值；另用相同字面 `shared-call-01` 但 `claude_code/provider-message` 求键。 | 1. 一个可信事件、total110，键精确为 `afd67bd0cad0227b3e7b5ac132bb9b3ed492073983b9c16a0c9cc24dd3008051`。2. 重放后仍一个事件；新 ID 后两个事件，`input=200/output=20/cached=40/total=220`。3. 首事件不变、诊断 `identity_conflict`；跨来源键精确为 `bf222a85ab2209f72ff82c21b7172c9315448b3e1d5bf4503a3c76b30c46cad1`，不在本例产品库中添加 Claude 事件。DB 准备是测试拥有的空 SQLite；只通过正式模块 API 插入，不直接 SQL 造事件；只读核对唯一约束、两行总量和诊断，结束只清理本例 DB。 | `null`；设计切片，程序未绑定、未执行；公开 key 不写入产品 profile；产品对应 DEDUP-01/NAMESPACE-01 保持 BLOCKED。 |
 
+## 无授权依赖的存储与游标开发切片
+
+固定输入为[tm003-core-storage-cursor.json](../../../tests/fixtures/tm003-core-storage-cursor.json)，seed303、已核验Codex版本、公开测试密钥`000102…1f`与另一有效密钥`202122…3f`。fixture的header+A、header+A+B、header+A+B+C完整LF长度分别为410、750、1090字节，原始字节及SHA在fixture；A/B/C分别为100/10/cached20、200/20/cached40、300/30/cached60。每例使用新建的0700 owner根、0600临时客户端SQLite，不读取TM-002已授权根、真实profile、Keychain或服务。输入事件只由该fixture的正式解析模块产生，测试不得直接SQL造`usage_event`；测试SQL仅可注入本例库的失败触发器和只读核对。每一步运行前程序固定预期和断言，输出`source_check`逐步结果与清理原件；程序未绑定前执行状态为unexecuted。
+
+### TC-TM003-CORE-04 · 同步批次原子提交与密钥标记
+
+**TASK：** `TASK-TM003-STORE`。**AC：** `AC-TM003-002`, `AC-TM003-003`。**类型：** `source_check`。**输入：** fixture的header、A/B两条完整LF，两个明确不同的有效32字节测试密钥；本例空库。模块批次须在同一同步SQLite事务里写可信事件、诊断、`source_cursor`、`coverage`及首次密钥标记；批次不得返回未提交成功状态后再异步补写游标。
+
+| 步骤 | 固定动作 | 每步预期、DB只读判据 |
+| --- | --- | --- |
+| 1 | 用key1解析并提交header+A，`source_cursor`定位410字节及其keyed prefixMAC，覆盖暂记`scan_incomplete=1`。 | `usage_event`只一条A；只读`COUNT/SUM(input)/SUM(output)/SUM(cached)`为`(1,100,10,20)`、total110；诊断0；游标410、前缀MAC非空、`identity_key_state`为key1标记，覆盖不完整。关闭重开同库后读值相同。 |
+| 2 | 只在本例库创建分别针对`source_cursor` INSERT和UPDATE的`BEFORE`触发器，触发`RAISE(ABORT,'cursor_fail')`；用key1提交B=200/20/cached40、一个固定`invalid_record`诊断、游标750及覆盖完成。 | 批次返回失败而非部分PASS；`usage_event`仍仅A、总量110、诊断仍0、游标仍410及原prefixMAC、`coverage.scan_incomplete=1`、密钥标记未变；关闭重开后仍相同。触发器仅属本例故障注入，不进入产品库。 |
+| 3 | 删除本例两个触发器，重试同一B批次。 | B只新增一次；只读`(COUNT,input,output,cached)=(2,300,30,60)`、total330、`invalid_record`诊断恰1、游标750及新prefixMAC、`scan_incomplete=0`；重启同库不重计。 |
+| 4 | 使用不同且有效的key2尝试重新打开/提交同一A及C；不得重建空库或借无效key长度拒绝。 | 明确返回密钥标记不匹配并停止采集；既有A/B两行、total330、诊断1、游标750、覆盖与key1标记逐项不变；不生成key2新事件键，不把停采集写成已知零。 |
+
+**DB与重置：** 准备空owner SQLite；测试触发器只为步骤2创建和步骤3删除，不直接插入业务行。每步只读`usage_event`按本例主体求数量及四项SUM、`collection_diagnostic`按代码求数、`source_cursor.committed_byte_offset/prefix_mac`、`coverage.scan_incomplete`和`identity_key_state.key_marker`；精确主体/源键由固定测试向量生成，不保留原路径。步骤4后只清理本例拥有的文件与库，保存原始报告；产品`STORE-01`、身份恢复与App E2E仍BLOCKED。
+
+### TC-TM003-CORE-05 · 追加、半行、前缀改写与截短游标
+
+**TASK：** `TASK-TM003-SCAN`、`TASK-TM003-STORE`。**AC：** `AC-TM003-001`, `AC-TM003-003`。**类型：** `source_check`。**输入：** 同fixture的header/A/B/C及将A行`padding`从`0`换为`1`的同长度改写，测试持有的已打开文件句柄、同一合成稳定文件身份和独立的可变快照digest。稳定身份在本模块由测试固定，不推断TM-002生产digest合同。
+
+| 步骤 | 固定动作 | 每步预期、DB只读判据 |
+| --- | --- | --- |
+| 1 | 写header+A完整LF并用key1扫描/同步提交。 | 只一条A、total110、游标410；保存对410字节的keyed prefixMAC及稳定身份；输出不含原始路径/正文/密钥。 |
+| 2 | 原句柄只追加B的前半行而不写LF；故意更新可变快照digest，保持稳定身份。 | B不提交，`COUNT=1`、total110、游标仍410；已提交410字节prefixMAC相同，不能因可变digest变化报`cursor_reset`。 |
+| 3 | 补齐B并写LF，随后追加C完整LF，保持稳定身份、再次改变可变digest。 | 只消费从410字节开始的B/C完整行；游标1090、`(COUNT,input,output,cached)=(3,600,60,120)`、total660；A不重计，无`cursor_reset`。 |
+| 4 | 在已读前缀把A行无业务意义的`padding`字节`0`原地改为`1`，保持文件长度1090和mtime不变，稳定身份仍相同；重新扫描。 | fixture改写后SHA与原SHA不同、长度相同；keyed prefixMAC不符，必须报`cursor_reset`并从0重扫。A/B/C同原生ID与用量只各保留一条，total仍660；旧可信行不删，`coverage.missing_before=1`或同义持久缺口状态，不能声称历史完整。 |
+| 5 | 将同一本例文件截短到header+A的410字节，再扫描。 | 当前长度小于游标，重新从0扫描并保持三条历史可信事件、total660；游标回到410、覆盖缺口继续为真，不将缺失的B/C写0或删除。 |
+
+**DB与重置：** 所有事件只经正式模块同步入口写测试拥有的SQLite；只读核对按`(principal_key,source,source_event_key)`唯一三行、总量、`source_cursor`偏移及prefixMAC、`coverage`缺口/完成状态、重置诊断，不直接造数。步骤4同长度/同mtime改写专门证明只凭mtime/size或可变快照digest均不能代替已提交前缀MAC；步骤2/3反证普通追加不是历史改写。结束仅清理本例owner根/库。TM-002能力、真实授权、App及产品`SCAN-02/03`仍BLOCKED。
+
 ## 当前执行合同
 
 每个 TC 的输入、步骤和 expected 已在此固定；实现时只能把它们绑定到可重复的代码并补充来源版本、具体文件 SHA/SQL 与稳定选择器，不得为适配已有代码改弱独立预期。`AC-TM003-001` 至 `004`、四个 E2E 组和全部具体 TC 双向保持。数据与程序未实现时，`tests/feature_matrix.json` 的目标仍为 planned、`tests/datasets.json` 的 `codex_raw` 仍为 planned，产品 E2E 的实际结论只能是 BLOCKED；完成文档结构或单元测试不能改变这一事实。

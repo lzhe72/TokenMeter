@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.3.0-20261001T034652Z",
+  "seed": 303,
+  "verified_source_version": "0.158.0-alpha.2.1",
+  "test_keys": {
+    "first_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "different_valid_hex": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+  },
+  "raw_lines": {
+    "header": "{\"type\":\"session_meta\",\"payload\":{\"cli_version\":\"0.158.0-alpha.2.1\"}}\n",
+    "a": "{\"timestamp\":\"2026-10-01T06:00:00Z\",\"type\":\"token_usage_record\",\"payload\":{\"response_id\":\"core-a\",\"session_id\":\"tm003-core-session\",\"turn_id\":\"core-a\",\"model_id\":\"test-model\",\"padding\":\"0\",\"usage\":{\"input_tokens\":100,\"output_tokens\":10,\"cached_input_tokens\":20,\"cache_write_input_tokens\":0,\"reasoning_output_tokens\":0,\"total_tokens\":110}}}\n",
+    "b": "{\"timestamp\":\"2026-10-01T06:00:01Z\",\"type\":\"token_usage_record\",\"payload\":{\"response_id\":\"core-b\",\"session_id\":\"tm003-core-session\",\"turn_id\":\"core-b\",\"model_id\":\"test-model\",\"padding\":\"0\",\"usage\":{\"input_tokens\":200,\"output_tokens\":20,\"cached_input_tokens\":40,\"cache_write_input_tokens\":0,\"reasoning_output_tokens\":0,\"total_tokens\":220}}}\n",
+    "c": "{\"timestamp\":\"2026-10-01T06:00:02Z\",\"type\":\"token_usage_record\",\"payload\":{\"response_id\":\"core-c\",\"session_id\":\"tm003-core-session\",\"turn_id\":\"core-c\",\"model_id\":\"test-model\",\"padding\":\"0\",\"usage\":{\"input_tokens\":300,\"output_tokens\":30,\"cached_input_tokens\":60,\"cache_write_input_tokens\":0,\"reasoning_output_tokens\":0,\"total_tokens\":330}}}\n",
+    "a_same_length_rewrite": "{\"timestamp\":\"2026-10-01T06:00:00Z\",\"type\":\"token_usage_record\",\"payload\":{\"response_id\":\"core-a\",\"session_id\":\"tm003-core-session\",\"turn_id\":\"core-a\",\"model_id\":\"test-model\",\"padding\":\"1\",\"usage\":{\"input_tokens\":100,\"output_tokens\":10,\"cached_input_tokens\":20,\"cache_write_input_tokens\":0,\"reasoning_output_tokens\":0,\"total_tokens\":110}}}\n"
+  },
+  "expected": {
+    "offset_header_a": 410,
+    "offset_header_a_b": 750,
+    "offset_all": 1090,
+    "sha256_header_a": "2b6b23ce690faea8f90a5bff4f789de2f804f8dfdce76edced023f3cda690edd",
+    "sha256_all": "6d014949319da9cb26df1568c1b10f5d820a04180fa9010c7b4cb5918c093a09",
+    "sha256_rewritten_all": "0c417861ac5c21a66ebfb36a7443c3cedbdbdb65d365e0645d03b1a9f33fa5d1",
+    "rewrite_same_length": true,
+    "a": {
+      "input": 100,
+      "output": 10,
+      "cached": 20,
+      "total": 110
+    },
+    "ab": {
+      "count": 2,
+      "input": 300,
+      "output": 30,
+      "cached": 60,
+      "total": 330
+    },
+    "abc": {
+      "count": 3,
+      "input": 600,
+      "output": 60,
+      "cached": 120,
+      "total": 660
+    }
+  }
+}

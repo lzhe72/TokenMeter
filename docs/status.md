@@ -2,7 +2,9 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
-SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc405952b79de4163` 并由总控整合入新主仓库本地 `master=6bbab2ed20878fe7fd4742967982f1d0b65c6138`。文档会话按新SOP-011/013/014/024同步[总表规范](standards/project-workbook.md)、[执行模板](templates/test-execution.md)、项目登记与Excel。TM-003固定`source_check`导出器的`ea6b187`和新清理合同`d7c3d39`两个独立模块批次都已生成并回读结果，根总表目前11 Sheet、225父TC、41变体、266用例行、15批次（13旧批次+2模块），SHA-256 `6238e2a36f461d9a185459ff59ddba846524eae88d3edf435241bd8a4755eea3`，回读PASS。模块原始PASS、Excel/总表批次与产品E2E状态分别记录；TM-005模块Excel仍待其固定TAP逐步/内存清理诊断接通，其产品E2E仍NOT_RUN。
+SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc405952b79de4163` 并由总控整合入新主仓库本地 `master=6bbab2ed20878fe7fd4742967982f1d0b65c6138`。文档会话按新SOP-011/013/014/024同步[总表规范](standards/project-workbook.md)、[执行模板](templates/test-execution.md)、项目登记与Excel。TM-003固定`source_check`导出器的`ea6b187`和新清理合同`d7c3d39`两个独立模块批次都已生成并回读结果；另新增CORE-04/05两条未执行的模块设计输入。根总表目前11 Sheet、227父TC、41变体、268用例行、15批次（13旧批次+2模块），SHA-256 `e20f33c88e79598e0ec17d7ea6893c877b39aebb26b45d2aefbe6b96d391d77a`，回读PASS。模块原始PASS、Excel/总表批次与产品E2E状态分别记录；TM-005模块Excel仍待其固定TAP逐步/内存清理诊断接通，其产品E2E仍NOT_RUN。
+
+TM-003新的`CORE-04/05`固定输入已写入[0.3测试计划](../releases/v0.3.0-20261001T034652Z/04-test-plan.md)及详细用例，fixture精确冻结410/750/1090字节偏移、原子事务故障注入、有效错键、完整LF增量与前缀MAC改写/截短；机器目录和总表增加两行，当前两例程序绑定null、unexecuted。独立SOP-008切片须先对干净文档候选做语义/结构/治理核对，不能因已有CORE-01/02/03的模块3/3而填通过；原27条产品TC继续未执行。
 
 新主仓库 `/Users/lz/文档/git/TokenMeter` 的 `master` 已将文档恢复提交 `48ca089a8569cb33ad3e97ba91b6712cc6be51d0` 集成为 `d606fbd9763447387b88f0d02a881091d0982631`；总控对该整合树执行的文档 structure、当前0.2 baseline、quality 和治理457/457均PASS。该合并只说明源码文档进入本地 master，旧仓库Git对象丢失、历史 c291 产品门禁 FAIL、各需求产品 E2E 未通过和正式发行 `NOT_RUN` 均保留。
 
