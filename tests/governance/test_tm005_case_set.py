@@ -41,24 +41,24 @@ class TM005CaseSetTests(unittest.TestCase):
         self.assertEqual(product_gaps, ["TC-TM005-CONTRACT-01"])
         self.assertEqual(core_gaps, [])
 
-    def test_core_three_are_separate_from_product_32(self):
+    def test_core_five_are_separate_from_product_32(self):
         augmented = copy.deepcopy(MANIFEST)
         errors, parents, variants, core = CHECKER.expected_case_set(augmented, DETAIL)
         self.assertEqual(errors, [])
-        self.assertEqual((len(parents), len(variants), len(core)), (32, 6, 3))
+        self.assertEqual((len(parents), len(variants), len(core)), (32, 6, 5))
         incomplete = copy.deepcopy(augmented)
         incomplete["traceability"] = [row for row in incomplete["traceability"]
                                       if row["test"] != "TC-TM005-CORE-03"]
         errors, _, _, _ = CHECKER.expected_case_set(incomplete, DETAIL)
-        self.assertIn("CORE auxiliary set must contain exactly three manifest and detailed cases", errors)
+        self.assertIn("CORE auxiliary set must contain exactly five manifest and detailed cases", errors)
         errors, _, _, _ = CHECKER.expected_case_set(
-            augmented, DETAIL + "\n### TC-TM005-CORE-04 · 意外用例")
-        self.assertIn("CORE auxiliary set must contain exactly three manifest and detailed cases", errors)
+            augmented, DETAIL + "\n### TC-TM005-CORE-06 · 意外用例")
+        self.assertIn("CORE auxiliary set must contain exactly five manifest and detailed cases", errors)
         missing = copy.deepcopy(MANIFEST)
         missing["traceability"] = [row for row in missing["traceability"]
                                    if not row["test"].startswith("TC-TM005-CORE-")]
         errors, _, _, _ = CHECKER.expected_case_set(missing, DETAIL)
-        self.assertIn("CORE auxiliary set must contain exactly three manifest and detailed cases", errors)
+        self.assertIn("CORE auxiliary set must contain exactly five manifest and detailed cases", errors)
 
     def test_registered_case_documents_must_match_files(self):
         errors, _ = CHECKER.case_document_registration(MANIFEST)
