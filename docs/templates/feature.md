@@ -78,3 +78,7 @@
 输出为本功能需求/验收细节、同步的实现/测试/数据/SOP 和真实证据索引。文档检查及实际结果写入本轮 `06-iteration-record.md`；发布资格由 [SOP-018](../../sop/SOP-018-release-gate.md)判定，归档按 [SOP-022](../../sop/SOP-022-archive-handoff.md)。
 
 无关的未来 `planned` 功能不加入本次应执行集合；本次目标不能通过改为 `planned` 或移动版本号被排除。
+
+## 具体任务与逐条用例合同
+
+按[任务与用例规范](../standards/test-cases.md)，需求阶段先建立具体TASK，再用[用例模板](test-case.md)逐条设计TC。每项任务登记其TC清单，每条TC包含类型、实际输入、逐步动作与预期、DB操作、数据/SQL/重置、绑定和结果入口。根目录汇总集合与详细文档同步；实际执行用[记录合同](test-execution.md)，无证据不填PASS。

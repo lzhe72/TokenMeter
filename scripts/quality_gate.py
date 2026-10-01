@@ -211,6 +211,25 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
         if not isinstance(cases, list) or not cases:
             errors.append(f"{identifier}: at least one E2E case required")
             continue
+        case_document = read_spec(feature.get("test_case_document"), f"{identifier}.test_case_document")
+        sections = re.findall(r"^##\s+(E2E-TM\d{3,}-\d{3,})\b[^\n]*\n(.*?)(?=^##\s|\Z)",
+                              case_document, flags=re.MULTILINE | re.DOTALL)
+        documented_ids = [case_id for case_id, _ in sections]
+        expected_ids = [case.get("id") for case in cases if isinstance(case, dict)]
+        if (len(documented_ids) != len(set(documented_ids)) or
+                set(documented_ids) != set(expected_ids)):
+            errors.append(f"{identifier}: case document must contain each matrix case exactly once")
+        for documented_id, body in sections:
+            acceptance_id = "AC-" + documented_id.removeprefix("E2E-")
+            if not re.search(r"(?<![A-Za-z0-9_-])" + re.escape(acceptance_id) + r"(?![A-Za-z0-9_-])", body):
+                errors.append(f"{documented_id}: case document has no matching acceptance")
+            for label in ("验收", "前置/数据", "步骤", "独立预期", "绑定/证据/状态"):
+                field = re.search(r"\*\*" + re.escape(label) + r"：\*\*\s*(.*?)(?=\n\s*\*\*[^\n]+：\*\*|\Z)",
+                                  body, flags=re.DOTALL)
+                if not field or not field[1].strip():
+                    errors.append(f"{documented_id}: case document is missing {label}")
+                elif label == "步骤" and not re.search(r"^1\.\s+\S", field[1], flags=re.MULTILINE):
+                    errors.append(f"{documented_id}: case document needs ordered executable steps")
         for case in cases:
             if not isinstance(case, dict):
                 errors.append(f"{identifier}: case object required")
@@ -267,14 +286,23 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
             if active or binding is not None:
                 if file_ref(binding, f"{case_id}.automated_test"):
                     counts["test_bindings"] += 1
-            native_identity = case.get("native_test")
-            if active or native_identity is not None:
-                if not isinstance(native_identity, str) or not re.fullmatch(r"[A-Za-z0-9_]+/[A-Za-z0-9_]+/test[A-Za-z0-9_]+", native_identity):
-                    errors.append(f"{case_id}.native_test: target/suite/testMethod identity required")
-                elif native_identity in native_bindings:
-                    errors.append(f"{case_id}: duplicate native_test {native_identity}")
-                else:
-                    native_bindings.add(native_identity)
+            engine = case.get("engine", "xcuitest")
+            if engine == "playwright_electron":
+                if case.get("test_identity") != case_id:
+                    errors.append(f"{case_id}.test_identity: expected stable E2E ID")
+                if case.get("native_test") is not None:
+                    errors.append(f"{case_id}: Electron binding must not pretend to be an XCTest method")
+            elif engine == "xcuitest":
+                native_identity = case.get("native_test")
+                if active or native_identity is not None:
+                    if not isinstance(native_identity, str) or not re.fullmatch(r"[A-Za-z0-9_]+/[A-Za-z0-9_]+/test[A-Za-z0-9_]+", native_identity):
+                        errors.append(f"{case_id}.native_test: target/suite/testMethod identity required")
+                    elif native_identity in native_bindings:
+                        errors.append(f"{case_id}: duplicate native_test {native_identity}")
+                    else:
+                        native_bindings.add(native_identity)
+            else:
+                errors.append(f"{case_id}.engine: unsupported test engine")
     missing = sorted(REQUIRED_FEATURES - seen_features)
     if missing:
         errors.append("required v1 features removed: " + ", ".join(missing))
@@ -338,6 +366,8 @@ def validate_manifest(root: Path) -> tuple[list[str], dict[str, int]]:
 def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("phase", choices=("check", "iteration", "release"))
+    parser.add_argument("--package-manifest", type=Path)
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     baseline_errors, baseline_counts = validate_baseline(root)
     if baseline_errors:
@@ -357,6 +387,25 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
     }, ensure_ascii=False), flush=True)
     if args.phase == "check":
         return 0
+    current = root / "releases/current.json"
+    if current.is_file():
+        try:
+            release_id = json.loads(current.read_text())["release_id"]
+            manifest_path = root / "releases" / release_id / "00-manifest.json"
+            if not manifest_path.resolve().is_relative_to((root / "releases").resolve()):
+                raise ValueError("Release index escaped its root")
+            manifest = json.loads(manifest_path.read_text())
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            print(json.dumps({"state": "BLOCKED", "reason": str(exc), "release_eligible": False}))
+            return 2
+        if manifest.get("execution_profile") == "local_electron":
+            local = root / "scripts/local_gate.py"
+            if manifest.get("execution_bindings_status") != "ready" or not local.is_file() or not args.package_manifest or not args.output:
+                print(json.dumps({"state": "BLOCKED", "reason": "Electron local gate needs ready bindings and --package-manifest/--output; legacy runner is retired", "release_eligible": False}))
+                return 2
+            result = subprocess.run([sys.executable, str(local), "--package-manifest", str(args.package_manifest),
+                                     "--output", str(args.output), "--phase", args.phase], cwd=root, check=False)
+            return result.returncode
     runner = root / "scripts/e2e.py"
     if not runner.resolve().is_relative_to(root.resolve()) or not runner.is_file():
         print(json.dumps({"state": "BLOCKED", "reason": "Missing product E2E runner", "release_eligible": False}))

@@ -88,6 +88,11 @@ def show(root: Path, release_id: str | None = None) -> dict:
     publication = manifest.get("publication")
     if not isinstance(publication, dict):
         raise ValueError("Missing publication contract")
+    passport={"expected_asset":publication.get("expected_passport_asset"),"location":"同名 Git Release 的发布资产","verified":False}
+    if publication.get('asset_storage')=='local_only':
+        archive=Path.home()/'Downloads/TokenMeter'/release_id
+        passport.update(location='本地版本档案',expected_path=str(archive/'evidence'/(release_id+'.passport.json')),
+                        archive_index=str(archive/'release-index.json'))
     return {
         "schema_version": 1, "release_id": release_id,
         "source": {"kind": "git_tag" if tag else "working_tree", "tag": release_id if tag else None,
@@ -103,8 +108,7 @@ def show(root: Path, release_id: str | None = None) -> dict:
         "gate_commands": manifest.get("gate_commands", {}),
         "changelog": {"path": changelog_path, "heading": release_id, "entry": "\n".join(lines[start:end]).strip()},
         "commits": commits, "publication": publication,
-        "passport": {"expected_asset": publication.get("expected_passport_asset"),
-                     "location": "同名 Git Release 的发布资产", "verified": False},
+        "passport": passport,
         "release_eligible": None,
         "notice": "查询只展示索引；planned 程序绑定尚未就绪，ready 也不代表测试已执行。Git Tag 或规划的通行证名称均不能证明已通过发布门禁。",
     }

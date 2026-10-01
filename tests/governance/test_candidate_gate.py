@@ -86,30 +86,29 @@ class CandidateGateTests(unittest.TestCase):
         self.assertEqual("candidate_context_only", result["scope"])
         self.assertFalse(result["release_eligible"])
 
+    def test_retired_ci_cannot_create_tags_or_publish_assets(self):
+        for filename in ("quality.yml", "release-candidate.yml", "internal-release.yml"):
+            workflow = (REPO / ".github/workflows" / filename).read_text()
+            self.assertIn("workflow_dispatch:", workflow)
+            self.assertIn("BLOCKED:", workflow)
+            self.assertIn("exit 2", workflow)
+            self.assertNotIn("contents: write", workflow)
+            self.assertNotIn("upload-artifact", workflow)
+            self.assertNotIn("internal_publish.py", workflow)
+            self.assertNotIn("continue-on-error:", workflow)
+
     def test_workflows_do_not_start_remote_tests_automatically(self):
-        regular = (REPO / ".github/workflows/quality.yml").read_text()
-        self.assertIn("on:\n  workflow_dispatch:", regular)
-        self.assertNotIn("  pull_request:", regular)
-        self.assertNotIn("  push:", regular)
-        self.assertNotIn("  schedule:", regular)
-        self.assertIn("explicit-environment-required:", regular)
-        self.assertIn("exit 2", regular)
-        self.assertNotIn("product-e2e:", regular)
-        dispatch = (REPO / ".github/workflows/release-candidate.yml").read_text()
-        self.assertIn("workflow_dispatch:", dispatch)
-        self.assertNotIn("  pull_request:", dispatch)
-        self.assertNotIn("  push:", dispatch)
-        self.assertNotIn("  schedule:", dispatch)
-        self.assertIn("environment: release-validation", dispatch)
-        self.assertIn("ref: ${{ inputs.candidate_sha }}", dispatch)
-        self.assertIn('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"', dispatch)
-        self.assertLess(dispatch.index('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"'),
-                        dispatch.index("actions/checkout@v4"))
-        self.assertIn('--dispatch-sha "$GITHUB_SHA"', dispatch)
-        self.assertIn("python3 scripts/quality_gate.py release", dispatch)
-        self.assertLess(dispatch.index("scripts/candidate_gate.py"), dispatch.index("scripts/quality_gate.py release"))
-        self.assertNotIn("contents: write", dispatch)
-        self.assertNotIn("continue-on-error:", dispatch)
+        for filename in ("quality.yml", "release-candidate.yml", "internal-release.yml"):
+            workflow = (REPO / ".github/workflows" / filename).read_text()
+            with self.subTest(workflow=filename):
+                self.assertIn("on:\n  workflow_dispatch:", workflow)
+                self.assertNotIn("  pull_request:", workflow)
+                self.assertNotIn("  push:", workflow)
+                self.assertNotIn("  schedule:", workflow)
+                self.assertIn("explicit-environment-required:", workflow)
+                self.assertIn("exit 2", workflow)
+                self.assertNotIn("product-e2e:", workflow)
+                self.assertNotIn("quality_gate.py release", workflow)
 
     def test_manual_environment_placeholder_cannot_qualify_product_or_package(self):
         workflow = (REPO / ".github/workflows/quality.yml").read_text()

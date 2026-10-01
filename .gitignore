@@ -20,3 +20,13 @@ database/test/.tokenmeter-test-database.json*
 database/production/production.db*
 database/production/seed.sql
 database/*/.bootstrap-*/
+
+# Electron runtime, builds and all local distribution artifacts.
+node_modules
+apps/desktop/out/
+apps/desktop/.test-build/
+apps/desktop/dist/
+*.dmg
+*.zip
+*.passport.json
+dmg/*/release-archive/

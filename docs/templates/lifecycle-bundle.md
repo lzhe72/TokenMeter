@@ -43,3 +43,7 @@
 - 编制中按 SOP-024 执行 `python3 scripts/check_docs.py --mode structure` 并返回原步骤，未完成文档保持 draft。001–007 全部完成后执行 [SOP-008 基线检查](../../sop/SOP-008-baseline-check.md)的严格 baseline 与质量检查，将实际结果及语义核对写入本轮 `06-iteration-record.md`。基线通过后先按 SOP-009 准备工程骨架。
 - 实际测试与发布证据来自执行器；候选 SHA、原生结果、产物摘要和 passport 保存于对应机器运行/资产。没有执行时明确未执行或 `BLOCKED`。
 - 完整追踪：`release_id → 文档 → 需求/验收条件 → 任务 → 用例 → 数据/重置程序 → 具体 SOP → 原生测试 → run_id/报告 → passport → 发布 → 下一轮需求`。
+
+## 统一查看与实际结果
+
+每轮建立README导航，以及07-test-results.md、08-release-record.md记录实际测试和发布状态。发布预案05提前编写，实际记录在执行后更新。采用[逐条用例模板](test-case.md)与[执行记录合同](test-execution.md)；根目录项目总表按[维护规范](../standards/project-workbook.md)随Git更新。

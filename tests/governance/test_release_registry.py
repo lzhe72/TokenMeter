@@ -76,6 +76,14 @@ class RegistryTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 registry.show(self.root, value)
 
+    def test_local_release_resolves_local_passport_without_claiming_verification(self):
+        self.manifest['publication'].update(asset_storage='local_only',github_release=False)
+        self.persist()
+        passport=registry.show(self.root)['passport']
+        self.assertEqual(passport['location'],'本地版本档案')
+        self.assertTrue(passport['expected_path'].endswith(f'/TokenMeter/{ID}/evidence/{ID}.passport.json'))
+        self.assertFalse(passport['verified'])
+
     def test_manifest_version_mismatch_and_missing_documents_rejected(self):
         self.manifest["version"] = "0.2.0"
         self.persist()
