@@ -4,7 +4,7 @@
 
 TM-002 0.2候选的七父/25个精确辅助ID已逐一绑定固定`tm002_source_check.py`程序与清理/命令；干净输入`dccf1f3`的SOP-008收据判仅此辅助绑定切片就绪，治理557/557 PASS，最新整合树待新run和独立Excel。程序绑定不填PASS，原产品21父及正式发行仍未通过。
 
-当前根项目总表已按合并候选重生并回读PASS：11 Sheet、236父TC、42变体、39批次；SHA-256 `c8b3aa301c35697836a195a77eed3a3bf09c1c82aaf55657ddb28afa2daaf631`。TM003新三例仍未绑定/执行，TM004五例虽已绑定仍待新run；完整产品E2E与发行均未通过。
+当前根项目总表已按合并候选重生并回读PASS：11 Sheet、236父TC、42变体、40批次；SHA-256 `dd1d94cd87c1f1ac53f91e0c4235832a09dd5021f969e30494d98203ebcb094f。TM003新三例仍未绑定/执行，TM004五例虽已绑定仍待新run；完整产品E2E与发行均未通过。
 
 SOP-008对干净输入`8107a06`的CORE08–10三例出具本机切片收据，结构、治理531/531、机器目录、总表及三组公开HMAC向量均通过；只准进入程序实现，三例仍未执行，整版产品与发行未通过。
 
@@ -12,6 +12,8 @@ TM-004 CORE01–05固定TAP程序已随本地master进入文档树，三套sourc
 TM-003 正在冻结下一独立开发输入CORE-08～10：私有身份密钥、真实SourceAccess类与合成helper的主进程适配、受限collection IPC；每条四步，程序绑定与执行仍空。原27产品TC、真实系统来源/Keychain/安装App及大日志处理不由此通过，待干净提交按SOP-008出切片收据。
 
 TM-001 709d候选BOOTSTRAP四父例安装App定向run`local-3d36f9cbe62a4c1e889e8ea2fa476281`4/4、18步和清理PASS，12截图；原报告与独立Excel/verification逐项回读，登记根总表第36批次。本批没有独立审计，旧完整门禁FAIL及正式发行NOT_RUN保留。
+
+TM-003 CORE08在代码候选`724732d`的固定source_check四步1/1和owner清理PASS，独立Excel/verification回读，登记总表第40批次；先前真实红测FAIL原件保留。本轮文档树尚无CORE08程序同树绑定，真实Keychain/App与产品E2E、发行仍NOT_RUN。
 
 TM-004整合候选`08463b31`三套固定source_check新run：CORE01–03为3/3九步，CORE04为1/1三步，CORE05为1/1四步；各逐例清理及独立Excel/verification回读PASS，总表登记第37–39批次。原20产品TC、真实App E2E及正式发行仍NOT_RUN。
 

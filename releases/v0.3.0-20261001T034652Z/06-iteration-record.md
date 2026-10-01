@@ -126,3 +126,7 @@ SOP-008对干净输入提交`ff668d0de1fef3dfc162c0d2bc71825df6425511`（tree`20
 ## 2026-10-02 · CORE-08～10独立产品接线输入核对
 
 干净输入提交`8107a063d8c24f303e2db2ca1294cfc343fe6a3e`（tree`32e64493ef823e2efa058f40440f0b13730aaa1d`）按SOP-008仅对`TASK-TM003-SECRET/WIRING/IPC`和`TC-TM003-CORE-08/09/10`出具`.local/docs-checks/20261002-tm003-product-loop-slice/receipt.json`。三例各四步，固定私有密钥、真实SourceAccess类配合合成helper至UsageStore、受限主窗口IPC；公开三组principal HMAC向量已独立重算一致。结构136文档/1294链接PASS，治理531/531 PASS，机器目录236父TC/756步CURRENT，总表11 Sheet/236父+42变体/35批次回读PASS（SHA-256`ddc2d04b4119481f48969265cf84e87e4e01dcdb272e47367064ca9690d76de8`）。三项任务、验收条件、fixture、重置、逐步预期和原产品边界均已核对，故仅本切片`development_slice_ready`；程序绑定为空、实际运行`unexecuted`，0.3整版draft，真实OS授权/Keychain/App/大日志及产品E2E、正式门禁均NOT_RUN。
+
+## 2026-10-02 · CORE08开发候选模块实测
+
+真实业务红测候选`0f82c3f95116e878ba9aa081fa85ce4fb9433795`的`tm003-core08-direct-red-20261001T214000Z`报告FAIL（`identity_profile_not_implemented`），SHA-256`5d93bfe1f47074d90f730b18bfe51f2ce4d353d2c9b08f0e01d74e0c74422763`，原件保留。实现候选`724732d77e2ff26dc8db8bd5607c7eec1ae1b800`（tree`d72fa17b142c8b6d52a5786585eedbe6f7b68f30`）固定run`tm003-core08-20261001T215000Z`为1/1、四步和owner清理PASS，报告SHA-256`3a00ce16c20926b02805874f3252dd12df15bd78e4cbf2ad4d33e121db3d7423`；独立Excel/verification回读PASS，Excel SHA-256`0fbf0a9354ed16b430e034ee073e4053fcadd6c4b0b4bd9f3616311b38c9c788`。本轮文档会话只按SOP-024将第40批次摘要与本机原件入口登记根总表，不改被测候选；CORE08程序待整合到同树后绑定机器目录，真实macOS Keychain、安装App/IPC、大日志及原27条产品TC仍NOT_RUN，正式发行不可用。

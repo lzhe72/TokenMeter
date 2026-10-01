@@ -12,7 +12,7 @@
     "observed_source_commit": "6e80dd12d60ee5dad641bca030445a2153a269c9",
     "observed_working_tree_dirty": true,
     "production_initial_password_reference": "scripts/bootstrap_sqlite.py::PRODUCTION_INITIAL_PASSWORD（本机配置引用；总表不保存取值）",
-    "notes": "2026-10-02文档同步：恢复的新主仓库本地master d606fbd 已含文档基线，旧Git对象丢失与历史c291门禁FAIL不变。TM003独立代码分支311deedf的CORE模块3/3 PASS原件已核对，但未进本文档树且不是产品E2E；模块结果Excel导出规范待SOP补齐。TM005新增3条纯统计CORE辅助TC，原32条产品父TC/6变体不变；总目录225父TC/41变体。正式跨需求产品门禁NOT_RUN，根Excel保存固定输入与历史13批次。 TM004新增3条reader CORE辅助TC，原20产品TC不变，切片核对待提交。 SOP会话模块结果修订4cca918/本地master整合6bbab2e已同步至项目登记和总表；TM003/TM005模块原始3/3与模块Excel/批次BLOCKED分别记录。 TM002 SECURITY-01三个路径变体明确previewSource.selectionId、短根和invalid_selection；TM005 CORE-01明确调用方传固定UTC界，不验证IANA换算。TM004 reader CORE-01/02/03独立切片在干净文档候选ebbcfd0就绪。 TM003新不可覆盖模块run tm003-core-20261001T163807Z的独立Excel已回读并作为第14批次登记；仅模块3/3，产品E2E NOT_RUN。 共享模块runner支持owned_root/memory_only清理类型；TM003新run tm003-core-20261001T165439Z第15批次已回读，最新模块3/3，旧ea6批次保留。 TM003新增CORE-04/05固定模块输入，原27条产品TC不变；两例未执行，root Excel候选行随设计同步。 TM001 709d的UPDATE-05定向14/14在de081a6固定导出器生成独立Excel并回读后登记第16批次；77父TC范围外，旧c291完整门禁FAIL仍保留。 TM002 EVIDENCE-01新增MISSING_CHOOSER_WITNESS第七变体，SECURITY-01 profile改私有目录，原28父TC保留；新变体未执行。 TM003 CORE04/05在9efc6fa候选新run2/2/9步及Excel回读PASS，登记第17批次；新增CORE06输入尚未执行。 TM001 709d新增LOGIN-AUTH五父例/11步真实App定向PASS与独立Excel第19批次；前置误加--development的另一次预检BLOCKED保留，旧c291完整门禁FAIL不变。 BOOTSTRAP-03额外成员固定provision数据绑定已核实，机器目录只更正过时前置文字。 TM001 709d另有LOGIN-SESSION六父例/14步独立产品run PASS/Excel回读，登记第20批次；不与LOGIN-AUTH或旧完整门禁合并。 TM002 0cc4f3e产品包预检run local-6ece8e342b514683a64d1cc0a9bf5282 原始33/33 BLOCKED，App未启动，独立Excel尚缺，故不列为总表批次；早先格式预检FAIL保留。 TM003 CORE07主进程编排五步辅助切片已设计，程序未绑定、真实运行与产品E2E均未执行。 TM001 709d LOGIN-VALIDATION十父/十二变体22行36步及LOGIN-RATE单父3步各独立run/Excel回读，登记第21/22批次；709d登录功能合计22父与12变体在四个定向run PASS，非TM001全功能/正式发行。 TM005 CORE04/05在259cf768候选各1/1、三/四步与独立Excel回读PASS，登记第23/24批次；仅source_check，产品E2E NOT_RUN。 TM001 709d CHANGE-PASSWORD十一父/六变体17行32步独立产品run及Excel回读PASS、PASSWORD-05单项审计PASS，登记第25批次；未完成全功能/完整审计。 TM001 709d SESSION十父/两变体12行44步独立产品run与Excel回读PASS、SESSION-04单项审计PASS，登记第26批次；未完成全功能/完整审计。 TM003 CORE07在33b1ee1候选source_check 1/1五步及Excel回读PASS，登记第27批次；仅fake来源能力与小文件，不移作产品E2E。 TM001 709d ADMIN六父/五变体11行33步独立产品run与Excel回读PASS、ADMIN-03单项审计PASS，登记第28批次；未完成全功能/完整审计。 TM003 CORE01-07程序已随本地master合入文档树并绑定机器目录；旧模块批次仍属旧候选，本整合树待新run，产品E2E仍NOT_RUN。 TM001 CONFIG六父、UPDATE-01..04四父、UPDATE-06..08三父三次709d产品定向PASS，独立Excel/审计回读，列第29–31批次；各审计仅覆盖所列项目。 TM003整合候选2324173的CORE01–07四套固定模块新run与独立Excel回读PASS，列第32–35批次；产品E2E、正式门禁NOT_RUN。 TM003新增CORE08–10三条各四步辅助输入与三个具体TASK，公开principal向量已独立核对；程序未绑定、未运行，0.3产品E2E/正式门禁NOT_RUN。 TM004 CORE01–05同树固定TAP程序/三套source_check registry与机器绑定已就绪，待新run/独立Excel；原20产品TC和发行NOT_RUN。 TM001 709d BOOTSTRAP四父/18步真实App定向PASS，Excel回读，第36批次；未做本批独立审计，完整门禁/发行不继承。 TM004整合候选08463b3三套固定辅助运行5/5、16步/独立Excel回读，列第37–39批次；原20产品TC及发行NOT_RUN。 TM002七父25精确辅助ID固定程序绑定已就绪，待同树新run/独立Excel；程序存在不计PASS，原产品E2E及发行未通过。",
+    "notes": "2026-10-02文档同步：恢复的新主仓库本地master d606fbd 已含文档基线，旧Git对象丢失与历史c291门禁FAIL不变。TM003独立代码分支311deedf的CORE模块3/3 PASS原件已核对，但未进本文档树且不是产品E2E；模块结果Excel导出规范待SOP补齐。TM005新增3条纯统计CORE辅助TC，原32条产品父TC/6变体不变；总目录225父TC/41变体。正式跨需求产品门禁NOT_RUN，根Excel保存固定输入与历史13批次。 TM004新增3条reader CORE辅助TC，原20产品TC不变，切片核对待提交。 SOP会话模块结果修订4cca918/本地master整合6bbab2e已同步至项目登记和总表；TM003/TM005模块原始3/3与模块Excel/批次BLOCKED分别记录。 TM002 SECURITY-01三个路径变体明确previewSource.selectionId、短根和invalid_selection；TM005 CORE-01明确调用方传固定UTC界，不验证IANA换算。TM004 reader CORE-01/02/03独立切片在干净文档候选ebbcfd0就绪。 TM003新不可覆盖模块run tm003-core-20261001T163807Z的独立Excel已回读并作为第14批次登记；仅模块3/3，产品E2E NOT_RUN。 共享模块runner支持owned_root/memory_only清理类型；TM003新run tm003-core-20261001T165439Z第15批次已回读，最新模块3/3，旧ea6批次保留。 TM003新增CORE-04/05固定模块输入，原27条产品TC不变；两例未执行，root Excel候选行随设计同步。 TM001 709d的UPDATE-05定向14/14在de081a6固定导出器生成独立Excel并回读后登记第16批次；77父TC范围外，旧c291完整门禁FAIL仍保留。 TM002 EVIDENCE-01新增MISSING_CHOOSER_WITNESS第七变体，SECURITY-01 profile改私有目录，原28父TC保留；新变体未执行。 TM003 CORE04/05在9efc6fa候选新run2/2/9步及Excel回读PASS，登记第17批次；新增CORE06输入尚未执行。 TM001 709d新增LOGIN-AUTH五父例/11步真实App定向PASS与独立Excel第19批次；前置误加--development的另一次预检BLOCKED保留，旧c291完整门禁FAIL不变。 BOOTSTRAP-03额外成员固定provision数据绑定已核实，机器目录只更正过时前置文字。 TM001 709d另有LOGIN-SESSION六父例/14步独立产品run PASS/Excel回读，登记第20批次；不与LOGIN-AUTH或旧完整门禁合并。 TM002 0cc4f3e产品包预检run local-6ece8e342b514683a64d1cc0a9bf5282 原始33/33 BLOCKED，App未启动，独立Excel尚缺，故不列为总表批次；早先格式预检FAIL保留。 TM003 CORE07主进程编排五步辅助切片已设计，程序未绑定、真实运行与产品E2E均未执行。 TM001 709d LOGIN-VALIDATION十父/十二变体22行36步及LOGIN-RATE单父3步各独立run/Excel回读，登记第21/22批次；709d登录功能合计22父与12变体在四个定向run PASS，非TM001全功能/正式发行。 TM005 CORE04/05在259cf768候选各1/1、三/四步与独立Excel回读PASS，登记第23/24批次；仅source_check，产品E2E NOT_RUN。 TM001 709d CHANGE-PASSWORD十一父/六变体17行32步独立产品run及Excel回读PASS、PASSWORD-05单项审计PASS，登记第25批次；未完成全功能/完整审计。 TM001 709d SESSION十父/两变体12行44步独立产品run与Excel回读PASS、SESSION-04单项审计PASS，登记第26批次；未完成全功能/完整审计。 TM003 CORE07在33b1ee1候选source_check 1/1五步及Excel回读PASS，登记第27批次；仅fake来源能力与小文件，不移作产品E2E。 TM001 709d ADMIN六父/五变体11行33步独立产品run与Excel回读PASS、ADMIN-03单项审计PASS，登记第28批次；未完成全功能/完整审计。 TM003 CORE01-07程序已随本地master合入文档树并绑定机器目录；旧模块批次仍属旧候选，本整合树待新run，产品E2E仍NOT_RUN。 TM001 CONFIG六父、UPDATE-01..04四父、UPDATE-06..08三父三次709d产品定向PASS，独立Excel/审计回读，列第29–31批次；各审计仅覆盖所列项目。 TM003整合候选2324173的CORE01–07四套固定模块新run与独立Excel回读PASS，列第32–35批次；产品E2E、正式门禁NOT_RUN。 TM003新增CORE08–10三条各四步辅助输入与三个具体TASK，公开principal向量已独立核对；程序未绑定、未运行，0.3产品E2E/正式门禁NOT_RUN。 TM004 CORE01–05同树固定TAP程序/三套source_check registry与机器绑定已就绪，待新run/独立Excel；原20产品TC和发行NOT_RUN。 TM001 709d BOOTSTRAP四父/18步真实App定向PASS，Excel回读，第36批次；未做本批独立审计，完整门禁/发行不继承。 TM004整合候选08463b3三套固定辅助运行5/5、16步/独立Excel回读，列第37–39批次；原20产品TC及发行NOT_RUN。 TM002七父25精确辅助ID固定程序绑定已就绪，待同树新run/独立Excel；程序存在不计PASS，原产品E2E及发行未通过。 TM003 CORE08开发候选724732d四步1/1和独立Excel回读PASS，第40批次；前置红测FAIL保留，同树绑定待整合，真实Keychain/App及发行NOT_RUN。",
     "observed_raw_state": "BLOCKED",
     "observed_raw_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674/result.json",
     "observed_review_model": ".local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/granular-source.json",
@@ -3709,6 +3709,30 @@
       "result_workbook_sha256": "59a6bc54758c89992d9d82d9cb392fbad9d6308f5a3173a2855a0952d04f39dd",
       "raw_report_sha256": "30d976676c63a3bf2a0112d125430159e5da0e94d4e2bf4affd4ec04b1e4ae64",
       "tested_case_catalog_sha256": "9cd2dd070c042ebba7b3c00c49b8520848b565213bb3a5e327232116e434a67f"
+    },
+    {
+      "run_id": "tm003-core08-20261001T215000Z",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "execution_type": "source_check",
+      "scope": "TM-003 CORE08开发候选私有密钥生命周期固定辅助模块；非产品E2E",
+      "state": "PASS",
+      "included_cases": 1,
+      "executed_cases": 1,
+      "passed_cases": 1,
+      "failed_cases": 0,
+      "blocked_cases": 0,
+      "source_commit": "724732d77e2ff26dc8db8bd5607c7eec1ae1b800",
+      "candidate_tree": "d72fa17b142c8b6d52a5786585eedbe6f7b68f30",
+      "working_tree_dirty": false,
+      "release_eligible": false,
+      "product_e2e_state": "NOT_RUN",
+      "summary": "CORE08固定四步1/1与owner清理PASS；独立Excel/verification回读PASS。先前红测FAIL原件保留；仅代码候选辅助合同，产品App/真实Keychain及发行NOT_RUN。",
+      "result_workbook": ".local/test-results/tm003-core08-20261001T215000Z/TokenMeter测试结果-tm003-core08-20261001T215000Z.xlsx",
+      "raw_report": ".local/source-check-runs/tm003-core08-20261001T215000Z/report.json",
+      "verification": ".local/test-results/tm003-core08-20261001T215000Z/verification.json",
+      "result_workbook_sha256": "0fbf0a9354ed16b430e034ee073e4053fcadd6c4b0b4bd9f3616311b38c9c788",
+      "raw_report_sha256": "3a00ce16c20926b02805874f3252dd12df15bd78e4cbf2ad4d33e121db3d7423",
+      "tested_case_catalog_sha256": "aebeb66fd3ed735bbcd13fbb2b1ce1c8d63e23406b24af0649bf461880a91876"
     }
   ],
   "latest_case_states": {
@@ -3816,7 +3840,8 @@
     "TC-TM004-CORE-02": "PASS",
     "TC-TM004-CORE-03": "PASS",
     "TC-TM004-CORE-04": "PASS",
-    "TC-TM004-CORE-05": "PASS"
+    "TC-TM004-CORE-05": "PASS",
+    "TC-TM003-CORE-08": "PASS"
   },
   "latest_case_runs": {
     "TC-TM001-LOGIN-01": "local-2aa05fb7b2754289a1d77b9ef89bd321",
@@ -3923,6 +3948,7 @@
     "TC-TM004-CORE-02": "tm004-core-20261001T213019Z",
     "TC-TM004-CORE-03": "tm004-core-20261001T213019Z",
     "TC-TM004-CORE-04": "tm004-core04-20261001T213019Z",
-    "TC-TM004-CORE-05": "tm004-core05-20261001T213019Z"
+    "TC-TM004-CORE-05": "tm004-core05-20261001T213019Z",
+    "TC-TM003-CORE-08": "tm003-core08-20261001T215000Z"
   }
 }
