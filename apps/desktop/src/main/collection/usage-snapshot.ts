@@ -24,7 +24,7 @@ function number(value: unknown): number {
 }
 function safeModel(value: unknown): string | null {
   if (value === null) return null;
-  if (typeof value !== 'string' || !/^[A-Za-z0-9._-]{1,80}$/.test(value))
+  if (typeof value !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(value))
     throw new Error('invalid_model_id');
   return value;
 }
