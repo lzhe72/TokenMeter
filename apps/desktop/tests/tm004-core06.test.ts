@@ -6,7 +6,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {DatabaseSync} from 'node:sqlite';
-import {SourceAccess, type SourceAccessIdentity, type SourceHelperLike, type SourcePreview} from '../src/main/source-access.ts';
+import {SourceAccess, type SourceAccessAudit, type SourceAccessIdentity,
+  type SourceHelperLike, type SourcePreview} from '../src/main/source-access.ts';
 import {SourceStore, type SourceCipher} from '../src/main/source-store.ts';
 import {UsageStore} from '../src/main/collection/usage-store.ts';
 import {runClaudeCollection} from '../src/main/collection/claude-runtime.ts';
@@ -104,6 +105,7 @@ class Harness {
   readonly dbPath: string;
   readonly data: Map<string, Buffer>;
   readonly counts: Counts = {begins: 0, pages: 0, reads: 0, maxReturned: 0, commits: 0, scannedClosed: 0};
+  readonly audits: SourceAccessAudit[] = [];
   readonly helpers: Helper[] = [];
   readonly sourceStore: SourceStore;
   sourceId: string | null = null;
@@ -160,7 +162,7 @@ class Harness {
         assert.equal(path, this.rootPath);
         if (options?.expectedRoot) assert.deepEqual(options.expectedRoot, {dev: '17', ino: '29'});
         const helper = new Helper(this); this.helpers.push(helper); return helper;
-      }, onChange: () => {}});
+      }, onChange: () => {}, onAudit: event => { this.audits.push(event); }});
   }
   async confirm(): Promise<string> {
     await this.access.syncIdentity();
@@ -211,7 +213,7 @@ function state(path: string) {
       marker: db.prepare('SELECT key_marker FROM identity_key_state').get()?.key_marker ?? null};
   } finally { db.close(); }
 }
-function privateDatabase(harness: Harness): void {
+function privateDatabase(harness: Harness, returned?: unknown): void {
   assert.equal(statSync(harness.owner).mode & 0o777, 0o700);
   assert.equal(statSync(harness.profile).mode & 0o777, 0o700);
   assert.equal(statSync(harness.dbPath).mode & 0o777, 0o600);
@@ -222,7 +224,10 @@ function privateDatabase(harness: Harness): void {
       [row.uuid, row.parentUuid, row.sessionId, row.agentId, row.message?.id]));
   for (const value of [...rawIds, ...specs.map(spec => spec.relative_name), harness.rootPath,
     harness.sourceId, fixture.append.new_call_id, fixture.secret_hex])
-    if (typeof value === 'string' && value.length >= 8) assert.equal(bytes.includes(value), false, value);
+    if (typeof value === 'string' && value.length >= 8) {
+      assert.equal(bytes.includes(value), false, value);
+      if (returned !== undefined) assert.equal(JSON.stringify(returned).includes(value), false, value);
+    }
 }
 function expectedKeys(sourceId: string): string[] {
   return specs.map(spec => referenceKey('claude-file-v1', sourceId, spec.file_identity_digest)).sort();
@@ -280,7 +285,7 @@ test('TC-TM004-CORE-06 confirmed Claude SourceAccess commits owned SQLite genera
     assert.ok(main.counts.maxReturned <= fixture.helper_max_chunk_bytes);
     checkCursors(main, sourceId, specs.map(spec => spec.bytes));
     assert.equal(initial.diagnostics.some(item => item.code === 'unverified_parent'), false);
-    privateDatabase(main);
+    privateDatabase(main, first);
     diagnostic(t, 2, {calls: initial.calls, input: initial.input, output: initial.output,
       total: initial.input + initial.output, cursors: initial.cursors.length,
       commits: main.counts.commits, pages: main.counts.pages,
@@ -333,6 +338,9 @@ test('TC-TM004-CORE-06 confirmed Claude SourceAccess commits owned SQLite genera
       await assert.rejects(fault.run(sourceId));
       assert.equal(fault.counts.commits, 0);
       assert.ok(fault.counts.scannedClosed >= 1);
+      assert.ok(fault.audits.some(event => event.operation === 'cancel' && event.tool === 'claude_code'));
+      if (mode !== 'early_eof_in_agent_sub') assert.ok(fault.audits.some(event =>
+        event.operation === 'cancel' && event.reason === 'capability_invalidated'));
       assert.deepEqual(state(fault.dbPath), beforeFault);
       if (mode === 'switch_principal_after_first_page') {
         const db = new DatabaseSync(fault.dbPath, {readOnly: true});
@@ -345,7 +353,7 @@ test('TC-TM004-CORE-06 confirmed Claude SourceAccess commits owned SQLite genera
     diagnostic(t, 5, {faults: fixture.negative_barriers, commit_calls_each: 0,
       scan_closed_each: true, old_calls_each: 6, old_total_each: 172,
       cursors_and_coverage_unchanged_each: true, second_principal_events: 0,
-      owner_cleanup_pending: true});
+      source_audit_cancel_each: true, owner_cleanup_pending: true});
   } finally {
     if (mainOpen) main.close();
     for (const owner of owners.reverse()) owner.cleanup();
