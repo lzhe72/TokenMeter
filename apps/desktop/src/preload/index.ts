@@ -8,6 +8,9 @@ const bridge: Bridge = {
   saveConfiguration: input => call('saveConfiguration', input), resetConfiguration: () => call('resetConfiguration'),
   setAutomaticLogin: value => call('setAutomaticLogin', value), checkUpdates: () => call('checkUpdates'),
   installUpdate: () => call('installUpdate'), cancelUpdate: () => call('cancelUpdate'),
+  chooseSource: input => call('chooseSource', input), previewSource: input => call('previewSource', input),
+  confirmSource: input => call('confirmSource', input), updateSourceConsent: input => call('updateSourceConsent', input),
+  refreshSource: input => call('refreshSource', input), revokeSource: input => call('revokeSource', input),
   onOpenConfiguration(callback) { const listener = () => callback(); ipcRenderer.on('tokenmeter:open-configuration', listener); return () => ipcRenderer.removeListener('tokenmeter:open-configuration', listener); },
   onState(callback) { const listener = (_event: Electron.IpcRendererEvent, state: Snapshot) => callback(state); ipcRenderer.on('tokenmeter:state', listener); return () => ipcRenderer.removeListener('tokenmeter:state', listener); }
 };

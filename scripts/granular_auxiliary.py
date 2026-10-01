@@ -239,7 +239,7 @@ def records_fixture(case_dir: Path, context: dict, *, fail: bool = False) -> tup
     variant_file = root / "variants.json"
     save(source, report)
     save(catalog_file, catalog)
-    save(variant_file, {"release_id": catalog["release_id"], "variants": []})
+    save(variant_file, {"release_id": results.tm001_case_release(catalog), "variants": []})
     return source, catalog_file, variant_file, report
 
 
@@ -545,7 +545,7 @@ def execute(args: argparse.Namespace) -> int:
     login, login_bytes = results.read_json(ROOT / "tests/granular_login_variants.json")
     update_path = ROOT / "tests/granular_update_variants.json"
     update, update_bytes = results.read_json(update_path) if update_path.is_file() else (None, None)
-    variants = granular_gate.combine_variants(login, update, catalog["release_id"])
+    variants = granular_gate.combine_variants(login, update, results.tm001_case_release(catalog))
     frozen = parent.get("test_inputs_sha256")
     for relative, raw in (("tests/test_cases.json", catalog_bytes),
                           ("tests/granular_login_variants.json", login_bytes),

@@ -52,18 +52,34 @@ def run(args, label, *, cwd=None, timeout=180, log=None):
 
 
 def validate_config(config):
+    if not isinstance(config, dict):
+        raise PackageError("Local release config must be an object")
+    version_builds = {"0.1.0": ("0.1.1", "100", "101"),
+                      "0.2.0": ("0.2.1", "200", "201")}
+    version = config.get("version")
+    if not isinstance(version, str) or version not in version_builds:
+        raise PackageError("Unsupported local release version")
     required = {"schema_version", "release_id", "version", "upgrade_version", "distribution_profile", "bundle_id",
                 "minimum_macos", "architectures", "build", "upgrade_build", "api_url", "update_feed_url",
                 "update_public_key", "certificate_sha256", "signature_kind"}
-    if not isinstance(config, dict) or set(config) != required:
+    if version == "0.2.0":
+        required |= {"upgrade_from_release_id", "upgrade_source_policy"}
+    if set(config) != required:
         raise PackageError("Local release config has missing or unknown fields")
-    fixed = {"schema_version": 1, "version": "0.1.0", "upgrade_version": "0.1.1", "build": "100", "upgrade_build": "101",
-             "distribution_profile": "internal", "bundle_id": "org.tokenmeter.TokenMeter", "minimum_macos": "15.0",
+    upgrade_version, build, upgrade_build = version_builds[version]
+    fixed = {"schema_version": 2 if version == "0.2.0" else 1,
+             "version": version, "upgrade_version": upgrade_version,
+             "build": build, "upgrade_build": upgrade_build, "distribution_profile": "internal",
+             "bundle_id": "org.tokenmeter.TokenMeter", "minimum_macos": "15.0",
              "architectures": ["x86_64"], "api_url": "http://127.0.0.1:49176",
              "update_feed_url": "http://127.0.0.1:49177/version.json", "signature_kind": "internal_self_signed"}
+    if version == "0.2.0":
+        fixed.update(upgrade_from_release_id="v0.1.0-20260929T074814Z",
+                     upgrade_source_policy="sop018_pass_sop020_archived_original_dmg")
     if any(type(config[key]) is not type(value) or config[key] != value for key, value in fixed.items()):
         raise PackageError("Local scope, platform or defaults differ from approved config")
-    if not re.fullmatch(r"v0\.1\.0-\d{8}T\d{6}Z", config["release_id"]):
+    if not isinstance(config["release_id"], str) or not re.fullmatch(
+            r"v" + re.escape(version) + r"-\d{8}T\d{6}Z", config["release_id"]):
         raise PackageError("Invalid release ID")
     try:
         datetime.strptime(config["release_id"].rsplit("-", 1)[1], "%Y%m%dT%H%M%SZ")
@@ -169,7 +185,15 @@ def archive_name(name):
     return name
 
 
-def builder_configuration(config, candidate, version, build, output, resource):
+def needs_native_helper(config):
+    return config["version"] == "0.2.0"
+
+
+def builder_configuration(config, candidate, version, build, output, resource, helper=None):
+    if needs_native_helper(config) and helper is None:
+        raise PackageError("TM-002 package requires a native source helper")
+    if not needs_native_helper(config) and helper is not None:
+        raise PackageError("TM-001 package must keep its original file layout")
     result = {"appId": config["bundle_id"], "productName": "TokenMeter", "electronVersion": "44.5.1",
             "directories": {"app": str(ROOT / "apps/desktop"), "output": str(output)},
             "files": ["out/**/*", "package.json"], "asar": True, "npmRebuild": False,
@@ -181,7 +205,9 @@ def builder_configuration(config, candidate, version, build, output, resource):
                     "minimumSystemVersion": config["minimum_macos"], "category": "public.app-category.developer-tools",
                     "extendInfo": {"ElectronSquirrelPreventDowngrades": True,
                                    "NSAppTransportSecurity": {"NSExceptionDomains": {
-                                       "127.0.0.1": {"NSExceptionAllowsInsecureHTTPLoads": True}}}}}}
+                                   "127.0.0.1": {"NSExceptionAllowsInsecureHTTPLoads": True}}}}}}
+    if helper is not None:
+        result["extraFiles"] = [{"from": str(helper), "to": "Helpers/source-helper"}]
     # Reuse the pinned official runtime installed by npm run runtime:install.
     runtime = ROOT / "apps/desktop/node_modules/electron/dist"
     if (runtime / "Electron.app/Contents/MacOS/Electron").is_file():
@@ -266,6 +292,78 @@ def verify_internal_flags(details):
         raise PackageError("Internal self-signed component enables hardened runtime or library validation")
 
 
+def verify_native_helper(app, config, scratch, expected_sha256=None):
+    """Verify the actual installed executable, including every package readback."""
+    app, scratch = Path(app), Path(scratch)
+    contents = app / "Contents"
+    if contents.is_symlink() or not contents.is_dir():
+        raise PackageError("Native source helper bundle contents are unsafe")
+    helper_dir = app / "Contents/Helpers"
+    if helper_dir.is_symlink() or not helper_dir.is_dir():
+        raise PackageError("Native source helper directory is missing or unsafe")
+    helper = helper_dir / "source-helper"
+    try:
+        metadata = helper.lstat()
+    except OSError:
+        raise PackageError("Native source helper is missing") from None
+    if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1 or metadata.st_size <= 0:
+        raise PackageError("Native source helper is not a unique regular executable")
+    mode = stat.S_IMODE(metadata.st_mode)
+    if mode != 0o755:
+        raise PackageError("Native source helper mode is not 0755")
+    digest = file_sha256(helper)
+    if expected_sha256 is not None and digest != expected_sha256:
+        raise PackageError("Native source helper digest changed")
+    architectures = run(["lipo", "-archs", str(helper)], "Read native helper architecture").split()
+    if architectures != config["architectures"]:
+        raise PackageError("Native source helper architecture differs from approved platform")
+    run(["codesign", "--verify", "--strict", str(helper)], "Verify native helper signature")
+    details = run(["codesign", "--display", "--verbose=4", str(helper)], "Read native helper signing identity")
+    verify_internal_flags(details)
+    if "Signature=adhoc" in details:
+        raise PackageError("Native source helper has an ad hoc signature")
+    scratch.mkdir(mode=0o700, parents=True, exist_ok=True)
+    prefix = scratch / "helper-certificate-"
+    run(["codesign", "--display", "--extract-certificates=" + str(prefix), str(helper)], "Read native helper certificate")
+    certificate = Path(str(prefix) + "0")
+    if not certificate.is_file() or file_sha256(certificate) != config["certificate_sha256"]:
+        raise PackageError("Native source helper certificate differs from App identity")
+    if file_sha256(helper) != digest or stat.S_IMODE(helper.lstat().st_mode) != mode:
+        raise PackageError("Native source helper changed during verification")
+    return {"path": "Contents/Helpers/source-helper", "sha256": digest, "bytes": metadata.st_size,
+            "mode": "0755", "architectures": architectures,
+            "certificate_sha256": config["certificate_sha256"], "codesign_verify_exit": 0}
+
+
+def build_native_helper(private, config):
+    """Build from the checked C source into an owned private path before signing."""
+    if not needs_native_helper(config): return None
+    source = ROOT / "apps/desktop/native/source-helper.c"
+    script = ROOT / "apps/desktop/native/build-source-helper.sh"
+    for path in (source, script):
+        if path.is_symlink() or not path.is_file():
+            raise PackageError("Native source helper build input is missing or unsafe")
+    helper = Path(private) / "source-helper"
+    run(["/bin/sh", str(script), str(helper)], "Build native source helper", timeout=300)
+    if helper.is_symlink() or not helper.is_file() or stat.S_IMODE(helper.stat().st_mode) != 0o755:
+        raise PackageError("Native source helper build output is missing or unsafe")
+    if run(["lipo", "-archs", str(helper)], "Read built native helper architecture").split() != config["architectures"]:
+        raise PackageError("Built native source helper architecture differs from approved platform")
+    return helper
+
+
+def native_source_digests(config):
+    if not needs_native_helper(config): return {}
+    names = ("apps/desktop/native/source-helper.c", "apps/desktop/native/build-source-helper.sh")
+    result = {}
+    for name in names:
+        path = ROOT / name
+        if path.is_symlink() or not path.is_file():
+            raise PackageError("Native source helper build input is missing or unsafe")
+        result[name] = file_sha256(path)
+    return result
+
+
 def verify_app(app, config, candidate, version, build, scratch):
     app = Path(app); scratch = Path(scratch); scratch.mkdir(mode=0o700, parents=True, exist_ok=True)
     if app.is_symlink() or not app.is_dir() or app.name != "TokenMeter.app": raise PackageError("Missing regular App bundle")
@@ -306,13 +404,15 @@ def verify_app(app, config, candidate, version, build, scratch):
     prefix = scratch / "certificate-"
     run(["codesign", "--display", "--extract-certificates=" + str(prefix), str(app)], "Read App certificate")
     if file_sha256(Path(str(prefix) + "0")) != config["certificate_sha256"]: raise PackageError("App certificate changed")
+    helper_info = verify_native_helper(app, config, scratch / "native-helper") if needs_native_helper(config) else None
     return {"version": version, "build": build, "bundle_id": config["bundle_id"], "tree_sha256": tree_sha256(app),
             "architectures": architectures, "certificate_sha256": config["certificate_sha256"], "designated_requirement": requirement,
             "signature_kind": "internal_self_signed", "codesign_verify_exit": 0, "minimum_macos": config["minimum_macos"],
-            "icon_path": "Contents/Resources/" + icon_name, "icon_sha256": file_sha256(icon)}
+            "icon_path": "Contents/Resources/" + icon_name, "icon_sha256": file_sha256(icon),
+            **({"native_helper": helper_info} if helper_info is not None else {})}
 
 
-def build_app(config, candidate, version, build, output, private, signing):
+def build_app(config, candidate, version, build, output, private, signing, helper=None):
     resource = private / ("resources-" + build + ".json")
     resource.write_text(json.dumps(resource_config(config, candidate, version, build), indent=2) + "\n")
     directory = output / ("candidate" if build == config["build"] else "update")
@@ -321,7 +421,7 @@ def build_app(config, candidate, version, build, output, private, signing):
     signer = ROOT / "apps/desktop/node_modules/@electron/osx-sign/dist/index.js"
     entitlements = private / ("entitlements-" + build + ".plist")
     entitlements.write_bytes(plistlib.dumps({}))
-    configuration = builder_configuration(config, candidate, version, build, directory, resource)
+    configuration = builder_configuration(config, candidate, version, build, directory, resource, helper)
     script.write_text("const {build, createTargets, Platform} = require(" + json.dumps(str(builder)) + ");\n"
                       "const {sign} = require(" + json.dumps(str(signer)) + ");\n"
                       "(async()=>{ await build({targets:createTargets([Platform.MAC], 'dir', 'x64'), publish:'never', config:"
@@ -380,6 +480,36 @@ def make_dmg(app, output, private, config, candidate, app_info):
     finally: run(["hdiutil", "detach", str(mount)], "Detach owned DMG")
 
 
+def verify_zip_app(archive, private, config, candidate, version, build, app_info, label):
+    """Read the original ZIP back through ditto and verify the signed bundle."""
+    archive = Path(archive)
+    if archive.is_symlink() or not archive.is_file() or not zipfile.is_zipfile(archive):
+        raise PackageError("Original update ZIP is missing or unsafe")
+    with zipfile.ZipFile(archive) as source:
+        names = [member.filename.rstrip("/") for member in source.infolist()]
+        if not names or any(not name or not (name == "TokenMeter.app" or name.startswith("TokenMeter.app/")
+                                  or name.startswith("__MACOSX/")) for name in names):
+            raise PackageError("Original update ZIP has an unexpected member")
+        if len(names) != len(set(names)):
+            raise PackageError("Original update ZIP has duplicate members")
+        for name in names: archive_name(name)
+        if needs_native_helper(config):
+            member = "TokenMeter.app/Contents/Helpers/source-helper"
+            if member not in names or "native_helper" not in app_info:
+                raise PackageError("Original update ZIP lacks native source helper")
+            if hashlib.sha256(source.read(member)).hexdigest() != app_info["native_helper"]["sha256"]:
+                raise PackageError("Original update ZIP native source helper digest changed")
+    destination = Path(private) / (label + "-zip-readback")
+    destination.mkdir(mode=0o700)
+    run(["ditto", "-x", "-k", str(archive), str(destination)], "Read back original update ZIP", timeout=600)
+    app = destination / "TokenMeter.app"
+    actual = verify_app(app, config, candidate, version, build, Path(private) / (label + "-zip-verify"))
+    if actual != {key: value for key, value in app_info.items() if key != "relative_path"}:
+        raise PackageError("Original update ZIP App differs from signed source")
+    return {"app_tree_sha256": actual["tree_sha256"],
+            **({"native_helper_sha256": actual["native_helper"]["sha256"]} if needs_native_helper(config) else {})}
+
+
 def server_archive(config_path, target):
     tracked = run(["git", "ls-files", "-z"], "Read tracked server whitelist", cwd=ROOT).split("\0")
     names = [name for name in tracked if name.startswith("server/") and (name.endswith(".py") or re.fullmatch(r"server/requirements[^/]*\.txt", name))]
@@ -407,6 +537,7 @@ def package(config_path, output, candidate, run_id, keys, development=False):
     config = validate_config(json.loads(config_path.read_text()))
     config_digest = file_sha256(config_path); lock = ROOT / "apps/desktop/package-lock.json"
     lock_digest = file_sha256(lock)
+    native_sources = native_source_digests(config)
     for tool in ("node", "npm", "codesign", "security", "openssl", "hdiutil", "ditto", "lipo"):
         if not shutil.which(tool): raise PackageError("Missing local tool: " + tool)
     validate_dependencies()
@@ -415,24 +546,30 @@ def package(config_path, output, candidate, run_id, keys, development=False):
     result = None
     with tempfile.TemporaryDirectory(prefix="tokenmeter-local-package-", dir=output) as temporary:
         private = Path(temporary); private.chmod(0o700)
+        helper = build_native_helper(private, config)
         signing = LocalIdentity(private, keys, config)
         try:
             signing.prepare()
-            app, app_info = build_app(config, candidate, config["version"], config["build"], output, private, signing)
-            update, update_info = build_app(config, candidate, config["upgrade_version"], config["upgrade_build"], output, private, signing)
+            app, app_info = build_app(config, candidate, config["version"], config["build"], output, private, signing, helper)
+            update, update_info = build_app(config, candidate, config["upgrade_version"], config["upgrade_build"], output, private, signing, helper)
             if app_info["designated_requirement"] != update_info["designated_requirement"]: raise PackageError("Update signing requirement changed")
             archives = {}
             signatures = {}
+            zip_readback = {}
             for name, bundle in (("candidate", app), ("update", update)):
                 archive = output / (name + ".zip")
                 run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", str(bundle), str(archive)], "Create original update ZIP", timeout=600)
+                details = app_info if name == "candidate" else update_info
+                zip_readback[name] = verify_zip_app(archive, private, config, candidate, details["version"], details["build"], details, name)
                 archives[name + "_zip"] = artifact(archive, output)
                 signatures[name + "_ed_signature"] = sign_archive(archive, keys, config, private)
             dmg = output / ("TokenMeter-" + config["release_id"] + "-internal.dmg")
             make_dmg(app, dmg, private, config, candidate, app_info)
             server = output / "server.zip"; source_files = server_archive(config_path, server)
             if tree_sha256(app) != app_info["tree_sha256"] or tree_sha256(update) != update_info["tree_sha256"]: raise PackageError("Original App changed during packaging")
-            if run(["git", "rev-parse", "HEAD"], "Recheck candidate", cwd=ROOT) != candidate or file_sha256(lock) != lock_digest or file_sha256(config_path) != config_digest:
+            if (run(["git", "rev-parse", "HEAD"], "Recheck candidate", cwd=ROOT) != candidate
+                    or file_sha256(lock) != lock_digest or file_sha256(config_path) != config_digest
+                    or native_source_digests(config) != native_sources):
                 raise PackageError("Source inputs changed during packaging")
             if not development and run(["git", "status", "--porcelain"], "Recheck clean source", cwd=ROOT): raise PackageError("Source became dirty during packaging")
             result = {"schema_version": 2, "scope": "development" if development else "final_package", "distribution_profile": "internal",
@@ -444,6 +581,9 @@ def package(config_path, output, candidate, run_id, keys, development=False):
                       "artifacts": archives | {"dmg": artifact(dmg, output), "server_zip": artifact(server, output)},
                       "app": app_info, "update_app": update_info, "signatures": signatures, "server_source_files": source_files,
                       "started_at": started, "release_eligible": False}
+            if needs_native_helper(config):
+                result["native_source_inputs"] = native_sources
+                result["zip_readback"] = zip_readback
         finally: signing.close()
     if result is None: raise PackageError("Packaging did not complete")
     result["cleanup_completed"] = True; result["finished_at"] = datetime.now(timezone.utc).isoformat()

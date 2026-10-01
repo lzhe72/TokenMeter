@@ -35,6 +35,7 @@ NODE = Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/n
 RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
 SHA = re.compile(r"[a-f0-9]{64}\Z")
 STATES = {"PASS", "FAIL", "BLOCKED"}
+TM001_RELEASE_ID = "v0.1.0-20260929T074814Z"
 AUX_PREFIXES = ("TC-TM001-UI-", "TC-TM001-CATALOG-", "TC-TM001-RECORDS-", "TC-TM001-GATE-")
 SPEC_BY_GROUP = {"LOGIN": "granular-login.spec.ts", "PASSWORD": "granular-login.spec.ts",
                  "SESSION": "granular-account.spec.ts", "ADMIN": "granular-account.spec.ts",
@@ -48,6 +49,24 @@ class Invalid(ValueError):
 
 class Blocked(Invalid):
     """A required export runtime or input is unavailable."""
+
+
+def tm001_case_release(catalog: dict) -> str:
+    """Read the frozen TM-001 source release from explicit case ownership."""
+    cases = catalog.get("cases")
+    if not isinstance(cases, list):
+        raise Invalid("Test catalog has no cases list")
+    releases = []
+    for case in cases:
+        if not isinstance(case, dict) or case.get("feature_id") != "TM-001":
+            continue
+        release = case.get("release_id")
+        if not isinstance(release, str) or not release:
+            raise Invalid("TM-001 cases differ from their fixed explicit release")
+        releases.append(release)
+    if not releases or len(set(releases)) != 1 or releases[0] != TM001_RELEASE_ID:
+        raise Invalid("TM-001 cases differ from their fixed explicit release")
+    return releases[0]
 
 
 def sha(data: bytes) -> str:
@@ -790,11 +809,7 @@ def build_model(catalog: dict, report: dict, *, run_root: Path, checks: dict | N
     future = [case for case in all_cases if case.get("feature_id") != "TM-001"]
     if not all_current:
         raise Invalid("No TM-001 detailed cases in the catalog")
-    source_releases = [case.get("release_id", catalog["release_id"]) for case in all_current]
-    if (any(not isinstance(value, str) or not value for value in source_releases)
-            or len(set(source_releases)) != 1):
-        raise Invalid("TM-001 parent cases have mixed or invalid source releases")
-    source_release = source_releases[0]
+    source_release = tm001_case_release(catalog)
     # A frozen integrated catalog can advance to the next release while its
     # historical TM-001 cases still identify the original source release.
     if report.get("release_id") not in (catalog_release, source_release):

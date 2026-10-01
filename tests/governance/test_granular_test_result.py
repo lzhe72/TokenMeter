@@ -122,6 +122,12 @@ class GranularResultTests(unittest.TestCase):
                     case["release_id"] = "v9.0.0-20990101T000000Z"
             with self.assertRaises(granular.Invalid):
                 granular.build_model(wrong_catalog, report, run_root=Path(temp), variants=VARIANTS)
+            rewritten_to_catalog = deepcopy(CATALOG)
+            for case in rewritten_to_catalog["cases"]:
+                if case.get("feature_id") == "TM-001":
+                    case["release_id"] = CATALOG["release_id"]
+            with self.assertRaises(granular.Invalid):
+                granular.build_model(rewritten_to_catalog, report, run_root=Path(temp), variants=VARIANTS)
 
     def test_export_rejects_mixed_historical_variant_manifests(self):
         target = "v0.2.0-20261001T034118Z"
