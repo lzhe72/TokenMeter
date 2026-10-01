@@ -2,7 +2,9 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
-SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc405952b79de4163` 并由总控整合入新主仓库本地 `master=6bbab2ed20878fe7fd4742967982f1d0b65c6138`。文档会话按新SOP-011/013/014/024同步[总表规范](standards/project-workbook.md)、[执行模板](templates/test-execution.md)、项目登记与Excel。TM-003固定`source_check`导出器的`ea6b187`和新清理合同`d7c3d39`两个独立模块批次都已生成并回读结果；另新增CORE-04/05两条未执行的模块设计输入。TM-001的709d UPDATE-05定向父例+13变体原始PASS已由后置固定导出器生成独立Excel并回读，现仅作第16批次索引。根总表目前11 Sheet、227父TC、41变体、268用例行、16批次，SHA-256 `a0b2b6be3a0d1d17be39ce6c9aea53bc0e3b708db9ccb13910c597c033847e51`，回读PASS。TM-001仍有77父TC在该定向批次范围外，旧c291完整门禁FAIL、正式发行NOT_RUN；TM-005模块Excel仍待共享runner在其候选树接通。
+SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc405952b79de4163` 并由总控整合入新主仓库本地 `master=6bbab2ed20878fe7fd4742967982f1d0b65c6138`。文档会话按新SOP-011/013/014/024同步[总表规范](standards/project-workbook.md)、[执行模板](templates/test-execution.md)、项目登记与Excel。TM-003固定`source_check`导出器的`ea6b187`和新清理合同`d7c3d39`两个独立模块批次都已生成并回读结果；另新增CORE-04/05两条未执行的模块设计输入。TM-001的709d UPDATE-05定向父例+13变体原始PASS已由后置固定导出器生成独立Excel并回读，现仅作第16批次索引。TM-002新增一条未执行的chooser见证治理变体。根总表目前11 Sheet、227父TC、42变体、269用例行、16批次，SHA-256 `64cbaa09fabf0acb710532e523c307ba9f306fed3157defe300746f898bcb897`，回读PASS。TM-001仍有77父TC在该定向批次范围外，旧c291完整门禁FAIL、正式发行NOT_RUN；TM-005模块Excel仍待共享runner在其候选树接通。
+
+TM-002 `EVIDENCE-01#MISSING_CHOOSER_WITNESS`已作为第七固定负例进入详细用例、机器目录与总表：删除合成picker事件的确认按钮字段并重算单项摘要后，独立复核仍必须拒绝，不能用通用弹窗冒充目录选择确认。`SECURITY-01`合成A/B继续在短`/tmp`根，测试profile另在当前用户独占私有目录，避免SourceStore拒绝world-writable祖先。0.2现有28父TC、36变体，新增变体未运行；产品E2E和正式发行仍NOT_RUN。
 
 TM-003新的`CORE-04/05`固定输入已写入[0.3测试计划](../releases/v0.3.0-20261001T034652Z/04-test-plan.md)及详细用例，fixture精确冻结410/750/1090字节偏移、原子事务故障注入、有效错键、完整LF增量与前缀MAC改写/截短；机器目录和总表增加两行，当前两例程序绑定null、unexecuted。独立SOP-008切片须先对干净文档候选做语义/结构/治理核对，不能因已有CORE-01/02/03的模块3/3而填通过；原27条产品TC继续未执行。
 

@@ -14,4 +14,4 @@
 | `TASK-TM002-RUNNER` | 全部功能点 / 两条 AC | 固定代码驱动安装后 App、真实原生目录面板、真实隔离服务/SQLite；测试 profile 的系统密钥服务身份独立于正式 App，并以受控元数据核对；逐 TC 自动保存步骤和读取范围证据，缺权限或绑定时判 BLOCKED | SOP-011/014；Playwright spec、原生面板驱动、本机 runner/gate | `TC-TM002-EVIDENCE-*` |
 | `TASK-TM002-DELIVERY` | 全部功能点 / 两条 AC | 全部目标 TC 与先前交付 TM-001 完整回归；上一正式稳定包到本版候选真实更新、最终 DMG 与本机门禁仅按原件 PASS 放行 | SOP-013/014/017/018；打包、门禁和本地归档 | `TC-TM002-DELIVERY-*` |
 
-任务依赖顺序为：已确认的需求与授权模型 → 技术设计 → 逐条 TC 与数据设计 → 文档基线 → 工程骨架 → DATA/CATALOG/RUNNER 的真实失败基线 → PICKER/PREVIEW/CONSENT/STORE/ACCESS 实现 → 构建与全量回归 → 最终包门禁。`TM-003/004` 只能使用 `TASK-TM002-ACCESS` 的已确认根只读分页/打开能力；本版不实现日志解析或用量统计。28 条父 TC 与 35 个稳定变体已形成设计基线，尚无本版产品 PASS。
+任务依赖顺序为：已确认的需求与授权模型 → 技术设计 → 逐条 TC 与数据设计 → 文档基线 → 工程骨架 → DATA/CATALOG/RUNNER 的真实失败基线 → PICKER/PREVIEW/CONSENT/STORE/ACCESS 实现 → 构建与全量回归 → 最终包门禁。`TM-003/004` 只能使用 `TASK-TM002-ACCESS` 的已确认根只读分页/打开能力；本版不实现日志解析或用量统计。28 条父 TC 与 36 个稳定变体已形成设计基线，尚无本版产品 PASS。
