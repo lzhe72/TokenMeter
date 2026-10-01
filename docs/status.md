@@ -2,6 +2,8 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+本地master新纳入的TM-004 fixture README已由文档会话登记`DOC-FIXTURE-TM004-README`并从0.4测试计划链接；仅修复整合树“未登记Markdown”结构阻断，不改变测试或产品状态。
+
 TM-001 709d候选的CONFIG六父、UPDATE-01..04四父、UPDATE-06..08三父分别在三次真实App定向run中PASS，共57步，独立Excel/verification及所列独立审计均回读，登记总表第29–31批次。UPDATE-05另见第16批次；旧完整门禁FAIL与正式发行NOT_RUN保留。
 
 TM-003同树绑定候选`2324173`重新执行CORE01–07四套固定source_check，合计7/7、27步，四份独立Excel回读PASS，登记第32–35批次；治理全量511/511 PASS。本结果只证明辅助模块，0.3产品E2E与正式门禁仍NOT_RUN。
