@@ -45,6 +45,7 @@ const runDir = path.dirname(reportPath);
 if (report.schema_version !== 1 || report.execution_type !== 'source_check' ||
     !/^[a-z0-9][A-Za-z0-9-]{7,100}$/.test(report.run_id) || path.basename(runDir) !== report.run_id ||
     path.basename(outputDir) !== report.run_id || !['PASS', 'FAIL', 'BLOCKED'].includes(report.state) ||
+    !/^tm\d{3}-core$/.test(report.suite) || !['owned_root', 'memory_only'].includes(report.reset_kind) ||
     report.product_e2e !== 'NOT_RUN' || report.release_gate !== 'NOT_RUN' ||
     !/^[0-9a-f]{40}$/.test(report.candidate_commit) || !/^[0-9a-f]{40}$/.test(report.candidate_tree))
   throw new Error('Invalid source_check report identity or execution type');
@@ -63,8 +64,16 @@ const committedFile = relative => {
 };
 if (sha(committedFile(report.source?.test_file)) !== report.source?.test_sha256 ||
     sha(committedFile(report.source?.case_catalog)) !== report.source?.case_catalog_sha256 ||
-    sha(committedFile(report.source?.runner)) !== report.source?.runner_sha256)
+    sha(committedFile(report.source?.runner)) !== report.source?.runner_sha256 ||
+    sha(committedFile(report.source?.suite_registry)) !== report.source?.suite_registry_sha256)
   throw new Error('Committed test or design differs from report');
+if (report.source.suite_registry !== 'tests/source_check_suites.json') throw new Error('Wrong fixed suite registry');
+const registry = JSON.parse(committedFile(report.source.suite_registry).toString('utf8'));
+const suite = registry.suites?.[report.suite];
+if (registry.schema_version !== 1 || !suite || suite.reset_kind !== report.reset_kind ||
+    suite.file !== report.source.test_file || suite.release_id !== report.release_id ||
+    JSON.stringify(suite.cases) !== JSON.stringify(expected))
+  throw new Error('Run differs from its committed fixed suite');
 const design = JSON.parse(committedFile(report.source.case_catalog).toString('utf8'));
 const designMap = new Map(design.cases.filter(item => expected.includes(item.id)).map(item => [item.id, item]));
 if (designMap.size !== expected.length || expected.some(id => designMap.get(id)?.type !== 'source_check' ||
@@ -99,7 +108,9 @@ for (const line of tap.split(/\r?\n/)) {
       typeof entry.actual === 'object' && !Array.isArray(entry.actual)) {
     if (steps.get(entry.case_id).has(entry.step)) throw new Error('TAP has duplicate step');
     steps.get(entry.case_id).set(entry.step, entry.actual);
-  } else if (entry.kind === 'cleanup' && entry.owned_root_removed === true) {
+  } else if (entry.kind === 'cleanup' &&
+      ((suite.reset_kind === 'owned_root' && entry.owned_root_removed === true && entry.memory_reset_complete === undefined) ||
+       (suite.reset_kind === 'memory_only' && entry.memory_reset_complete === true && entry.owned_root_removed === undefined))) {
     if (cleanup.has(entry.case_id)) throw new Error('TAP has duplicate cleanup');
     cleanup.add(entry.case_id);
   } else throw new Error('TAP has invalid diagnostic');
@@ -171,6 +182,7 @@ function sheet(name, title, headers, rows, widths, rowHeight = 34) {
 }
 const overview = [
   ['批次', report.run_id], ['执行类型', 'source_check'], ['结果', report.state],
+  ['重置类型', report.reset_kind],
   ['版本', report.release_id], ['被测提交', report.candidate_commit], ['被测树', report.candidate_tree],
   ['开始 UTC', report.started_at_utc], ['结束 UTC', report.finished_at_utc],
   ['平台', `${report.environment.platform} ${report.environment.architecture} ${report.environment.os_release}`],
@@ -193,6 +205,7 @@ sheet('02逐步实测', '逐步预期与实际断言',
 sheet('03证据与清理', '原件及清理', ['项目', '路径或状态', 'SHA-256', '字节'], [
   ['固定程序', report.source.test_file, report.source.test_sha256, ''],
   ['固定运行器', report.source.runner, report.source.runner_sha256, ''],
+  ['固定套件配置', report.source.suite_registry, report.source.suite_registry_sha256, ''],
   ['用例目录', report.source.case_catalog, report.source.case_catalog_sha256, ''],
   ['原始报告', path.relative(root, reportPath), sha(reportBytes), reportBytes.length],
   ...evidence.map(item => [item.role, item.path, item.sha256, item.bytes]),

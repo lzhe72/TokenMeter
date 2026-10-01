@@ -32,6 +32,7 @@ class SourceCheckExportContract(unittest.TestCase):
     def base_report(self):
         return {
             "schema_version": 1, "execution_type": "source_check", "run_id": self.run_id,
+            "suite": "tm003-core", "reset_kind": "owned_root",
             "state": "PASS", "product_e2e": "NOT_RUN", "release_gate": "NOT_RUN",
             "candidate_commit": self.commit, "candidate_tree": self.tree,
             "expected_cases": ["TC-TM003-CORE-01"],

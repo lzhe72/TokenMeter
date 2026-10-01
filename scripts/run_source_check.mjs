@@ -8,13 +8,9 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const suites = {
-  'tm003-core': {
-    releaseId: 'v0.3.0-20261001T034652Z',
-    file: 'apps/desktop/tests/tm003-core.test.ts',
-    cases: ['TC-TM003-CORE-01', 'TC-TM003-CORE-02', 'TC-TM003-CORE-03'],
-  },
-};
+const registryPath = path.join(root, 'tests/source_check_suites.json');
+const registryBytes = await fs.readFile(registryPath);
+const registry = JSON.parse(registryBytes.toString('utf8'));
 const args = process.argv.slice(2);
 function option(name) {
   const at = args.indexOf(name);
@@ -25,8 +21,13 @@ if (args.length !== 4 || !args.includes('--suite') || !args.includes('--run-id')
   throw new Error('Usage: node scripts/run_source_check.mjs --suite tm003-core --run-id <unique id>');
 const suiteName = option('--suite');
 const runId = option('--run-id');
-const suite = suites[suiteName];
-if (!suite || !/^[a-z0-9][A-Za-z0-9-]{7,100}$/.test(runId)) throw new Error('Invalid suite or run ID');
+const suite = registry.suites?.[suiteName];
+if (registry.schema_version !== 1 || !suite || !/^[a-z0-9][A-Za-z0-9-]{7,100}$/.test(runId) ||
+    !/^tm\d{3}-core$/.test(suiteName) || !/^v\d+\.\d+\.\d+-\d{8}T\d{6}Z$/.test(suite.release_id) ||
+    !/^apps\/desktop\/tests\/[a-z0-9-]+\.test\.ts$/.test(suite.file) ||
+    !Array.isArray(suite.cases) || suite.cases.length < 1 || new Set(suite.cases).size !== suite.cases.length ||
+    suite.cases.some(id => !/^TC-TM\d{3}-CORE-\d{2}$/.test(id)) ||
+    !['owned_root', 'memory_only'].includes(suite.reset_kind)) throw new Error('Invalid fixed suite or run ID');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const git = (...argv) => execFileSync('git', argv, {cwd: root, encoding: 'utf8'}).trim();
 if (git('status', '--porcelain')) throw new Error('Source tree must be clean before the run');
@@ -41,7 +42,8 @@ const runnerBytes = await fs.readFile(runnerPath);
 const catalog = JSON.parse(catalogBytes.toString('utf8'));
 const designs = new Map(catalog.cases.filter(item => suite.cases.includes(item.id)).map(item => [item.id, item]));
 if (designs.size !== suite.cases.length || suite.cases.some(id => designs.get(id)?.type !== 'source_check' ||
-    designs.get(id)?.release_id !== suite.releaseId || designs.get(id)?.steps.length !== 3))
+    designs.get(id)?.release_id !== suite.release_id || designs.get(id)?.steps.length < 1 ||
+    designs.get(id)?.steps.length > 20))
   throw new Error('Fixed source_check case design is missing or changed');
 
 const base = path.join(root, '.local/source-check-runs');
@@ -68,6 +70,7 @@ await fs.writeFile(path.join(runDir, 'stderr.txt'), stderr, {flag: 'wx', mode: 0
 const finished = new Date().toISOString();
 const sourceStable = sha(await fs.readFile(testPath)) === sha(testBytes) &&
   sha(await fs.readFile(catalogPath)) === sha(catalogBytes) &&
+  sha(await fs.readFile(registryPath)) === sha(registryBytes) &&
   sha(await fs.readFile(runnerPath)) === sha(runnerBytes) && !git('status', '--porcelain') &&
   git('rev-parse', 'HEAD') === commit;
 
@@ -89,11 +92,14 @@ for (const line of stdout.split(/\r?\n/)) {
   try { item = JSON.parse(line.slice(2)); }
   catch { parseErrors.push('invalid_step_json'); continue; }
   if (!suite.cases.includes(item.case_id)) { parseErrors.push('unknown_diagnostic_case'); continue; }
-  if (item.kind === 'step' && Number.isInteger(item.step) && item.step >= 1 && item.step <= 3 &&
+  if (item.kind === 'step' && Number.isInteger(item.step) && item.step >= 1 &&
+      item.step <= designs.get(item.case_id).steps.length &&
       item.actual && typeof item.actual === 'object' && !Array.isArray(item.actual)) {
     if (actualSteps.get(item.case_id).has(item.step)) parseErrors.push('duplicate_step');
     else actualSteps.get(item.case_id).set(item.step, item.actual);
-  } else if (item.kind === 'cleanup' && item.owned_root_removed === true) {
+  } else if (item.kind === 'cleanup' &&
+      ((suite.reset_kind === 'owned_root' && item.owned_root_removed === true && item.memory_reset_complete === undefined) ||
+       (suite.reset_kind === 'memory_only' && item.memory_reset_complete === true && item.owned_root_removed === undefined))) {
     if (cleanup.has(item.case_id)) parseErrors.push('duplicate_cleanup');
     else cleanup.set(item.case_id, true);
   } else parseErrors.push('invalid_step_or_cleanup');
@@ -112,11 +118,12 @@ const complete = sourceStable && parseErrors.length === 0 && processResult.statu
   cases.every(item => item.state === 'PASS');
 const report = {
   schema_version: 1, execution_type: 'source_check', run_id: runId, suite: suiteName,
-  release_id: suite.releaseId, candidate_commit: commit, candidate_tree: tree,
+  reset_kind: suite.reset_kind, release_id: suite.release_id, candidate_commit: commit, candidate_tree: tree,
   started_at_utc: started, finished_at_utc: finished,
   environment: {platform: process.platform, architecture: process.arch, node: process.version, os_release: os.release()},
   source: {test_file: suite.file, test_sha256: sha(testBytes), case_catalog: 'tests/test_cases.json',
-    case_catalog_sha256: sha(catalogBytes), runner: 'scripts/run_source_check.mjs', runner_sha256: sha(runnerBytes)},
+    case_catalog_sha256: sha(catalogBytes), runner: 'scripts/run_source_check.mjs', runner_sha256: sha(runnerBytes),
+    suite_registry: 'tests/source_check_suites.json', suite_registry_sha256: sha(registryBytes)},
   command: ['node', ...argv],
   raw: {tap: {path: 'raw-test.tap', sha256: sha(Buffer.from(stdout)), bytes: Buffer.byteLength(stdout)},
     stderr: {path: 'stderr.txt', sha256: sha(Buffer.from(stderr)), bytes: Buffer.byteLength(stderr)}},
