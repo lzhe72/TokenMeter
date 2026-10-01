@@ -240,7 +240,7 @@ class GranularEvidenceAuditTests(unittest.TestCase):
 
     def test_password05_20261001_frozen_sources_need_whole_peer_review(self):
         reviewed = {
-            "scripts/granular_e2e.py": "22e85ed37e850d38b7fd05ccc79346e96f5a7dbd6a1744f1b84b51dad07a6f5b",
+            "scripts/granular_e2e.py": "70e29fe415743ea63b95f4916c2cb8f1b0c380bf162bc015c87d59eab420fc17",
             "scripts/local_e2e.py": "d43036d0cee91b06df325f0fd8c9a60067b198fb2702ee56cedc80fcd028dae1",
             "apps/desktop/e2e/granular-login.spec.ts": "0bd303133c7d3bd0452eac4359af45ff8a8d94295664af0aed500faacafbe5a2",
         }

@@ -125,6 +125,25 @@ class GateTests(unittest.TestCase):
         self.assertEqual(result["scope"], "traceability_only")
         self.assertFalse(result["release_eligible"])
 
+    def test_local_electron_gate_requires_and_forwards_absolute_signing_inputs(self):
+        release_id = "v0.1.0-20260929T074814Z"
+        self.write("releases/current.json", json.dumps({"release_id": release_id}))
+        self.write(f"releases/{release_id}/00-manifest.json", json.dumps({
+            "execution_profile": "local_electron", "execution_bindings_status": "ready"}))
+        self.write("scripts/local_gate.py", "# Synthetic gate entry.\n")
+        package = self.write("package-manifest.json", "{}\n")
+        output = self.root / "gate-output"
+        private = self.base / "private-inputs"
+        options = ["iteration", "--package-manifest", str(package), "--output", str(output)]
+        with mock.patch.object(gate.subprocess, "run") as child, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(gate.main(options, root=self.root), 2)
+            self.assertEqual(gate.main(options + ["--key-dir", "relative-keys"], root=self.root), 2)
+            child.assert_not_called()
+            child.return_value.returncode = 7
+            self.assertEqual(gate.main(options + ["--key-dir", str(private)], root=self.root), 7)
+            command = child.call_args.args[0]
+            self.assertEqual(command[command.index("--key-dir") + 1], str(private))
+
     def test_required_feature_removal_and_empty_case_list_fail(self):
         self.matrix["features"].pop()
         self.matrix["features"][0]["cases"] = []
