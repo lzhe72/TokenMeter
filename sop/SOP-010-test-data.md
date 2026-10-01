@@ -1,6 +1,6 @@
 # SOP-010 测试数据
 
-**修订：** 13　**状态：** baselined　**适用：** all
+**修订：** 14　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -24,8 +24,8 @@ tests/server/fixtures.py、bootstrap_sqlite.py、datasets和独立预期。
 2. 生成账号及执行SQL，保留schema/脚本摘要和独立预期；测试账号仅在测试库。备份恢复也使用合成同构副本。
 3. 本机API使用动态独占回环端口，经真实设置UI配置；006先检查内置默认再切两套服务。不得向用户49176服务发送测试登录/写请求。
 4. 004同一回环更新fixture初始无可用更新，依次非法下载URL、坏重定向、坏Ed25519签名、有效受控101包。元数据和签名只来自本轮构建，私钥不进入测试报告；具体合同见本机设计。
-5. 仅数据/外部更新源为fixture；不mock真实App认证、IPC或SQLite结果。每例独立profile、DB、源nonce与请求日志。
-6. finally只清理本次拥有的进程、端口、profile与数据库；保留受限本地证据。数据程序自测不能当作App E2E。
+5. 仅数据/外部更新源为fixture；不mock真实App认证、IPC或SQLite结果。每例独立profile、DB、源nonce与请求日志。依赖 `safeStorage` 的用例先消费SOP-009的最终包 Keychain 身份证明；对精确测试 service/account（或等效标识）做只读不存在检查，预存 item、身份不明或与正式 App 冲突均BLOCKED，不复用或重置。记录本次创建前空态、包/签名、随机 owner 标识和创建后的实际 item 元数据，密钥值与真实用户 item 均不进入报告。
+6. finally只清理本次拥有的进程、端口、profile、数据库和**精确匹配本次创建并有所有权证据的测试 Keychain item**；清理前再次核对身份与归属，清理后只读确认该 item 不存在。未知、预存或归属不符的 item 不删除并记录BLOCKED；不得按 App 名称做广泛删除，也不得查询、覆盖或清理用户正式 TokenMeter item。保留受限本地证据。数据程序自测不能当作App E2E。
 
 ## 输出
 
