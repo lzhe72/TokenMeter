@@ -145,6 +145,14 @@ UI-01修复后独立单例Excel为`.local/test-results/aux-ui01-local-343e54113b
 
 ## 4. 精细用例的固定代码与执行缺口
 
+### 2026-10-02 · 709d 登录定向五例
+
+候选`709d21253a0f88bc703a431cbf3adba3df17e508`（tree`6309bb70540407d90c8b059b4faef15879e691f9`）从SHA-256 `c2f079452746d86397bb395450c4e46cec3e26a9eaa71217ca22dbfbb45257fb`的原DMG安装真实App，对`TASK-TM001-LOGIN-AUTH`固定`LOGIN-01/02/03/04/08`执行独立run`local-2aa05fb7b2754289a1d77b9ef89bd321`：五父例PASS、零FAIL/BLOCKED、11步，`cleanup_completed=true`。原报告`.local/ci/local-2aa05fb7b2754289a1d77b9ef89bd321/result.json` SHA-256 `2b27d3c2a6582d679a204166bacb0b033580928c7e6904b01b0d6a3d64301f40`；固定后置导出的独立结果Excel在同run的`.local/test-results/`，SHA-256 `35bb159ff87c81726f002134264bdb8a7a2d92d3ba3da57783e0cbc7ca29d47a`，verification回读PASS。前一次误带`--development`的run`local-7ce07b71ca1240de93c16a437ab7e292`在包清单预检时五例BLOCKED、App未启动，其原件仍独立保留，不并入这五个PASS。709d其余TM-001固定父例未运行；旧`c2911bc`完整门禁FAIL和正式发行NOT_RUN保持。
+
+同一709d候选另有独立`TASK-TM001-LOGIN-SESSION` run`local-1d7d9238f9fd4d389e27cad990a6cb97`，固定`LOGIN-10/11/12/13/14/15`六父例、14步全部PASS、零FAIL/BLOCKED、清理完成。原报告SHA-256 `b4c5cc8c3c0b9ef4ad6d2e4a965cc665952142424af50b207f50aa513e7f9e45`，独立结果Excel SHA-256 `c53f52fc2e7f961e433121934e211f1f1cd917ce6d34c6dc37d6a4ef27715bdb`，verification回读PASS。两个run分别保留，不拼接为一次完整回归；709d未测的其他父例及旧完整门禁FAIL不变。
+
+同包的`TASK-TM001-LOGIN-VALIDATION`另有run`local-5e076fa3d05b4d949877333a3b5339e0`：`LOGIN-05/06/07/09/17/18/19/20/21/22`十父例及17/18/19/22下12个固定变体，共22报告行PASS、36步、清理完成；其中4个父例由变体结果派生，18个是真实App执行。原报告SHA-256 `addde7aa03203f15ef8aa5b480714b5408024618c207a7032c1be9f8560085ea`，独立Excel SHA-256 `495242667704e4639a8a8389646afcfc96d28d79f991881df4d0bbef66f8669b`，verification回读PASS。`TASK-TM001-LOGIN-RATE`的`LOGIN-16`另一次run`local-09f2c4fd672848a9a68ba851a5d7b3c9`为一父例/三步真实App PASS、清理完成；原报告SHA-256 `f3793197707de6e877e80ad6e542a8131b8ccd226bd0ff7ca615fdffba34cbb2`，独立Excel SHA-256 `654629131838f9f937f4f0c6ed44e6ece9373792f9313ccd2dad368088ddb0c4`，verification回读PASS。四个登录任务在709d候选分别定向覆盖了22父例与12变体；TM-001其余功能、完整门禁及正式发行均不能由四批单独PASS推定。
+
 [登录与改密01a](../../docs/testing/cases/01a-TM-001-login-scenarios.md)、[会话/管理/配置/升级01b](../../docs/testing/cases/01b-TM-001-session-admin-release-scenarios.md)、[交付检查01c](../../docs/testing/cases/01c-TM-001-delivery-checks.md)中的TC/变体均为本轮需求阶段基线修订。原代码先于这些精细条目存在，不能追认为先设计后开发已经完成。
 
 - `tests/test_cases.json`当前有78条本版TC：67条产品父TC具备逐编号Playwright程序，另11条交付、目录和门禁辅助TC具备固定程序并已在独立批次执行。其余31条属于后续功能规划，不能纳入本版通过数。
