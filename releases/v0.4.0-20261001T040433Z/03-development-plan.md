@@ -68,4 +68,4 @@ TM-003 SQLite schema 尚未提交，不能现在决定是否需 SOP-016 迁移�
 
 ### SourceAccess至私有库的下一辅助开发切片
 
-`TC-TM004-CORE-06`要求调用真实`SourceAccess`确认、分页、受控分块、撤权与同步守卫，真实Claude collector/trigger和`UsageStore.commitScanBatch`；只把文件系统helper和密钥保护端口换成本例合成实现。固定四份2.1.126隔离原件的去敏投影及独立预期给首次5调用/117、复制fork不重计、一级子父归属；显式合成完整LF追加50/5后为6调用/172。三个新代际故障在成功库副本上都零新写，旧可信行、游标与覆盖保留；所有原生标识仅在内存参与HMAC，不入SQLite/WAL。程序与实际原件仍待SOP-011/013。真实OS目录选择、TM-002 Keychain item身份实证、TM-003主进程/IPC接线、安装App Playwright/真实服务和未决原生raw仍是产品TC依赖，本切片不得代替。
+`TC-TM004-CORE-06`要求调用真实`SourceAccess`确认、分页、受控分块、撤权与同步守卫，真实Claude collector/trigger和`UsageStore.commitScanBatch`；只把文件系统helper和密钥保护端口换成本例合成实现。真实SourceAccess确认会随机生成sourceId；固定UUID只校验独立HMAC算法，实际UUID在确认后读取并以同一独立算法求root/文件预期键，重启保持。固定四份2.1.126隔离原件的去敏投影及独立预期给首次5调用/117、复制fork不重计、一级子父归属；显式合成完整LF追加50/5后为6调用/172。三个新代际故障在成功库副本上都零新写，旧可信行、游标与覆盖保留；所有原生标识仅在内存参与HMAC，不入SQLite/WAL。程序与实际原件仍待SOP-011/013。真实OS目录选择、TM-002 Keychain item身份实证、TM-003主进程/IPC接线、安装App Playwright/真实服务和未决原生raw仍是产品TC依赖，本切片不得代替。

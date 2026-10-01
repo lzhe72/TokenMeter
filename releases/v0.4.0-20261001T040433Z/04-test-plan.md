@@ -40,4 +40,4 @@ TM-001 Electron基线及 TM-002/003 稳定提交、TM-002 授权内部续扫/覆
 
 ## CORE-06独立辅助用例输入
 
-`TC-TM004-CORE-06`在[详细用例](../../docs/testing/cases/04-TM-004-claude-collection.md)冻结五步：确认前零读→真实SourceAccess两页/分块到私有UsageStore一次提交→重启幂等→合成LF追加续扫→分别撤权、换主体和提前EOF零新写。固定[fixture](../../tests/fixtures/tm004-sourceaccess-store-slice.json)包含文件SHA、来源键、行数与数值；每故障使用独立owner库副本、只读SQL及SQLite/WAL隐私核验。类型仅`source_check`，程序绑定当前为空、未运行。原20产品细TC的真实原生面板、Keychain、安装App/IPC/服务和未决raw判据保持原阻断。
+`TC-TM004-CORE-06`在[详细用例](../../docs/testing/cases/04-TM-004-claude-collection.md)冻结五步：确认前零读→真实SourceAccess两页/分块到私有UsageStore一次提交→重启幂等→合成LF追加续扫→分别撤权、换主体和提前EOF零新写。固定[fixture](../../tests/fixtures/tm004-sourceaccess-store-slice.json)包含文件SHA、固定UUID算法参考键、确认后随机UUID参考计算规则、行数与数值；每故障使用独立owner库副本、只读SQL及SQLite/WAL隐私核验。类型仅`source_check`，程序绑定当前为空、未运行。原20产品细TC的真实原生面板、Keychain、安装App/IPC/服务和未决raw判据保持原阻断。

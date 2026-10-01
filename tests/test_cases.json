@@ -20364,7 +20364,7 @@
         "AC-TM004-002",
         "AC-TM004-004"
       ],
-      "input": "tests/fixtures/tm004-sourceaccess-store-slice.json；四个2.1.126原生来源去敏投影文件、独立合成追加行；两页2+2/97字节分块与固定HMAC向量",
+      "input": "tests/fixtures/tm004-sourceaccess-store-slice.json；四个2.1.126原生来源去敏投影文件、独立合成追加行；两页2+2/97字节分块与固定UUID参考向量及真实确认随机UUID的独立参考HMAC判据",
       "db_operations": {
         "prepare": "每故障从本例成功owner库复制；无生产库；只经UsageStore写入",
         "expected_changes": "成功首次5行/117、追加后6行/172、四游标及覆盖；故障零新写",
@@ -20377,7 +20377,7 @@
           "action": "未确认时扫描，再经真实SourceAccess选择/预览/确认并核对四文件/root键",
           "expected_ui": "不适用；辅助模块",
           "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
-          "expected": "确认前扫描/读取/库提交均0、库空；确认仅绑定第一主体和sourceId，四文件/root键等于fixture，不把路径/原摘要当库键"
+          "expected": "确认前扫描/读取/库提交均0、库空；真实确认只绑定第一主体并生成随机UUID，不注入固定sourceId；fixture固定UUID的四文件/root向量核参考算法，实际UUID的键等于独立参考HMAC输出；不把路径/原摘要当库键"
         },
         {
           "step": 2,
@@ -20391,7 +20391,7 @@
           "action": "关闭重开owner来源/库/helper，重扫相同四文件",
           "expected_ui": "不适用；辅助模块",
           "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
-          "expected": "主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源"
+          "expected": "本轮随机sourceId与主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源"
         },
         {
           "step": 4,
@@ -20417,7 +20417,7 @@
         "line": 221,
         "heading": "TC-TM004-CORE-06 · 真实SourceAccess到私有库的多文件贯通"
       },
-      "overall_expected": "1. 未确认时扫描，再经真实SourceAccess选择/预览/确认并核对四文件/root键；确认前扫描/读取/库提交均0、库空；确认仅绑定第一主体和sourceId，四文件/root键等于fixture，不把路径/原摘要当库键\n2. 真实主进程采集按两页2+2及97字节片段读完四文件，末页守卫后提交；只一次同步commitScanBatch；M+fork新+Agent父/子共5唯一调用、input85/output32/total117，四游标到LF末、coverage.scan_incomplete=0，复制fork不重计、子父归属已核验，DB/WAL无原生标识或正文\n3. 关闭重开owner来源/库/helper，重扫相同四文件；主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源\n4. 向主文件仅追加固定合成50/5完整LF行，续扫并重扫；只新增一调用，6行、input135/output37/total172，主游标推进追加字节数，其余三游标不变，无cursor_reset，复制fork不重计\n5. 从成功库独立副本分别在第一页后撤权、换主体、子文件提前EOF；每次取消scan、commitScanBatch=0；旧6行/172、四游标/覆盖原值不变，新主体无旧事件，本轮不可用/不完整而非已知零；SQLite/WAL与owner清理核对"
+      "overall_expected": "1. 未确认时扫描，再经真实SourceAccess选择/预览/确认并核对四文件/root键；确认前扫描/读取/库提交均0、库空；真实确认只绑定第一主体并生成随机UUID，不注入固定sourceId；fixture固定UUID的四文件/root向量核参考算法，实际UUID的键等于独立参考HMAC输出；不把路径/原摘要当库键\n2. 真实主进程采集按两页2+2及97字节片段读完四文件，末页守卫后提交；只一次同步commitScanBatch；M+fork新+Agent父/子共5唯一调用、input85/output32/total117，四游标到LF末、coverage.scan_incomplete=0，复制fork不重计、子父归属已核验，DB/WAL无原生标识或正文\n3. 关闭重开owner来源/库/helper，重扫相同四文件；本轮随机sourceId与主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源\n4. 向主文件仅追加固定合成50/5完整LF行，续扫并重扫；只新增一调用，6行、input135/output37/total172，主游标推进追加字节数，其余三游标不变，无cursor_reset，复制fork不重计\n5. 从成功库独立副本分别在第一页后撤权、换主体、子文件提前EOF；每次取消scan、commitScanBatch=0；旧6行/172、四游标/覆盖原值不变，新主体无旧事件，本轮不可用/不完整而非已知零；SQLite/WAL与owner清理核对"
     }
   ]
 }
