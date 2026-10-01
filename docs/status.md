@@ -1,14 +1,54 @@
 # 当前状态
 
-## 0.1 本地 master 门禁与源码检查点（2026-10-01）
+## 2026-10-01 当前开发阶段与证据边界
 
-本地 `master` 固定候选 `c2911bc65d55579fcf71e5ba11db87357a01a5e4`、tree `d4555b207b50e7cbe313b54ba9bfec1b7fdccb54` 的首次最终包门禁已于 2026-10-01 12:02:59Z 结束为 **FAIL**。总控整合树原件 `.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/{gate.json,granular/result.json}` 为 `release_eligible=false`，精细原始 116 项 91 PASS/14 FAIL/11 BLOCKED；UPDATE-05 父项及 13 个变体缺私有签名输入。TM-001 开发会话确认执行器把该输入写死在旧 worktree 的 `.local`，新整合树缺目录，变体在启动 App 前失败；正在改为显式必填 `--key-dir`，检查目录及祖先路径安全、归属/权限、原ZIP Ed25519重签名与p12公有证书指纹，并向精细及单例runner透传。SOP-009/010/014/018/019已修订；实现是否完整符合新规则仍须以固定代码和实际负测核对，私有路径不得进报告。新run中公开候选包自身不一致为完整性FAIL；有效包缺私有输入为前置BLOCKED，预检通过不等于产品PASS；原c291 FAIL保留。修复尚未交付新固定候选，完整门禁仍须重跑；0.1 无正式稳定包，0.2 真实升级继续 BLOCKED。
+用户决定先完成 TM-001→TM-005 的源码和各功能已基线固定 TC 的实际回归。总控按依赖顺序整合本地 `master`，全部目标源码完成后按远端保护登记并读回；开发期不以逐版跨需求完整 E2E、SOP-018/020 或稳定包为整合前置。用户另行明确启动正式对外发行后，才对固定最终候选运行跨需求完整产品 E2E、适用真实升级和本机门禁，PASS 并归档后登记正式 Tag。所有开发/候选 DMG 标 `NOT-RELEASED`；完整发行门禁目前 `NOT_RUN`。功能回归的 FAIL/BLOCKED/NOT_RUN 和历史 c291 门禁 FAIL 各自保留，源码登记不转换为产品 PASS。
 
-文档会话为本次 run `local-0512d4fc44544eba97f9d1ae79cbfc37` 用固定程序生成独立结果 Excel（78 父 TC 66 PASS/1 FAIL/11 BLOCKED，38 变体 25 PASS/13 FAIL），报告生成 PASS 不改变产品 FAIL。根项目总表已追加为第 13 批，当前版本仍是 0.1；TM-002 的未来设计草稿不纳入本版门禁。SOP-019 修订 12 允许需求独立 worktree 的干净 WIP/候选提交快进保存到远端同名功能分支，总控可选单一 integration 镜像；每次须记录Git客户端绝对路径/版本，HTTP 400或超时后先读回远端精确ref/SHA/tree，无法读回为`remote_code_saved=unknown`。远端读回尚未由本次文档工作核实。本机产品/稳定发行、远端 `master` 和 Tag 分别记录；本分支未改 c291 被测树，也未产生新产品 PASS。
+TM-001 开发会话提交 `9f06cb1bb2f116c87ab5543173e15c0613b60991` 修正私有签名输入；其开发检查报告治理 454 项、服务 55 项、桌面 26 项和构建 PASS，开发 DMG 摘要为 `d342c8ffa571e28aad38bc37ec682389c2c54d3791246f2a828bd85c024d523d`。其后定向 App 原件 `local-6e066...` 为 0 PASS/14 FAIL，`local-7264e...` 为 9 PASS/2 FAIL/3 BLOCKED，仍有 ENOSPC/环境及功能失败；这两个省略 run_id 的数字来自开发会话交接，完整原件需在该工作树读回后才可登记为根总表独立批次。旧 `local-883bf...` 的 14/14 PASS 只属于旧候选，不覆盖新失败。0.1 功能仍未完成回归，正式发行未启动。
 
-TM-001开发会话交接称代码提交`883bf567b16d57527acdb887537699a082c53c97`的独立定向run `local-67f0e7832e284f2d8986b03c0da716b3`有14/14项PASS、`cleanup=true`，原件在其worktree的`.local/ci/<run_id>/result.json`；这不是最终全量门禁。SOP会话另指出该实现仍需补私有`--key-dir`祖先路径检查和普通报告/输出中的完整路径脱敏；须待新代码、负测、新包与本地master完整门禁，不能以定向结果宣布0.1通过。
+TM-002 开发会话交接：已接入主进程原生目录面板、当前用户私有加密 locator、根 FD 受限读取、React 授权 UI 和 0.2 开发 helper 打包检查；固定产品 E2E 已编码 33 个叶入口（28 个可执行入口及 5 个场景摘要父项）。开发树报告桌面构建 PASS、Node 单元 59/59、治理 473/473、文档结构/基线/质量追踪 PASS。产品 E2E 因 AX `trusted=false` 且隔离标准测试账号不可用而 BLOCKED，最终 DMG 的 Keychain 实际隔离和真实产品结果仍缺。本文件所处文档树尚未整合该代码，机器功能矩阵不得提前将 0.2 绑定标 `ready`；开发树的检查不作本树或最终包产品 PASS。固定源码快照由该开发会话单独保存，恢复后的新仓库仍需核对其提交/tree并按总控顺序整合。
 
-## TM-002 文档设计与0.1稳定包前置（2026-10-01）
+TM-003 的 CORE 三条仅固定无授权模块输入与预期，尚无正式程序或运行；TM-004 的纯解析器已有部分源码/单元检查但未接授权或产品 E2E；TM-005 目前为纯统计设计/代码定向检查，完整双来源产品绑定未完成。版本状态详见各版 06 记录及根 Excel。原主仓库目录及 Git 对象库曾突然不可见；总控已在 `/Users/lz/文档/git/TokenMeter` 恢复新的本地主仓库，固定 `master=8f6cac8bd8d0358dcb5eebd72df26f59fa7bf6ff`，旧对象丢失和原测试证据不被新 Git 基线抹除。文档会话在独立新工作树从逐文件验证的快照迁入非 SOP 文件并核对新 SOP；当前尚待本树提交、TM-003 切片 SHA 和总控整合读回。历史原件路径仅按其真实位置引用。
+
+恢复工作树首次治理452项中10项ERROR的原始报告保留；9项是跨版本来源校验旧代码，1项是本树缺锁定Playwright依赖。恢复四个此前已验证的治理文件、执行本树`npm ci`后，治理457/457 PASS；结构、当前0.2基线、质量追踪、用例目录及根Excel回读PASS。收据位于本树`.local/docs-checks/20261001-recovery-migration/`。这些检查仅用于文档与固定目录迁移，未启动产品E2E。
+
+## TM-003 无授权模块切片（2026-10-01）
+
+TM-003 原27条逐项 TC 之外，文档会话新增 `TC-TM003-CORE-01/02/03` 三条辅助模块 TC，分别固定完整 LF/半行增量、累计与非法用量诊断、公开身份向量下的去重/冲突和临时 SQLite 只读核验；项目机器清单现为219父TC、41变体。它们只用于不调用 TM-002 来源能力、产品 Keychain、真实 App/服务的源码切片；程序绑定尚为 null、实际执行 unexecuted，不给原 `PARSE-01/PARSE-02/DEDUP-01/SOURCE-02` 等产品 TC 填 PASS。整版0.3仍 draft，正式数据、授权/密钥、App 与产品E2E仍 BLOCKED。详细输入与每步判据见[TM-003 用例](testing/cases/03-TM-003-codex-collection.md#无授权依赖的解析与身份开发切片)，本轮语义纠错及检查记录见[0.3 执行记录](../releases/v0.3.0-20261001T034652Z/06-iteration-record.md)。用户新指令下跨需求完整E2E与发行门禁将在其明确正式发布后执行；现阶段只按功能固定TC推进并保留既有c291/ENOSPC失败。
+
+本切片的结构、用例目录、质量追踪、治理457/457和项目总表回读均退出0，工作簿为11 Sheet、219父TC、41变体、13历史批次，SHA-256 `ccaad4b3fcd717661259b10a69af98d85d28d73c5484b4456bc931ac022530b1`；检查收据在本树 `.local/docs-checks/20261001-tm003-core-slice/receipt.json`。当前主仓库 Git 对象库路径突然不可见，文档改动还不能提交，SOP-008切片就绪的提交SHA条件未满足，暂记 BLOCKED；已做私有只读快照并通知总控，未重建仓库或覆盖原件。以上检查不证明产品E2E。
+
+后续按开发新进度更新项目登记并重生根 Excel，当前工作簿为11 Sheet、219父TC、41变体、260条用例行、13个历史批次，回读PASS，SHA-256 `fd47070bbf497048b6fed8a904cd68536ff63282041b7fab0939f0d97390d5ba`。结构/当前0.2基线、质量追踪、用例目录和治理457/457均PASS；这些仅证明文档树内部一致，不改变上述TM-003切片的提交SHA阻断或任何产品结论。
+
+TM-004 开发会话交接纯内存 Claude Code 2.1.126 解析器提交短SHA `f2c3972`；文档会话核实旧工作树源码与单元36/36、治理452/452日志尾部。当前支持范围限已实测主会话、原样复制fork、同ID双内容块及可核实单层Agent关系；0/0仍未知。TM-002授权、TM-003身份/SQLite、真实App逐TC与最终包未接入，改写UUID、fork-context-ref、嵌套Agent和有效零仍待原生证据。本版20条细TC仍draft/unexecuted，不记产品PASS；详细见[0.4执行记录](../releases/v0.4.0-20261001T040433Z/06-iteration-record.md)。旧对象库丢失后，开发短SHA须在恢复的新仓库重新建立可核对的提交/tree。
+
+## 多会话远端源码检查点规范（2026-10-01）
+
+用户要求多会话代码有远端版本检查点。SOP 会话已将 SOP-019 修订至11：每个需求独立worktree、`codex/<release_id>/<功能名>`分支，干净WIP/候选提交可普通快进保存到远端同名功能分支并读回SHA/tree；总控可选单一integration镜像本地逐版祖先链。`remote_code_saved`只说明源码已保存，不改变本机产品 E2E、SOP-018/020稳定发行、最终远端`master`受保护PR及逐版Tag状态。远端不保存DMG/ZIP、数据库、密钥、原始报告或通行证。本次是规范与文档同步，尚未据此完成任何远端功能分支推送；0.1 的本地 `master` 固定候选 `c2911bc65d55579fcf71e5ba11db87357a01a5e4` 已完成首次最终包门禁，结论为 FAIL，详见下节；本会话未改该被测树。
+
+## TM-001 本地 master 首次最终包门禁失败（2026-10-01）
+
+总控固定里程碑 `c2911bc65d55579fcf71e5ba11db87357a01a5e4`、tree `d4555b207b50e7cbe313b54ba9bfec1b7fdccb54` 的本机原件位于其独立整合树 `.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/`。`gate.json` 为 FAIL、`release_eligible=false`；`granular/result.json` 原始 116 项为 91 PASS/14 FAIL/11 BLOCKED，其中 UPDATE-05 父项及 13 个变体因签名输入缺失失败，11 项为辅助程序占位。文档会话按固定程序生成本批独立结果 Excel `TokenMeter测试结果-local-0512d4fc44544eba97f9d1ae79cbfc37.xlsx`，回读仅证明报表一致；父 TC 模型 66 PASS/1 FAIL/11 BLOCKED，38 变体 25 PASS/13 FAIL。本次失败已交 TM-001 开发会话按 SOP-015 修复；0.1 尚无本地正式稳定包，0.2 真实升级前置仍未成立。
+
+## TM-003 采集文档草稿接管（2026-10-01）
+
+后续版本的源文档已由文档会话接管：TM-004有8项TASK、20条细TC，TM-005有6项TASK、32条细TC与6个稳定变体，均为未来版draft/unexecuted；当前根机器目录合计216父TC、41变体。TM-004原生2.1.126定向证据无法仅凭JSONL 0/0区分有效零和缺usage，也只覆盖一个未触发嵌套的Agent配置；TM-005语义oracle仅为固定算术输入。开发总控要求先冻结TM-003最小可执行任务/TC/接口，再推进TM-004已验证子集和TM-005纯统计合同；两版缺完整SOP-008、上游稳定原包及最终包产品E2E，不进入当前0.2门禁。
+
+文档会话已从独立 TM-003 开发工作树接管本版 01–08/README、详细用例、机器验收/数据/矩阵/目录与项目登记草稿；27 条逐项 TC（四组 E2E 摘要）保留 `draft` / `unexecuted`，程序绑定为空。本分支当前版本仍为 0.2，TM-003 尚未执行自己的 SOP-008 基线或产品 E2E。隔离原生日志研究样例和 `identity-v1` 向量已有来源记录；其可重建基础探针不能替代正式 SOP-010 测试数据、安装后 App 的 UI/IPC/服务/SQLite 回归。实际阻断和来源见[TM-003 执行记录](../releases/v0.3.0-20261001T034652Z/06-iteration-record.md)。
+
+## TM-002 独立文档基线（2026-10-01）
+
+0.2新增[公开构建配置](../releases/v0.2.0-20261001T034118Z/local-release.json)：version `0.2.0`/build `200`，受控高版 `0.2.1`/build `201` 只供更新器测试；现阶段沿用0.1的公开签名身份及默认连接配置，上一正式稳定0.1原包是实际0.1→0.2升级来源。当前打包器只接受0.1/schema1、桌面开发入口也固定读0.1配置；0.2实际打包、升级和门禁在代码扩展、0.1正式原包与Keychain隔离实证前仍BLOCKED。配置是设计基线，尚无已构建0.2包。
+
+本工作树的 `releases/current.json` 指向 `v0.2.0-20261001T034118Z`，与正在执行 0.1 最终门禁的本地 `master` 隔离。TM-002 的三功能点、九项 TASK、28 条父 TC、35 个稳定变体和七份本版文档已完成 SOP-008 内容及机器基线检查；固定程序仍为 `planned`，所有本版用例尚未执行，产品 E2E 没有 PASS，发布资格为否。实际检查与限制见[本版执行记录](../releases/v0.2.0-20261001T034118Z/06-iteration-record.md)。这份基线可供不依赖 0.1 稳定包的 TM-002 实现准备、隔离数据和固定测试绑定使用。
+
+首次完整治理回归有 9 项跨版本程序 ERROR（452 项中），原件保留。TM-002 开发会话交付的 `ca0c43b` 已在本独立文档树拣选为 `dcf215f`；随后完整治理 457/457 PASS，原始日志 `.local/docs-checks/20261001-remote-checkpoint-docs/governance-after-ca0.log`。这解决了当前文档树的程序核对错误，不表示 TM-002 产品 E2E 已执行或可发行。
+
+TM-002 开发会话另报告其 0.2 **实现工作树**治理 460/460 PASS、SOP-008 baseline/quality PASS、桌面构建 PASS、Node 单元 26/26、服务 pytest 55/55；治理原件在该树 `.local/ci/tm002-governance-cross-release.log`。来源存储、native helper 与 E2E 代码仍在开发且有未提交 WIP；Keychain/AX 隔离与产品 E2E 未满足，以上开发检查不移作本树或最终包产品 PASS。
+
+0.1 正式本机稳定原包仍是 0.2 真实自主升级和发行的前置；最终 DMG 的异步 `safeStorage` 测试 Keychain 项身份及隔离也未获原生证明。依赖这两项的实际运行保持 BLOCKED，不能以文档基线代替验证。
+
+## TM-002 草稿阶段与0.1稳定包前置（历史快照，2026-10-01）
 
 当前版本指针暂为 `v0.1.0-20260929T074814Z`，供0.1固定里程碑执行最终门禁；TM-002档案已预登记。TM-002 已按三个功能点、九项 TASK 编制28条父TC和35个固定变体，并将详细规格、独立验收、机器用例与根项目总表同源核对；当前TM-002保持draft/baseline_pending，0.1严格基线和总表回读的实际结论见TM-002 06记录。计划中的原生面板、私有加密来源 locator、主进程受限读取和测试 Keychain 隔离仍缺固定数据/程序与最终包实测；当前还没有独立macOS测试账号或经原生证明的进程专属Keychain命名空间，依赖密钥的用例及SOP-009第5步保持BLOCKED，TM-002 产品 E2E 为 `NOT_RUN`，发布资格为否。
 
@@ -68,7 +108,7 @@ SESSION-09的确定性失败来自测试脚本在退出待确认时点击了已�
 
 目标新审计`.local/ci/local-877830fb340a4d12b4e29cf76fa422ed-audit-peer-v3/audit.json`为PASS，独立核对PASSWORD-05第二App peer及两个旧会话401、ADMIN-03四步证据；目标审阅表`.local/test-results/local-877830fb340a4d12b4e29cf76fa422ed-reviewed/TokenMeter测试结果-local-877830fb340a4d12b4e29cf76fa422ed.xlsx`已回读PASS、产品FAIL，3父TC为2 PASS/1 FAIL，13变体8 PASS/5 FAIL。它确认两条脚本缺陷的定向修复，不改变UPDATE-05产品清理失败或主全量FAIL。
 
-用户统一查看入口为仓库根[TokenMeter项目总表.xlsx](../TokenMeter项目总表.xlsx)，按明确指令随Git版本提交。当前主表已重新导出为11个Sheet、109条用例摘要及12次测试批次；`.local/workbook/verification.json`登记SHA-256 `ef94e5e15c1c6c0b4fe4a0ae8d550728c54ad502e317262b7dc02ffba41c8ae3`，`python3 scripts/verify_project_workbook.py`对当前文件回读PASS、零错误，`product_tests_executed=false`。`05测试用例`汇总功能、输入、预期、DB操作、类型及状态；`06测试批次`只汇总12次运行及各自独立结果Excel入口，逐步实际结果仍在独立表。主run原始BLOCKED与联合复核表`.local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/TokenMeter测试结果-local-534748ff47cb44229183a6bd878c1674.xlsx`的78父TC、38变体全PASS分别记录，主表回读不授予正式发布资格。完整设计保存在[用例JSON](../tests/test_cases.json)和[详细用例文档](testing/cases/README.md)，不因主表展示范围缩减而删除真实用例或执行证据。腾讯在线方案未写入，已取消。仓库导航：[全部用例索引](../TEST_CASES.md)、[本版全流程](../releases/v0.1.0-20260929T074814Z/README.md)。
+用户统一查看入口为仓库根[TokenMeter项目总表.xlsx](../TokenMeter项目总表.xlsx)，随 Git 版本维护。当前表已回读 PASS：11 个 Sheet、164 条父用例与 35 个变体共 199 行、13 次 TM-001 历史批次，SHA-256 `fa36939ff901254b9bce7775d194943ceccc3c7e41d64680c0ab1b4b22701a5d`，`product_tests_executed=false` 表示导表程序本身未运行产品。最新 `c2911bc` 失败批次的独立结果 Excel 在本工作树 `.local/test-results/local-0512d4fc44544eba97f9d1ae79cbfc37-reviewed/`，与旧批次并列而不覆盖；总表用例最近状态和批次摘要不能替代原始门禁。完整设计见[用例 JSON](../tests/test_cases.json)与[详细用例](testing/cases/README.md)，腾讯在线表格已停止同步。
 
 每次实际测试单独输出`TokenMeter测试结果-<run_id>.xlsx`并留在本机。新版全量审阅表已生成于`.local/test-results/local-343e54113b0b442383e80f137013014b-reviewed/TokenMeter测试结果-local-343e54113b0b442383e80f137013014b.xlsx`；同目录`verification.json`为Excel回读PASS、`product_state=FAIL`，记录78父TC 62/9/7与38变体31/7/0。UI-01新单例表另存于`.local/test-results/aux-ui01-local-343e54113b0b442383e80f137013014b-02-reviewed/TokenMeter测试结果-aux-ui01-local-343e54113b0b442383e80f137013014b-02.xlsx`，本次仅1例PASS。导出PASS不授予产品通过，也不改主审阅表。首轮BLOCKED和dev07历史批次各有独立结果Excel；详见[07结果](../releases/v0.1.0-20260929T074814Z/07-test-results.md)。
 

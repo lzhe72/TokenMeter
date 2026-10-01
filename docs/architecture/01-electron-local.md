@@ -32,13 +32,13 @@ Squirrel原生重启不保证保留argv，因此显式工作目录首次登记�
 
 采用Electron成熟的macOS原生autoUpdater/Squirrel完成包替换和自主重启，前置轻量验证层保留稳定Ed25519信任：检查更新URL、每次重定向、包长度/SHA256及独立Ed25519签名，只有完整验证的包才交给本次拥有的临时回环feed；Squirrel再校验代码签名与原App designated requirement。electron-builder以publish=never构建目录包，再用成熟签名工具处理嵌套框架，hdiutil制作DMG供安装，ditto制作ZIP供原生更新。禁止自写绕过签名的替换器或把下载成功当成安装成功。
 
-清单合同：`{schema_version:1,version,build,url,sha256,bytes,ed25519_signature}`，Ed25519签名对象为ZIP原始字节。元数据自身不是已签名声明；下载前限制大小，验摘要和签名后安全解包、校验App代码签名/旧版指定要求、实际Info版本/build与清单一致及严格递增，才能准备安装。不能因清单自称高版本就展示安装成功。私钥由打包进程和受控的UPDATE-05本机负例runner按SOP-009/010读取；runner须先证明输入与原包身份一致。
+清单合同：`{schema_version:1,version,build,url,sha256,bytes,ed25519_signature}`，Ed25519签名对象为ZIP原始字节。元数据自身不是已签名声明；下载前限制大小，验摘要和签名后安全解包、校验App代码签名/旧版指定要求、实际Info版本/build与清单一致及严格递增，才能准备安装。不能因清单自称高版本就展示安装成功。私钥仅打包读取，不交测试执行器。
 
 仅精确回环HTTP可用，其他地址必须HTTPS；拒绝userinfo/query/fragment、非法端口和空host。对非法下载URL、非回环HTTP重定向、坏Ed25519签名分别提供可区分的错误状态，原App保持可用；有效更新真实下载/安装/退出/重启，恢复原profile及`/v1/me`身份。
 
 更新控制器位于`apps/desktop/src/main/updater.ts`，导出`createUpdater({app,profilePath,buildInfo,getFeed,onChange})`，返回`snapshot/check/install/cancel`。状态含phase、canCheck、canConfigure、status、errorCode、availableBuild、availableVersion；主进程将事件映射到UI。资源`release-config.json`包含release_id、version、build、api_url、update_feed_url、update_public_key与签名证书摘要，打包验证其与源码配置一致。
 
-候选版本0.1.0/build100；首版无上一稳定包，同源码构建受控0.1.1/build101仅用于升级试验，不能作为最终发布包。固定自签证书/Ed25519私钥保存在本机受限目录；受控UPDATE-05 runner只可通过显式`--key-dir`在App启动前读取原候选身份并生成固定负例。先独立核对公开配置、原ZIP和包清单：它们自相矛盾属于候选包完整性FAIL。对于有效包，再核对私有目录、祖先路径、文件权限和归属，以原更新ZIP重签名比对清单签名、从p12公有证书核对指纹；私有输入缺失、不安全或与有效包身份不符为测试前置BLOCKED，预检通过不算产品PASS。私有内容、密码及完整目录路径不进入Git、报告、App或普通测试fixture。需要临时钥匙串时仅导入本次私有临时库并恢复列表，不修改系统信任。候选和升级包保持同一签名身份；自签与Squirrel兼容须先真实探针，再完整包E2E，失败即阻断。
+候选版本0.1.0/build100；首版无上一稳定包，同源码构建受控0.1.1/build101仅用于升级试验，不能作为最终发布包。固定自签证书/Ed25519私钥保存在本机私有目录，只有打包进程读取；不进入Git、报告、App或测试fixture。需要临时钥匙串时仅导入本次私有临时库并恢复列表，不修改系统信任。候选和升级包保持同一签名身份；自签与Squirrel兼容须先真实探针，再完整包E2E，失败即阻断。
 
 成熟库文档中尚未发布的签名清单字段不能冒充当前稳定依赖能力。2026-09-30查明electron-updater6.8.9没有next文档的updateManifestPublicKey；因此明确使用前置Ed25519验证层。原生替换仍交成熟实现。
 
@@ -64,7 +64,7 @@ Playwright使用安装后的`Contents/MacOS/TokenMeter`作为executablePath，�
 
 源码形成干净候选后才执行最终包验证，机器记录候选完整SHA与tree。构建成功的开发/候选DMG以`NOT-RELEASED`文件名复制到根`dmg/<release_id>/`方便定位，原件仍按候选独立保留并接受安装测试。门禁PASS后将同一原包与原证据归档到`dmg/<release_id>/release-archive/`，并将已验证正式DMG原名放在同一版本目录，不覆盖同名旧文件。安装给用户的版本必须是该候选100，不能重新构建并借用旧报告。Git Tag可作为源码版本索引；不创建GitHub Release、不上传DMG、zip或原始报告。签名钥匙、数据库、node_modules、build输出和本地发行产物均被忽略，目录说明文件随Git保存。
 
-各需求分支由总控按依赖顺序集成本地`master`，为每版固定不可变SHA/tree里程碑，再从该版干净里程碑构建最终包、执行完整本机E2E与机器门禁。PASS后按SOP-020先把同一原包、通行证和原始证据归档为本机正式稳定包，下一版从这份原包真实升级。全部目标版本本机稳定后，总控一次按远端保护通过受控PR登记源码，核对每版里程碑仍在远端祖先链、来源tree及Tag映射；不同则阻断相应远端登记并重新验证。原包始终绑定实际被测里程碑，远端源码登记待办不被写作本机包门禁失败，也不冒充已完成Git发布。
+用户2026-10-01将工作分为开发与正式发行两段。各需求分支由总控按依赖顺序集成本地`master`，为每版固定源码SHA/tree及其功能已基线固定TC的真实回归状态；FAIL/BLOCKED/NOT_RUN可随源码整合，但不能宣称功能PASS。全部目标源码完成后按远端保护统一登记`master`并读回，源码登记不以逐版全量E2E或稳定包为前置。只有用户另行明确启动正式对外发布，才从固定最终候选原包安装运行跨需求完整E2E、适用真实升级和SOP-018/020，PASS后归档本机正式包并登记正式Tag。开发/候选包统一标NOT-RELEASED，完整门禁未运行记NOT_RUN。原包、源码与原始证据始终分别核对，不能借旧PASS。
 
 各需求可在独立worktree把范围可核对的干净WIP/候选源码普通快进保存到远端同名功能分支，总控可选一个`codex/<首个release_id>/integration`分支镜像本地里程碑祖先链。两种远端读回只记录代码已保存和真实检查状态，`release_eligible=false`；本机最终包E2E、稳定发行、最后一次受保护远端`master`登记和逐版Tag各自有独立证据，不能互相替代。上传范围仅源码、文档、固定测试、数据程序和版本追踪，原包、数据库、密钥、原始报告、通行证留本机。
 
@@ -76,8 +76,8 @@ GitHub工作流默认禁用自动触发；明确多环境需求时按当时矩�
 
 1. SOP索引/详细规范、AGENTS、版本01–05、功能用例与本设计同步，经structure再baseline。
 2. 客户端主进程/界面/隔离与基础失败用例；更新/打包兼容探针；六例Playwright和数据编排并行，接口按本文。
-3. 基础检查、真实App启动与业务红测后修实现；总控本地`master`整合所有需求分支，在最终干净候选上构建原包并执行完整逐TC与六组补充E2E、父gate验原件。
-4. 本版门禁PASS后先按SOP-020在本机归档同一原包、通行证和证据，提供正式稳定DMG供下一版真实升级；全部目标版本本机完成后由总控统一按远端保护登记源码并逐版建立Tag。FAIL/BLOCKED保留诊断并修复，不签发通行证。
+3. 基础检查、真实App启动与业务红测后修实现；开发阶段按该功能已基线固定TC回归并保存逐步原件，总控按依赖顺序本地整合，全部目标源码完成后按远端保护登记`master`。FAIL/BLOCKED/NOT_RUN保留诊断，不写功能PASS。
+4. 用户另行启动正式发布后，在最终干净候选上构建原包并执行跨需求完整逐TC/变体与场景补充E2E、适用真实升级及父gate；SOP-018 PASS后按SOP-020归档同一原包、通行证和证据，提供正式稳定DMG并登记正式Tag。未启动时均NOT_RUN，不签发通行证。
 
 文件所有权：客户端agent负责apps/desktop除updater/e2e；打包agent负责src/main/updater.ts与local_package.py及对应基础测试；E2E agent负责apps/desktop/e2e、local_e2e.py及其负测；整合者负责规范/文档、local_gate/local_release与Git。不得覆盖另一个agent的修改。
 

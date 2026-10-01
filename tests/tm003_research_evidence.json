@@ -1,0 +1,49 @@
+{
+  "release_id": "v0.3.0-20261001T034652Z",
+  "status": "source_and_data_research_only",
+  "formal_sop_010_status": "blocked_until_sop_008_009_and_owned_reset_binding",
+  "product_e2e_status": "unexecuted",
+  "sources": {
+    "basic": {
+      "program": "scripts/tm003_native_probe.py",
+      "run": ".local/tm003-native-probe/20261001T054930Z-96270",
+      "result": "SOURCE_PROBE_PASS",
+      "cli_version": "codex-cli 0.158.0-alpha.2.1",
+      "rollout_sha256": "3b30cfa81c0c29a80f1bfc1de5bf823db01a9a85636e41ec58dfdd00f0436d08"
+    },
+    "lifecycle": {
+      "program": "scripts/tm003_lifecycle_probe.py",
+      "run": ".local/tm003-lifecycle-probe/20261001T060101Z-1879",
+      "result": "SOURCE_LIFECYCLE_PASS",
+      "rollout_audit_sha256": "9f2ad103f8a899e36965dd01ff803588a9dfb07480ec3a0433e668bcab67e550",
+      "root_rollout_sha256": "ef7aa0a9ce0f238a3043d1e6b5454de56173e64b28525d8fcca0bc52abd2db1b",
+      "fork_rollout_sha256": "01be1b23bae46bb3e1ef230d18909748af926930c0a194acb9071a63315b60a2",
+      "no_usage_rollout_sha256": "538131d313bff16c6bb20fb53f7917f695e777d11a370bb7932696f2691b5823"
+    }
+  },
+  "derived_data": {
+    "program": "scripts/tm003_fixture_research.py",
+    "first_run": ".local/tm003-fixture-research/20261001T063703Z-15669",
+    "comparison_run": ".local/tm003-fixture-research/20261001T063737Z-15929",
+    "seed": 303,
+    "t0_utc": "2026-10-01T06:00:00.000Z",
+    "file_count": 1010,
+    "expected_sha256": "90d41b61b07929c774b70b81a6ca7d96f393818eb080e93e4b0300364d852376",
+    "same_files_and_expected": true,
+    "provenance_label": "derived synthetic JSONL, not native CLI output"
+  },
+  "case_research_map": {
+    "TC-TM003-SOURCE-01": ["basic"],
+    "TC-TM003-SOURCE-02": ["lifecycle", "derived_data"],
+    "TC-TM003-DATA-01": ["basic", "lifecycle", "derived_data"],
+    "TC-TM003-PARSE-02": ["derived_data"],
+    "TC-TM003-BRANCH-01": ["lifecycle", "derived_data"],
+    "TC-TM003-COVERAGE-OVERFLOW-01": ["derived_data"]
+  },
+  "unverified": [
+    "subagent native on-disk records",
+    "formal owned reset and per-TC data binding",
+    "TM-002 stable source capability",
+    "installed App product E2E"
+  ]
+}

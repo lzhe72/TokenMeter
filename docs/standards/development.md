@@ -14,7 +14,7 @@
 
 ## 开发与完成
 
-每项功能先需求/验收/详细用例/数据SQL/SOP；骨架后先有效失败用例，再实现；变更同步文档、矩阵、Changelog。基础检查后每次迭代/修复执行完整目标及已交付E2E，不能仅跑单元或降低正确预期。
+每项功能先需求/验收/详细用例/数据SQL/SOP；骨架后先有效失败用例，再实现；变更同步文档、矩阵、Changelog。基础检查后，功能完成或修复执行该功能已基线固定TC与变体的真实回归；缺项/失败不能记功能PASS。整版仍draft时，只有按SOP-008明确列出的无未决依赖TASK/TC切片可先开发，模块测试不代替对应产品TC。用户另行启动正式对外发布后，对最终候选执行目标及已交付功能的完整E2E并集；不能仅跑单元或降低正确预期。
 
 文档完成、实现存在、测试通过分别登记；缺环境/程序/证据明确BLOCKED。保留首个失败，按SOP-015修根因。最终原DMG和本机门禁通过才可发行，Git不保存安装包或原始报告。状态页和版本06记录实际命令、结果、证据与接手入口。
 
@@ -22,4 +22,4 @@
 
 每个需求会话使用独立worktree和`codex/<release_id>/<功能名>`分支，先核对分支、来源提交、负责人和未提交文件的归属。只把本任务已核对的源码、文档、配置、固定测试和数据程序暂存；运行`git diff --cached --name-only`、`git diff --cached --check`并保存实际结果。提交后工作树须干净，记录完整SHA/tree、父提交和适用检查的真实PASS/FAIL/BLOCKED。不能把另一会话的未提交文件复制成无来源的候选。
 
-干净且范围可核对的WIP或候选提交可按[SOP-019](../../sop/SOP-019-git-release.md)普通快进推送远端**同名功能分支**，前后读取精确引用并核对SHA/tree。推送前记录`command -v git`、`git --version`与实际绝对Git可执行文件路径/版本；同一次网络流程使用同一个已记录客户端。HTTP 400或超时先只读核对精确远端ref的SHA/tree；读回不可得时`remote_code_saved=unknown`/BLOCKED。确认远端未更新且无竞争后，才可使用另一已记录版本客户端普通快进重试，并保存两次原始结果。WIP允许产品测试未通过或未运行，须原样登记`source_checkpoint=WIP`、`remote_code_saved`和`release_eligible=false`；源码读回只说明代码已保存。已推送提交不amend/rebase，不强推或覆盖他人进展。总控可选单一`codex/<首个release_id>/integration`镜像本地整合祖先链；镜像读回也不产生本机产品PASS。DMG、ZIP、数据库、密钥、`node_modules`、原始证据和通行证留本机，不进入Git。完整多环境Actions只在用户明确要求时运行。
+干净且范围可核对的WIP或候选提交可按[SOP-019](../../sop/SOP-019-git-release.md)普通快进推送远端**同名功能分支**，前后读取精确引用并核对SHA/tree。WIP允许产品测试未通过或未运行，须原样登记`source_checkpoint=WIP`、`remote_code_saved`和`release_eligible=false`；源码读回只说明代码已保存。已推送提交不amend/rebase，不强推或覆盖他人进展。总控可选单一`codex/<首个release_id>/integration`镜像本地整合祖先链；镜像读回也不产生本机产品PASS。DMG、ZIP、数据库、密钥、`node_modules`、原始证据和通行证留本机，不进入Git。完整多环境Actions只在用户明确要求时运行。

@@ -1,5 +1,19 @@
 # v0.2.0-20261001T034118Z — 执行记录
 
+## 2026-10-01 新仓库恢复时的目录治理
+
+新本地主仓库基线 `8f6cac8` 尚未包含旧文档树已验证的跨版本来源校验修复。非SOP资料及0.2当前指针迁入独立文档树后，首次完整治理452项中10项ERROR：9项来自 TM-001 父TC/变体仍按顶层0.2 release解释，另1项为该新工作树尚未安装锁定 Playwright 依赖；原始日志 `.local/docs-checks/20261001-recovery-migration/governance.log` 保留。文档会话仅恢复旧候选中的 `scripts/granular_gate.py`、`scripts/granular_test_result.py` 及其两份治理负测，再于本树执行 `npm ci`，随后治理457/457 PASS，原始日志 `governance-after-fix.log`。本轮结构、当前0.2基线、质量追踪、机器用例与根Excel回读也PASS。该恢复只使文档/目录治理可核，不更改TM-002产品E2E的AX/测试账号BLOCKED和正式发行NOT_RUN。
+
+## 2026-10-01 开发工作树后续交接
+
+开发会话报告主进程原生目录面板、当前用户私有加密 locator、根 FD 受限读取、React 授权 UI、0.2 开发 helper 打包检查已实现；固定产品 E2E 已编码 33 个叶入口，其中 28 个可执行入口和 5 个场景摘要父项。其工作树报告桌面构建 PASS、Node 单元 59/59、治理 473/473、结构/基线/质量追踪 PASS。文档会话所处独立树未合入这些源码，不能据报告将本树机器绑定标 ready，固定 TC 的产品 E2E 因 AX `trusted=false` 与隔离标准测试账号缺失保持 BLOCKED，最终 DMG Keychain 实证亦未取得。开发会话另保存源码快照 `.local` 之外的 `tm002-source-rescue-20261001T1433Z.tar.gz`，SHA-256 `969afaa1544546a3fba88fd44d5c3a683e97dd0b027befb6e6b08ef14bf9a435`；这只保护普通文件，不是可读回的 Git 提交。主 Git 对象库路径当前不可见，提交/tree 和整合均待恢复。根据用户新阶段决定，本版开发按已固定功能 TC 回归，完整跨需求 E2E、SOP-018/020 与稳定原包只在用户启动正式发行后执行，现记 `NOT_RUN`，不改历史失败。
+
+## 公开构建配置设计（2026-10-01）
+
+文档会话新增[本版local-release配置](local-release.json)，设计值为0.2.0/build200、受控高版0.2.1/build201、macOS15 Intel、沿用当前0.1公开bundle ID/API/更新源/公钥/证书指纹；声明上一实际稳定原包来自`v0.1.0-20260929T074814Z`且必须有SOP-018 PASS与SOP-020归档读回。配置纳入机器manifest、文档目录及项目总表来源。当前`local_package.py`硬编码0.1/schema1/build100/101，桌面开发入口读取0.1配置；0.2尚需固定程序扩展及负测，再绑定0.1最终稳定原包的实际身份。本次仅形成构建设计，未生成0.2 DMG或产品PASS，0.1正式稳定源与Keychain原生隔离仍缺。
+
+文档工作树接入未来版TM-004/005源草稿和机器用例后，执行`python3 scripts/check_docs.py --mode structure`及`--mode baseline`均退出0、PASS，134份登记文档、1190条链接；严格基线仅针对当前0.2，未来0.4/0.5仍为draft。`python3 scripts/quality_gate.py check`退出0、`release_eligible=false`，`python3 scripts/export_test_cases.py --check`退出0，216父TC/685父步骤（含未来版52条细TC），根项目总表回读PASS、11 Sheet、216父TC/41变体/257行、13个历史批次，SHA-256 `acfd57a242d6e8c6108f20404925bb80e7d4fee450d9a101abc8852ed6e35e3f`。本轮仅验证文档设计一致性，不执行TM-002/004/005产品E2E。
+
 ## SOP-001 立项（2026-10-01）
 
 - 输入：用户指定 `REQ-TM002` 独立会话开发；上版为未发布的 `v0.1.0-20260929T074814Z`，其完整产品 E2E 仍 FAIL/BLOCKED。用户将 REQ-TM003、REQ-TM005 分至独立会话。
@@ -57,3 +71,25 @@ TM-002开发会话报告的隔离调查指出：仅改变profile或创建私有�
 总控已将TM-001里程碑归档校验代码`fbab99b`合入本地`master` `4bdeb13`。后续实际0.1归档使用schema2 `release-index.json`，含`milestone_sha/tree`、`master_tip_sha`、`remote_source_state=PENDING`和DMG/manifest/passport摘要；当前尚未产生由最终整合树门禁PASS的稳定原包。本版`TC-TM002-DELIVERY-01`及测试/发布计划已增固定消费者和负测：拒绝旧schema、开发/候选包、错误里程碑或摘要；只有读回原件、签名、通行证及真实App自主升级均符合，才可把它作为0.2升级源。消费者代码与程序绑定由TM-002开发会话负责，现未交付或执行，故该项仍BLOCKED。最终包异步`safeStorage`测试项身份探针也缺隔离macOS测试账号或实测独立命名空间；本版Keychain相关E2E保持BLOCKED。本轮只是计划与机器用例同步，不增加测试运行批次。
 
 文档分支随后合入含里程碑归档校验的本地`master` `4bdeb13`并重跑检查：治理454/454 PASS，原始日志`.local/docs-checks/20261001-tm002-draft-and-milestones/governance-after-milestone.log`；structure、当前0.1的baseline、quality、用例导出一致性、总表回读和`git diff --check`均退出0，同目录`*-milestone.log`留原始输出。总表最终SHA-256为`670e0a4c6185f8f038744b81a341168d6aed3c37e19eb657919c1fe11cb738f0`，仍是172用例行/12历史批次。以上只是文档/治理检查，TM-002草稿未取得SOP-008本版基线或任何产品PASS；未来代码与最终包还须另按SOP运行。
+
+## SOP-008 独立 0.2 文档基线（2026-10-01）
+
+- 输入与决定：总控要求缩短 TM-002 开发关键路径，先在独立文档分支形成 0.2 设计基线，同时让本地 `master` 的 0.1 最终候选继续门禁。SOP-008 的前置是 001–007 计划与可验收逐条用例齐全；0.1 本机稳定原包是本版真实升级和发行的执行前置，不是 0.2 设计内容核对的前置。Keychain 原生隔离是依赖测试运行的前置，设计已写明证据与失败判据，尚未获得该证据。本分支把 `releases/current.json` 切至本版，仅供独立设计基线检查，不改变总控的 0.1 最终候选。
+- 首次切换后 `scripts/export_test_cases.py` 检出历史 TM-001 的 78 条父用例未显式归属 0.1，默认落入当前 0.2 manifest；补齐每例 `release_id=v0.1.0-20260929T074814Z` 后，又检出 45 个早期 `source.heading` 只存 ID 而非原文完整标题。逐行核对原详细文档后补齐精确标题；未修改 TM-001 的动作、输入、预期、结果或既有原始证据。第二次导出返回 `GENERATED`，后续 `--check` 返回 `CURRENT`。这个跨版本目录问题及修复记录在[复盘](../../docs/retrospectives/2026-10-01-development-and-governance.md)。
+- 语义核对：本版 3 功能点、9 TASK、2 场景组、28 条父 TC（20 条安装后产品 E2E、8 条辅助）、35 个稳定变体与 37 个 manifest 任务/用例链接双向一致；每条父 TC 有具体 TASK、AC、输入、有序步骤、逐步预期、DB 操作或不适用理由、数据/重置与证据计划。28 条父 TC 及两组摘要的设计状态由 `baseline_pending` 改为 `baselined`，执行状态仍为 `unexecuted`，绑定仍为 null；manifest 的 `program_bindings_status=planned`，本版产品 E2E 未运行。语义核对输出在 `.local/docs-checks/20261001-tm002-baseline/semantic.log`。
+- 机器检查：`python3 scripts/check_docs.py --mode structure` 退出 0、PASS；`--mode baseline` 退出 0、PASS，110 份登记文档、1030 条链接；`python3 scripts/quality_gate.py check` 退出 0、PASS，明确 `scope=traceability_only`、`release_eligible=false`；`python3 scripts/export_test_cases.py --check` 退出 0、CURRENT，137 条父记录/437 个父步骤。原始输出分别在 `.local/docs-checks/20261001-tm002-baseline/{structure-final,baseline-final,quality-final,export-check-final}.log`。此处的 SOP-008 结论仅为设计基线，不是产品实现、E2E 或发布 PASS。
+- 完整治理回归另执行 `python3 -m unittest discover -s tests/governance -p 'test_*.py'`，退出 1，452 项中 9 项 ERROR。旧 TM-001 治理测试的变体合并/结果模型仍将顶层当前 `catalog.release_id` 当成 TM-001 的 0.1 来源；切至 0.2 后与历史变体 manifest 冲突。原始失败在 `.local/docs-checks/20261001-tm002-baseline/governance.log`，已交 TM-002 开发会话修代码并回归；不能将此候选称为完整治理全绿，依赖程序执行继续阻断。
+- 根项目总表按当前 0.2 基线重新导出并回读：11 个 Sheet、137 条父用例、35 个变体、172 行用例、12 个历史 TM-001 批次，SHA-256 `d4dad13552db7b42a99f1f513617194f6a678339e53dde6ea606908886975fa5`；回读为 PASS、`product_tests_executed=false`、`release_eligible=false`，原始收据 `.local/docs-checks/20261001-tm002-baseline/workbook-verify.log`。没有新增 TM-002 测试批次，也未重写历史结果 Excel。
+- 下一步：TM-002 开发会话可据此完成不依赖稳定 0.1 原包的 SOP-009–012 准备、数据和固定测试。真实 Keychain 隔离证明缺失时相关用例 BLOCKED；0.1 正式稳定原包缺失时真实升级/发行用例 BLOCKED；最终整合候选仍须按 SOP-013/014/017/018 全量验证。
+
+## SOP-019 远端代码检查点与本版状态（2026-10-01）
+
+SOP 会话以提交`1bc01e38e8de5ab2786a2b5207dbaff434206156`修订SOP-019至11；文档会话在独立树同步了需求worktree/同名远端功能分支的干净WIP/候选快进保存、可选单一integration镜像，以及逐版本地稳定包后才最终登记远端`master`与Tag的四种状态。本版文档基线提交`aa9b74219b105d1b7edc319e2b3aad98e70bae42`只在本地形成，未据此推送0.2远端功能分支；`remote_code_saved`、0.2产品E2E、0.2本机发行、远端`master`及Tag均未记完成。0.1最终包门禁在总控固定本地里程碑运行，文档分支不回写其被测树。TM-002固定程序、隔离Keychain证据和上一0.1正式稳定原包缺项仍按各自依赖阻断。
+
+## 跨版本治理错误修复及上游门禁结果（2026-10-01）
+
+上文记录的 452 项中 9 项 ERROR 保留为首次原始失败。TM-002 开发会话提交 `ca0c43b` 修复历史 TM-001 父 TC/变体的显式来源校验；文档树在完成非 SOP 文档/Excel 提交 `bce7902` 后拣选为 `dcf215f`，只涉及两份治理脚本及两份回归测试。相同独立树执行 `python3 -m unittest discover -s tests/governance -p 'test_*.py'`，退出 0，457/457 PASS，原始日志 `.local/docs-checks/20261001-remote-checkpoint-docs/governance-after-ca0.log`。这仅解除本树的跨版本治理程序错误；0.2 固定产品程序与隔离 Keychain 证明仍按前述状态分别检查。
+
+总控交接的 0.1 本地 `master` 首次最终包门禁 `c2911bc` 为 FAIL；文档会话只读核对其 `gate.json` 与精细原件，UPDATE-05 的 13 个变体缺签名输入而失败。0.1 本机稳定原包仍不存在，本版 `TC-TM002-DELIVERY-01` 真实升级依赖继续 BLOCKED。该失败批次已在 0.1 版本记录和根项目总表单独登记；不改变本版 `unexecuted`、`release_eligible=false`。
+
+TM-002 开发会话后续交接：0.2 实现工作树完整治理 460/460 PASS，原件 `.local/ci/tm002-governance-cross-release.log`（在该开发工作树），SOP-008 baseline/quality PASS；已准备 SOP-009 本机工具链和锁定依赖，桌面基线构建 PASS、Node 单元 26/26、服务 pytest 55/55。来源存储、native helper 和 E2E 固定代码仍为未提交 WIP，尚无可交接干净候选 SHA/tree；Keychain/AX 隔离仍 BLOCKED、产品 E2E 未执行。以上为开发会话检查事实，不宣称本树执行过这些构建或测试。

@@ -4,7 +4,7 @@
 
 | 要做的事 | 阅读入口 |
 | --- | --- |
-| 统一查看项目全流程 | [项目总表Excel](../TokenMeter项目总表.xlsx)、[版本导航](../releases/v0.1.0-20260929T074814Z/README.md) |
+| 统一查看项目全流程 | [项目总表Excel](../TokenMeter项目总表.xlsx)、[当前0.2版本档案](../releases/v0.2.0-20261001T034118Z/00-manifest.json)、[TM-003草稿导航](../releases/v0.3.0-20261001T034652Z/README.md) |
 | 查看所有用例集合 | [根目录TEST_CASES](../TEST_CASES.md)、[任务与用例规范](standards/test-cases.md) |
 | 确定文档规范 | [文档标准](standards/documentation.md)、[元数据登记](catalog.json) |
 | 查项目会话和文档交接 | [项目会话体系](project-sessions.md)：文档、SOP、开发总控与需求会话 |

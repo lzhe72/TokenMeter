@@ -2,6 +2,10 @@
 
 需求：`REQ-TM005`。规划版本：`0.5.0`。功能与全部用例为 **planned**，未执行产品 E2E，无 PASS 证据和发布资格。以下是待实现用例规格；步骤具体描述目标行为，缺少的程序和环境逐项列明。不能把文档完整误报为用例可执行。
 
+本轮双来源范围已确定：Codex 与 Claude Code 均必须从受支持原生日志经安装后的 App 采集。目标版本的任务拆解、[统计读取合同](../../../releases/v0.5.0-20261001T034729Z/03a-statistics-contract.md)、逐 TC 草案和规范化语义 oracle 分别见[02 拆解](../../../releases/v0.5.0-20261001T034729Z/02-breakdown.md)、[04a 逐 TC 草案](../../../releases/v0.5.0-20261001T034729Z/04a-test-cases.md)和[语义 oracle](../../../tests/fixtures/tm005-semantic-expected.json)。这些文件仍为 draft；现有 `date_ranges` 不具备原生数据或三态覆盖能力。
+
+32 条父 TC 和 6 个稳定变体已逐行进入 `tests/test_cases.json` 与项目总表，均为 `baseline_pending` / `unexecuted`，产品绑定为空。固定预检 `python3 scripts/check_tm005_bindings.py` 报告 38 项绑定缺口；这是目录负测和阻断证据，不是产品 E2E。
+
 ## 共用前置与执行规则
 
 依赖功能：`TM-003`、`TM-004`。进入实现前按 [SOP-006](../../../sop/SOP-006-test-plan.md) 确定当轮版本/平台矩阵，按 [SOP-010](../../../sop/SOP-010-test-data.md) 建立数据、SQL、独立 expected 及重置程序，再按 [SOP-011](../../../sop/SOP-011-test-implementation.md) 绑定真实测试；执行遵循 [SOP-014](../../../sop/SOP-014-e2e.md)。账号只用合成测试用户，所有数据库、日志、授权和设置均隔离；不得用用户生产库造数。
@@ -16,7 +20,7 @@
 
 **验收：** `AC-TM005-001`，每个 UI 指标、趋势和明细与独立 expected 对应范围一致。
 
-**前置/数据：** 数据集 `date_ranges`；date_ranges 已由 scripts/test_data.py 提供标准化语义样例，固定2026-09-29T04:00:00Z、Asia/Shanghai、seed42；13行含1重复、12唯一。需另有已验证raw输入映射和真实App导入流程，当前未实现。
+**前置/数据：** 目标数据集 `tm005_raw_both` 为 planned，生成程序为 null；已有 `date_ranges` 仅由 scripts/test_data.py 提供标准化语义样例，固定2026-09-29T04:00:00Z、Asia/Shanghai、seed42，13行含1重复、12唯一。需两个来源各自已验证版本的 raw 映射和真实App导入流程，当前未实现。
 
 **步骤：**
 
@@ -33,7 +37,7 @@
 
 **验收：** `AC-TM005-002`，自然日边界正确；无覆盖/未知数据与真实零值区别显示。
 
-**前置/数据：** 数据集 `date_ranges`；复用date_ranges中的2026-09-28T15:59:59Z与16:00:00Z、2026-08-30T15:59:59Z与16:00:00Z边界。另需补充覆盖缺口、已覆盖零调用日、unknown字段三类状态；当前生成器未覆盖后面三类。
+**前置/数据：** 目标数据集 `tm005_raw_both` 为 planned，生成程序为 null；语义设计复用date_ranges中的2026-09-28T15:59:59Z与16:00:00Z、2026-08-30T15:59:59Z与16:00:00Z边界。还需补充两个来源可证明的覆盖缺口、已覆盖零调用日、unknown字段三类原生状态；当前生成器未覆盖后面三类。
 
 **步骤：**
 
