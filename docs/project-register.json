@@ -2,9 +2,9 @@
   "schema_version": 1,
   "metadata": {
     "project": "TokenMeter",
-    "release_id": "v0.1.0-20260929T074814Z",
-    "snapshot_type": "planning_and_observed_development_joint_review",
-    "product_e2e_pass": true,
+    "release_id": "v0.2.0-20261001T034118Z",
+    "snapshot_type": "tm002_design_and_tm001_candidate_historical_evidence",
+    "product_e2e_pass": false,
     "release_eligible": false,
     "observed_run_id": "local-534748ff47cb44229183a6bd878c1674",
     "observed_run_state": "PASS",
@@ -12,13 +12,16 @@
     "observed_source_commit": "6e80dd12d60ee5dad641bca030445a2153a269c9",
     "observed_working_tree_dirty": true,
     "production_initial_password_reference": "scripts/bootstrap_sqlite.py::PRODUCTION_INITIAL_PASSWORD（本机配置引用；总表不保存取值）",
-    "notes": "TM001独立候选d2db551本机门禁PASS并生成通行证；最终master整合、归档和正式发布未完成。当前test_runs与observed_run_id仍是先前开发包联合复核的历史批次，d2门禁批次须在通行证和原件归档后按SOP-024另行登记。旧3467dc1门禁FAIL保留。",
+    "notes": "TM-002 设计与逐例用例尚未通过 SOP-008 基线；固定程序和产品 E2E 未执行。TM-001 独立 d2 候选门禁 PASS，但本地 master 整合后的稳定包仍待完整门禁；下列历史 test_runs、observed_run 和最新用例状态均属于 TM-001，不能继承为 TM-002 PASS。",
     "observed_raw_state": "BLOCKED",
     "observed_raw_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674/result.json",
     "observed_review_model": ".local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/granular-source.json",
     "observed_auxiliary_run_id": "aux-818fe55e1e8940e4a3196b9d03b76563",
     "observed_aggregate_run_id": "local-5197628d58ac4136b004b87da438220c",
-    "observed_audit_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674-audit-v2/audit.json"
+    "observed_audit_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674-audit-v2/audit.json",
+    "design_state": "baseline_pending",
+    "current_product_e2e_state": "NOT_RUN",
+    "publication_state": "not_published"
   },
   "requirements": [
     {
@@ -35,11 +38,12 @@
       "requirement_id": "REQ-TM002",
       "feature_id": "TM-002",
       "name": "首次授权",
-      "description": "选择目录、候选文件预览、记录采集/同步意愿、拒绝/撤销/重新授权",
+      "description": "已登录成员通过 macOS 原生目录选择器选定来源，预览选中根内候选文件；分别确认采集与未来同步意愿，App 在当前用户私有记录中加密持久保存已确认目录 locator；撤销删除记录，失效或解密失败停读，经重新选择和确认后恢复。",
       "acceptance_ids": "AC-TM002-001\nAC-TM002-002",
       "acceptance_count": 2,
-      "status": "planned",
-      "source": "docs/product/README.md:19"
+      "status": "baseline_pending",
+      "source": "docs/product/README.md:19",
+      "design_source": "releases/v0.2.0-20261001T034118Z/01-requirements.md:5"
     },
     {
       "requirement_id": "REQ-TM003",
@@ -201,19 +205,21 @@
       "ac_id": "AC-TM002-001",
       "requirement_id": "REQ-TM002",
       "feature_id": "TM-002",
-      "criterion": "真实系统授权完成，只读取选定目录；确认前不开始持续扫描；选择和同意状态可在重启后恢复",
-      "data_requirements": "",
-      "status": "planned",
-      "source": "tests/acceptance.json#AC-TM002-001"
+      "criterion": "已验证账号通过 macOS 原生目录选择器选定来源；App 强制只读取所选目录；确认前不持续扫描，选择和两项意愿在同一身份重启后恢复",
+      "data_requirements": "native_directory_picker\nselected_root_a_b\ncandidate_metadata\nconsent_state\nrestart_identity\naccess_audit\nencrypted_private_locator\nkeychain_fault_injection\npaged_candidate_scan",
+      "status": "baseline_pending",
+      "source": "tests/acceptance.json#AC-TM002-001",
+      "design_source": "releases/v0.2.0-20261001T034118Z/01-requirements.md:21"
     },
     {
       "ac_id": "AC-TM002-002",
       "requirement_id": "REQ-TM002",
       "feature_id": "TM-002",
-      "criterion": "App 不崩溃、不继续读取失效目录；重新授权后可读取目录并恢复授权状态",
-      "data_requirements": "",
-      "status": "planned",
-      "source": "tests/acceptance.json#AC-TM002-002"
+      "criterion": "用户在 App 内撤销来源或所选目录失效后，App 不崩溃并停止读取；再次通过原生目录选择器选定并明确确认后恢复读取和来源状态",
+      "data_requirements": "selected_root_a_b\naccess_loss\nreselect\naccess_audit\nowner_cleanup\nstale_selection_and_cursor",
+      "status": "baseline_pending",
+      "source": "tests/acceptance.json#AC-TM002-002",
+      "design_source": "releases/v0.2.0-20261001T034118Z/01-requirements.md:22"
     },
     {
       "ac_id": "AC-TM003-001",
@@ -494,11 +500,12 @@
       "level": "main",
       "parent_feature_id": "",
       "name": "首次授权",
-      "scope": "选择目录、候选文件预览、记录采集/同步意愿、拒绝/撤销/重新授权",
+      "scope": "已登录成员通过 macOS 原生目录选择器选定来源，预览选中根内候选文件；分别确认采集与未来同步意愿，App 在当前用户私有记录中加密持久保存已确认目录 locator；撤销删除记录，失效或解密失败停读，经重新选择和确认后恢复。",
       "ac_ids": "AC-TM002-001\nAC-TM002-002",
       "version": "0.2.0",
-      "status": "planned",
-      "source": "docs/product/README.md:19"
+      "status": "baseline_pending",
+      "source": "docs/product/README.md:19",
+      "design_source": "releases/v0.2.0-20261001T034118Z/01-requirements.md:13"
     },
     {
       "feature_id": "TM-003",
@@ -1165,6 +1172,125 @@
       "historical_test_mapping": "",
       "status": "pending_case_mapping_and_acceptance",
       "source": "releases/v0.1.0-20260929T074814Z/02-breakdown.md:56"
+    },
+    {
+      "task_id": "TASK-TM002-PICKER",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-01",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-001",
+      "input": "已验证的 TM-001 登录身份",
+      "output_and_done": "通过原生目录选择器取得来源；取消不改状态；主进程只接受系统选择结果，不暴露 renderer 任意路径读取接口",
+      "dependencies": "TM-001 身份；主进程选择器、preload、引导 UI",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:7"
+    },
+    {
+      "task_id": "TASK-TM002-PREVIEW",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-01",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-001",
+      "input": "PICKER 暂选根与本版候选规则",
+      "output_and_done": "只列相对名称、大小、时间；拒绝符号链接逸出及未选根，绝不读取正文；达到上限标明预览不完整",
+      "dependencies": "PICKER；主进程候选枚举和 UI",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:8"
+    },
+    {
+      "task_id": "TASK-TM002-CONSENT",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-02",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-001",
+      "input": "PICKER/PREVIEW 暂选结果与用户明确意愿",
+      "output_and_done": "分别确认采集与未来同步意愿；确认前不持续读取，本版不因同步意愿上传",
+      "dependencies": "PICKER、PREVIEW；UI 与主进程来源状态机",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:9"
+    },
+    {
+      "task_id": "TASK-TM002-STORE",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-02",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-001",
+      "input": "已确认来源、服务 origin 与真实账号",
+      "output_and_done": "已确认目录的规范化路径以 Electron safeStorage 加密为 locator，密文写入当前用户 0700/0600 私有 sources 记录，macOS 密钥由 Keychain 保护；按服务 origin 与真实账号隔离，重启经验证恢复；未确认暂选内容不持久化，密钥不可用或解密失败停读，不回退明文。",
+      "dependencies": "CONSENT；受保护本地配置、safeStorage/Keychain 与状态恢复；无加密能力时安全拒绝",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:10",
+      "decision_source": "releases/v0.2.0-20261001T034118Z/01-requirements.md:32"
+    },
+    {
+      "task_id": "TASK-TM002-ACCESS",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-03",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-002",
+      "input": "已确认来源及可读取目录",
+      "output_and_done": "后续读取经主进程受限接口；受控候选元数据刷新验证范围；App 内撤销删除 locator 并立即停读，密钥不可用、解密失败、目录不可读或根身份变化均停读；经原生选择器重新选择并确认后才恢复。",
+      "dependencies": "STORE；来源访问模块与 UI 状态；TM-003 后续调用",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:11",
+      "decision_source": "releases/v0.2.0-20261001T034118Z/01-requirements.md:32"
+    },
+    {
+      "task_id": "TASK-TM002-DATA",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-01\nFP-TM002-02\nFP-TM002-03",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-001\nAC-TM002-002",
+      "input": "本轮隔离目录与独立预期值",
+      "output_and_done": "固定合成 A/B、候选/非候选/逸出文件及确认/失效状态；只清理取得所有权的目录",
+      "dependencies": "SOP-010；不访问真实工具日志或生产库",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:12"
+    },
+    {
+      "task_id": "TASK-TM002-CATALOG",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-01\nFP-TM002-02\nFP-TM002-03",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-001\nAC-TM002-002",
+      "input": "本版逐条 TC 与跨版本任务归属",
+      "output_and_done": "新 TC 关联 0.2.0 TASK，保留 0.1.0 TC 归属；目录导出及质量检查有失败回归",
+      "dependencies": "SOP-000/006/011；测试清单、导出和治理测试",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:13"
+    },
+    {
+      "task_id": "TASK-TM002-RUNNER",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-01\nFP-TM002-02\nFP-TM002-03",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-001\nAC-TM002-002",
+      "input": "固定用例代码、隔离服务和 SQLite",
+      "output_and_done": "驱动安装后 App 与真实原生面板；逐 TC 自动保存步骤及读取范围证据；缺绑定或环境判 BLOCKED",
+      "dependencies": "SOP-011/014；Playwright spec、面板驱动和本机 runner/gate",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:14"
+    },
+    {
+      "task_id": "TASK-TM002-DELIVERY",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM002-01\nFP-TM002-02\nFP-TM002-03",
+      "requirement_id": "REQ-TM002",
+      "ac_ids": "AC-TM002-001\nAC-TM002-002",
+      "input": "TM-001 与 TM-002 完整回归范围及最终候选",
+      "output_and_done": "运行全部目标 TC 和既有完整回归，验证稳定包真实升级、最终 DMG 与本机门禁；仅原件 PASS 放行",
+      "dependencies": "SOP-013/014/017/018；打包、门禁与本地归档",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.2.0-20261001T034118Z/02-breakdown.md:15"
     }
   ],
   "sops": [
@@ -1624,6 +1750,22 @@
       "historical_evidence": "旧SwiftUI PR #2 已合并、历史双平台六例PASS；不继承给Electron",
       "source": "releases/v0.1.0-20260929T074814Z/00-manifest.json",
       "status_source": "releases/v0.1.0-20260929T074814Z/06-iteration-record.md"
+    },
+    {
+      "release_id": "v0.2.0-20261001T034118Z",
+      "version": "0.2.0",
+      "created_at": "2026-10-01T03:41:18Z",
+      "kind": "product_feature",
+      "feature_ids": "TM-002",
+      "manifest_state": "not_published",
+      "distribution_profile": "internal",
+      "asset_storage": "本机版本归档及 dmg/<release_id>/；当前无本版正式包",
+      "github_release": false,
+      "actual_state": "0.2.0 已确定原生面板、App 私有加密持久 locator 与受限读取模型；规范和逐条 TC 核对仍待完成（baseline_pending）。产品 E2E 未执行，未签发通行证，未发布。",
+      "historical_evidence": "TM-001 历史完整回归为 FAIL/BLOCKED，不能继承为本版 PASS；本版无实际产品运行。",
+      "source": "releases/v0.2.0-20261001T034118Z/00-manifest.json",
+      "status_source": "releases/v0.2.0-20261001T034118Z/06-iteration-record.md",
+      "design_source": "releases/v0.2.0-20261001T034118Z/01-requirements.md:32"
     }
   ],
   "retrospectives": [

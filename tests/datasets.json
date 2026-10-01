@@ -41,10 +41,24 @@
     },
     {
       "id": "system_permissions",
-      "description": "系统文件/通知授权与撤销的隔离环境",
+      "description": "TM-002 原生目录选择与 App 主进程来源限制、合成 A/B 候选、Keychain 加密 locator、独立意愿、身份恢复与自有目录失效的隔离环境；不主张系统沙盒授权",
       "status": "planned",
       "generator": null,
-      "capabilities": []
+      "capabilities": [
+        "native_directory_picker",
+        "selected_root_a_b",
+        "candidate_metadata",
+        "paged_candidate_scan",
+        "encrypted_private_locator",
+        "keychain_fault_injection",
+        "stale_selection_and_cursor",
+        "consent_state",
+        "restart_identity",
+        "access_loss",
+        "reselect",
+        "access_audit",
+        "owner_cleanup"
+      ]
     },
     {
       "id": "codex_raw",

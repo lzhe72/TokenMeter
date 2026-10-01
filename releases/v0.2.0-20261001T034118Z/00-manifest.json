@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.2.0-20261001T034118Z",
+  "version": "0.2.0",
+  "created_at": "2026-10-01T03:41:18Z",
+  "kind": "product_feature",
+  "feature_ids": [
+    "TM-002"
+  ],
+  "product_feature_matrix": "tests/feature_matrix.json",
+  "documents": {
+    "requirements": "releases/v0.2.0-20261001T034118Z/01-requirements.md",
+    "breakdown": "releases/v0.2.0-20261001T034118Z/02-breakdown.md",
+    "development_plan": "releases/v0.2.0-20261001T034118Z/03-development-plan.md",
+    "test_plan": "releases/v0.2.0-20261001T034118Z/04-test-plan.md",
+    "release_plan": "releases/v0.2.0-20261001T034118Z/05-release-plan.md",
+    "iteration_record": "releases/v0.2.0-20261001T034118Z/06-iteration-record.md"
+  },
+  "global_design": "docs/design-plan.md",
+  "lifecycle": "docs/lifecycle.md",
+  "documentation_standard": "docs/standards/documentation.md",
+  "changelog": "CHANGELOG.md",
+  "changelog_heading": "v0.2.0-20261001T034118Z",
+  "traceability": [
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PICKER",
+      "test": "E2E-TM002-001",
+      "description": "选择、预览、意愿与恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PREVIEW",
+      "test": "E2E-TM002-001",
+      "description": "选择、预览、意愿与恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-CONSENT",
+      "test": "E2E-TM002-001",
+      "description": "选择、预览、意愿与恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-STORE",
+      "test": "E2E-TM002-001",
+      "description": "选择、预览、意愿与恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PICKER",
+      "test": "E2E-TM002-002",
+      "description": "撤销、失效与重新选择"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-ACCESS",
+      "test": "E2E-TM002-002",
+      "description": "撤销、失效与重新选择"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PICKER",
+      "test": "TC-TM002-SELECT-01",
+      "description": "首次从原生面板选择 A"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PICKER",
+      "test": "TC-TM002-SELECT-02",
+      "description": "面板取消保留当前来源状态"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PICKER",
+      "test": "TC-TM002-SELECT-04",
+      "description": "Claude Code 来源选择、预览、确认与恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PREVIEW",
+      "test": "TC-TM002-SELECT-04",
+      "description": "Claude Code 来源选择、预览、确认与恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-CONSENT",
+      "test": "TC-TM002-SELECT-04",
+      "description": "Claude Code 来源选择、预览、确认与恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-STORE",
+      "test": "TC-TM002-SELECT-04",
+      "description": "Claude Code 来源选择、预览、确认与恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PREVIEW",
+      "test": "TC-TM002-PREVIEW-01",
+      "description": "只显示 A 的候选元数据"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PREVIEW",
+      "test": "TC-TM002-PREVIEW-02",
+      "description": "非候选文件不充当日志"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PREVIEW",
+      "test": "TC-TM002-PREVIEW-03",
+      "description": "符号链接不能逸出选中根"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PREVIEW",
+      "test": "TC-TM002-PREVIEW-04",
+      "description": "枚举上限与“不完整”提示"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-CONSENT",
+      "test": "TC-TM002-CONSENT-01",
+      "description": "预览不启动持续读取"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-CONSENT",
+      "test": "TC-TM002-CONSENT-02",
+      "description": "采集开启、未来同步关闭"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-CONSENT",
+      "test": "TC-TM002-CONSENT-03",
+      "description": "采集关闭时两种未来同步意愿独立保存"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-CONSENT",
+      "test": "TC-TM002-CONSENT-04",
+      "description": "两意愿均开启，本版仍不上传"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-STORE",
+      "test": "TC-TM002-STATE-01",
+      "description": "同账号重启恢复与损坏密文停读（#NORMAL_RESTORE / #CORRUPT_LOCATOR）"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-STORE",
+      "test": "TC-TM002-STATE-02",
+      "description": "同服务账号隔离"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-STORE",
+      "test": "TC-TM002-STATE-03",
+      "description": "同账号不同服务 origin 隔离"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PICKER",
+      "test": "TC-TM002-SELECT-03",
+      "description": "失效后选择面板取消"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-ACCESS",
+      "test": "TC-TM002-ACCESS-01",
+      "description": "用户主动撤销来源"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-ACCESS",
+      "test": "TC-TM002-ACCESS-02",
+      "description": "POSIX 拒读后停止访问"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-ACCESS",
+      "test": "TC-TM002-ACCESS-03",
+      "description": "同路径新 inode 不继承旧授权"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-ACCESS",
+      "test": "TC-TM002-ACCESS-04",
+      "description": "重启后取消重新选择仍停读"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-ACCESS",
+      "test": "TC-TM002-ACCESS-05",
+      "description": "真实重新选择并确认后恢复"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-PREVIEW",
+      "test": "TC-TM002-LIMIT-01",
+      "description": "2 秒枚举期限的固定时钟边界"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-STORE",
+      "test": "TC-TM002-STORE-01",
+      "description": "私有加密来源记录与写入失败保留健康旧根（#WRITE_FAIL_KEEP_OLD）"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-ACCESS",
+      "test": "TC-TM002-ACCESS-06",
+      "description": "内部分页游标完整性与失效"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-ACCESS",
+      "test": "TC-TM002-SECURITY-01",
+      "description": "renderer 不能传任意路径"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-DATA",
+      "test": "TC-TM002-DATA-01",
+      "description": "fixture 仅操作自有根"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-CATALOG",
+      "test": "TC-TM002-CATALOG-01",
+      "description": "各版本 TC 归属不能串线"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-RUNNER",
+      "test": "TC-TM002-EVIDENCE-01",
+      "description": "缺原生/文件审计不得放行"
+    },
+    {
+      "requirement": "REQ-TM002",
+      "feature": "TM-002",
+      "task": "TASK-TM002-DELIVERY",
+      "test": "TC-TM002-DELIVERY-01",
+      "description": "最终包、升级与全量回归门禁"
+    }
+  ],
+  "program_bindings_status": "planned",
+  "test_programs": [],
+  "test_data_program": null,
+  "test_sop": "sop/SOP-014-e2e.md",
+  "execution_profile": "local_electron",
+  "execution_bindings_status": "planned",
+  "test_case_catalog": "tests/test_cases.json",
+  "test_case_collection": "TEST_CASES.md",
+  "test_case_documents": [
+    "docs/testing/cases/02-TM-002-permissions.md"
+  ],
+  "project_workbook": "TokenMeter项目总表.xlsx",
+  "project_register": "docs/project-register.json",
+  "distribution_profile": "internal",
+  "publication": {
+    "planned_git_tag": "v0.2.0-20261001T034118Z",
+    "expected_passport_asset": "v0.2.0-20261001T034118Z.passport.json",
+    "passport_policy": "issued_locally_after_verified_final_package_e2e",
+    "state": "not_published",
+    "asset_storage": "local_only",
+    "github_release": false
+  },
+  "lookup_command": "python3 scripts/release_registry.py show --release-id v0.2.0-20261001T034118Z",
+  "sop_index": "sop/README.md",
+  "document_catalog": "docs/catalog.json"
+}
