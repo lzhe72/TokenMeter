@@ -2,10 +2,12 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-003 的 `CORE-01`～`CORE-07`固定模块测试、套件注册表和 `run_source_check.mjs` 已随本地 master 合入本文档候选树；机器用例现逐条绑定程序、测试名、owner 重置和独立命令，`TEST_CASES.md`与总表同步。先前各模块 PASS 原件仍只证明原候选；本次绑定后的整合树尚未新run，产品 App/IPC/真实授权和正式发行仍NOT_RUN。文档树 `.local` 目录权限曾使治理两例在前置安全检查失败，改回 owner 0700 后该两例重跑2/2 PASS；全量治理首次509/511，待整合树复核。
+
 TM-001 709d候选`ADMIN`定向run`local-cd15a5fef2444f748088d1fcdd29fe0d`覆盖6父+5变体，11行/33步PASS、清理和Excel回读PASS；仅`ADMIN-03`独立审计PASS，作为总表第28批次。其他TM-001功能、完整审计、旧c291完整门禁FAIL与正式发行NOT_RUN保持。
 
 
-TM-003 `CORE-07`在代码候选`33b1ee1636fc8e92ecba834856769df9f112c509`独立`source_check` run`tm003-core07-20261001T200438Z`固定五步1/1、清理与Excel回读PASS，登记总表第27批次；先前固定红测FAIL原件保留。模块假能力/小文件结果不证明真实App/IPC、Keychain、任意大日志或产品E2E；程序未进入本文档树，机器绑定仍null。
+TM-003 `CORE-07`在代码候选`33b1ee1636fc8e92ecba834856769df9f112c509`独立`source_check` run`tm003-core07-20261001T200438Z`固定五步1/1、清理与Excel回读PASS，登记总表第27批次；先前固定红测FAIL原件保留。模块假能力/小文件结果不证明真实App/IPC、Keychain、任意大日志或产品E2E；该句记录当时文档树状态，后续本地master整合后已补齐同树机器绑定。
 
 
 TM-001 709d候选`SESSION`功能定向run`local-ff24478631134a96bd7d40f2bbc5e254`覆盖10父+2变体，12行/44步PASS、清理和Excel回读PASS；仅`SESSION-04`独立审计PASS，作为总表第26批次。其余TM-001功能、完整审计及正式发行仍按原阻断。

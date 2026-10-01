@@ -1,3 +1,7 @@
+## 2026-10-02 · CORE-01～07同树机器绑定
+
+本地master的固定模块测试、`tests/source_check_suites.json`与`scripts/run_source_check.mjs`已合入文档候选树。文档会话按SOP-011/024把七条辅助TC逐项绑定到同树测试文件、精确名称、owner重置和suite独立命令，并再生`TEST_CASES.md`及根总表。既有模块PASS批次保留其原候选SHA/tree，不反填本次机器清单的执行状态；整合候选必须由干净提交新run核对。0.3产品TC、真实TM-002授权/App/Keychain及正式门禁仍NOT_RUN。治理全量首次509/511，两例仅因本树`.local`目录权限过宽被导出器前置拒绝；恢复owner 0700后定向2/2 PASS，随后再复核全量。
+
 # REQ-TM003 · 执行记录与交接
 
 ## 2026-10-02 · CORE-06 多文件generation固定模块回归

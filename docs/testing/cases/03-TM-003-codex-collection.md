@@ -188,17 +188,17 @@
 
 ## 无授权依赖的解析与身份开发切片
 
-以下三个辅助 TC 只检查私有合成字节、纯解析结果和本例拥有的临时 SQLite；不启动 App、不调用 TM-002 目录能力或产品 profile/Keychain。它们把 `TC-TM003-PARSE-01/PARSE-02/DEDUP-01` 的输入与独立预期固定为可先编写的模块测试，不能代填对应产品 TC 的 UI、IPC、授权、正式存储或最终包结果。数据使用 seed303、固定 `T0=2026-10-01T06:00:00Z`、官方已核验的 `0.158.0-alpha.2.1` 原生字段形状；每例新建测试拥有的 0700 临时根，固定 expected 在测试源码内显式声明，原始研究文件不作为程序绑定。测试结束仅清理 owner 收据所列文件。程序绑定未交付前，三个 TC 的执行状态仍为 unexecuted。
+以下三个辅助 TC 只检查私有合成字节、纯解析结果和本例拥有的临时 SQLite；不启动 App、不调用 TM-002 目录能力或产品 profile/Keychain。它们把 `TC-TM003-PARSE-01/PARSE-02/DEDUP-01` 的输入与独立预期固定为可先编写的模块测试，不能代填对应产品 TC 的 UI、IPC、授权、正式存储或最终包结果。数据使用 seed303、固定 `T0=2026-10-01T06:00:00Z`、官方已核验的 `0.158.0-alpha.2.1` 原生字段形状；每例新建测试拥有的 0700 临时根，固定 expected 在测试源码内显式声明，原始研究文件不作为程序绑定。测试结束仅清理 owner 收据所列文件。当前同树程序与运行入口已绑定；既有模块运行仍归属各自原候选，绑定变更后的整合候选须另起 run。
 
 | TC / TASK / 类型 | 输入与有序动作 | 每步独立预期及 DB 操作 | 绑定与状态 |
 | --- | --- | --- | --- |
-| `TC-TM003-CORE-01` / `TASK-TM003-PARSE` / source_check | 1. 在私有文件写 A=100/10/cached20 的完整 `token_usage_record` LF 行并调用模块解析入口。2. 只追加 B=200/20/cached40 的前半字节、无 LF，再解析。3. 补齐 B 与 LF，追加 C=300/30/cached60 与仅含累计快照的两条完整 LF 行，再解析并复扫。 | 1. 返回 A 一事件、`input=100/output=10/total=110/cached=20`，完成偏移恰在 A 的 LF 后。2. 仍只有 A，完成偏移不跨半行。3. 仅 A/B/C 三个不同响应，`input=600/output=60/total=660/cached=120`；累计快照与复扫不增量，完成偏移在累计快照行的 LF 后。无产品 DB 写入；只核对解析输出、源字节摘要和临时文件长度，重置为本例新根。 | `null`；设计切片，程序未绑定、未执行；产品对应 PARSE-01/SCAN-02 保持 BLOCKED。 |
-| `TC-TM003-CORE-02` / `TASK-TM003-SOURCE`, `TASK-TM003-PARSE` / source_check | 1. 输入只有无响应 ID 的累计100/10与 `info=null` rate-limit 行。2. 输入合法 A，再分别输入缺 `usage`、负 input、cached111>input100、total111 四条不同 ID 的完整 LF 行。3. 输入未知 build 的完整记录。 | 1. 零可信事件，分别诊断 `unverified_cumulative`、`missing_usage`，不生成零值事件。2. 只有 A=110 一事件；四条负例依次产生 `missing_usage`、`negative_input`、`invalid_cached`、`invalid_total`，不覆写 A。3. 零新增事件、`unsupported_source_version`。无产品 DB 写入；独立枚举事件和诊断代码/数量，重置为本例新根。 | `null`；设计切片，程序未绑定、未执行；产品对应 SOURCE-02/PARSE-02 保持 BLOCKED。 |
-| `TC-TM003-CORE-03` / `TASK-TM003-IDENTITY` / source_check | 1. 用公开身份向量的32字节测试 key，经正式身份函数处理 `codex/provider-response/shared-call-01` 的 A=100/10/cached20，并写入本例临时 SQLite。2. 同 ID、同 usage 重放；再写不同 ID `shared-call-02`、相同 usage。3. 同 `shared-call-01` 写999/99冲突值；另用相同字面 `shared-call-01` 但 `claude_code/provider-message` 求键。 | 1. 一个可信事件、total110，键精确为 `afd67bd0cad0227b3e7b5ac132bb9b3ed492073983b9c16a0c9cc24dd3008051`。2. 重放后仍一个事件；新 ID 后两个事件，`input=200/output=20/cached=40/total=220`。3. 首事件不变、诊断 `identity_conflict`；跨来源键精确为 `bf222a85ab2209f72ff82c21b7172c9315448b3e1d5bf4503a3c76b30c46cad1`，不在本例产品库中添加 Claude 事件。DB 准备是测试拥有的空 SQLite；只通过正式模块 API 插入，不直接 SQL 造事件；只读核对唯一约束、两行总量和诊断，结束只清理本例 DB。 | `null`；设计切片，程序未绑定、未执行；公开 key 不写入产品 profile；产品对应 DEDUP-01/NAMESPACE-01 保持 BLOCKED。 |
+| `TC-TM003-CORE-01` / `TASK-TM003-PARSE` / source_check | 1. 在私有文件写 A=100/10/cached20 的完整 `token_usage_record` LF 行并调用模块解析入口。2. 只追加 B=200/20/cached40 的前半字节、无 LF，再解析。3. 补齐 B 与 LF，追加 C=300/30/cached60 与仅含累计快照的两条完整 LF 行，再解析并复扫。 | 1. 返回 A 一事件、`input=100/output=10/total=110/cached=20`，完成偏移恰在 A 的 LF 后。2. 仍只有 A，完成偏移不跨半行。3. 仅 A/B/C 三个不同响应，`input=600/output=60/total=660/cached=120`；累计快照与复扫不增量，完成偏移在累计快照行的 LF 后。无产品 DB 写入；只核对解析输出、源字节摘要和临时文件长度，重置为本例新根。 | `tm003-core.test.ts` / `tm003-core`；原候选模块PASS，整合候选待新run；产品 PARSE-01/SCAN-02 仍BLOCKED。 |
+| `TC-TM003-CORE-02` / `TASK-TM003-SOURCE`, `TASK-TM003-PARSE` / source_check | 1. 输入只有无响应 ID 的累计100/10与 `info=null` rate-limit 行。2. 输入合法 A，再分别输入缺 `usage`、负 input、cached111>input100、total111 四条不同 ID 的完整 LF 行。3. 输入未知 build 的完整记录。 | 1. 零可信事件，分别诊断 `unverified_cumulative`、`missing_usage`，不生成零值事件。2. 只有 A=110 一事件；四条负例依次产生 `missing_usage`、`negative_input`、`invalid_cached`、`invalid_total`，不覆写 A。3. 零新增事件、`unsupported_source_version`。无产品 DB 写入；独立枚举事件和诊断代码/数量，重置为本例新根。 | `tm003-core.test.ts` / `tm003-core`；原候选模块PASS，整合候选待新run；产品 SOURCE-02/PARSE-02 仍BLOCKED。 |
+| `TC-TM003-CORE-03` / `TASK-TM003-IDENTITY` / source_check | 1. 用公开身份向量的32字节测试 key，经正式身份函数处理 `codex/provider-response/shared-call-01` 的 A=100/10/cached20，并写入本例临时 SQLite。2. 同 ID、同 usage 重放；再写不同 ID `shared-call-02`、相同 usage。3. 同 `shared-call-01` 写999/99冲突值；另用相同字面 `shared-call-01` 但 `claude_code/provider-message` 求键。 | 1. 一个可信事件、total110，键精确为 `afd67bd0cad0227b3e7b5ac132bb9b3ed492073983b9c16a0c9cc24dd3008051`。2. 重放后仍一个事件；新 ID 后两个事件，`input=200/output=20/cached=40/total=220`。3. 首事件不变、诊断 `identity_conflict`；跨来源键精确为 `bf222a85ab2209f72ff82c21b7172c9315448b3e1d5bf4503a3c76b30c46cad1`，不在本例产品库中添加 Claude 事件。DB 准备是测试拥有的空 SQLite；只通过正式模块 API 插入，不直接 SQL 造事件；只读核对唯一约束、两行总量和诊断，结束只清理本例 DB。 | `tm003-core.test.ts` / `tm003-core`；原候选模块PASS，整合候选待新run；产品 DEDUP-01/NAMESPACE-01 仍BLOCKED。 |
 
 ## 无授权依赖的存储与游标开发切片
 
-固定输入为[tm003-core-storage-cursor.json](../../../tests/fixtures/tm003-core-storage-cursor.json)，seed303、已核验Codex版本、公开测试密钥`000102…1f`与另一有效密钥`202122…3f`。fixture的header+A、header+A+B、header+A+B+C完整LF长度分别为410、750、1090字节，原始字节及SHA在fixture；A/B/C分别为100/10/cached20、200/20/cached40、300/30/cached60。每例使用新建的0700 owner根、0600临时客户端SQLite，不读取TM-002已授权根、真实profile、Keychain或服务。输入事件只由该fixture的正式解析模块产生，测试不得直接SQL造`usage_event`；测试SQL仅可注入本例库的失败触发器和只读核对。每一步运行前程序固定预期和断言，输出`source_check`逐步结果与清理原件；程序未绑定前执行状态为unexecuted。
+固定输入为[tm003-core-storage-cursor.json](../../../tests/fixtures/tm003-core-storage-cursor.json)，seed303、已核验Codex版本、公开测试密钥`000102…1f`与另一有效密钥`202122…3f`。fixture的header+A、header+A+B、header+A+B+C完整LF长度分别为410、750、1090字节，原始字节及SHA在fixture；A/B/C分别为100/10/cached20、200/20/cached40、300/30/cached60。每例使用新建的0700 owner根、0600临时客户端SQLite，不读取TM-002已授权根、真实profile、Keychain或服务。输入事件只由该fixture的正式解析模块产生，测试不得直接SQL造`usage_event`；测试SQL仅可注入本例库的失败触发器和只读核对。每一步运行前程序固定预期和断言，输出`source_check`逐步结果与清理原件；CORE-04/05当前分别绑定`tm003-core45.test.ts`同一suite，原候选模块PASS，整合候选待新run。
 
 ### TC-TM003-CORE-04 · 同步批次原子提交与密钥标记
 
@@ -229,6 +229,8 @@
 
 ### TC-TM003-CORE-06 · 多文件代际一次提交与全回滚
 
+当前同树绑定：`tm003-core06.test.ts` / `tm003-core06`；原候选模块PASS，整合候选待新run。
+
 **TASK：** `TASK-TM003-SCAN`、`TASK-TM003-STORE`。**AC：** `AC-TM003-001`, `AC-TM003-003`。**类型：** `source_check`。**输入：** 固定[tm003-core-generation.json](../../../tests/fixtures/tm003-core-generation.json)引用同源原始行：合成file-a=`header+A`与file-b=`header+B`各410字节，分别SHA预置；两页属于同一generation，第1页`complete=false`只交file-a，末页`complete=true`交file-b。仅使用本例已打开合成句柄/假scan capability、固定公开key1、owner 0700根/0600空SQLite。两个文件都先有可信A/B的解析候选，但不能逐文件提交；每次独立试验从新空库/代际开始。
 
 | 步骤 | 固定动作 | 每步预期、DB只读判据 |
@@ -242,7 +244,7 @@
 
 ### TC-TM003-CORE-07 · 主进程采集编排与能力失效
 
-**TASK：** `TASK-TM003-SCAN`、`TASK-TM003-STORE`。**AC：** `AC-TM003-001/003`。**类型：** `source_check`。**输入：** [固定主进程fixture](../../../tests/fixtures/tm003-main-collector-slice.json)引用CORE-06两份各410字节的原始行，公开测试密钥、已验证主体与已确认`sourceId`；假的TM-002 `SourceAccess`只暴露正式`beginCandidateScan`、`nextCandidatePage`、`readCandidateChunk`、`commitGuard`、`cancelScan`端口，存储则用本例0700根/0600 SQLite和真实`UsageStore`。每条故障路径独立重建空库，仅读核`usage_event/source_cursor/collection_diagnostic/coverage`；结束按owner清理并保留原始模块报告。输入在实现前固定，程序绑定`null`、执行`unexecuted`。
+**TASK：** `TASK-TM003-SCAN`、`TASK-TM003-STORE`。**AC：** `AC-TM003-001/003`。**类型：** `source_check`。**输入：** [固定主进程fixture](../../../tests/fixtures/tm003-main-collector-slice.json)引用CORE-06两份各410字节的原始行，公开测试密钥、已验证主体与已确认`sourceId`；假的TM-002 `SourceAccess`只暴露正式`beginCandidateScan`、`nextCandidatePage`、`readCandidateChunk`、`commitGuard`、`cancelScan`端口，存储则用本例0700根/0600 SQLite和真实`UsageStore`。每条故障路径独立重建空库，仅读核`usage_event/source_cursor/collection_diagnostic/coverage`；结束按owner清理并保留原始模块报告。输入在实现前固定；当前绑定`tm003-core07.test.ts`/`tm003-core07`，原候选模块PASS，整合候选待新run。
 
 | 步骤 | 固定动作 | 独立预期及DB检查 |
 | --- | --- | --- |
@@ -256,7 +258,7 @@
 
 ## 当前执行合同
 
-每个 TC 的输入、步骤和 expected 已在此固定；实现时只能把它们绑定到可重复的代码并补充来源版本、具体文件 SHA/SQL 与稳定选择器，不得为适配已有代码改弱独立预期。`AC-TM003-001` 至 `004`、四个 E2E 组和全部具体 TC 双向保持。数据与程序未实现时，`tests/feature_matrix.json` 的目标仍为 planned、`tests/datasets.json` 的 `codex_raw` 仍为 planned，产品 E2E 的实际结论只能是 BLOCKED；完成文档结构或单元测试不能改变这一事实。
+每个 TC 的输入、步骤和 expected 已在此固定；程序绑定须保留来源版本、具体文件 SHA/SQL 与稳定选择器，不得为适配已有代码改弱独立预期。当前CORE-01～07由`tests/source_check_suites.json`和`scripts/run_source_check.mjs`绑定，命令为`node scripts/run_source_check.mjs --suite <suite> --run-id <新唯一UTC时间>`，每例在对应测试文件内创建并清理owner根。`AC-TM003-001` 至 `004`、四个 E2E 组和全部具体 TC 双向保持。数据与程序未实现时，`tests/feature_matrix.json` 的目标仍为 planned、`tests/datasets.json` 的 `codex_raw` 仍为 planned，产品 E2E 的实际结论只能是 BLOCKED；完成文档结构或单元测试不能改变这一事实。
 
 ## 稳定 TC 定位
 
