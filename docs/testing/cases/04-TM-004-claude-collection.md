@@ -163,3 +163,30 @@
 ### TC-TM004-INCREMENTAL-03 · 跨工具同 ID 与 Claude 复制历史（TASK-TM004-INCREMENTAL，AC-001/002，E2E-001/002）
 
 输入：同一合成主体、各自经 UI 授权的 Codex 与 Claude 隔离根。固定本地响应使 Codex 原生 `payload.response_id` 与 Claude 主 `assistant.message.id` 字面均为 `shared-call-01`，分别有 C=11/1 与 M=100/10；Claude 原生 `--fork-session` 复制M，再有独立 Agent 子调用S=200/20（新 message.id、与父同 sessionId 但带 agentId）。另以明确标记的衍生故障数据令同一 Claude message.id 出现矛盾101/10，该行不冒称 CLI 原件。步骤：①经安装 App 扫描C，可信1次/total12；②扫描M，可信2次/input111/output11/total122，跨工具同字面 ID 不冲突；③扫描 fork 复制M与 Agent S，可信3次/input311/output31/total342；④加入矛盾行并重扫/重启，可信仍3次/342，出现 `identity_conflict` 与覆盖不完整。SQL：只读同一 `principal_key` 下 `source=codex` 与 `source=claude_code` 各自事件数1/2、`source_event_key` 不同，Agent `source_scope_key` 与主来源可区分，复制M不多行，冲突不覆写原M；键与归属均不得存原生ID/完整路径。类型：产品E2E；`usage-identity-v1` 长度前缀/HMAC、TM-003 schema 和迁移、两工具原生同字面ID固定程序、安装 App/SQL绑定均待稳定实现，`baseline_pending`、`automated_test=null`。
+## 无授权依赖的reader辅助切片
+
+共同输入为版本化[reader fixture](../../../tests/fixtures/tm004-reader-core-slice.json)：隔离Claude 2.1.126投影 `raw-main.jsonl` SHA-256 `2b484c185cf0ba333a85c53eb4953f13ddd2e40b6ab95167ca353a8454588ffe`，首条assistant按JSON解析再紧凑序列化加LF为746字节、SHA-256 `cefd7dbe966383874d5b0f587c41089ecfbd8150a980a8b9ca701e4df4c9855f`，调用13/7=20。测试仅在自有0700临时目录写0600合成文件，并另以只读方式打开FileHandle，把合成稳定身份和32字节测试秘密传给模块；不访问用户日志、TM-002授权、产品Keychain、SQLite、IPC、服务或App。每例固定程序先核对输入摘要，逐步输出数值/诊断/游标及退出状态，最终只删除本例自有文件；无产品DB操作，原20条产品TC仍draft/unexecuted。此处的`fileIdentity`是模块合成稳定值，不等于TM-002会随size/mtime改变的候选`fileIdentityDigest`。
+
+### TC-TM004-CORE-01 · 完整LF、半行与限额续读
+
+**TASK：** `TASK-TM004-INCREMENTAL`；**AC：** `AC-TM004-002`；**类型：** 辅助模块。**输入：** 固定746字节行、前半字节以及两条独立调用行，首读上限754字节。
+
+1. 只写前半行并读一次：调用0，游标偏移0，`scanIncomplete=true`，无可信零结论；源字节不变。
+2. 补齐746字节LF并沿偏移0读：仅一条调用，13/7=20；偏移746，前缀MAC等于以32字节测试秘密对精确746原始字节计算的HMAC-SHA256，`scanIncomplete=false`。重复读且无新字节时调用0、游标不变。
+3. 重置本例文件为两条完整但不同ID的行，首读限额754字节（跨入第二行8字节）：首读仅第一条调用且偏移746，`read_limit`与`scanIncomplete=true`；下一次续读仅第二条调用，偏移等于两行原始字节总长，覆盖才可标完整。无SQLite写入；完整产品`INCREMENTAL-01`仍需真实授权、事务与App测试。
+
+### TC-TM004-CORE-02 · 前缀MAC、变更和密钥失败
+
+**TASK：** `TASK-TM004-INCREMENTAL`；**AC：** `AC-TM004-002/004`；**类型：** 辅助模块。**输入：** 首次完整行及游标、在同一文件追加第二完整行、同长度不同ID改写行、截短、模拟源身份变化和不可用秘密。每一子场景从相同已提交第一行的自有副本开始。
+
+1. 固定第一行后追加第二完整行，即使候选size/mtime指纹变化，只要同一稳定模块身份和已提交746字节前缀MAC不变，续读仅返回第二调用，偏移到新LF末，不报`cursor_reset`。不能把TM-002候选快照digest当稳定身份传入。
+2. 将前缀原地改成同字节长度、不同`message.id`的完整行，并把mtime恢复为原值；同inode/同size/同mtime也须因prefixMAC不符报`cursor_reset`、从0返回改写后的唯一调用。截短到游标前、或使用不同稳定身份时亦从0重扫且报重置。reader本身不保证数据库去重，旧事件保留及coverage缺口须由TM-003事务与产品TC核对。
+3. 秘密缺失/非32字节或读中源发生变化时返回错误，不产生可提交的新cursor、可信调用或成功零；不输出路径/正文/秘密。无产品DB写入；完整产品`INCREMENTAL-02`仍未通过。
+
+### TC-TM004-CORE-03 · 损坏完整行与未知结构
+
+**TASK：** `TASK-TM004-PARSER`、`TASK-TM004-INCREMENTAL`；**AC：** `AC-TM004-003`；**类型：** 辅助模块。**输入：** 原fixture首条assistant的可识别13/7行，前置 `0xff 0x0a` 非法UTF-8完整行，再前置仅将版本改成2.1.127的完整JSON行。
+
+1. 对三条完整LF行一次读取：仅2.1.126合法assistant生成一条13/7=20可信调用；非法UTF-8给`invalid_utf8`一次、未知版本给`unsupported_version`一次，两行均不产生零Token或伪调用。
+2. 游标推进到三条完整LF末并给出前缀MAC，`scanIncomplete=false`；再次读取无新调用。检查返回/诊断只含代码、数量、键和用量，不含合成文件路径、原始文本或秘密。
+3. 在尾部追加不含LF的非法UTF-8片段：游标仍停在上一完整LF，`scanIncomplete=true`；补齐LF后才按固定诊断推进。无产品DB写入；产品`PARSER-02`需真实来源与安装App E2E另测。

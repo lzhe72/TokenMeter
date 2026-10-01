@@ -55,7 +55,7 @@ def check() -> dict:
                            ("B7", len(context["acceptance_criteria"])),
                            ("B8", len(expanded_cases)), ("B9", len(context["test_runs"]))):
         equal(overview[address], count, "summary " + address)
-    auxiliary = lambda case: case["id"].startswith(("TC-TM001-UI-", "TC-TM001-CATALOG-", "TC-TM001-RECORDS-", "TC-TM001-GATE-")) or case["type"] in {"security_unit", "governance_unit", "delivery_gate", "unit"}
+    auxiliary = lambda case: case["id"].startswith(("TC-TM001-UI-", "TC-TM001-CATALOG-", "TC-TM001-RECORDS-", "TC-TM001-GATE-")) or case["type"] in {"source_check", "security_unit", "governance_unit", "delivery_gate", "unit"}
     equal(overview["B10"], sum(not case.get("aggregate_planned", False) and not auxiliary(case) for case, _ in expanded_cases), "product case count")
     equal(overview["B11"], sum(auxiliary(case) for case, _ in expanded_cases), "auxiliary case count")
     equal(overview["B12"], sum(case.get("aggregate_planned", False) for case in catalog["cases"]), "future aggregate count")
@@ -75,8 +75,12 @@ def check() -> dict:
     for row, run in enumerate(context["test_runs"], start=5):
         cells = sheets["06测试批次"]
         counts = [run["passed_cases"], run["failed_cases"], run.get("blocked_cases", 0)]
-        for column, value in zip("ADEFGHL", [run["run_id"], run["state"], sum(counts), *counts, run["result_workbook"]]):
+        for column, value in zip("AEFGHIM", [run["run_id"], run["state"], sum(counts), *counts, run["result_workbook"]]):
             equal(cells[f"{column}{row}"], value, run["run_id"] + " " + column)
+        equal(cells[f"C{row}"], run["execution_type"], run["run_id"] + " execution type")
+        equal(cells[f"N{row}"], run.get("product_e2e_state", "NOT_RUN" if run["execution_type"] == "source_check" else run["state"]), run["run_id"] + " product state")
+        if run["execution_type"] == "source_check" and (run.get("release_eligible") or run.get("product_e2e_state", "NOT_RUN") != "NOT_RUN"):
+            errors.append(run["run_id"] + ": module result cannot be product PASS or release eligible")
         if not (ROOT / run["result_workbook"]).is_file():
             errors.append(run["run_id"] + ": result workbook missing")
     return {"state": "FAIL" if errors else "PASS", "scope": "project_workbook_readback_only",

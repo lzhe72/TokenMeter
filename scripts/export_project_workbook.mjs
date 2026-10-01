@@ -37,8 +37,8 @@ const cell = value => {
 };
 const states = {designed:'已设计', baseline_pending:'预期待明确', planned:'未来规划', unexecuted:'未执行', not_run:'未执行'};
 const state = v => states[v] || v;
-const kind = v => ({normal:'正向',negative:'负向',boundary:'边界',security:'安全/权限',fault:'故障',product_e2e:'产品E2E',security_unit:'安全单元',governance_unit:'治理检查',delivery_gate:'交付门禁',unit:'单元'})[v] || v;
-const isAuxiliaryCase = c => /TC-TM001-(UI|CATALOG|RECORDS|GATE)-/.test(c.id) || ['security_unit','governance_unit','delivery_gate','unit'].includes(c.type);
+const kind = v => ({normal:'正向',negative:'负向',boundary:'边界',security:'安全/权限',fault:'故障',product_e2e:'产品E2E',source_check:'模块检查',security_unit:'安全单元',governance_unit:'治理检查',delivery_gate:'交付门禁',unit:'单元'})[v] || v;
+const isAuxiliaryCase = c => /TC-TM001-(UI|CATALOG|RECORDS|GATE)-/.test(c.id) || ['source_check','security_unit','governance_unit','delivery_gate','unit'].includes(c.type);
 const source = c => `${c.source?.path || c.source || ''}${c.source?.line ? ':'+c.source.line : ''}`;
 const expected = c => c.overall_expected || [...new Set(c.steps.map(s => s.expected))].join('\n');
 const databaseSummary = c => {
@@ -133,7 +133,7 @@ const overview = table('00项目总览','TokenMeter 项目总览',['项目','当
  ['查询用例','05测试用例：一例一行','汇总功能、任务、输入、预期、DB操作、类型和状态；详细设计按来源查阅'],
  ['查询结果','06测试批次 → 独立测试结果Excel','每次运行单独保存逐例、逐步实测和证据，不覆盖历史批次'],
  ['查询版本','07发布版本','DMG及原始证据留本机；Git保存代码、文档和此工作簿'],
- ['最近登记批次',latestRun?.state || '未执行',`${latestRun?.scope || ''}：${latestRun?.summary || '尚无实际运行记录'}；是否覆盖完整回归以批次范围和原始证据为准。`],
+ ['最近登记批次',latestRun?.state || '未执行',`${latestRun?.execution_type || '未标明类型'} · ${latestRun?.scope || ''}：${latestRun?.summary || '尚无实际运行记录'}；是否覆盖完整产品回归以批次范围和原始证据为准。`],
  ['用例执行状态','各用例最近一次有效证据','可能来自不同批次；05测试用例的状态汇总不能当作一次完整回归通过。'],
 ], [37,77,100]);
 overview.tabColor='#234C78';
@@ -150,15 +150,15 @@ const caseRows=expandedCases.map(({case: c, variant: v})=>{
 table('05测试用例','测试用例汇总 · 一例一行',['功能编号','用例编号','测试点','开发任务','类型','输入','预期结果','DB操作摘要','设计状态','执行状态','范围','详细设计依据','最近结果批次','归属版本'],caseRows,[18,41,46,55,26,85,120,100,23,20,22,85,65,52],{freeze:2});
 
 const runs=context.test_runs || [];
-const runRows=runs.map(r=>[r.run_id,r.release_id,r.scope,r.state,r.included_cases ?? (r.passed_cases+r.failed_cases+(r.blocked_cases||0)),r.passed_cases,r.failed_cases,r.blocked_cases ?? 0,r.source_commit,r.release_eligible?'是':'否',r.summary,r.result_workbook]);
-const runSheet=table('06测试批次','测试批次索引 · 详细结果单独保存',['运行批次','版本','范围','结果','父用例/场景数','通过数','失败数','阻塞数','候选提交','发布资格','批次摘要','独立结果Excel（本机）'],runRows,[55,52,34,18,22,14,14,14,55,16,95,95]);
+const runRows=runs.map(r=>[r.run_id,r.release_id,r.execution_type,r.scope,r.state,r.included_cases ?? (r.passed_cases+r.failed_cases+(r.blocked_cases||0)),r.passed_cases,r.failed_cases,r.blocked_cases ?? 0,r.source_commit,r.release_eligible?'是':'否',r.summary,r.result_workbook,r.product_e2e_state || (r.execution_type==='source_check'?'NOT_RUN':r.state)]);
+const runSheet=table('06测试批次','测试批次索引 · 模块与产品结果分别计数',['运行批次','版本','执行类型','范围','结果','父用例/场景数','通过数','失败数','阻塞数','候选提交','发布资格','批次摘要','独立结果Excel（本机）','产品E2E状态'],runRows,[55,52,24,43,18,22,14,14,14,55,16,95,95,22]);
 for(let i=0;i<runs.length;i++) {
   const relative=runs[i].result_workbook;
   const absolute=path.resolve(root,relative);
   if(!absolute.startsWith(root+path.sep))throw Error('Result workbook must stay inside repository local storage');
   await fs.access(absolute);
   // The renderer does not support HYPERLINK; retain a readable portable path.
-  runSheet.getRangeByIndexes(i+4,11,1,1).values=[[relative]];
+  runSheet.getRangeByIndexes(i+4,12,1,1).values=[[relative]];
 }
 objects('07发布版本','版本与实际发布状态',context.versions);
 objects('08问题复盘','问题、决策与经验',context.retrospectives);
@@ -196,7 +196,7 @@ for(const info of sheetInfo){
  const preview=await wb.render({sheetName:info.name,range:`A1:${info.columns>=4?'D':'C'}${Math.min(8,info.rows+4)}`,scale:1.3,format:'png'});
  await fs.writeFile(path.join(out,info.name+'.png'),new Uint8Array(await preview.arrayBuffer()));
 }
-for(const [name,range] of [['case-summary-detail','E4:J7'],['run-workbook-link','H4:L5']]){
+for(const [name,range] of [['case-summary-detail','E4:J7'],['run-workbook-link','J4:N5']]){
  const preview=await wb.render({sheetName:name.startsWith('case')?'05测试用例':'06测试批次',range,scale:1.3,format:'png'});
  await fs.writeFile(path.join(out,name+'.png'),new Uint8Array(await preview.arrayBuffer()));
 }

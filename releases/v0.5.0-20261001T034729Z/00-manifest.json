@@ -257,6 +257,27 @@
       "feature": "TM-005",
       "task": "TASK-TM005-UI",
       "test": "TC-TM005-MODEL-02"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CORE-01",
+      "description": "双来源可信事件与半开日汇总（纯统计辅助模块，不代替产品TC）"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CORE-02",
+      "description": "未知用量诊断不补零（纯统计辅助模块，不代替产品TC）"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-COVERAGE",
+      "test": "TC-TM005-CORE-03",
+      "description": "声明式覆盖状态代数（纯统计辅助模块，不代替产品TC）"
     }
   ],
   "program_bindings_status": "planned",

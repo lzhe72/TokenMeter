@@ -4,11 +4,12 @@
 
 ## 运行
 
-- run_id / release_id / 候选 SHA / tree / dirty：
+- run_id / release_id / 执行类型（`source_check` / `product_e2e`） / 候选 SHA / tree / dirty：
 - 用例基线、包、数据、SQL 和配置摘要：
 - 执行原因（具体变更/缺陷/首次候选）、范围和平台：
 - 预期 TC/变体清单、实际执行清单、开始/结束时间：
-- 本次独立Excel位置、原始来源摘要、导出/回读结果：`.local/test-results/<run_id>/TokenMeter测试结果-<run_id>.xlsx`
+- 本次独立Excel位置、原始来源摘要、导出/回读结果：`.local/test-results/<run_id>/TokenMeter测试结果-<run_id>.xlsx`；未接通导出器时记BLOCKED，不预填路径为已生成。
+- `source_check`另记固定模块测试代码、数据/重置、逐TC断言与步骤原始值、退出码及清理；测试拥有目录的套件须核`owned_root_removed=true`，只用内存的套件须核`memory_reset_complete=true`，缺项或互冒均BLOCKED。`product_e2e`另记原包/App/服务/SQLite与适用审计。两类结论独立。
 
 ## 每条用例与每一步
 
@@ -21,8 +22,8 @@
 - 首次失败 / BLOCKED 原因、后续未执行步骤：
 - 缺陷 / 修复提交 / 下一次运行关联：
 - 本次进程、端口、镜像、profile、测试库清理结果：
-- 逐 TC 汇总与门禁状态；产品未执行时不得填 PASS：
+- 按执行类型分别列逐TC汇总；模块PASS不得写入产品E2E或门禁PASS，产品未执行时写NOT_RUN：
 
 不覆盖原记录。后续清理、诊断和更正使用独立记录引用原 run_id。实际记录不得包含用户生产数据或真实凭据。
 
-根项目总表只登记本批次摘要和独立Excel入口；逐条实测及失败证据放在本次结果文件中。
+根项目总表只在真实导出器和Excel回读通过后登记本批次摘要与独立入口；逐条实测及失败证据放在本次结果文件中。模块报告缺逐步原始字段或固定导出器时，保留原测试结论，Excel和总表批次登记BLOCKED。

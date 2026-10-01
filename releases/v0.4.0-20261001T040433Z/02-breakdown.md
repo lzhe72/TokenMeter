@@ -14,3 +14,5 @@
 | TASK-TM004-RELEASE | 001–004；完整候选 | 文档/矩阵/总表/Changelog同步、构建与DMG安装门禁，交总控集成。 | E2E与前版本全回归 | TC-TM004-RELEASE-01 |
 
 依赖顺序：TM-001稳定已提交 Electron 基线 → TM-002授权接口 → TM-003规范事件/SQLite/诊断 → 有来源的 Claude raw 证据 → 设计基线 → 数据与红测 → 实现 → 完整 E2E → 包/门禁。当前仅本版独立规划可推进；依赖任务状态 BLOCKED。各 TASK 的具体失败、权限和边界组合由 [测试计划](04-test-plan.md)逐条规定，不能用四个 E2E 汇总 ID 替代细TC。
+
+`TASK-TM004-INCREMENTAL` 与 `TASK-TM004-PARSER` 另拆出已打开只读文件句柄的辅助开发切片 `TC-TM004-CORE-01/02/03`。它只验证LF提交、带密钥的前缀校验、重扫、限额与损坏行诊断，固定输入见[reader合成fixture](../../tests/fixtures/tm004-reader-core-slice.json)；TM-002授权、TM-003原子事件+SQLite游标、源文件身份、账号/覆盖及原20条产品TC仍为独立依赖。TM-002当前`fileIdentityDigest`包含size/mtime，正常追加就变化，不能直接作为稳定游标身份；产品接入需另核对稳定匿名身份和前缀MAC口径。此切片不拆除或降级原产品目标。
