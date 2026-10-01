@@ -1,6 +1,6 @@
 # SOP-014 自动 E2E
 
-**修订：** 24　**状态：** baselined　**适用：** all
+**修订：** 25　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -16,23 +16,23 @@
 
 ## 输入
 
-固定候选、tests/test_cases.json本轮全部用例及已声明参数变体、数据/SQL、独立预期、包与执行目录；六组聚合场景作为补充证据，不能代替逐TC结果。
+固定候选、`tests/test_cases.json`及各来源版本的父TC/固定变体/辅助/聚合/审计清单、功能矩阵和版本计划、数据/SQL、独立预期、包与执行目录；TM001六组及后续版本各自聚合场景作为补充证据，不能代替逐TC结果。
 
 ## 执行步骤
 
 1. 测试必须是仓库中固化、可按TC编号重复执行的代码。输入、动作、预期和断言在运行前确定；AI只能调用这些代码并分析原始结果，不能以临场操作、看图判断或手填结果代替测试。缺自动化绑定或缺可执行判据为BLOCKED。 运行前冻结测试代码并记录摘要；运行中改变断言、数据或代码使本批次证据失效，修复后必须创建新run。
 
-2. 先确定运行原因和 TC 集合：开发定位只执行与具体改动/缺陷有关的用例，避免相同条件下无依据反复全量运行；正式迭代/发布候选仍完整回归。按 TC/变体及步骤逐项记录实际输入、动作、预期、实测、证据、失败与清理；聚合场景通过不能代替缺失子用例。记录合同见[测试规范](../docs/standards/test-cases.md)。
+2. 先确定运行原因和 TC 集合：开发定位只执行与具体改动/缺陷有关的用例，避免相同条件下无依据反复全量运行；正式迭代/发布候选从固定候选的机器清单和各来源 release 基线求目标版本加此前已交付功能的精确并集，覆盖父TC、固定变体、辅助、聚合场景和独立审计。记录清单摘要、来源 release、候选SHA/tree与各ID归属；重复、漏项、错误归属、未基线目标或混入未来 planned 项即BLOCKED。按 TC/变体及步骤逐项记录实际输入、动作、预期、实测、证据、失败与清理；聚合场景通过不能代替缺失子用例。记录合同见[测试规范](../docs/standards/test-cases.md)。
 
 3. 先读Electron本机设计与详细用例；默认只在本机执行，Actions仅明确多环境要求后启用。新客户端必须有新证据，不能借旧Swift/CI PASS。
-4. 本轮测试计划程序为scripts/granular_e2e.py逐TC及scripts/local_e2e.py六组补充回归、apps/desktop/e2e；未实现/绑定时BLOCKED。建立后由runner检查候选SHA、包/DMG摘要、平台和归属，在全新目录执行。
+4. TM001 的计划入口为`scripts/granular_e2e.py`逐TC与`scripts/local_e2e.py`六组补充回归、`apps/desktop/e2e`；后续版本须按SOP-011扩展或新增固定入口，使逐来源应测并集可执行。入口未进入最终整合树或未绑定时BLOCKED。runner检查候选SHA、包/DMG与清单摘要、平台、来源 release 和归属，在全新目录执行；旧版本的原始PASS不能充当新候选回归。
 5. 正式包模式从最终DMG安装并逐例用Playwright executablePath启动该App；API/SQLite、主进程/IPC均为真实链路。每例新profile与测试库，动态独占端口经真实设置UI选择。TM002/003/004 中调用 macOS `safeStorage` 的用例在任何首次密钥调用前，核对SOP-009最终包原生探针的实际 Keychain item 身份和SOP-010本次独占所有权；`--user-data-dir`本身不证明 Keychain 隔离。身份未证实、测试 item 已存在或可能访问正式 item 即BLOCKED，不启动依赖该能力的场景。
 6. 006先核对内置默认127.0.0.1:49176与更新源，再UI切两套动态服务验证实际登录、重启和origin隔离，不能为了默认端口使用用户生产服务。
 7. 004启动前检查Squirrel固定用户缓存和launchd job；两者均不存在才创建本次owner标记并执行，已有未知状态返回BLOCKED，不能覆盖。结束时核对ShipIt目标属于本次安装，再清理本次状态。只有启动前不存在、当前uid且内容为空、创建时间不早于本次owner的ByHost偏好文件，才允许随本次状态清理，先保存文件摘要/副本。含内容、归属不明或旧偏好保持BLOCKED。历史失败残留另存恢复记录，不能改写原失败。先证明账号验证后自动发现当前204源，再执行同一更新源四阶段：非法下载URL在传输前拒绝，非回环HTTP重定向在跟随前拒绝，完整坏签名包验签失败保持原版，正确包经成熟原生更新器安装并自主重启到101。Electron不要求旧Swift ATS错误码-1022；必须用独立请求日志证明拒绝边界。
 8. 升级后只连接已自行启动的新PID，不调用launch高版；核对实际包路径/版本/hash、同一runtime侧文件与profile、/v1/me自动登录、配置与token保留。
-9. 保存原始JSON/trace/截图、fixture与SQL摘要、服务审计/DB验证、更新请求和清理；关闭本次进程并验证端口/镜像/profile及适用的精确测试 Keychain item 清理，只操作本次拥有的资源，记录清理前后元数据和归属，不能清理正式 item。精细主run的116行原始记录必须保留：其中105行实际执行/可从执行变体推导的项均须PASS，只有11条明确无步骤、未执行且由独立辅助程序接管的占位可保持BLOCKED。辅助11例须同候选独立执行并11/11 PASS；审计12/12及六组补充6/6均须PASS。阶段报告的BLOCKED历史不改写，也不能直接当作最终产品PASS。父门禁从冻结原件及目录生成并独立重算最终规范化产品结果，精确证明78父TC与38变体零跳过、零重试、零FAIL/BLOCKED、证据齐全，才可继续；六组聚合场景不能覆盖缺失细例。
-10. 精细用例执行后，调用`python3 scripts/audit_granular_evidence.py --report <本批次result.json> --output <新的audit.json>`检查固定规则要求的旁证。审计绑定原报告和代码摘要，不改原件；缺断言/旁证为BLOCKED，原FAIL不得升级为PASS。测试准备缺陷与产品断言失败分别记录。修复测试准备后可按步骤2作新run的单例验证，不能用新结果覆盖旧失败或声称完整发布回归通过。
-11. `scripts/local_e2e.py`在结果落盘后调用`test_result_export.py`，从本批次原始结果生成独立 `TokenMeter测试结果-<run_id>.xlsx`，包括FAIL/BLOCKED。精细结果使用`granular_test_result.py`，传入同批次原报告、辅助报告和独立审计。运行前按[总表规范](../docs/standards/project-workbook.md)准备Codex捆绑Node与artifact-tool。结果保存在`.local/test-results/<run_id>/`；同源重复导出只验证，禁止覆盖历史。逐步实测、失败和证据放在该文件。导出收据为独立`excel-export.json`，不改产品结果；生成失败保留原始结论并非零返回，不能声称本步完成。候选门禁和发行归档先在干净被测树上完成，根项目总表的批次摘要与入口在其后按SOP-024作为只索引原件的文档提交同步，明确所指被测SHA，不将总表提交冒充被测候选。
+9. 保存各来源 release 的原始JSON/trace/截图、fixture与SQL摘要、服务审计/DB验证、更新请求和清理；关闭本次进程并验证端口/镜像/profile及适用的精确测试 Keychain item 清理，只操作本次拥有的资源，记录清理前后元数据和归属，不能清理正式 item。TM001 历史主run的116行、105个执行或可从变体推导项、11个无步骤辅助占位，以及辅助11、审计12、聚合6、最终78父TC/38变体，是该来源当时原件的固定核对口径，原报告及BLOCKED原样保留，不能当作后续候选总数或重用旧PASS。当前最终候选按步骤2的并集逐来源保存同一候选/DMG的新原件，并独立验真每个父TC、变体、辅助、聚合、审计；有独立辅助原件承接的无步骤占位才可在主原件保持BLOCKED，其余原件须PASS。父门禁从冻结原件与目录重算规范化结果，所有应测项零跳过、零重试、零FAIL/BLOCKED且证据齐全才可继续。最终gate自身派生TC（当前TM002的`TC-TM002-DELIVERY-01`）不要求预先PASS：先保持BLOCKED，待所有其他原件及真实升级验真后由独立门禁计算，不能预填或借历史结果。
+10. 精细用例执行后，TM001 使用已建立的`python3 scripts/audit_granular_evidence.py --report <本批次result.json> --output <新的audit.json>`检查其固定旁证；后续来源须建立同等固定审计程序或明确机器判据，未建立时该来源BLOCKED。审计绑定原报告和代码摘要，不改原件；缺断言/旁证为BLOCKED，原FAIL不得升级为PASS。测试准备缺陷与产品断言失败分别记录。修复测试准备后可按步骤2作新run的单例验证，不能用新结果覆盖旧失败或声称完整发布回归通过。
+11. `scripts/local_e2e.py`在其结果落盘后调用`test_result_export.py`，从本批次原始结果生成独立 `TokenMeter测试结果-<run_id>.xlsx`，包括FAIL/BLOCKED。TM001精细结果使用`granular_test_result.py`，传入同批次原报告、辅助报告和独立审计；跨版本候选须扩展固定导出入口覆盖步骤2的全部来源及gate派生TC，程序未接通即BLOCKED。运行前按[总表规范](../docs/standards/project-workbook.md)准备Codex捆绑Node与artifact-tool。结果保存在`.local/test-results/<run_id>/`；同源重复导出只验证，禁止覆盖历史。逐步实测、失败和证据放在该文件。导出收据为独立`excel-export.json`，不改产品结果；生成失败保留原始结论并非零返回，不能声称本步完成。候选门禁和发行归档先在干净被测树上完成，根项目总表的批次摘要与入口在其后按SOP-024作为只索引原件的文档提交同步，明确所指被测SHA，不将总表提交冒充被测候选。
 
 ## 输出
 
