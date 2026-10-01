@@ -213,7 +213,7 @@ def _fixture_record(case: dict, identity: str, root: Path, run_id: str, *, fail:
             "step_results": steps, "evidence": evidence, "started_at": now(), "finished_at": now()}
 
 
-def records_fixture(case_dir: Path, context: dict, *, fail: bool = False) -> tuple[Path, Path, Path, dict]:
+def records_fixture(case_dir: Path, context: dict, *, fail: bool = False) -> tuple[Path, Path, Path, Path, dict]:
     root = case_dir / "fixture"
     root.mkdir(mode=0o700)
     catalog = deepcopy(context["catalog"])
@@ -238,23 +238,25 @@ def records_fixture(case_dir: Path, context: dict, *, fail: bool = False) -> tup
     source = root / "result.json"
     catalog_file = root / "catalog.json"
     variant_file = root / "variants.json"
+    update_variant_file = root / "update-variants.json"
     save(source, report)
     save(catalog_file, catalog)
     save(variant_file, {"release_id": catalog["release_id"], "variants": []})
-    return source, catalog_file, variant_file, report
+    save(update_variant_file, {"release_id": catalog["release_id"], "variants": []})
+    return source, catalog_file, variant_file, update_variant_file, report
 
 
 def records_01(case_dir: Path, context: dict) -> dict:
-    source, catalog, variants, _ = records_fixture(case_dir, context)
+    source, catalog, variants, update_variants, _ = records_fixture(case_dir, context)
     report_before = results.read_file(source)
     output = case_dir / "excel"
     receipt = results.export(source, output, catalog_path=catalog, variants_path=variants,
-                             update_variants_path=None)
+                             update_variants_path=update_variants)
     workbook = output / receipt["workbook"]["path"]
     saved_before = results.read_file(workbook)
     modified_before = workbook.stat().st_mtime_ns
     repeated = results.export(source, output, catalog_path=catalog, variants_path=variants,
-                              update_variants_path=None)
+                              update_variants_path=update_variants)
     actual = {"first_export": receipt["state"], "repeat_same_receipt": receipt == repeated,
               "repeat_did_not_overwrite": workbook.stat().st_mtime_ns == modified_before and results.read_file(workbook) == saved_before,
               "fixture_source_unchanged": results.read_file(source) == report_before,
@@ -268,19 +270,19 @@ def records_01(case_dir: Path, context: dict) -> dict:
 
 
 def records_02(case_dir: Path, context: dict) -> dict:
-    source, catalog, variants, fixture = records_fixture(case_dir, context, fail=True)
+    source, catalog, variants, update_variants, fixture = records_fixture(case_dir, context, fail=True)
     first_events = case_dir / "fixture" / fixture["tc_results"][0]["evidence"]["events"]["path"]
     original_events = results.read_file(first_events)
     output = case_dir / "excel"
     receipt = results.export(source, output, catalog_path=catalog, variants_path=variants,
-                             update_variants_path=None)
+                             update_variants_path=update_variants)
     failed_before = receipt["tc_counts"] == {"PASS": 0, "FAIL": 1, "BLOCKED": 77}
     previous = os.environ.get("TOKENMETER_WORKBOOK_NODE")
     os.environ["TOKENMETER_WORKBOOK_NODE"] = "/definitely-missing-tokenmeter-node"
     try:
         try:
             results.export(source, case_dir / "missing-runtime", catalog_path=catalog, variants_path=variants,
-                           update_variants_path=None)
+                           update_variants_path=update_variants)
         except results.Blocked:
             missing_runtime_blocked = True
         else:
@@ -295,7 +297,7 @@ def records_02(case_dir: Path, context: dict) -> dict:
         stream.write(b"tampered")
     try:
         results.export(source, output, catalog_path=catalog, variants_path=variants,
-                       update_variants_path=None)
+                       update_variants_path=update_variants)
     except results.Invalid:
         tamper_rejected = True
     else:

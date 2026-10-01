@@ -97,6 +97,16 @@ class AuxiliaryTests(unittest.TestCase):
             self.assertEqual(actual["workbook_count"], sum(1 + len(case.get("variants", []))
                                                           for case in catalog["cases"]))
 
+    def test_records_fixtures_export_with_owned_variant_inputs(self):
+        catalog = json.loads((results.ROOT / "tests/test_cases.json").read_text())
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            context = {"catalog": catalog, "run_id": "aux-records-fixture-01"}
+            (root / "positive").mkdir()
+            (root / "negative").mkdir()
+            self.assertTrue(auxiliary.records_01(root / "positive", context)["passed"])
+            self.assertTrue(auxiliary.records_02(root / "negative", context)["passed"])
+
 
 if __name__ == "__main__":
     unittest.main()
