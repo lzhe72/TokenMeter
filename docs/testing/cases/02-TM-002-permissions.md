@@ -421,3 +421,19 @@
 本文件 28 个稳定父 TC 的 TASK 映射为：PICKER 4、PREVIEW 5（含辅助 LIMIT-01）、CONSENT 4、STORE 4（含辅助 STORE-01）、ACCESS 7（含辅助 SECURITY-01、ACCESS-06）、DATA 1、CATALOG 1、RUNNER 1、DELIVERY 1。SELECT-01/02/04、PREVIEW-01 至 04、CONSENT、STATE 属 E2E-TM002-001；SELECT-03 与 ACCESS-01 至 05 属 E2E-TM002-002；其余 8 个辅助 TC 不作为产品 E2E PASS 计数。36 个稳定变体分别为：SELECT-02 的 3 个、PREVIEW-04 的 3 个、CONSENT-03 的 2 个、CONSENT-04 的 3 个、STATE-01 的 2 个、STORE-01 的 3 个、ACCESS-06 的 3 个、SECURITY-01 的 7 个、CATALOG-01 的 3 个、EVIDENCE-01 的 7 个。父 TC 的所有已声明变体均必跑、逐变体独立记录；没有 `#ID` 的父路径照常单独判定。每个 TC 的独立行与变体已同步至 tests/test_cases.json；生成索引、矩阵、版本计划及项目总表由本轮整合继续复核，不把设计行冒充已执行结果。
 
 授权模型已确定为原生目录选择器 + App 持久来源 + 主进程读取 allowlist。SOP-000 私有加密 locator 例外已按 PR #4/#5 同步；SOP-008 逐例语义复核已完成。厂商来源版本与正文解析在 TM-003/004 验收，并把以上“计划”绑定改为实际固定程序与可执行判据。数据和程序就绪仍不等于运行通过；缺原生面板自动化、Keychain 测试项隔离原生证明、主进程范围判定与实际文件访问审计、最终包或任一必测 TC 结果，均按 SOP-014/018 保持 BLOCKED。
+
+## 2026-10-02 · 七父25精确辅助入口绑定
+
+整合候选已具备`scripts/tm002_source_check.py`固定runner和`scripts/export_tm002_source_check.mjs`结果导出。机器目录逐变体绑定完整ID、源码文件、精确test name、`owned_root`/`memory_only`清理类型及命令；每次运行单独产生不可覆盖的原始`source-check.json`与独立Excel，命令为`python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>`。本表替代上文各例“计划文件/automated_test=null”的过时程序状态；逐步输入、预期和产品边界仍以各例正文为准。
+
+| 父TC | 固定独立ID数 | 实际绑定程序文件 |
+| --- | ---: | --- |
+| `TC-TM002-LIMIT-01` | 1 | `apps/desktop/tests/tm002-limit-source-check.test.mjs` |
+| `TC-TM002-STORE-01` | 3 | `apps/desktop/tests/source-access.test.ts` |
+| `TC-TM002-ACCESS-06` | 3 | `apps/desktop/tests/source-helper.test.ts`, `apps/desktop/tests/tm002-aux-fixed.test.ts` |
+| `TC-TM002-SECURITY-01` | 7 | `apps/desktop/tests/source-access.test.ts`, `apps/desktop/tests/tm002-security-ipc-fixed.test.ts` |
+| `TC-TM002-DATA-01` | 1 | `tests/governance/test_tm002_data_fixed.py` |
+| `TC-TM002-CATALOG-01` | 3 | `tests/governance/test_tm002_catalog_fixed.py` |
+| `TC-TM002-EVIDENCE-01` | 7 | `tests/governance/test_tm002_evidence_fixed.py` |
+
+合计25个精确ID。runner可保留底层测试PASS，同时因缺逐步实际事件或独立清理见证把结果标为BLOCKED；不得从测试行PASS推定辅助TC PASS。绑定只表示程序入口可执行，当前全部`unexecuted`、证据空；第七个`EVIDENCE-01#MISSING_CHOOSER_WITNESS`已明确列入。其余21条产品父TC、真实OS面板/Keychain/安装App与正式发行仍须独立验收。

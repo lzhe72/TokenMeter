@@ -56,3 +56,7 @@
 ## 数据库、网络与输出边界
 
 TM-002 本身不修改服务端 schema 或用量表。测试准备通过 TM-001 的隔离账号 SQL 完成；预期服务端变化只有登录/会话审计等既有副作用，TM-002 的选择/预览/刷新不向服务器上传任何用量、日志正文或路径。读取证据主要来自本机受保护配置和文件访问审计。最终每个 run_id 输出独立原始结果和 `TokenMeter测试结果-<run_id>.xlsx`，项目总表只登记批次摘要；所有失败、BLOCKED、未执行原样保留。
+
+## 2026-10-02 · 固定辅助程序绑定
+
+`LIMIT-01`、`STORE-01`、`ACCESS-06`、`SECURITY-01`、`DATA-01`、`CATALOG-01`、`EVIDENCE-01`七父共25个精确独立ID已在`tests/test_cases.json`逐项绑定固定程序/测试名/runner/重置与命令，见[详细用例的绑定表](../../docs/testing/cases/02-TM-002-permissions.md)。运行入口`scripts/tm002_source_check.py`只检查辅助模块，逐步实测或清理缺失仍判BLOCKED；程序存在不表示本候选已执行。原产品21父及其产品变体、真实原生面板/Keychain/安装App E2E和发行门禁均独立保持未通过。

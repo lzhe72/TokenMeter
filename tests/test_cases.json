@@ -9617,14 +9617,26 @@
       },
       "design_status": "baselined",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "execution_type": "source_check",
+        "runner": "scripts/tm002_source_check.py",
+        "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+        "case_id": "TC-TM002-LIMIT-01",
+        "exact_ids": [
+          "TC-TM002-LIMIT-01"
+        ],
+        "status": "implemented_pending_integrated_run",
+        "program": "apps/desktop/tests/tm002-limit-source-check.test.mjs",
+        "test_name": "TC-TM002-LIMIT-01 source_check records the 2001 ms production C boundary once",
+        "reset_kind": "memory_only"
+      },
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
         "heading": "TC-TM002-LIMIT-01 — 2 秒枚举期限的固定时钟边界",
         "line": 312
       },
       "missing": [
-        "固定单调时钟/FS adapter 单元程序和独立原始证据尚未实现；不替代真实目录产品 E2E。"
+        "固定程序/逐ID原始测试入口已绑定；须在干净整合候选运行并按逐步实测、owner清理与独立Excel/verification判定；模块结果不代替产品E2E。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -9632,7 +9644,8 @@
       "sops": [
         "SOP-006",
         "SOP-011"
-      ]
+      ],
+      "data_program": "apps/desktop/tests/tm002-limit-source-check.test.mjs"
     },
     {
       "id": "TC-TM002-STORE-01",
@@ -9688,14 +9701,25 @@
       },
       "design_status": "baselined",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "execution_type": "source_check",
+        "runner": "scripts/tm002_source_check.py",
+        "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+        "case_id": "TC-TM002-STORE-01",
+        "exact_ids": [
+          "TC-TM002-STORE-01#KEY_UNAVAILABLE",
+          "TC-TM002-STORE-01#DECRYPT_FAIL",
+          "TC-TM002-STORE-01#WRITE_FAIL_KEEP_OLD"
+        ],
+        "status": "implemented_pending_integrated_run"
+      },
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
         "heading": "TC-TM002-STORE-01 — 密文恢复或原子写入失败的安全状态",
         "line": 323
       },
       "missing": [
-        "safeStorage 注入、真实来源存储代码安全单元绑定与每变体原始零访问证据尚未实现；不代替产品 E2E。"
+        "固定程序/逐ID原始测试入口已绑定；须在干净整合候选运行并按逐步实测、owner清理与独立Excel/verification判定；模块结果不代替产品E2E。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -9737,7 +9761,18 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-STORE-01#KEY_UNAVAILABLE",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-access.test.ts",
+            "test_name": "TC-TM002-STORE-01#KEY_UNAVAILABLE persists a stop-reading latch",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-access.test.ts"
         },
         {
           "id": "TC-TM002-STORE-01#DECRYPT_FAIL",
@@ -9770,7 +9805,18 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-STORE-01#DECRYPT_FAIL",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-access.test.ts",
+            "test_name": "TC-TM002-STORE-01#DECRYPT_FAIL rejects a formerly healthy locator without fallback",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-access.test.ts"
         },
         {
           "id": "TC-TM002-STORE-01#WRITE_FAIL_KEEP_OLD",
@@ -9803,9 +9849,21 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-STORE-01#WRITE_FAIL_KEEP_OLD",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-access.test.ts",
+            "test_name": "TC-TM002-STORE-01#WRITE_FAIL_KEEP_OLD keeps A while B is pending or atomic replacement fails",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-access.test.ts"
         }
-      ]
+      ],
+      "data_program": "scripts/tm002_source_check.py"
     },
     {
       "id": "TC-TM002-ACCESS-06",
@@ -9861,14 +9919,25 @@
       },
       "design_status": "baselined",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "execution_type": "source_check",
+        "runner": "scripts/tm002_source_check.py",
+        "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+        "case_id": "TC-TM002-ACCESS-06",
+        "exact_ids": [
+          "TC-TM002-ACCESS-06#PAGE_COMPLETION",
+          "TC-TM002-ACCESS-06#REVOKE_CURSOR",
+          "TC-TM002-ACCESS-06#TREE_CHANGED"
+        ],
+        "status": "implemented_pending_integrated_run"
+      },
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
         "heading": "TC-TM002-ACCESS-06 — 内部分页游标完整性与失效",
         "line": 342
       },
       "missing": [
-        "同一生产分页代码固定绑定、可验证树版本与游标失效屏障、每变体页/文件审计证据尚未实现；不代替产品 E2E。"
+        "固定程序/逐ID原始测试入口已绑定；须在干净整合候选运行并按逐步实测、owner清理与独立Excel/verification判定；模块结果不代替产品E2E。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -9910,7 +9979,18 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-ACCESS-06#PAGE_COMPLETION",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-helper.test.ts",
+            "test_name": "TC-TM002-ACCESS-06#PAGE_COMPLETION: 1201 native candidates span five ordered pages",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-helper.test.ts"
         },
         {
           "id": "TC-TM002-ACCESS-06#REVOKE_CURSOR",
@@ -9943,7 +10023,18 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-ACCESS-06#REVOKE_CURSOR",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/tm002-aux-fixed.test.ts",
+            "test_name": "TC-TM002-ACCESS-06#REVOKE_CURSOR rejects the old page after a real 1201-file source is revoked",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/tm002-aux-fixed.test.ts"
         },
         {
           "id": "TC-TM002-ACCESS-06#TREE_CHANGED",
@@ -9976,9 +10067,21 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-ACCESS-06#TREE_CHANGED",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-helper.test.ts",
+            "test_name": "TC-TM002-ACCESS-06#TREE_CHANGED: an insertion invalidates the old page before any result",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-helper.test.ts"
         }
-      ]
+      ],
+      "data_program": "scripts/tm002_source_check.py"
     },
     {
       "id": "TC-TM002-SECURITY-01",
@@ -10034,14 +10137,29 @@
       },
       "design_status": "baselined",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "execution_type": "source_check",
+        "runner": "scripts/tm002_source_check.py",
+        "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+        "case_id": "TC-TM002-SECURITY-01",
+        "exact_ids": [
+          "TC-TM002-SECURITY-01#ABSOLUTE",
+          "TC-TM002-SECURITY-01#FILE_URL",
+          "TC-TM002-SECURITY-01#DOTDOT",
+          "TC-TM002-SECURITY-01#TOKEN",
+          "TC-TM002-SECURITY-01#STALE_SELECTION",
+          "TC-TM002-SECURITY-01#REVOKE_DURING_REFRESH",
+          "TC-TM002-SECURITY-01#SWITCH_DURING_REFRESH"
+        ],
+        "status": "implemented_pending_integrated_run"
+      },
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
         "heading": "TC-TM002-SECURITY-01 — renderer 不能传任意路径",
         "line": 361
       },
       "missing": [
-        "本辅助例固定程序、变体绑定及独立原始证据尚未实现；该例不替代产品E2E。"
+        "固定程序/逐ID原始测试入口已绑定；须在干净整合候选运行并按逐步实测、owner清理与独立Excel/verification判定；模块结果不代替产品E2E。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -10082,7 +10200,18 @@
               "expected_file": "无pending/confirmed来源变化，A/B原文字节未改，审计仅记变体ID与invalid_selection错误码，不记攻击字串原值",
               "expected": "不适用：主进程参数安全单元用例。；无pending/confirmed来源变化，A/B原文字节未改，审计仅记变体ID与invalid_selection错误码，不记攻击字串原值；无网络/DB操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-SECURITY-01#ABSOLUTE",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/tm002-security-ipc-fixed.test.ts",
+            "test_name": "TC-TM002-SECURITY-01#ABSOLUTE rejects a renderer path at the production source IPC dispatcher",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/tm002-security-ipc-fixed.test.ts"
         },
         {
           "id": "TC-TM002-SECURITY-01#FILE_URL",
@@ -10115,7 +10244,18 @@
               "expected_file": "无pending/confirmed来源变化，A/B原文字节未改，审计仅记变体ID与invalid_selection错误码，不记攻击字串原值",
               "expected": "不适用：主进程参数安全单元用例。；无pending/confirmed来源变化，A/B原文字节未改，审计仅记变体ID与invalid_selection错误码，不记攻击字串原值；无网络/DB操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-SECURITY-01#FILE_URL",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/tm002-security-ipc-fixed.test.ts",
+            "test_name": "TC-TM002-SECURITY-01#FILE_URL rejects a renderer path at the production source IPC dispatcher",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/tm002-security-ipc-fixed.test.ts"
         },
         {
           "id": "TC-TM002-SECURITY-01#DOTDOT",
@@ -10148,7 +10288,18 @@
               "expected_file": "无pending/confirmed来源变化，A/B原文字节未改，审计仅记变体ID与invalid_selection错误码，不记攻击字串原值",
               "expected": "不适用：主进程参数安全单元用例。；无pending/confirmed来源变化，A/B原文字节未改，审计仅记变体ID与invalid_selection错误码，不记攻击字串原值；无网络/DB操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-SECURITY-01#DOTDOT",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/tm002-security-ipc-fixed.test.ts",
+            "test_name": "TC-TM002-SECURITY-01#DOTDOT rejects a renderer path at the production source IPC dispatcher",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/tm002-security-ipc-fixed.test.ts"
         },
         {
           "id": "TC-TM002-SECURITY-01#TOKEN",
@@ -10181,7 +10332,18 @@
               "expected_file": "无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。",
               "expected": "不适用：主进程参数安全单元用例。；无确认来源、A/B 字节未改，原始结果只记变体 ID 与错误码；不记录攻击路径或令牌原值。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-SECURITY-01#TOKEN",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-access.test.ts",
+            "test_name": "TC-TM002-SECURITY-01#TOKEN rejects a fabricated selection handle",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-access.test.ts"
         },
         {
           "id": "TC-TM002-SECURITY-01#STALE_SELECTION",
@@ -10214,7 +10376,18 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-SECURITY-01#STALE_SELECTION",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-access.test.ts",
+            "test_name": "TC-TM002-SECURITY-01#STALE_SELECTION rejects old native picker result after identity epoch changes",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-access.test.ts"
         },
         {
           "id": "TC-TM002-SECURITY-01#REVOKE_DURING_REFRESH",
@@ -10247,7 +10420,18 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-SECURITY-01#REVOKE_DURING_REFRESH",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-access.test.ts",
+            "test_name": "TC-TM002-SECURITY-01#REVOKE_DURING_REFRESH discards result and closes old helper",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-access.test.ts"
         },
         {
           "id": "TC-TM002-SECURITY-01#SWITCH_DURING_REFRESH",
@@ -10280,10 +10464,22 @@
             }
           ],
           "execution_status": "unexecuted",
-          "evidence": null
+          "evidence": null,
+          "binding": {
+            "tc_identity": "TC-TM002-SECURITY-01#SWITCH_DURING_REFRESH",
+            "execution_type": "source_check",
+            "program": "apps/desktop/tests/source-access.test.ts",
+            "test_name": "TC-TM002-SECURITY-01#SWITCH_DURING_REFRESH discards Alice result after switching to Bob",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "apps/desktop/tests/source-access.test.ts"
         }
       ],
-      "overall_expected": "ABSOLUTE/FILE_URL/DOTDOT/TOKEN均调用previewSource.selectionId，返回snapshot.error=invalid_selection且不打开A/B、无来源状态变化；竞态变体沿既定屏障判据。"
+      "overall_expected": "ABSOLUTE/FILE_URL/DOTDOT/TOKEN均调用previewSource.selectionId，返回snapshot.error=invalid_selection且不打开A/B、无来源状态变化；竞态变体沿既定屏障判据。",
+      "data_program": "scripts/tm002_source_check.py"
     },
     {
       "id": "TC-TM002-DATA-01",
@@ -10339,14 +10535,26 @@
       },
       "design_status": "baselined",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "execution_type": "source_check",
+        "runner": "scripts/tm002_source_check.py",
+        "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+        "case_id": "TC-TM002-DATA-01",
+        "exact_ids": [
+          "TC-TM002-DATA-01"
+        ],
+        "status": "implemented_pending_integrated_run",
+        "program": "tests/governance/test_tm002_data_fixed.py",
+        "test_name": "test_tc_tm002_data_01_owned_generation_mutation_and_reset",
+        "reset_kind": "owned_root"
+      },
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
         "heading": "TC-TM002-DATA-01 — fixture 仅操作自有根",
         "line": 375
       },
       "missing": [
-        "TM-002 自有 A/B fixture 生成、权限/owner 清理的固定治理程序与原始证据尚未实现。"
+        "固定程序/逐ID原始测试入口已绑定；须在干净整合候选运行并按逐步实测、owner清理与独立Excel/verification判定；模块结果不代替产品E2E。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -10355,7 +10563,8 @@
         "SOP-006",
         "SOP-010",
         "SOP-011"
-      ]
+      ],
+      "data_program": "tests/governance/test_tm002_data_fixed.py"
     },
     {
       "id": "TC-TM002-CATALOG-01",
@@ -10411,14 +10620,25 @@
       },
       "design_status": "baselined",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "execution_type": "source_check",
+        "runner": "scripts/tm002_source_check.py",
+        "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+        "case_id": "TC-TM002-CATALOG-01",
+        "exact_ids": [
+          "TC-TM002-CATALOG-01#VALID",
+          "TC-TM002-CATALOG-01#MISSING_TASK",
+          "TC-TM002-CATALOG-01#WRONG_RELEASE"
+        ],
+        "status": "implemented_pending_integrated_run"
+      },
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
         "heading": "TC-TM002-CATALOG-01 — 各版本 TC 归属不能串线",
         "line": 386
       },
       "missing": [
-        "本辅助例固定程序、变体绑定及独立原始证据尚未实现；该例不替代产品E2E。"
+        "固定程序/逐ID原始测试入口已绑定；须在干净整合候选运行并按逐步实测、owner清理与独立Excel/verification判定；模块结果不代替产品E2E。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -10459,7 +10679,18 @@
               "expected_file": "源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。",
               "expected": "不适用：目录治理测试。；源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-CATALOG-01#VALID",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_catalog_fixed.py",
+            "test_name": "test_TC_TM002_CATALOG_01_VALID",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_catalog_fixed.py"
         },
         {
           "id": "TC-TM002-CATALOG-01#MISSING_TASK",
@@ -10492,7 +10723,18 @@
               "expected_file": "源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。",
               "expected": "不适用：目录治理测试。；源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-CATALOG-01#MISSING_TASK",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_catalog_fixed.py",
+            "test_name": "test_TC_TM002_CATALOG_01_MISSING_TASK",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_catalog_fixed.py"
         },
         {
           "id": "TC-TM002-CATALOG-01#WRONG_RELEASE",
@@ -10525,9 +10767,21 @@
               "expected_file": "源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。",
               "expected": "不适用：目录治理测试。；源 catalog SHA 与前值相同，两个 TC 均仍在源文件；只清理本例临时副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-CATALOG-01#WRONG_RELEASE",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_catalog_fixed.py",
+            "test_name": "test_TC_TM002_CATALOG_01_WRONG_RELEASE",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_catalog_fixed.py"
         }
-      ]
+      ],
+      "data_program": "scripts/tm002_source_check.py"
     },
     {
       "id": "TC-TM002-EVIDENCE-01",
@@ -10583,14 +10837,29 @@
       },
       "design_status": "baselined",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "execution_type": "source_check",
+        "runner": "scripts/tm002_source_check.py",
+        "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+        "case_id": "TC-TM002-EVIDENCE-01",
+        "exact_ids": [
+          "TC-TM002-EVIDENCE-01#COMPLETE",
+          "TC-TM002-EVIDENCE-01#MISSING_STEP",
+          "TC-TM002-EVIDENCE-01#MISSING_PICKER",
+          "TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS",
+          "TC-TM002-EVIDENCE-01#MISSING_FS",
+          "TC-TM002-EVIDENCE-01#WRONG_PACKAGE",
+          "TC-TM002-EVIDENCE-01#FAILED_CLEANUP"
+        ],
+        "status": "implemented_pending_integrated_run"
+      },
       "source": {
         "path": "docs/testing/cases/02-TM-002-permissions.md",
         "heading": "TC-TM002-EVIDENCE-01 — 缺原生/文件审计不得放行",
         "line": 397
       },
       "missing": [
-        "本辅助例固定程序、变体绑定及独立原始证据尚未实现；该例不替代产品E2E。"
+        "固定程序/逐ID原始测试入口已绑定；须在干净整合候选运行并按逐步实测、owner清理与独立Excel/verification判定；模块结果不代替产品E2E。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -10631,7 +10900,18 @@
               "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
               "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-EVIDENCE-01#COMPLETE",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_evidence_fixed.py",
+            "test_name": "test_TC_TM002_EVIDENCE_01_COMPLETE",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_evidence_fixed.py"
         },
         {
           "id": "TC-TM002-EVIDENCE-01#MISSING_STEP",
@@ -10664,7 +10944,18 @@
               "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
               "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-EVIDENCE-01#MISSING_STEP",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_evidence_fixed.py",
+            "test_name": "test_TC_TM002_EVIDENCE_01_MISSING_STEP",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_evidence_fixed.py"
         },
         {
           "id": "TC-TM002-EVIDENCE-01#MISSING_PICKER",
@@ -10697,7 +10988,18 @@
               "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
               "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-EVIDENCE-01#MISSING_PICKER",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_evidence_fixed.py",
+            "test_name": "test_TC_TM002_EVIDENCE_01_MISSING_PICKER",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_evidence_fixed.py"
         },
         {
           "id": "TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS",
@@ -10730,7 +11032,18 @@
               "expected_file": "原始母版与其它变体不覆盖，失败原件和清理记录保留。",
               "expected": "原始母版与其它变体不覆盖，失败原件和清理记录保留；无产品UI/网络/DB。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_evidence_fixed.py",
+            "test_name": "test_TC_TM002_EVIDENCE_01_MISSING_CHOOSER_WITNESS",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_evidence_fixed.py"
         },
         {
           "id": "TC-TM002-EVIDENCE-01#MISSING_FS",
@@ -10763,7 +11076,18 @@
               "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
               "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-EVIDENCE-01#MISSING_FS",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_evidence_fixed.py",
+            "test_name": "test_TC_TM002_EVIDENCE_01_MISSING_FS",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_evidence_fixed.py"
         },
         {
           "id": "TC-TM002-EVIDENCE-01#WRONG_PACKAGE",
@@ -10796,7 +11120,18 @@
               "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
               "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-EVIDENCE-01#WRONG_PACKAGE",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_evidence_fixed.py",
+            "test_name": "test_TC_TM002_EVIDENCE_01_WRONG_PACKAGE",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_evidence_fixed.py"
         },
         {
           "id": "TC-TM002-EVIDENCE-01#FAILED_CLEANUP",
@@ -10829,9 +11164,21 @@
               "expected_file": "输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。",
               "expected": "不适用：证据治理测试。；输入原件未覆盖；失败或 BLOCKED 原始输出保留，按 owner marker 仅清理本例副本。；无网络/DB 操作。"
             }
-          ]
+          ],
+          "binding": {
+            "tc_identity": "TC-TM002-EVIDENCE-01#FAILED_CLEANUP",
+            "execution_type": "source_check",
+            "program": "tests/governance/test_tm002_evidence_fixed.py",
+            "test_name": "test_TC_TM002_EVIDENCE_01_FAILED_CLEANUP",
+            "runner": "scripts/tm002_source_check.py",
+            "command_template": "python3 scripts/tm002_source_check.py --run-id tm002-source-check-<新唯一UTC时间>",
+            "reset_kind": "owned_root",
+            "status": "implemented_pending_integrated_run"
+          },
+          "data_program": "tests/governance/test_tm002_evidence_fixed.py"
         }
-      ]
+      ],
+      "data_program": "scripts/tm002_source_check.py"
     },
     {
       "id": "TC-TM002-DELIVERY-01",
