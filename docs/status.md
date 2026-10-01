@@ -2,12 +2,14 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
-当前根项目总表已按合并候选重生并回读PASS：11 Sheet、236父TC、42变体、35批次；SHA-256 `ddc2d04b4119481f48969265cf84e87e4e01dcdb272e47367064ca9690d76de8`。TM003新三例仍未绑定/执行，TM004五例虽已绑定仍待新run；完整产品E2E与发行均未通过。
+当前根项目总表已按合并候选重生并回读PASS：11 Sheet、236父TC、42变体、36批次；SHA-256 `3752845964e704918bfc2c974f736a121099715bf02da597aacf701e27e8eaae`。TM003新三例仍未绑定/执行，TM004五例虽已绑定仍待新run；完整产品E2E与发行均未通过。
 
 SOP-008对干净输入`8107a06`的CORE08–10三例出具本机切片收据，结构、治理531/531、机器目录、总表及三组公开HMAC向量均通过；只准进入程序实现，三例仍未执行，整版产品与发行未通过。
 
 TM-004 CORE01–05固定TAP程序已随本地master进入文档树，三套source_check suite及五条机器绑定/总表候选输入已同步；正式逐TC运行/独立Excel尚未生成，原20产品TC与发行仍NOT_RUN。
 TM-003 正在冻结下一独立开发输入CORE-08～10：私有身份密钥、真实SourceAccess类与合成helper的主进程适配、受限collection IPC；每条四步，程序绑定与执行仍空。原27产品TC、真实系统来源/Keychain/安装App及大日志处理不由此通过，待干净提交按SOP-008出切片收据。
+
+TM-001 709d候选BOOTSTRAP四父例安装App定向run`local-3d36f9cbe62a4c1e889e8ea2fa476281`4/4、18步和清理PASS，12截图；原报告与独立Excel/verification逐项回读，登记根总表第36批次。本批没有独立审计，旧完整门禁FAIL及正式发行NOT_RUN保留。
 
 本地master新纳入的TM-004 fixture README已由文档会话登记`DOC-FIXTURE-TM004-README`并从0.4测试计划链接；仅修复整合树“未登记Markdown”结构阻断，不改变测试或产品状态。
 
