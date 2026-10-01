@@ -2,9 +2,17 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
-SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc405952b79de4163` 并由总控整合入新主仓库本地 `master=6bbab2ed20878fe7fd4742967982f1d0b65c6138`。文档会话按新SOP-011/013/014/024同步[总表规范](standards/project-workbook.md)、[执行模板](templates/test-execution.md)、项目登记与Excel。TM-003固定`source_check`导出器的`ea6b187`和新清理合同`d7c3d39`两个独立模块批次都已生成并回读结果；另新增CORE-04/05两条未执行的模块设计输入。根总表目前11 Sheet、227父TC、41变体、268用例行、15批次（13旧批次+2模块），SHA-256 `e20f33c88e79598e0ec17d7ea6893c877b39aebb26b45d2aefbe6b96d391d77a`，回读PASS。模块原始PASS、Excel/总表批次与产品E2E状态分别记录；TM-005模块Excel仍待其固定TAP逐步/内存清理诊断接通，其产品E2E仍NOT_RUN。
+SOP会话已把固定模块结果导出合同提交 `4cca9188f37cd85e677234dbc405952b79de4163` 并由总控整合入新主仓库本地 `master=6bbab2ed20878fe7fd4742967982f1d0b65c6138`。文档会话按新SOP-011/013/014/024同步[总表规范](standards/project-workbook.md)、[执行模板](templates/test-execution.md)、项目登记与Excel。TM-003已有两个CORE01/02/03与一个CORE04/05独立模块批次生成并回读；另新增未执行的CORE06跨文件generation设计。TM-001的709d UPDATE-05定向父例+13变体原始PASS已由后置固定导出器生成独立Excel并回读，为第16批次；TM-002新增一条未执行的chooser见证治理变体。根总表目前11 Sheet、228父TC、42变体、270用例行、17批次，SHA-256 `7e5b566c3247c802fa1bbadad87e23b95ed1adc33451de5e344ed17d20e3c91e`，回读PASS。TM-001仍有77父TC在该定向批次范围外，旧c291完整门禁FAIL、正式发行NOT_RUN；TM-005模块Excel仍待共享runner在其候选树接通。
+
+TM-003候选`9efc6fa9d8523f30dfc20f4cfb8282cc54f18dd0`的`CORE-04/05`原始模块run`tm003-core45-20261001T175000Z`为2/2、九步、逐例清理PASS，独立Excel及verification回读PASS，作为第17批次登记；被测机器用例摘要仍指向原CORE04/05输入`2fa3b6...`，后续CORE06设计不倒填该run。新增CORE06 fixture固定两文件各410字节及整代一次提交/失败全回滚，程序绑定null、实际未运行；0.3产品E2E与正式发行仍NOT_RUN。
+
+TM-002 `EVIDENCE-01#MISSING_CHOOSER_WITNESS`已作为第七固定负例进入详细用例、机器目录与总表：删除合成picker事件的确认按钮字段并重算单项摘要后，独立复核仍必须拒绝，不能用通用弹窗冒充目录选择确认。`SECURITY-01`合成A/B继续在短`/tmp`根，测试profile另在当前用户独占私有目录，避免SourceStore拒绝world-writable祖先。0.2现有28父TC、36变体，新增变体未运行；产品E2E和正式发行仍NOT_RUN。
+
+TM-002上述修订的干净输入提交`0c4f2604657484ae29cc601b6246bbc232e49450`已按SOP-008复核当前文档基线，收据`.local/docs-checks/20261002-tm002-chooser-baseline/receipt.json`：structure、baseline、quality、治理477/477、机器用例和Excel回读均PASS。它只确认冻结测试输入，`EVIDENCE-01#MISSING_CHOOSER_WITNESS`的程序绑定/实际运行及0.2产品E2E仍未由文档检查产生PASS。
 
 TM-003新的`CORE-04/05`固定输入已写入[0.3测试计划](../releases/v0.3.0-20261001T034652Z/04-test-plan.md)及详细用例，fixture精确冻结410/750/1090字节偏移、原子事务故障注入、有效错键、完整LF增量与前缀MAC改写/截短；机器目录和总表增加两行，当前两例程序绑定null、unexecuted。独立SOP-008切片须先对干净文档候选做语义/结构/治理核对，不能因已有CORE-01/02/03的模块3/3而填通过；原27条产品TC继续未执行。
+
+上述`CORE-04/05`输入提交`ba9c782da2cd24f909e26a22c77c506627a40a2f`已按SOP-008独立判`development_slice_ready`，收据`.local/docs-checks/20261002-tm003-core45-slice-ready/receipt.json`绑定该提交/tree、fixture/详细用例/机器目录SHA：structure、治理477/477、用例227/721、总表227父+41变体/15批次均PASS。只允许无TM-002授权依赖的同步事务和合成句柄游标模块进入红测/实现；两条TC实际执行仍0，0.3整版、产品E2E及正式发行均NOT_RUN。
 
 新主仓库 `/Users/lz/文档/git/TokenMeter` 的 `master` 已将文档恢复提交 `48ca089a8569cb33ad3e97ba91b6712cc6be51d0` 集成为 `d606fbd9763447387b88f0d02a881091d0982631`；总控对该整合树执行的文档 structure、当前0.2 baseline、quality 和治理457/457均PASS。该合并只说明源码文档进入本地 master，旧仓库Git对象丢失、历史 c291 产品门禁 FAIL、各需求产品 E2E 未通过和正式发行 `NOT_RUN` 均保留。
 

@@ -740,7 +740,7 @@
         "docs/standards/documentation.md",
         "sop/README.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-024-document-change.md"
     },
     {
@@ -795,7 +795,7 @@
         "releases/v0.1.0-20260929T074814Z/03-development-plan.md",
         "releases/v0.1.0-20260929T074814Z/04-test-plan.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-023-iteration.md"
     },
     {
@@ -1553,7 +1553,7 @@
       "inputs": [
         "releases/v0.2.0-20261001T034118Z/01-requirements.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-003-feature-breakdown.md"
     },
     {
@@ -1567,7 +1567,7 @@
         "releases/v0.2.0-20261001T034118Z/02-breakdown.md",
         "docs/architecture/01-electron-local.md"
       ],
-      "updated_at": "2026-10-01",
+      "updated_at": "2026-10-02",
       "sop": "sop/SOP-005-development-plan.md"
     },
     {

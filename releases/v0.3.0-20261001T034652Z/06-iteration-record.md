@@ -89,3 +89,9 @@ TM-003开发会话在干净候选`ea6b18765ce63a5b32b7de0488de5d2a4647de94`（tr
 ## 2026-10-02 · CORE-04/05下一独立输入编制
 
 总控优先要求补齐TM-003后续无授权模块输入。文档会话新增`TC-TM003-CORE-04`（`TASK-TM003-STORE`同步SQLite全事务与另一有效密钥拒绝）和`CORE-05`（`TASK-TM003-SCAN/STORE`稳定身份、完整LF、可变digest与keyed前缀MAC、改写/截短缺口），固定fixture`tests/fixtures/tm003-core-storage-cursor.json`为seed303、header+A/B/C偏移410/750/1090，改写同长度不同SHA。已同步02任务映射、03设计、04测试计划、详细逐步判据、manifest追踪、机器用例和根Excel候选输入；先按SOP-024检查并提交，再按SOP-008对干净输入单独给出`development_slice_ready`或BLOCKED收据。原27条产品TC、TM-002授权/Keychain、真实App/服务/产品E2E仍不由此改变。
+
+SOP-008对干净输入提交`ba9c782da2cd24f909e26a22c77c506627a40a2f`（tree`cd26900101e9b1952bffe19e21ffabd0e9b9fc32`）独立复核`CORE-04/05`：structure退出0（134文档/1228链接）、治理477/477退出0、用例227父/721步CURRENT、根Excel11 Sheet/227父/41变体/268行/15旧批次回读PASS、工作树clean；日志摘要、逐文件SHA和逐TC语义核对在`.local/docs-checks/20261002-tm003-core45-slice-ready/receipt.json`。fixture SHA-256`839af58edcde32f4919e5796b0008413b6bcf9d1e2f9d5190fee306c0742ca60`，详细用例`9e0b5679d97802f45b71b7614ed7a1d0bf5c3ad9c22358d232ef31bddecb0026`，机器用例`2fa3b6b38f7f015e1cede0d0b25b1c8a2b98c8cf8ff23a24aa7cbfc9ef0d7b95`。两条TC具有合成输入、有序步骤、逐步预期、owner库SQL/重置、程序准备任务与原产品阻断边界，故仅此纯模块切片判`development_slice_ready`；两条程序绑定仍null、实际运行unexecuted，0.3整版baseline、产品E2E和正式发行仍NOT_RUN。
+
+开发会话在干净代码候选`9efc6fa9d8523f30dfc20f4cfb8282cc54f18dd0`（tree`c06841b2ae70a3cc3ef04513a22984dafc6cf499`）执行不可覆盖`source_check`批次`tm003-core45-20261001T175000Z`，固定CORE-04/05共2/2、九步、两例owner清理PASS；原始报告SHA-256`f53138155448e9b64001465c62a243144bed48b856c37abf1ef2773624bf4b3d`，独立Excel SHA-256`2d503782486ef2b0b850e89b01b3ea22bb72ced7ef950a43d09052ce0b451a69`，`verification.json`回读PASS。本轮文档以被测SHA登记第17模块批次，不改被测候选；原27产品TC、App/IPC/服务E2E及正式发行均NOT_RUN。
+
+下一独立输入`TC-TM003-CORE-06`仅冻结两文件同generation模块行为：fixture`tests/fixtures/tm003-core-generation.json`引用各410字节的header+A/header+B，第一页不完整不得落库；第二游标SQL故障使整代事件/多游标/覆盖回滚；第二文件后撤权发生在guard/事务前须取消且提交调用0次；只有两正文稳定、末页complete并通过guard才一次同步提交A/B总量330和两个游标。该输入尚待干净提交及SOP-008切片核对，程序绑定null、未执行，不代填产品SCAN/STORE/COVERAGE。

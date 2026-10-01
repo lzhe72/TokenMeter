@@ -1,6 +1,6 @@
 # 02 · TM-002 首次授权：逐条测试用例（已基线）
 
-需求 REQ-TM002；release_id v0.2.0-20261001T034118Z；功能 TM-002。本文按 SOP-006 将本轮 28 条父 TC 与 35 个稳定参数变体逐项回链到版本计划的具体 TASK；`tests/test_cases.json` 与本文保持双向覆盖，版本计划摘要由本轮整合复核。E2E-TM002-001 与 E2E-TM002-002 是场景组，组内 TC 分别判定。本文为已基线的测试设计：产品代码、fixture、固定自动化、运行报告和 PASS 证据尚不存在。
+需求 REQ-TM002；release_id v0.2.0-20261001T034118Z；功能 TM-002。本文按 SOP-006 将本轮 28 条父 TC 与 36 个稳定参数变体逐项回链到版本计划的具体 TASK；`tests/test_cases.json` 与本文保持双向覆盖，版本计划摘要由本轮整合复核。E2E-TM002-001 与 E2E-TM002-002 是场景组，组内 TC 分别判定。本文为已基线的测试设计：产品代码、fixture、固定自动化、运行报告和 PASS 证据尚不存在。
 
 ## 基线状态与共同合同
 
@@ -362,7 +362,7 @@
 
 - 追踪：REQ-TM002 / AC-TM002-001、AC-TM002-002 / TASK-TM002-ACCESS；层级 security_unit，辅助产品 E2E，不代替原生面板与 App 主进程 allowlist 的产品证据。
 - 前置与输入：固定主进程 `tokenmeter:invoke` 业务IPC handler/来源服务测试环境；已验证 S1 Alice，无待确认选择；本例独占并标记短根 `R=/tmp/t2-<8位十六进制>`，自有 `R/A/a.jsonl`、未授权 `R/B/b.jsonl`，路径字串长度事前断言≤64。`TC-TM002-SECURITY-01#ABSOLUTE` 调用 `previewSource({selectionId: R+'/B/b.jsonl'})`；`TC-TM002-SECURITY-01#FILE_URL` 调用 `previewSource({selectionId: pathToFileURL(R+'/B/b.jsonl').href})`；`TC-TM002-SECURITY-01#DOTDOT` 调用 `previewSource({selectionId:'../B/b.jsonl'})`；`TC-TM002-SECURITY-01#TOKEN` 调用 `previewSource({selectionId:'00000000-0000-4000-8000-000000000099'})`。前三个输入不是UUID，第四个为未签发UUID；各自固定预期为返回snapshot的`error='invalid_selection'`（没有未处理异常）、无pending/confirmed来源变化、B的metadata/open/read均0。`chooseSource({tool,rootPath})`会忽略额外`rootPath`并启动选择器，不能用于这三个安全拒绝变体。三个受控竞态变体仍为`TC-TM002-SECURITY-01#STALE_SELECTION`、`TC-TM002-SECURITY-01#REVOKE_DURING_REFRESH`和`TC-TM002-SECURITY-01#SWITCH_DURING_REFRESH`；全部只用本例合成身份和目录，不含用户目录，竞态通过Promise屏障驱动同一主进程代码，不把受控选择结果或adapter当真实原生面板产品证据。
-- 数据/SQL/重置：七变体各自使用新 run_id、R 与独立 A/B/profile；仅内存 handler、受控异步屏障和隔离文件，没有服务或 DB 调用，SQL 不适用。四个恶意参数的 expected 为拒绝且 B 零访问、无来源确认；三个竞态的 expected 分别为过期选择不提交、撤销或换身份后旧刷新结果不提交，并以操作前后时间序列判读文件访问。
+- 数据/SQL/重置：七变体各自使用新 run_id；短根R仅存本例A/B，profile另建于当前用户独占、realpath化的0700私有临时目录，不置于world-writable `/tmp` 祖先，符合SourceStore私有目录合同。仅内存 handler、受控异步屏障和隔离文件，没有服务或 DB 调用，SQL 不适用。四个恶意参数的 expected 为拒绝且 B 零访问、无来源确认；三个竞态的 expected 分别为过期选择不提交、撤销或换身份后旧刷新结果不提交，并以操作前后时间序列判读文件访问。
 - 四个恶意参数变体的固定步骤：
   1. 建立已验证 Alice/窗口、记录 A/B 审计基线。测试 UI 不适用，原因是本例为主进程参数安全层；A/B 文件未被读取，无网络/DB 操作。
   2. 在同一已验证主frame调用`tokenmeter:invoke('previewSource',{selectionId:<该变体固定字串>})`。返回snapshot的`error='invalid_selection'`，不返回内容、绝对路径或 locator；不存在 renderer 任意文件读取 API，A/B open/read=0、B 元数据访问=0，pending/confirmed不变；无网络/DB 操作。
@@ -397,13 +397,13 @@
 ### TC-TM002-EVIDENCE-01 — 缺原生/文件审计不得放行
 
 - 追踪：REQ-TM002 / AC-TM002-001、AC-TM002-002 / TASK-TM002-RUNNER；层级 governance_unit，非产品 E2E。
-- 前置与输入：固定程序只在本例私有目录生成合成原始报告及隔离副本，绝不改真实产品报告。稳定变体 TC-TM002-EVIDENCE-01#COMPLETE 为结构完整的合成输入；TC-TM002-EVIDENCE-01#MISSING_STEP 只删除步骤 2 的逐步事件；TC-TM002-EVIDENCE-01#MISSING_PICKER 只删除唯一的真实面板事件；TC-TM002-EVIDENCE-01#MISSING_FS 只删除该 TC 的来源访问审计；TC-TM002-EVIDENCE-01#WRONG_PACKAGE 将 package manifest SHA256 改为 64 个字符 0；TC-TM002-EVIDENCE-01#FAILED_CLEANUP 将 cleanup.completed 改为 false。各变体从同一完整合成母版单独构造，不叠加。
+- 前置与输入：固定程序只在本例私有目录生成合成原始报告及隔离副本，绝不改真实产品报告。稳定变体 TC-TM002-EVIDENCE-01#COMPLETE 为结构完整的合成输入；TC-TM002-EVIDENCE-01#MISSING_STEP 只删除步骤 2 的逐步事件；TC-TM002-EVIDENCE-01#MISSING_PICKER 只删除唯一的真实面板事件；`TC-TM002-EVIDENCE-01#MISSING_CHOOSER_WITNESS`仅删除`picker-01.json`的`chooser_confirm_button`并更新该旁证描述摘要，原报告其它字段、步骤和面板事件仍在；TC-TM002-EVIDENCE-01#MISSING_FS 只删除该 TC 的来源访问审计；TC-TM002-EVIDENCE-01#WRONG_PACKAGE 将 package manifest SHA256 改为 64 个字符 0；TC-TM002-EVIDENCE-01#FAILED_CLEANUP 将 cleanup.completed 改为 false。各变体从同一完整合成母版单独构造，不叠加。
 - 数据/SQL/重置：只生成自有报告副本；无服务/DB，SQL 不适用。按 owner marker 独立清理，真实报告不可写。
 - 每个变体的固定步骤：
   1. 读取本变体输入并核对原始母版和变体 SHA。UI 不适用，原因是证据复核；无 App 文件访问、网络或 DB 操作。
-  2. 独立复核器读取本变体。#COMPLETE 仅结构核对通过且 release_eligible=false，不能签产品通行证；#MISSING_STEP、#MISSING_PICKER、#MISSING_FS、#WRONG_PACKAGE、#FAILED_CLEANUP 均分别返回非 PASS 与对应缺项原因，缺 FS 时 UI 无 B 不可补证；无网络/DB 操作。
+  2. 独立复核器读取本变体。#COMPLETE 仅结构核对通过且 release_eligible=false，不能签产品通行证；#MISSING_STEP、#MISSING_PICKER、#MISSING_CHOOSER_WITNESS、#MISSING_FS、#WRONG_PACKAGE、#FAILED_CLEANUP 均分别返回非 PASS 与对应缺项原因。缺chooser见证时即使仍有通用面板/按钮事件也须非零退出、FAIL并明确指出`native picker event`不可信；缺 FS 时 UI 无 B 不可补证；无网络/DB 操作。
   3. 核对输入原件未覆盖、首次失败和复核输出按变体单独保留；无网络/DB 操作。
-- 完成/证据/绑定：六个变体各自有输入、期望、退出码与原始复核输出；计划文件 tests/governance/test_tm002_evidence.py 与本机 gate，automated_test=null。状态 baselined/planned/not_run。
+- 完成/证据/绑定：七个变体各自有输入、期望、退出码与原始复核输出；固定程序须让通用弹窗缺`chooser_confirm_button`负例拒绝而不能借同一报告其它旁证补过。计划文件 tests/governance/test_tm002_evidence_fixed.py 与本机 gate，automated_test=null；代码进入整合候选并实际运行前，设计行状态仍unexecuted。
 
 ### TC-TM002-DELIVERY-01 — 最终包、升级与全量回归门禁
 
@@ -413,11 +413,11 @@
 - 步骤：
   1. 从最终 DMG 安装并运行固定完整集合。UI、原生面板、真实服务和隔离 DB 由各产品 TC 操作；原始记录须包含全部目标 TC 及 TM-001 回归的唯一尝试、逐步断言和清理，无漏例/跳过/重试取绿；网络/DB 按各产品 TC。
   2. 由固定消费者先只读核对上一0.1本机稳定原包的schema 2归档/通行证/来源身份与实际摘要，负测拒绝旧schema、候选包、错误里程碑或摘要；再从该原包安装，经 App 自主检查/安装 0.2.0 候选并重启。UI 显示新版本与保留的 TM-001 合成账号/配置，经真实 `/v1/me` 复核身份；包签名、摘要和运行中进程版本与清单一致。0.1 没有 TM-002 来源记录，0.2 初态必须为 `none`；随后真实面板选择 A、确认意愿、重启恢复本版密文来源。网络/DB 只按更新与认证的已定合同发生。
-  3. 独立父门禁先复读候选/包/测试源码、TM-001 全部原件、除本例外的 TM-002 其余 27 条父 TC 与 35 个变体原件、升级、平台和清理，再从这些实际结果计算本例状态。本例不能作为父门禁启动前须已 PASS 的输入；计算前为 BLOCKED。只有其他各项和本例自身包/升级/证据核验均 PASS，才记本例 PASS 并签发本机通行证；任一缺项、失败、跳过或摘要不匹配给 FAIL/BLOCKED 且无正式原名 DMG；本步骤无业务 DB 写入。
-- 完成/证据/绑定：正式包原件、上一0.1本机稳定原包及schema 2归档/通行证/来源身份与负测、其他 27 条 TM-002 父 TC、35 个变体、TM-001 全量原件及最终签名/升级证据全部一致，父门禁独立派生本例结果。计划绑定 SOP-014/017/018 的本机 runner/gate，automated_test=null；证据为原始包/升级/回归/独立 gate 结果及每 run_id Excel，状态 baselined/planned/not_run。
+  3. 独立父门禁先复读候选/包/测试源码、TM-001 全部原件、除本例外的 TM-002 其余 27 条父 TC 与 36 个变体原件、升级、平台和清理，再从这些实际结果计算本例状态。本例不能作为父门禁启动前须已 PASS 的输入；计算前为 BLOCKED。只有其他各项和本例自身包/升级/证据核验均 PASS，才记本例 PASS 并签发本机通行证；任一缺项、失败、跳过或摘要不匹配给 FAIL/BLOCKED 且无正式原名 DMG；本步骤无业务 DB 写入。
+- 完成/证据/绑定：正式包原件、上一0.1本机稳定原包及schema 2归档/通行证/来源身份与负测、其他 27 条 TM-002 父 TC、36 个变体、TM-001 全量原件及最终签名/升级证据全部一致，父门禁独立派生本例结果。计划绑定 SOP-014/017/018 的本机 runner/gate，automated_test=null；证据为原始包/升级/回归/独立 gate 结果及每 run_id Excel，状态 baselined/planned/not_run。
 
 ## 追踪与退出条件
 
-本文件 28 个稳定父 TC 的 TASK 映射为：PICKER 4、PREVIEW 5（含辅助 LIMIT-01）、CONSENT 4、STORE 4（含辅助 STORE-01）、ACCESS 7（含辅助 SECURITY-01、ACCESS-06）、DATA 1、CATALOG 1、RUNNER 1、DELIVERY 1。SELECT-01/02/04、PREVIEW-01 至 04、CONSENT、STATE 属 E2E-TM002-001；SELECT-03 与 ACCESS-01 至 05 属 E2E-TM002-002；其余 8 个辅助 TC 不作为产品 E2E PASS 计数。35 个稳定变体分别为：SELECT-02 的 3 个、PREVIEW-04 的 3 个、CONSENT-03 的 2 个、CONSENT-04 的 3 个、STATE-01 的 2 个、STORE-01 的 3 个、ACCESS-06 的 3 个、SECURITY-01 的 7 个、CATALOG-01 的 3 个、EVIDENCE-01 的 6 个。父 TC 的所有已声明变体均必跑、逐变体独立记录；没有 `#ID` 的父路径照常单独判定。每个 TC 的独立行与变体已同步至 tests/test_cases.json；生成索引、矩阵、版本计划及项目总表由本轮整合继续复核，不把设计行冒充已执行结果。
+本文件 28 个稳定父 TC 的 TASK 映射为：PICKER 4、PREVIEW 5（含辅助 LIMIT-01）、CONSENT 4、STORE 4（含辅助 STORE-01）、ACCESS 7（含辅助 SECURITY-01、ACCESS-06）、DATA 1、CATALOG 1、RUNNER 1、DELIVERY 1。SELECT-01/02/04、PREVIEW-01 至 04、CONSENT、STATE 属 E2E-TM002-001；SELECT-03 与 ACCESS-01 至 05 属 E2E-TM002-002；其余 8 个辅助 TC 不作为产品 E2E PASS 计数。36 个稳定变体分别为：SELECT-02 的 3 个、PREVIEW-04 的 3 个、CONSENT-03 的 2 个、CONSENT-04 的 3 个、STATE-01 的 2 个、STORE-01 的 3 个、ACCESS-06 的 3 个、SECURITY-01 的 7 个、CATALOG-01 的 3 个、EVIDENCE-01 的 7 个。父 TC 的所有已声明变体均必跑、逐变体独立记录；没有 `#ID` 的父路径照常单独判定。每个 TC 的独立行与变体已同步至 tests/test_cases.json；生成索引、矩阵、版本计划及项目总表由本轮整合继续复核，不把设计行冒充已执行结果。
 
 授权模型已确定为原生目录选择器 + App 持久来源 + 主进程读取 allowlist。SOP-000 私有加密 locator 例外已按 PR #4/#5 同步；SOP-008 逐例语义复核已完成。厂商来源版本与正文解析在 TM-003/004 验收，并把以上“计划”绑定改为实际固定程序与可执行判据。数据和程序就绪仍不等于运行通过；缺原生面板自动化、Keychain 测试项隔离原生证明、主进程范围判定与实际文件访问审计、最终包或任一必测 TC 结果，均按 SOP-014/018 保持 BLOCKED。

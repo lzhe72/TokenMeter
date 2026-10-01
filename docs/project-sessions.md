@@ -53,3 +53,7 @@
 文档会话随后又核对TM-003共享runner候选`d7c3d39`的独立run `tm003-core-20261001T165439Z`及Excel，并在根总表登记为第15批次；两个模块批次均保留，产品E2E仍未运行。TM-004代码检查点`1c785082`继续推进受guard约束的扫描租约，尚无可登记的模块Excel。各开发会话提交原件及被测SHA后，由文档会话更新总表；总控集成文档提交，不以总表状态代替产品验收。
 
 TM-004随后交接`7b5aae46`跨文件/chunk父证据模块检查点；TM-005交接`69d2ccff`结构化CORE逐步输出。文档会话核对真实提交和原始运行后只更新状态/版本记录；两者独立模块Excel尚未生成，所以总表保持15批次。TM-005 CORE-01固定UTC界纠错后的切片就绪收据重建于`.local/docs-checks/20261002-tm005-core-slice-utc-corrected/receipt.json`，不表示IANA换算或产品验收。
+
+总控已将`ba9c782`TM-003 CORE-04/05固定输入及`9cda072`独立切片就绪记录交开发会话使用；文档会话继续维护其未执行状态。TM-001开发会话交接709d UPDATE-05定向run和de081a6后置导出器修复，文档会话核对原报告/独立Excel/回读收据后在根总表登记为第16批次；77父TC范围外、旧c291完整门禁FAIL保留。该Excel的逐步证据留在本机`.local/test-results/<run_id>/`，Git只存总表摘要及入口。
+
+TM-002开发会话交接原生目录选择器的`chooser_confirm_button`见证与独立审计负例ID`MISSING_CHOOSER_WITNESS`，并指出SECURITY-01的profile不能置于world-writable `/tmp` 根。文档会话把该负例固化为EVIDENCE-01第七变体，A/B短根与用户私有profile分开，在版本计划、详细用例、机器目录及总表同步；本版产品TC仍未执行。TM-004主进程触发与TM-003跨文件generation等下一切片继续由文档会话编写，代码会话只消费已冻结输入。
