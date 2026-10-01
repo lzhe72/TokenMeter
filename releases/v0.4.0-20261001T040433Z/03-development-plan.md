@@ -65,3 +65,7 @@ TM-003 SQLite schema 尚未提交，不能现在决定是否需 SOP-016 迁移�
 | RELEASE | 本版档案、矩阵、总表、Changelog | structure→baseline→完整门禁 | 仅草稿编制中 |
 
 本分支只改 TM-004 拥有文件和本版文档；对共享接口先核对依赖分支后再整合，不覆盖其他需求工作树。当前分支的基点仍没有 Electron 工程；TM-001 另有干净候选 `3467dc1`，只读核对表明其 `apps/desktop/src/main/index.ts` 在 `tokenmeter:invoke` 校验发送窗口、主 frame 和自有页面，preload 的 `Bridge`/`Snapshot` 定义在 `src/shared/types.ts`，主进程模块可在 `src/main/collection/` 加入但必须沿用同级安全校验。其 `scripts/run_test_case.py` 已存在，然而 `scripts/granular_e2e.py` 的 case 解析仅接受 `TC-TM001-*` 并只映射 TM-001 Playwright spec；本版20条 TC 在候选中全部**不可执行**。后续应在总控整合后的真实基线上扩展固定用例目录、调度、证据与门禁，不能仅把 TM-004 ID 写入 manifest 当作绑定完成。该候选未运行最终 DMG 产品 E2E，且 TM-002/003 接口未稳定，不能声称 TM-004 GUI 验收可运行。下一步：[测试计划](04-test-plan.md)。
+
+### SourceAccess至私有库的下一辅助开发切片
+
+`TC-TM004-CORE-06`要求调用真实`SourceAccess`确认、分页、受控分块、撤权与同步守卫，真实Claude collector/trigger和`UsageStore.commitScanBatch`；只把文件系统helper和密钥保护端口换成本例合成实现。固定四份2.1.126隔离原件的去敏投影及独立预期给首次5调用/117、复制fork不重计、一级子父归属；显式合成完整LF追加50/5后为6调用/172。三个新代际故障在成功库副本上都零新写，旧可信行、游标与覆盖保留；所有原生标识仅在内存参与HMAC，不入SQLite/WAL。程序与实际原件仍待SOP-011/013。真实OS目录选择、TM-002 Keychain item身份实证、TM-003主进程/IPC接线、安装App Playwright/真实服务和未决原生raw仍是产品TC依赖，本切片不得代替。

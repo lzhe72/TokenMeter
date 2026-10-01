@@ -213,3 +213,19 @@
 4. 稳定末页且guard通过时同步调用`commitScanBatch`恰一次：只读SQLite见三唯一调用、input350/output35/total385、三个来源键及410/510/610游标、四种诊断按文件归属，根覆盖`scan_incomplete=1`（Q父归属未核实），三个`source_scope_key`等于fixture向量，重扫不增加事件。完整SQLite及WAL/返回序列化无异常模型哨兵、原生session/agent/call ID、相对名、完整路径、正文和秘密。这里仅核对合成端口+隔离SQLite；真实TM-002授权、安装App UI/IPC、服务及原产品`LINEAGE/INCREMENTAL/SOURCE`仍须各自E2E。
 
 CORE-01～05的程序、精确测试名、suite、清理类型和独立命令以`tests/test_cases.json`机器绑定为准。当前仅绑定就绪；既有分散Node日志不补录为固定`source_check`批次，待干净整合候选新run与Excel/verification回读。原20条产品TC和正式发行不因此通过。
+
+## 已确认来源至私有UsageStore的下一独立辅助切片
+
+本切片固定`TC-TM004-CORE-06`，只用真实`SourceAccess`类、真实`collectClaudeUsage/triggerClaudeCollection`和真实私有`UsageStore`；选择器/文件读取由本例合成helper实现，安全存储由注入假加密端口实现。owner目录0700、SQLite0600，不访问用户来源、真实Keychain、服务、IPC、renderer或安装App。原始数据使用仓库中经2.1.126隔离CLI产生的**去敏投影**主会话、原样复制fork、一级Agent父/子四文件；投影文件并非原生字节原件。它们在[来源投影清单](../../../tests/fixtures/tm004/native-2.1.126-projection/provenance-and-expected.json)中的SHA、调用和独立预期已固定；追加事件是[显式合成行](../../../tests/fixtures/tm004-append-2.1.126-shape.jsonl)，不能冒称CLI原生行。所有来源键、四文件摘要、两个页和97字节分块、错误屏障及预期见[切片fixture](../../../tests/fixtures/tm004-sourceaccess-store-slice.json)。
+
+### TC-TM004-CORE-06 · 真实SourceAccess到私有库的多文件贯通
+
+**TASK：** `TASK-TM004-SOURCE`、`TASK-TM004-INCREMENTAL`；**AC：** `AC-TM004-001/002/004`；**类型：** `source_check`辅助模块。**前置：** 本例自有0700 profile/空0600 SQLite，固定公开32字节测试秘密及64hex合成主体键；真实SourceAccess类使用仅映射上述四个投影文件的合成helper，两页2+2、每次最多97字节；无系统密钥或原生面板访问。各异常从已成功的独立owner库副本和新来源实例开始，不叠加故障。
+
+1. 未确认时请求`sourceId`扫描；随后由真实SourceAccess的选择/预览/确认入口建立本例Claude来源，核对候选和HMAC向量。确认前helper的`beginCandidateScan/readCandidateChunk`及`UsageStore.commitScanBatch`调用均0、库空；确认仅绑定第一主体与固定sourceId，不接收renderer路径或原生ID作为库键。四文件/root来源键逐字节等于fixture，DB不存文件相对名/原始摘要。
+2. 触发真实主进程采集，helper第一页`complete=false`、第二页`complete=true`且正文按97字节片段读取；末页、每文件完整LF及同步守卫全部通过后只调用一次`commitScanBatch`。只读库为主M13/7、fork新调用13/7且复制M只计一次、Agent父两调用40/12和已核验子19/6，共5唯一调用、input85/output32/total117；四游标各到其文件完整LF末，`coverage.scan_incomplete=0`，一级子父归属已核验。库及WAL/返回不含原生session/Agent/message ID、相对名、完整路径、正文、秘密或密文。
+3. 关闭来源、库及合成helper，在同一owner profile重开后再次完整扫描。所有来源键/主体键与游标保持，事件仍5行/117且没有新增调用，四游标和可信覆盖不回退；确认前或重开时不得自动扫描未经确认的来源。
+4. 仅向主文件追加fixture的完整合成LF行（50/5、独立ID），按已确认sourceId续扫。只新增一调用，合计6行、input135/output37/total172；主文件游标推进精确追加字节数，其他三游标不变，普通追加不触发`cursor_reset`，再次续扫不增，原复制fork仍不重计。
+5. 分别从步骤4成功库的三个owner副本开启新代际，在第一页后撤销授权、切换第二主体，以及让子文件helper提前EOF但仍声称原size。前两者守卫拒绝、旧sourceId不能给新主体读取；提前EOF必须报来源变化/读取失败，三者`commitScanBatch=0`且取消本轮scan，事件仍6行/172、四旧游标/可信覆盖原值不变。本轮运行状态记不可用或不完整，不能把旧可信值删掉或宣称新完整零；第二主体查询不见第一主体事件。逐故障核对SQLite/WAL、来源审计和owner清理。
+
+**数据/DB/重置：** 成功路径仅`UsageStore`写本例SQLite的事件、诊断、游标、coverage、身份键标记；每步用只读SQL按`principal_key/source`核对行数、输入输出、游标摘要和覆盖，故障前后记录库表摘要并比较。关闭数据库和helper、核对owner marker后只删除本例私有目录，原始报告/Excel保留。**程序准备：** SOP-011实现固定TAP/runner绑定后才运行，现`binding=null`、`unexecuted`。本辅助切片不证明真实OS目录选择、Keychain item归属、主窗口IPC/React、服务、任何原20条产品TC或发行。产品路径仍需TM-003持久身份与主进程接线、TM-002真实Keychain item隔离证明、安装App Playwright/隔离服务、原生raw改写UUID/fork-context-ref/嵌套Agent和有效零判据。

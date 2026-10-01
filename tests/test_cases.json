@@ -20332,6 +20332,92 @@
       ],
       "reset": "关闭本例全部DB/helper，核对owner收据，仅清理本例私有目录；保留模块原件。",
       "overall_expected": "1. 分别用非主窗口 sender、子 frame、路径/账号/密钥多余字段和未确认 sourceId 调用 handler。；全部拒绝，采集/DB调用0次；不接受任意路径或由 renderer 指定 principal/secret，不返回旧主体状态。\n2. 主窗口按固定 sourceId 刷新并取 state。；只触发第一主体 Codex 采集一次，返回两事件的 input300/output30/total330、cached已知60、覆盖与诊断代码/数量；库仍两行，序列化状态无密钥、密文、路径、原生ID或正文。\n3. 同主体再刷新并取 state，随后将来源暂停/撤销。；重扫仍两行/330；暂停/撤销后刷新拒绝、旧可信330只对第一主体保留可见且标采集不可用/覆盖不完整，不能报新已知零。\n4. 切换第二主体后由旧 sender/sourceId 取 state/刷新。；旧来源被拒绝，第二主体 state 为缺失/未核实且无第一主体330；第一主体持久事件不删除，按主体只读核对隔离。"
+    },
+    {
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "scenario_group": "E2E-TM004-001",
+      "type": "source_check",
+      "preconditions": "本例0700私有profile/0600空SQLite；真实SourceAccess类+注入合成helper/假加密端口；不读取真实日志/Keychain/App",
+      "data_program": null,
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "sops": [
+        "SOP-006",
+        "SOP-008",
+        "SOP-010",
+        "SOP-011",
+        "SOP-013"
+      ],
+      "id": "TC-TM004-CORE-06",
+      "title": "真实SourceAccess到私有库的多文件贯通",
+      "task_ids": [
+        "TASK-TM004-SOURCE",
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-002",
+        "AC-TM004-004"
+      ],
+      "input": "tests/fixtures/tm004-sourceaccess-store-slice.json；四个2.1.126原生来源去敏投影文件、独立合成追加行；两页2+2/97字节分块与固定HMAC向量",
+      "db_operations": {
+        "prepare": "每故障从本例成功owner库复制；无生产库；只经UsageStore写入",
+        "expected_changes": "成功首次5行/117、追加后6行/172、四游标及覆盖；故障零新写",
+        "verification": "只读usage_event/source_cursor/coverage/identity_key_state与SQLite/WAL隐私扫描；逐代际表摘要比较",
+        "read_only_checks": []
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "未确认时扫描，再经真实SourceAccess选择/预览/确认并核对四文件/root键",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "确认前扫描/读取/库提交均0、库空；确认仅绑定第一主体和sourceId，四文件/root键等于fixture，不把路径/原摘要当库键"
+        },
+        {
+          "step": 2,
+          "action": "真实主进程采集按两页2+2及97字节片段读完四文件，末页守卫后提交",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "只一次同步commitScanBatch；M+fork新+Agent父/子共5唯一调用、input85/output32/total117，四游标到LF末、coverage.scan_incomplete=0，复制fork不重计、子父归属已核验，DB/WAL无原生标识或正文"
+        },
+        {
+          "step": 3,
+          "action": "关闭重开owner来源/库/helper，重扫相同四文件",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源"
+        },
+        {
+          "step": 4,
+          "action": "向主文件仅追加固定合成50/5完整LF行，续扫并重扫",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "只新增一调用，6行、input135/output37/total172，主游标推进追加字节数，其余三游标不变，无cursor_reset，复制fork不重计"
+        },
+        {
+          "step": 5,
+          "action": "从成功库独立副本分别在第一页后撤权、换主体、子文件提前EOF",
+          "expected_ui": "不适用；辅助模块",
+          "expected_api_db": "无真实产品API；仅本例SQLite只读旁证",
+          "expected": "每次取消scan、commitScanBatch=0；旧6行/172、四游标/覆盖原值不变，新主体无旧事件，本轮不可用/不完整而非已知零；SQLite/WAL与owner清理核对"
+        }
+      ],
+      "reset": "关闭本例DB/helper，核对owner marker后仅清理本例私有目录；保留原始结果。",
+      "missing": [
+        "SOP-011固定程序/重置绑定与实际原始结果未交付；真实OS目录选择、Keychain、IPC/App、原20产品TC另验"
+      ],
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "line": 221,
+        "heading": "TC-TM004-CORE-06 · 真实SourceAccess到私有库的多文件贯通"
+      },
+      "overall_expected": "1. 未确认时扫描，再经真实SourceAccess选择/预览/确认并核对四文件/root键；确认前扫描/读取/库提交均0、库空；确认仅绑定第一主体和sourceId，四文件/root键等于fixture，不把路径/原摘要当库键\n2. 真实主进程采集按两页2+2及97字节片段读完四文件，末页守卫后提交；只一次同步commitScanBatch；M+fork新+Agent父/子共5唯一调用、input85/output32/total117，四游标到LF末、coverage.scan_incomplete=0，复制fork不重计、子父归属已核验，DB/WAL无原生标识或正文\n3. 关闭重开owner来源/库/helper，重扫相同四文件；主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源\n4. 向主文件仅追加固定合成50/5完整LF行，续扫并重扫；只新增一调用，6行、input135/output37/total172，主游标推进追加字节数，其余三游标不变，无cursor_reset，复制fork不重计\n5. 从成功库独立副本分别在第一页后撤权、换主体、子文件提前EOF；每次取消scan、commitScanBatch=0；旧6行/172、四游标/覆盖原值不变，新主体无旧事件，本轮不可用/不完整而非已知零；SQLite/WAL与owner清理核对"
     }
   ]
 }

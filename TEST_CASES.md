@@ -4,9 +4,9 @@
 
 主要查看入口：[TokenMeter项目总表.xlsx](TokenMeter项目总表.xlsx)。本页提供 Git 可审查索引，详细前置、SQL、逐步观察面和缺项见机器清单及各来源文档。
 
-当前主目录共 **236 条父用例、42 条内嵌稳定变体、756 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
+当前主目录共 **237 条父用例、42 条内嵌稳定变体、761 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
 
-设计状态：baseline_pending 52、baselined 30、designed 78、draft 47、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
+设计状态：baseline_pending 52、baselined 30、designed 78、draft 48、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
 
 本页保存用例设计，不回填运行结果；每批次实际PASS/FAIL/BLOCKED见独立测试结果Excel。新增TC不能继承旧聚合场景的结果。
 
@@ -404,7 +404,7 @@
 | TM-003 / REQ-TM003 | [TC-TM003-CORE-10](docs/testing/cases/03-TM-003-codex-collection.md) · 主窗口 IPC 与刷新状态隔离 | TASK-TM003-IPC | source_check | tests/fixtures/tm003-product-loop-slice.json；CORE09成功库、固定主窗口sender/frame端口及第二主体 | 1. 分别用非主窗口 sender、子 frame、路径/账号/密钥多余字段和未确认 sourceId 调用 handler。<br>2. 主窗口按固定 sourceId 刷新并取 state。<br>3. 同主体再刷新并取 state，随后将来源暂停/撤销。<br>4. 切换第二主体后由旧 sender/sourceId 取 state/刷新。 | 1. 全部拒绝，采集/DB调用0次；不接受任意路径或由 renderer 指定 principal/secret，不返回旧主体状态。<br>2. 只触发第一主体 Codex 采集一次，返回两事件的 input300/output30/total330、cached已知60、覆盖与诊断代码/数量；库仍两行，序列化状态无密钥、密文、路径、原生ID或正文。<br>3. 重扫仍两行/330；暂停/撤销后刷新拒绝、旧可信330只对第一主体保留可见且标采集不可用/覆盖不完整，不能报新已知零。<br>4. 旧来源被拒绝，第二主体 state 为缺失/未核实且无第一主体330；第一主体持久事件不删除，按主体只读核对隔离。 | 准备：本例owner库只经handler/collector操作<br>变更：合法刷新不重复；非法sender/输入/换主体零新写<br>核验：只读usage_event/coverage与输出白名单、handler调用数 | draft / unexecuted<br>缺项：SOP-011固定程序/数据重置绑定未交付；真实ipcMain/preload/React和产品UI仍未验 |
 
 
-## TM-004 · 29 行
+## TM-004 · 30 行
 
 | 功能 / 需求 | 用例及详情 | 开发任务 | 类型 | 输入 | 操作步骤 | 独立预期 | DB 准备、变更与核验 | 设计 / 执行状态 |
 
@@ -467,6 +467,8 @@
 | TM-004 / REQ-TM004 | [TC-TM004-CORE-04](docs/testing/cases/04-TM-004-claude-collection.md) · 授权主体与扫描事务触发 | TASK-TM004-SOURCE、TASK-TM004-INCREMENTAL | source_check | tests/fixtures/tm004-trigger-core-slice.json；固定UUID、M=100/10、各错误码、三种屏障事件及成功返回形状 | 1. 拒绝路径字段、无效主体/来源和预先取消的请求<br>2. 扫描开始后在固定屏障分别换账号、撤权和取消<br>3. 健康主体和授权世代扫描完整M并通过提交守卫 | 1. 路径字段/坏UUID为invalid_collection_request；账号不可用为collection_unavailable；异主体来源为source_not_authorized；预先取消为collection_cancelled；均扫描0、提交0<br>2. 换账号/撤权为collection_stale，取消为collection_cancelled；每次cancelScan、commitSync=0、缓冲不外露<br>3. commitSync恰一次；返回summary{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]，无私密哨兵/原生标识 | 准备：无产品DB；每子变体新建假端口与计数器<br>变更：无SQLite；只观察假同步提交次数及数值<br>核验：逐步断言扫描、取消、守卫、提交次数与返回白名单；无SQL | draft / unexecuted<br>缺项：同树固定source_check程序/逐步TAP与重置已绑定；须在干净整合候选新run并生成独立Excel/verification，现无该候选真实结果；原20条产品TC/真实App与正式发行另验。 |
 
 | TM-004 / REQ-TM004 | [TC-TM004-CORE-05](docs/testing/cases/04-TM-004-claude-collection.md) · 多文件来源键与整代持久映射 | TASK-TM004-INCREMENTAL、TASK-TM004-LINEAGE | source_check | tests/fixtures/tm004-storage-port-slice.json；合成M100/10、S200/20、Q50/5，三文件HMAC/游标/诊断与隔离SQLite；异常model_id哨兵与invalid_model_id诊断 | 1. 计算三个文件来源键、根键及换源/追加/替换向量<br>2. 构造完整三文件generation并核对文件归属与turnId代号<br>3. 分别在新库注入第二游标写失败与guard撤权<br>4. 稳定末页通过guard后一次同步commitScanBatch并重扫 | 1. 64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名<br>2. a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交<br>3. 每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲<br>4. 唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识 | 准备：每故障子场景新建本例空SQLite；故障注入只在本例库设置第二游标写入RAISE(ABORT)<br>变更：成功一次事务新增三事件、三个游标、三诊断与根覆盖；失败和撤权零提交<br>核验：只读查询usage_event、source_cursor、collection_diagnostic、coverage的数量/键/数值；核对源键和scope HMAC向量及无原生标识；关闭并核对SQLite/WAL无合成prompt/路径哨兵 | draft / unexecuted<br>缺项：同树固定source_check程序/逐步TAP与重置已绑定；须在干净整合候选新run并生成独立Excel/verification，现无该候选真实结果；原20条产品TC/真实App与正式发行另验。 |
+
+| TM-004 / REQ-TM004 | [TC-TM004-CORE-06](docs/testing/cases/04-TM-004-claude-collection.md) · 真实SourceAccess到私有库的多文件贯通 | TASK-TM004-SOURCE、TASK-TM004-INCREMENTAL | source_check | tests/fixtures/tm004-sourceaccess-store-slice.json；四个2.1.126原生来源去敏投影文件、独立合成追加行；两页2+2/97字节分块与固定HMAC向量 | 1. 未确认时扫描，再经真实SourceAccess选择/预览/确认并核对四文件/root键<br>2. 真实主进程采集按两页2+2及97字节片段读完四文件，末页守卫后提交<br>3. 关闭重开owner来源/库/helper，重扫相同四文件<br>4. 向主文件仅追加固定合成50/5完整LF行，续扫并重扫<br>5. 从成功库独立副本分别在第一页后撤权、换主体、子文件提前EOF | 1. 确认前扫描/读取/库提交均0、库空；确认仅绑定第一主体和sourceId，四文件/root键等于fixture，不把路径/原摘要当库键<br>2. 只一次同步commitScanBatch；M+fork新+Agent父/子共5唯一调用、input85/output32/total117，四游标到LF末、coverage.scan_incomplete=0，复制fork不重计、子父归属已核验，DB/WAL无原生标识或正文<br>3. 主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源<br>4. 只新增一调用，6行、input135/output37/total172，主游标推进追加字节数，其余三游标不变，无cursor_reset，复制fork不重计<br>5. 每次取消scan、commitScanBatch=0；旧6行/172、四游标/覆盖原值不变，新主体无旧事件，本轮不可用/不完整而非已知零；SQLite/WAL与owner清理核对 | 准备：每故障从本例成功owner库复制；无生产库；只经UsageStore写入<br>变更：成功首次5行/117、追加后6行/172、四游标及覆盖；故障零新写<br>核验：只读usage_event/source_cursor/coverage/identity_key_state与SQLite/WAL隐私扫描；逐代际表摘要比较 | draft / unexecuted<br>缺项：SOP-011固定程序/重置绑定与实际原始结果未交付；真实OS目录选择、Keychain、IPC/App、原20产品TC另验 |
 
 
 ## TM-005 · 45 行
