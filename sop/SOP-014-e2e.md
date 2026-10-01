@@ -1,10 +1,10 @@
 # SOP-014 自动 E2E
 
-**修订：** 27　**状态：** baselined　**适用：** all
+**修订：** 28　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
-开发阶段按每项功能已基线固定TC验证真实桌面App行为；用户另行启动正式对外发布时，针对固定最终候选执行全部目标及已交付功能的完整端到端并集。
+开发阶段按每项功能已基线的`product_e2e`固定TC验证真实桌面App行为；用户另行启动正式对外发布时，针对固定最终候选执行全部目标及已交付功能的完整端到端并集。`source_check`模块TC依SOP-013执行和导出，结果单独记录。
 
 ## 触发条件
 
@@ -32,7 +32,7 @@
 8. 升级后只连接已自行启动的新PID，不调用launch高版；核对实际包路径/版本/hash、同一runtime侧文件与profile、/v1/me自动登录、配置与token保留。
 9. 保存本次运行的原始JSON/trace/截图、fixture与SQL摘要、服务审计/DB验证、更新请求和清理；关闭本次进程并验证端口/镜像/profile及适用的精确测试Keychain item清理，只操作本次拥有的资源，记录清理前后元数据和归属，不能清理正式item。TM001历史主run的116行、105个执行或可从变体推导项、11个无步骤辅助占位，以及辅助11、审计12、聚合6、最终78父TC/38变体，是该来源当时原件的固定核对口径，原报告及BLOCKED原样保留。只有正式发布的最终候选才按步骤2的完整并集逐来源保存同一候选/DMG的新原件，并独立验真每个父TC、变体、辅助、聚合、审计；有独立辅助原件承接的无步骤占位才可在主原件保持BLOCKED，其余原件须PASS。父门禁从冻结原件与目录重算规范化结果，所有应测项零跳过、零重试、零FAIL/BLOCKED且证据齐全才可继续。最终gate自身派生TC（当前TM002的`TC-TM002-DELIVERY-01`）不要求预先PASS：先保持BLOCKED，待其他原件与真实升级验真后由独立门禁计算，不能预填或借历史结果。
 10. 精细用例执行后，TM001 使用已建立的`python3 scripts/audit_granular_evidence.py --report <本批次result.json> --output <新的audit.json>`检查其固定旁证；后续来源须建立同等固定审计程序或明确机器判据，未建立时该来源BLOCKED。审计绑定原报告和代码摘要，不改原件；缺断言/旁证为BLOCKED，原FAIL不得升级为PASS。签名目录或预检失败且App未启动属于测试准备BLOCKED；预检通过后真实App行为/断言失败记FAIL，逐项保留日志。修复准备条件后可按步骤2作新run单例验证，不能用新结果覆盖旧失败或声称完整发布回归通过。
-11. `scripts/local_e2e.py`在其结果落盘后调用`test_result_export.py`，从本批次原始结果生成独立`TokenMeter测试结果-<run_id>.xlsx`，包括FAIL/BLOCKED。TM001精细结果使用`granular_test_result.py`，传入同批次原报告、辅助报告和独立审计；正式发布跨版本候选须扩展固定导出入口覆盖步骤2的全部来源及gate派生TC，程序未接通即BLOCKED。运行前按[总表规范](../docs/standards/project-workbook.md)准备Codex捆绑Node与artifact-tool。结果保存在`.local/test-results/<run_id>/`；同源重复导出只验证，禁止覆盖历史。逐步实测、失败和证据放在该文件。导出收据为独立`excel-export.json`，不改产品结果；生成失败保留原始结论并非零返回，不能声称本步完成。开发功能批次可按SOP-024同步总表索引，明确被测SHA及未发布状态；正式候选门禁和发行归档先在干净被测树上完成，随后另作只索引原件的文档提交。
+11. `scripts/local_e2e.py`在其结果落盘后调用`test_result_export.py`，从本批次原始结果生成独立`TokenMeter测试结果-<run_id>.xlsx`，包括FAIL/BLOCKED。TM001精细结果使用`granular_test_result.py`，传入同批次原报告、辅助报告和独立审计；正式发布跨版本候选须扩展固定导出入口覆盖步骤2的全部来源及gate派生TC，程序未接通即BLOCKED。运行前按[总表规范](../docs/standards/project-workbook.md)准备Codex捆绑Node与artifact-tool。结果保存在`.local/test-results/<run_id>/`；同源重复导出只验证，禁止覆盖历史。逐步实测、失败和证据放在该文件。导出收据为独立`excel-export.json`，不改产品结果；生成失败保留原始结论并非零返回，不能声称本步完成。此导出入口只接收其已定义的产品E2E报告，不能为`source_check`模块TC伪造`result.json`、产品用例ID或产品PASS；模块Excel走SOP-013。开发功能批次可按SOP-024同步总表索引，明确被测SHA及未发布状态；正式候选门禁和发行归档先在干净被测树上完成，随后另作只索引原件的文档提交。
 
 ## 输出
 
