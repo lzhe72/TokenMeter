@@ -1337,15 +1337,16 @@
       "doc_id": "DOC-TEST-CASES-TM-004",
       "path": "docs/testing/cases/04-TM-004-claude-collection.md",
       "type": "plan",
-      "status": "baselined",
+      "status": "draft",
       "applicable_release": "all",
       "base_release": null,
       "inputs": [
         "tests/feature_matrix.json",
         "tests/acceptance.json",
-        "docs/testing/strategy.md"
+        "docs/testing/strategy.md",
+        "releases/v0.4.0-20261001T040433Z/00-manifest.json"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
@@ -1496,6 +1497,90 @@
       ],
       "updated_at": "2026-10-01",
       "sop": "sop/SOP-015-bugfix.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-REQUIREMENTS",
+      "path": "releases/v0.4.0-20261001T040433Z/01-requirements.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/product/README.md",
+        "docs/testing/cases/04-TM-004-claude-collection.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-002-requirements.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-BREAKDOWN",
+      "path": "releases/v0.4.0-20261001T040433Z/02-breakdown.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/product/README.md",
+        "docs/testing/cases/04-TM-004-claude-collection.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-003-feature-breakdown.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-DEVELOPMENT-PLAN",
+      "path": "releases/v0.4.0-20261001T040433Z/03-development-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/product/README.md",
+        "docs/testing/cases/04-TM-004-claude-collection.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-005-development-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-TEST-PLAN",
+      "path": "releases/v0.4.0-20261001T040433Z/04-test-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/product/README.md",
+        "docs/testing/cases/04-TM-004-claude-collection.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-006-test-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-RELEASE-PLAN",
+      "path": "releases/v0.4.0-20261001T040433Z/05-release-plan.md",
+      "type": "plan",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/product/README.md",
+        "docs/testing/cases/04-TM-004-claude-collection.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-007-release-plan.md"
+    },
+    {
+      "doc_id": "DOC-RELEASES-V0-4-0-20261001T040433Z-ITERATION-RECORD",
+      "path": "releases/v0.4.0-20261001T040433Z/06-iteration-record.md",
+      "type": "record",
+      "status": "draft",
+      "applicable_release": "v0.4.0-20261001T040433Z",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/product/README.md",
+        "docs/testing/cases/04-TM-004-claude-collection.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-022-archive-handoff.md"
     }
   ]
 }
