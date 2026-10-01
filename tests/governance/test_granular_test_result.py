@@ -62,6 +62,67 @@ def recorded_case(root: Path, run_id: str, case: dict, state: str, count: int | 
 
 
 class GranularResultTests(unittest.TestCase):
+    def test_excel_export_receipt_is_bound_and_never_overwritten(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            report = root / "result.json"
+            report.write_text(json.dumps({"run_id": "receipt-01", "state": "PASS"}))
+            output = root / "export"
+            output.mkdir()
+            model = output / "granular-source.json"
+            model.write_text(json.dumps({"source_hashes": {"result.json": granular.sha(report.read_bytes())}}))
+            workbook = output / "TokenMeter测试结果-receipt-01.xlsx"
+            workbook.write_bytes(b"fixed-workbook")
+            verified = {"state": "PASS", "run_id": "receipt-01", "product_state": "PASS",
+                        "source_model_sha256": granular.sha(model.read_bytes()),
+                        "workbook": {"path": workbook.name, "sha256": granular.sha(workbook.read_bytes()),
+                                     "bytes": workbook.stat().st_size}}
+            (output / "verification.json").write_text(json.dumps(verified))
+            first = granular.persist_excel_export_receipt(report, output, verified)
+            receipt = report.parent / "excel-export.json"
+            original = receipt.read_bytes()
+            self.assertEqual(first["workbook"]["sha256"], verified["workbook"]["sha256"])
+            self.assertEqual(granular.persist_excel_export_receipt(report, output, verified), first)
+            self.assertEqual(receipt.read_bytes(), original)
+            second = root / "second-review"
+            second.mkdir()
+            (second / model.name).write_bytes(model.read_bytes())
+            (second / workbook.name).write_bytes(workbook.read_bytes())
+            (second / "verification.json").write_text(json.dumps(verified))
+            later = granular.persist_excel_export_receipt(report, second, verified)
+            self.assertNotEqual(later["receipt_path"], str(receipt))
+            self.assertTrue(Path(later["receipt_path"]).is_file())
+            self.assertEqual(receipt.read_bytes(), original)
+            failure = granular.persist_excel_export_failure(
+                report, root / "failed-review", "BLOCKED", granular.Blocked("runtime unavailable"))
+            self.assertEqual(failure["product_state"], "PASS")
+            self.assertEqual(failure["state"], "BLOCKED")
+            self.assertEqual(receipt.read_bytes(), original)
+            workbook.write_bytes(b"tampered")
+            with self.assertRaises(granular.Invalid):
+                granular.persist_excel_export_receipt(report, output, verified)
+            self.assertEqual(receipt.read_bytes(), original)
+
+    def test_frozen_integrated_catalog_exports_original_tm001_run(self):
+        # The catalog has advanced to TM-002, while its frozen TM-001 cases
+        # still belong to the original TM-001 release under test.
+        source_release = VARIANTS["release_id"]
+        self.assertNotEqual(CATALOG["release_id"], source_release)
+        parent = next(case for case in CURRENT if case["id"] == "TC-TM001-UPDATE-05")
+        report = {"run_id": "original-tm001", "release_id": source_release,
+                  "scope": "granular_targeted_probe", "state": "BLOCKED",
+                  "expected_cases": [parent["id"]], "tc_results": []}
+        with tempfile.TemporaryDirectory() as temp:
+            model = granular.build_model(CATALOG, report, run_root=Path(temp), variants=VARIANTS)
+            self.assertEqual(model["release_id"], source_release)
+            self.assertEqual([case["id"] for case in model["cases"]], [parent["id"]])
+            wrong_catalog = deepcopy(CATALOG)
+            for case in wrong_catalog["cases"]:
+                if case.get("feature_id") == "TM-001":
+                    case["release_id"] = "v9.0.0-20990101T000000Z"
+            with self.assertRaises(granular.Invalid):
+                granular.build_model(wrong_catalog, report, run_root=Path(temp), variants=VARIANTS)
+
     def test_export_rejects_mixed_historical_variant_manifests(self):
         target = "v0.2.0-20261001T034118Z"
         catalog = deepcopy(CATALOG)
