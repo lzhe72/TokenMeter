@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.3.0-20261001T034652Z",
+  "case_id": "TC-TM003-CORE-07",
+  "input_fixture": "tests/fixtures/tm003-core-generation.json",
+  "public_test_secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "verified_principal_key": "1111111111111111111111111111111111111111111111111111111111111111",
+  "source_id": "00000000-0000-4000-8000-000000000303",
+  "source_tool": "codex",
+  "source_key_contract": "HMAC-SHA256(public test secret, uint32-BE byte length + strict UTF-8 fields in order); no raw sourceId or file digest enters usage DB",
+  "root_key_fields": [
+    "codex-root-v1",
+    "00000000-0000-4000-8000-000000000303"
+  ],
+  "root_key_hex": "68e6651ea8d18edb835ee1f975d4ad3c0907345d37db9ea3c63894aeebf35ca8",
+  "files": [
+    {
+      "synthetic_file_id": "file-a",
+      "file_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_key_fields": [
+        "codex-file-v1",
+        "00000000-0000-4000-8000-000000000303",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "source_key_hex": "a59d9eccea8f73a7736fb32a34d01d9e5e4b9db65c85fbf6a2c099e74e6ceb65",
+      "size_bytes": 410,
+      "read_return_chunk_bytes": 128
+    },
+    {
+      "synthetic_file_id": "file-b",
+      "file_identity_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_key_fields": [
+        "codex-file-v1",
+        "00000000-0000-4000-8000-000000000303",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "source_key_hex": "356085b7016d38dc881ed7c110ed364de8be4a22ad332da7eb270c65407ad26e",
+      "size_bytes": 410,
+      "read_return_chunk_bytes": 128
+    }
+  ],
+  "scan_pages": [
+    {
+      "page": 1,
+      "file_ids": [
+        "file-a"
+      ],
+      "complete": false
+    },
+    {
+      "page": 2,
+      "file_ids": [
+        "file-b"
+      ],
+      "complete": true
+    }
+  ],
+  "max_read_request_bytes": 65536,
+  "fixture_staging_budget_bytes": 1024,
+  "oversize_candidate_bytes": 1025,
+  "expected_complete": {
+    "event_count": 2,
+    "input_tokens": 300,
+    "output_tokens": 30,
+    "cached_input_tokens": 60,
+    "total_tokens": 330,
+    "source_cursor_count": 2,
+    "scan_incomplete": 0,
+    "commitScanBatch_calls": 1,
+    "cancelScan_calls": 1
+  },
+  "expected_abort": {
+    "event_count": 0,
+    "source_cursor_count": 0,
+    "diagnostic_count": 0,
+    "coverage_row_count": 0,
+    "commitScanBatch_calls": 0,
+    "cancelScan_calls": 1
+  },
+  "negative_inputs": [
+    "foreign_source_id",
+    "unverified_principal",
+    "collect_not_allowed",
+    "early_eof",
+    "read_throw",
+    "staging_budget_exceeded",
+    "revoke_before_commit_guard",
+    "account_switch_before_commit_guard"
+  ],
+  "privacy_sentinels": [
+    "PRIVATE-PROMPT-CORE07",
+    "/Users/private/source-a.jsonl",
+    "PRIVATE-SECRET-CORE07"
+  ],
+  "product_scope": "source_check fake SourceAccess + owner UsageStore only; no real App, picker, Keychain, native helper, service or product E2E"
+}

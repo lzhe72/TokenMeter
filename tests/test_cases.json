@@ -4924,7 +4924,7 @@
       ],
       "type": "集成及E2E/负向/数据保留",
       "input": "改后密码、重复首建/seed；额外合成成员变体",
-      "preconditions": "新D-PROD，在真实UI改密；保留用户/credential_version/审计快照。新增成员变体只可由批准的离线provision程序向本例合成库添加，生成与重置绑定待补。SOP-010/016/014；RESET。\n每TC独立拥有的安装/profile/动态回环服务/SQLite，不访问用户49176或真实生产库。D-A42=seed42四账号：test-admin/admin/UUID尾0001，test-alice/member/尾0002，test-bob/member/尾0003，test-disabled/member/尾0004且停用；初始均需改密，合成密码TEST-ONLY-<admin|alice|bob|disabled>-42!。D-A43=相同角色的独立seed43服务B，alice密码TEST-ONLY-alice-43!。P-NEW=TEST-ONLY-Changed-42!；P-RESET=TEST-ONLY-Reset-42!。SETUP-MEMBER/ADMIN=在真实UI改连本例服务A，以对应初始账号登录、强制改为P-NEW并等待/v1/me；不依赖上一TC。D-PROD=新私有根由bootstrap_sqlite.initialize_production创建的首建同构测试库，仅admin/UUID尾0005、强制改密，初始口令从本机首建配置引用，不使用用户生产库。D-UPDATE=同次0.1.0/build100原DMG与0.1.1/build101受控ZIP、固定证书/Ed25519公钥；同一owned动态回环源的idle/forbidden/redirect/invalid/valid阶段。RESET=保留原件后按owner/run_id清理本例App/服务/挂载/profile/库，未知资源不删除。",
+      "preconditions": "新D-PROD，在真实UI改密；保留用户/credential_version/审计快照。新增成员变体由固定Playwright程序调用离线server.tokenmeter_server.provision，仅向本例拥有的D-PROD合成库添加尾0007的test-extra成员；固定重启/拒绝首建及owner清理已绑定，实际结果仍须独立运行。SOP-010/016/014；RESET。\n每TC独立拥有的安装/profile/动态回环服务/SQLite，不访问用户49176或真实生产库。D-A42=seed42四账号：test-admin/admin/UUID尾0001，test-alice/member/尾0002，test-bob/member/尾0003，test-disabled/member/尾0004且停用；初始均需改密，合成密码TEST-ONLY-<admin|alice|bob|disabled>-42!。D-A43=相同角色的独立seed43服务B，alice密码TEST-ONLY-alice-43!。P-NEW=TEST-ONLY-Changed-42!；P-RESET=TEST-ONLY-Reset-42!。SETUP-MEMBER/ADMIN=在真实UI改连本例服务A，以对应初始账号登录、强制改为P-NEW并等待/v1/me；不依赖上一TC。D-PROD=新私有根由bootstrap_sqlite.initialize_production创建的首建同构测试库，仅admin/UUID尾0005、强制改密，初始口令从本机首建配置引用，不使用用户生产库。D-UPDATE=同次0.1.0/build100原DMG与0.1.1/build101受控ZIP、固定证书/Ed25519公钥；同一owned动态回环源的idle/forbidden/redirect/invalid/valid阶段。RESET=保留原件后按owner/run_id清理本例App/服务/挂载/profile/库，未知资源不删除。",
       "steps": [
         {
           "step": 1,
@@ -4956,7 +4956,7 @@
         }
       ],
       "db_operations": {
-        "prepare": "D-PROD先真实改密；额外成员用批准provision输入，数据绑定待补",
+        "prepare": "D-PROD先在真实UI改密；固定Playwright程序以离线provision向本例拥有的库添加尾0007的test-extra成员，再读回与重启核对；不接触用户生产库。",
         "read_only_checks": [
           {
             "id": "Q-OWNER",
@@ -16720,7 +16720,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 251,
+        "line": 265,
         "heading": "TC-TM003-SOURCE-01"
       },
       "missing": [
@@ -16773,7 +16773,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 255,
+        "line": 269,
         "heading": "TC-TM003-DATA-01"
       },
       "missing": [
@@ -16828,7 +16828,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 259,
+        "line": 273,
         "heading": "TC-TM003-PARSE-01"
       },
       "missing": [
@@ -16891,7 +16891,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 263,
+        "line": 277,
         "heading": "TC-TM003-SCAN-01"
       },
       "missing": [
@@ -16976,7 +16976,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 267,
+        "line": 281,
         "heading": "TC-TM003-STORE-01"
       },
       "missing": [
@@ -17039,7 +17039,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 271,
+        "line": 285,
         "heading": "TC-TM003-UI-01"
       },
       "missing": [
@@ -17092,7 +17092,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 275,
+        "line": 289,
         "heading": "TC-TM003-SOURCE-02"
       },
       "missing": [
@@ -17147,7 +17147,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 279,
+        "line": 293,
         "heading": "TC-TM003-PARSE-02"
       },
       "missing": [
@@ -17214,7 +17214,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 283,
+        "line": 297,
         "heading": "TC-TM003-MODEL-01"
       },
       "missing": [
@@ -17285,7 +17285,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 287,
+        "line": 301,
         "heading": "TC-TM003-DEDUP-01"
       },
       "missing": [
@@ -17356,7 +17356,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 291,
+        "line": 305,
         "heading": "TC-TM003-BRANCH-01"
       },
       "missing": [
@@ -17427,7 +17427,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 295,
+        "line": 309,
         "heading": "TC-TM003-NAMESPACE-01"
       },
       "missing": [
@@ -17482,7 +17482,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 299,
+        "line": 313,
         "heading": "TC-TM003-PRIVACY-01"
       },
       "missing": [
@@ -17542,7 +17542,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 303,
+        "line": 317,
         "heading": "TC-TM003-DATA-02"
       },
       "missing": [
@@ -17605,7 +17605,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 307,
+        "line": 321,
         "heading": "TC-TM003-SCAN-02"
       },
       "missing": [
@@ -17672,7 +17672,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 311,
+        "line": 325,
         "heading": "TC-TM003-SCAN-03"
       },
       "missing": [
@@ -17739,7 +17739,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 315,
+        "line": 329,
         "heading": "TC-TM003-WINDOW-01"
       },
       "missing": [
@@ -17822,7 +17822,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 319,
+        "line": 333,
         "heading": "TC-TM003-COVERAGE-OVERFLOW-01"
       },
       "missing": [
@@ -17877,7 +17877,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 323,
+        "line": 337,
         "heading": "TC-TM003-UI-02"
       },
       "missing": [
@@ -17932,7 +17932,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 327,
+        "line": 341,
         "heading": "TC-TM003-BOUNDARY-01"
       },
       "missing": [
@@ -17995,7 +17995,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 331,
+        "line": 345,
         "heading": "TC-TM003-AUTH-01"
       },
       "missing": [
@@ -18066,7 +18066,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 335,
+        "line": 349,
         "heading": "TC-TM003-AUTH-02"
       },
       "missing": [
@@ -18150,7 +18150,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 339,
+        "line": 353,
         "heading": "TC-TM003-ISOLATION-01"
       },
       "missing": [
@@ -18219,7 +18219,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 343,
+        "line": 357,
         "heading": "TC-TM003-MIGRATE-01"
       },
       "missing": [
@@ -18289,7 +18289,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 347,
+        "line": 361,
         "heading": "TC-TM003-E2E-01"
       },
       "missing": [
@@ -18355,7 +18355,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 351,
+        "line": 365,
         "heading": "TC-TM003-E2E-02"
       },
       "missing": [
@@ -18418,7 +18418,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 355,
+        "line": 369,
         "heading": "TC-TM003-GOV-01"
       },
       "missing": [
@@ -18484,7 +18484,7 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 359,
+        "line": 373,
         "heading": "TC-TM003-CORE-01"
       }
     },
@@ -18546,7 +18546,7 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 363,
+        "line": 377,
         "heading": "TC-TM003-CORE-02"
       }
     },
@@ -18606,7 +18606,7 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 367,
+        "line": 381,
         "heading": "TC-TM003-CORE-03"
       }
     },
@@ -18838,6 +18838,88 @@
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
         "line": 230,
         "heading": "TC-TM003-CORE-06 · 多文件代际一次提交与全回滚"
+      }
+    },
+    {
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "scenario_group": "E2E-TM003-003",
+      "type": "source_check",
+      "data_program": null,
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "preconditions": "固定tests/fixtures/tm003-main-collector-slice.json引用CORE06两文件；公开32字节测试key、已验证主体、已确认sourceId；假TM002 SourceAccess端口与真实UsageStore；本例0700 owner根/0600 SQLite。每故障变体独立新库，不使用真实App/来源/Keychain/服务。",
+      "id": "TC-TM003-CORE-07",
+      "title": "主进程采集编排与能力失效",
+      "task_ids": [
+        "TASK-TM003-SCAN",
+        "TASK-TM003-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM003-001",
+        "AC-TM003-003"
+      ],
+      "input": "固定同代际两页file-a/file-b各410字节、假readCandidateChunk每次最多返128字节、65536请求上限、公开HMAC root/file键向量；坏sourceId/主体/采集授权、提前EOF/读异常/1025字节元数据对1024注入暂存预算、撤权/切换主体；五步。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "分别提交非本主体sourceId、未验证主体和collectAllowed=false，均从独立新库开始",
+          "expected": "扫描前拒绝；beginCandidateScan与commitScanBatch调用0次，不写事件/游标/覆盖，不接受renderer路径/账号/密钥",
+          "expected_ui": "",
+          "expected_api_db": "四表本代际行0"
+        },
+        {
+          "step": 2,
+          "action": "合法sourceId读第一页file-a的410字节/complete=false，再读末页file-b 410字节/complete=true；每次最多返回128字节，逐文件SHA及HMAC键核对后取commitGuard并单次同步提交，finally cancelScan",
+          "expected": "第一页无落库；末页完整稳定后A/B两事件、input300/output30/cached60/total330，两游标各410、coverage.scan_incomplete=0，commitScanBatch1次，cancelScan1次且无私密哨兵",
+          "expected_ui": "",
+          "expected_api_db": "usage_event2、source_cursor2、coverage完成；HMAC root/file键与fixture精确相同，DB/WAL无原路径/原生ID/密钥"
+        },
+        {
+          "step": 3,
+          "action": "独立新库分别注入file-b提前EOF、读异常和1025字节元数据超过1024本例暂存预算；先暂存file-a",
+          "expected": "三路径均取消、提交0次、四表无行；请求≤65536，超预算在完整Buffer分配前失败，不截断正文后提交",
+          "expected_ui": "",
+          "expected_api_db": "事件/游标/诊断/覆盖均无本代际行；不声称完整"
+        },
+        {
+          "step": 4,
+          "action": "另两新库各读满两文件后，在commitGuard前分别撤权、切换主体",
+          "expected": "守卫拒绝、cancelScan各1次、同步提交0次，旧主体暂存不写新主体",
+          "expected_ui": "",
+          "expected_api_db": "A/B、游标、覆盖均不存在"
+        },
+        {
+          "step": 5,
+          "action": "对步骤2成功库重启模块，同主体/来源/文件身份完整重扫一次",
+          "expected": "根/文件HMAC键及调用身份稳定，A/B仍各一、total330、游标各410，重扫仍经守卫和关闭，不输出私密哨兵",
+          "expected_ui": "",
+          "expected_api_db": "usage_event仍2、source_cursor仍2、total330"
+        }
+      ],
+      "db_operations": {
+        "prepare": "每个故障变体本例owner0700根/0600新SQLite；事件只经正式解析/UsageStore；公开测试key不进入产品profile",
+        "expected_changes": "仅完整稳定且guard通过的两页代际一次事务入A/B；所有预检、读取、容量和失权故障零提交；重扫去重",
+        "verification": "逐步只读usage_event数量/聚合/HMAC键、source_cursor两个偏移/prefixMAC、collection_diagnostic、coverage和库/WAL私密哨兵；核fake端口调用顺序/次数及owner清理",
+        "read_only_checks": [
+          "usage_event count/input/output/cached/total/source_event_key",
+          "source_cursor count/offset/root_key/source_key",
+          "collection_diagnostic count",
+          "coverage scan_incomplete",
+          "SQLite/WAL privacy sentinel absence"
+        ]
+      },
+      "missing": [
+        "固定source_check主进程编排程序未绑定；fake能力与小文件/注入预算不证明真实TM002授权、任意大日志、App/IPC或产品E2E"
+      ],
+      "source": {
+        "path": "docs/testing/cases/03-TM-003-codex-collection.md",
+        "line": 243,
+        "heading": "TC-TM003-CORE-07 · 主进程采集编排与能力失效"
       }
     },
     {
