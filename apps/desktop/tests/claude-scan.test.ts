@@ -101,3 +101,74 @@ test('TM004 guarded module boundary: revoked lease cannot invoke SQLite commit',
   assert.equal(commits, 0);
   assert.equal(cancels, 1);
 });
+
+test('TM004 lineage module boundary: parent evidence in another candidate verifies child Agent', async () => {
+  const parent = readFileSync(join(import.meta.dirname,
+    '../../../tests/fixtures/tm004/native-2.1.126-projection/raw-agent-parent.jsonl'));
+  const child = readFileSync(join(import.meta.dirname,
+    '../../../tests/fixtures/tm004/native-2.1.126-projection/raw-agent-sub.jsonl'));
+  const files = [child, parent]; // Child arrives first to prove order does not grant attribution.
+  const access: ClaudeSourceScanAccess = {
+    async beginCandidateScan() { return {scanId, complete: true, candidates: files.map((bytes, index) => ({
+      relativeName: `project/session-${index}.jsonl`, size: bytes.length,
+      candidateToken: String(index).padStart(32, '0'), fileIdentityDigest: String(index).padStart(64, '0'),
+    }))}; },
+    async nextCandidatePage() { throw new Error('unexpected_page'); },
+    async readCandidateChunk(_scan, token, offset, maxBytes) {
+      return files[Number(token)]!.subarray(offset, offset + maxBytes);
+    },
+    cancelScan() {},
+  };
+  const plan = await scanClaudeSource(access, sourceId, secret, async () => null);
+  assert.equal(plan.calls.length, 3);
+  assert.equal(plan.calls.find(call => call.isSidechain)?.attribution, 'parent_verified');
+  assert.equal(plan.diagnostics.filter(item => item.code === 'unverified_parent').length, 0);
+});
+
+test('TM004 lineage module boundary: copied fork call across candidate files is counted once', async () => {
+  const main = readFileSync(join(import.meta.dirname,
+    '../../../tests/fixtures/tm004/native-2.1.126-projection/raw-main.jsonl'));
+  const fork = readFileSync(join(import.meta.dirname,
+    '../../../tests/fixtures/tm004/native-2.1.126-projection/raw-fork.jsonl'));
+  const files = [main, fork];
+  const access: ClaudeSourceScanAccess = {
+    async beginCandidateScan() { return {scanId, complete: true, candidates: files.map((bytes, index) => ({
+      relativeName: `project/session-${index}.jsonl`, size: bytes.length,
+      candidateToken: String(index).padStart(32, '0'), fileIdentityDigest: String(index).padStart(64, '0'),
+    }))}; },
+    async nextCandidatePage() { throw new Error('unexpected_page'); },
+    async readCandidateChunk(_scan, token, offset, maxBytes) {
+      return files[Number(token)]!.subarray(offset, offset + maxBytes);
+    },
+    cancelScan() {},
+  };
+  const plan = await scanClaudeSource(access, sourceId, secret, async () => null);
+  assert.equal(plan.calls.length, 2);
+  assert.equal(plan.calls.reduce((sum, call) => sum + call.inputTokens + call.outputTokens, 0), 40);
+});
+
+test('TM004 lineage module boundary: parent evidence after a read limit verifies earlier child', async () => {
+  const parent = readFileSync(join(import.meta.dirname,
+    '../../../tests/fixtures/tm004/native-2.1.126-projection/raw-agent-parent.jsonl'));
+  const child = readFileSync(join(import.meta.dirname,
+    '../../../tests/fixtures/tm004/native-2.1.126-projection/raw-agent-sub.jsonl'));
+  const bytes = Buffer.concat([child, ...Array.from({length: 1500}, () => firstLine), parent]);
+  assert.ok(bytes.length > 1024 * 1024);
+  const access: ClaudeSourceScanAccess = {
+    async beginCandidateScan() { return {scanId, complete: true, candidates: [{
+      relativeName: 'project/session.jsonl', size: bytes.length,
+      candidateToken: 'a'.repeat(32), fileIdentityDigest: 'b'.repeat(64),
+    }]}; },
+    async nextCandidatePage() { throw new Error('unexpected_page'); },
+    async readCandidateChunk(_scan, _token, offset, maxBytes) {
+      return bytes.subarray(offset, offset + maxBytes);
+    },
+    cancelScan() {},
+  };
+  const plan = await scanClaudeSource(access, sourceId, secret, async () => null);
+  assert.equal(plan.scanIncomplete, false);
+  assert.equal(plan.calls.length, 4);
+  assert.equal(plan.calls.find(call => call.isSidechain)?.attribution, 'parent_verified');
+  assert.equal(plan.diagnostics.filter(item => item.code === 'unverified_parent').length, 0);
+  assert.equal(plan.cursors[0].committedByteOffset, bytes.length);
+});

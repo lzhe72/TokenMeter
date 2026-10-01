@@ -27,6 +27,7 @@ export interface ClaudeCall {
 export interface ClaudeCollection {
   calls: ClaudeCall[];
   diagnostics: ClaudeDiagnostic[];
+  parentEvidence: Array<{agentId: string; sessionId: string}>;
   totals: {calls: number; inputTokens: number; outputTokens: number; totalTokens: number};
 }
 
@@ -53,7 +54,7 @@ const utcTimestamp = (value: unknown): value is string =>
   && Number.isFinite(Date.parse(value))
   && new Date(Date.parse(value)).toISOString().slice(0, 19) === value.slice(0, 19);
 
-function sameUsage(a: ClaudeCall, b: ClaudeCall): boolean {
+export function sameClaudeUsage(a: ClaudeCall, b: ClaudeCall): boolean {
   return a.model === b.model && a.inputTokens === b.inputTokens && a.outputTokens === b.outputTokens
     && a.cachedReadInputTokens === b.cachedReadInputTokens && a.cachedWriteInputTokens === b.cachedWriteInputTokens;
 }
@@ -62,6 +63,7 @@ function sameUsage(a: ClaudeCall, b: ClaudeCall): boolean {
 export function collectClaudeJsonl(files: readonly string[]): ClaudeCollection {
   const calls: ClaudeCall[] = [];
   const diagnostics: ClaudeDiagnostic[] = [];
+  const parentEvidence: Array<{agentId: string; sessionId: string}> = [];
   const byCallId = new Map<string, ClaudeCall>();
   const agentParents = new Map<string, Set<string>>();
   const totals = {calls: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0};
@@ -86,6 +88,7 @@ export function collectClaudeJsonl(files: readonly string[]): ClaudeCollection {
         const sessions = agentParents.get(row.toolUseResult.agentId) ?? new Set<string>();
         sessions.add(row.sessionId);
         agentParents.set(row.toolUseResult.agentId, sessions);
+        parentEvidence.push({agentId: row.toolUseResult.agentId, sessionId: row.sessionId});
       }
       if (row.type !== 'assistant') continue;
       if (row.version !== '2.1.126') { diagnose('unsupported_version'); continue; }
@@ -118,7 +121,7 @@ export function collectClaudeJsonl(files: readonly string[]): ClaudeCollection {
       };
       const prior = byCallId.get(candidate.canonicalCallId);
       if (prior) {
-        if (!sameUsage(prior, candidate)) diagnose('identity_conflict');
+        if (!sameClaudeUsage(prior, candidate)) diagnose('identity_conflict');
         else if (prior.rowUuid !== candidate.rowUuid &&
                  (prior.sessionId !== candidate.sessionId || prior.agentId !== candidate.agentId))
           diagnose('unverified_inheritance');
@@ -143,5 +146,5 @@ export function collectClaudeJsonl(files: readonly string[]): ClaudeCollection {
     if (sessions?.size === 1 && sessions.has(call.sessionId)) call.attribution = 'parent_verified';
     else { call.attribution = 'unverified_parent'; diagnose('unverified_parent'); }
   }
-  return {calls, diagnostics, totals};
+  return {calls, diagnostics, parentEvidence, totals};
 }

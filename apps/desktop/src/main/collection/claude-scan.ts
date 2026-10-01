@@ -1,4 +1,4 @@
-import type { ClaudeCall, ClaudeDiagnostic } from './claude-format.ts';
+import {sameClaudeUsage, type ClaudeCall, type ClaudeDiagnostic} from './claude-format.ts';
 import { readClaudeCandidate, type ClaudeFileCursor } from './claude-reader.ts';
 import { claudeCandidateFromSource, type ConfirmedClaudeCandidate, type ConfirmedClaudeSourceAccess } from './claude-source.ts';
 
@@ -34,6 +34,8 @@ async function withClaudeScanLease<T>(
 ): Promise<T> {
   const calls: ClaudeCall[] = [];
   const diagnostics: ClaudeDiagnostic[] = [];
+  const byCallId = new Map<string, ClaudeCall>();
+  const agentParents = new Map<string, Set<string>>();
   const cursors: ClaudeFileCursor[] = [];
   const seen = new Set<string>();
   let scanId: string | null = null;
@@ -54,8 +56,25 @@ async function withClaudeScanLease<T>(
         for (let pass = 0; pass < 1024; pass++) {
           const oldOffset = cursor?.committedByteOffset ?? 0;
           const read = await readClaudeCandidate(readable, cursor, secret);
-          calls.push(...read.calls);
-          diagnostics.push(...read.diagnostics.filter(item => item.code !== 'read_limit' && item.code !== 'incomplete_tail'));
+          for (const evidence of read.parentEvidence) {
+            const sessions = agentParents.get(evidence.agentId) ?? new Set<string>();
+            sessions.add(evidence.sessionId);
+            agentParents.set(evidence.agentId, sessions);
+          }
+          for (const call of read.calls) {
+            const prior = byCallId.get(call.canonicalCallId);
+            if (prior) {
+              if (!sameClaudeUsage(prior, call)) diagnostics.push({code: 'identity_conflict', count: 1});
+              else if (prior.rowUuid !== call.rowUuid &&
+                  (prior.sessionId !== call.sessionId || prior.agentId !== call.agentId))
+                diagnostics.push({code: 'unverified_inheritance', count: 1});
+            } else {
+              byCallId.set(call.canonicalCallId, call);
+              calls.push(call);
+            }
+          }
+          diagnostics.push(...read.diagnostics.filter(item => item.code !== 'read_limit' &&
+            item.code !== 'incomplete_tail' && item.code !== 'unverified_parent'));
           cursor = read.cursor;
           if (!read.scanIncomplete) break;
           if (read.cursor.committedByteOffset <= oldOffset ||
@@ -69,8 +88,18 @@ async function withClaudeScanLease<T>(
         if (!cursor) throw new Error('claude_scan_failed');
         cursors.push(cursor);
       }
-      if (page.complete)
+      if (page.complete) {
+        for (const call of calls) {
+          if (!call.isSidechain) continue;
+          const sessions = call.agentId ? agentParents.get(call.agentId) : undefined;
+          if (sessions?.size === 1 && sessions.has(call.sessionId)) call.attribution = 'parent_verified';
+          else {
+            call.attribution = 'unverified_parent';
+            diagnostics.push({code: 'unverified_parent', count: 1});
+          }
+        }
         return await finish({calls, diagnostics, cursors, scanIncomplete, candidateCount}, scanId);
+      }
       page = await access.nextCandidatePage(scanId);
     }
     throw new Error('claude_scan_limit');

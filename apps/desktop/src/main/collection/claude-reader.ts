@@ -11,6 +11,7 @@ export interface ClaudeFileCursor {
 export interface ClaudeFileRead {
   calls: ClaudeCall[];
   diagnostics: ClaudeDiagnostic[];
+  parentEvidence: Array<{agentId: string; sessionId: string}>;
   cursor: ClaudeFileCursor;
   scanIncomplete: boolean;
 }
@@ -98,6 +99,7 @@ export async function readClaudeCandidate(
     return {
       calls: parsed.calls,
       diagnostics: [...diagnostics, ...parsed.diagnostics],
+      parentEvidence: parsed.parentEvidence,
       cursor: {fileIdentity, committedByteOffset, prefixMac: committedPrefixMac},
       scanIncomplete: committedByteOffset < size,
     };
