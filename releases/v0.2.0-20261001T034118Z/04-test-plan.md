@@ -4,6 +4,7 @@
 
 ## 执行集合与前置
 
+- 升级源固定验真：在 0.2.0 最终包运行前，以固定程序只读核对上一0.1本机稳定原包的 schema 2 `release-index.json`、SOP-018通行证、归档/DMG/manifest摘要、`milestone_sha/tree` 与本地`master`祖先、`master_tip_sha`和`remote_source_state=PENDING`；旧 schema、开发/候选包、错误里程碑或摘要必须由固定负测拒绝。缺程序或任何原件则`TC-TM002-DELIVERY-01`为BLOCKED，不手工认定升级源。
 - 目标平台：当前本机 macOS 15 Intel。TM-002 全部产品 TC、TM-001 已交付功能的全部细化 TC 和六组补充场景均需同一最终候选重新执行；TM-001 独立 `d2db551` 候选门禁 PASS，但本地 `master` 整合树尚未通过同树完整门禁或形成稳定0.1原包；0.2.0 不能借用其旧候选结果。
 - 每例由固定程序建立新的 0700 私有 profile、动态独占回环 FastAPI/隔离 SQLite、合成账号、专用来源 A/B 与独立 expected。通过真实登录界面指向本例服务。测试 profile 的运行时 App 名称拟按其规范化路径稳定派生，正式 profile 仍为 `TokenMeter`；这是待验证设计。须在同一最终 DMG 的异步 `safeStorage` 首次调用前取得实际目标 Keychain item 身份和签名访问边界证据，确认本例测试 item 此前不存在且与正式 App 项分离，再用仅匹配本例测试名称的精确元数据探针核对调用后状态；不得查询、修改或删除正式项。未证实隔离时依赖密钥的用例为 BLOCKED。不得扫描用户 `~/.codex`、`~/.claude` 或操作用户 App、49176 服务、生产库与默认凭据。
 - 目录选择由真实 `dialog.showOpenDialog` 启动，固定系统 UI 自动化驱动原生面板；observer 只记录调用、取消和来源标签，原方法照常执行。Playwright 的 DOM/IPC stub 或直接注入目录路径不构成产品 E2E。环境缺少系统 UI 自动化权限则相关 TC 为 BLOCKED。
@@ -48,7 +49,7 @@
 | `TC-TM002-DATA-01` | DATA | 辅助 | fixture 只创建、改变、恢复并清理自己拥有的根；manifest/预期/摘要可重复。 |
 | `TC-TM002-CATALOG-01` | CATALOG | 辅助 | 0.1.0、0.2.0 TC 的 TASK 均按各自 release 校验，错误归属时检查失败。 |
 | `TC-TM002-EVIDENCE-01` | RUNNER | 辅助 | 每条产品 TC 的原始操作、独立预期、文件审计、安装包和清理证据缺一即 FAIL/BLOCKED。 |
-| `TC-TM002-DELIVERY-01` | DELIVERY | 父门禁派生辅助 | 固定父门禁先核对最终包、上一真实稳定包升级、TM-001 与除本例外的 TM-002 全部原件，再计算本例状态；本例不能预填 PASS 作为门禁启动前提。 |
+| `TC-TM002-DELIVERY-01` | DELIVERY | 父门禁派生辅助 | 固定父门禁先核对最终包、上一schema 2稳定归档原包与真实升级、TM-001 与除本例外的 TM-002 全部原件，再计算本例状态；本例不能预填 PASS 作为门禁启动前提。 |
 
 `SELECT-01/02/04`、`PREVIEW-01` 至 `PREVIEW-04`、`CONSENT`、`STATE` 属 `E2E-TM002-001`；`SELECT-03` 与 `ACCESS-01` 至 `ACCESS-05` 属 `E2E-TM002-002`；`STORE-01`、`ACCESS-06`、`LIMIT-01` 等 8 条辅助 TC 分别验证加密恢复失败、分页契约、预览边界、数据、目录、安全和门禁，不作为产品 E2E 计数。35 个稳定变体分别分配给 SELECT-02（3）、PREVIEW-04（3）、CONSENT-03（2）、CONSENT-04（3）、STATE-01（2）、STORE-01（3）、ACCESS-06（3）、SECURITY-01（7）、CATALOG-01（3）、EVIDENCE-01（6）；有变体的父 ID 不替代其变体实际运行。每个 TASK 至少一条 TC。稳定 TC 须与[详细用例草稿](../../docs/testing/cases/02-TM-002-permissions.md)、机器目录、验收清单、场景矩阵、数据集和项目总表双向核对；场景矩阵只登记两组 E2E ID，不将每条 TC 当新场景组。
 

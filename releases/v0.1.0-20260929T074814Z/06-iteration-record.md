@@ -707,3 +707,7 @@ SOP 会话最终交付组合 SOP-only 提交 `afee30d28f9952559dacd895b231329804
 SOP管理会话提交 `afee30d28f9952559dacd895b2313298045b635d` 与 `090d8081f22d2c94dceec29e9e538ab903c6316d`，总控在本地 `master` 经 `bc52923`、`c6729ea` 整合。新SOP-017/018/019/020规定逐版固定本地`master`里程碑，完整最终包E2E与门禁PASS后先经SOP-020归档本机正式稳定DMG，下一版从该原包真实升级；全部目标版本完成后再统一按远端保护登记源码和Tag。文档会话同步AGENTS、发布/版本规范、Electron架构、0.1/0.2发布预案、状态、Changelog及SOP快照，并预登记TM-002设计草稿。该流程修订不是产品E2E；`d2db551`仍仅是独立候选PASS，本地`master`的0.1里程碑尚未完成同树最终门禁、正式原包归档或稳定发行。
 
 当前 `releases/current.json` 保持指向本版0.1，供总控以明确release_id和固定里程碑执行本版门禁。TM-002的28条父TC/35个变体在机器目录与根总表中标为未来设计草稿、`baseline_pending`/`unexecuted`，其程序绑定为null；0.1门禁按本版清单排除未来0.2项，不能把它们计入0.1必测集合，也不能删掉未来设计。待0.1稳定原包取得并完成TM-002的SOP-008基线后，再由文档会话把当前版本指针切到0.2。本机稳定归档和后续远端源码登记分别留原始收据，不能用本段文档替代固定程序核对。
+
+### 2026-10-01：本地里程碑归档程序补齐，产品门禁仍待最终树
+
+TM-001开发会话的代码提交`fbab99b13022d7178a96dc344fb5ff9db8dd85f0`已由总控合入本地`master` `4bdeb13abb581c6b5650ed937db661d81079bb4f`；这是文档候选整合前的master状态，后续文档合并会产生新的最终里程碑SHA/tree。`scripts/local_release.py verify/archive`现在要求`--milestone-sha`与`--milestone-tree`，在干净的被测提交检出中核对HEAD与候选精确相等、该提交为本地master祖先、原包/通行证同源。归档收据schema2记录里程碑SHA/tree、master tip及原DMG/manifest/passport摘要，`remote_source_state=PENDING`，远端登记仍为后续独立步骤。该代码分支局部23/23、治理433/433 PASS，总控整合树治理亦433/433 PASS；这些均不是整合后最终包E2E或SOP-018/020实际通过。独立`d2db551`PASS不能借给新的最终树；总控须先冻结新SHA/tree再构建、运行与归档。

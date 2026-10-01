@@ -17,6 +17,6 @@
 
 远端集成前只读核对分支保护、实际required checks和工作流触发。用户2026-10-01重申本机测试、Git仅做源码版本管理后，已从远端`master`移除三项旧Actions required checks；前后原始快照及读回核对保存在`.local/git-sync/20261001T055756Z-local-only-protection/`。PR、管理员执行、对话解决、禁止强推/删除均保留。旧检查不再作为本机候选的远端验收条件；完整产品E2E、最终包和本机机器门禁仍必须在最终候选上真实PASS。后续实际保护变化按[SOP-019](../../sop/SOP-019-git-release.md)核对与处理。
 
-按SOP-020将原包、原始结果与passport复制至仓库根`dmg/<release_id>/release-archive/`，逐项读回摘要；正式原包只有同一里程碑门禁PASS后才独占复制到`dmg/<release_id>/`供用户安装，并再次核对摘要。开发/候选便捷副本标记`NOT-RELEASED`；不重建包借报告，不覆盖已有档案。本地归档索引记录远端源码登记待办；最终远端读回收据另行追加，不改原包或通行证。测试不覆盖用户旧App、生产数据库或占用服务；后续部署前备份并验证恢复，失败按SOP-021停止推广。
+按SOP-020执行`scripts/local_release.py verify`或`archive`，均传入`--milestone-sha <被测提交> --milestone-tree <被测tree>`，在干净且HEAD精确等于被测提交的里程碑检出中核对该提交为本地`master`祖先，原包、通行证与里程碑同源；再将原包、原始结果与passport复制至仓库根`dmg/<release_id>/release-archive/`，逐项读回摘要。schema 2归档索引保存里程碑SHA/tree、master tip、DMG/manifest/passport摘要及`remote_source_state=PENDING`；正式原包只有同一里程碑门禁PASS后才独占复制到`dmg/<release_id>/`供用户安装，并再次核对摘要。开发/候选便捷副本标记`NOT-RELEASED`；不重建包借报告，不覆盖已有档案。本地归档索引记录远端源码登记待办；最终远端读回收据另行追加，不改原包或通行证。测试不覆盖用户旧App、生产数据库或占用服务；后续部署前备份并验证恢复，失败按SOP-021停止推广。
 
 默认不运行GitHub Actions完整测试，仅用户明确要求多环境时设计矩阵后运行；旧CI签发/Release上传程序属于历史，不能作为当前发行入口。

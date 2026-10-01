@@ -75,7 +75,7 @@ GitHub工作流默认禁用自动触发；明确多环境需求时按当时矩�
 1. SOP索引/详细规范、AGENTS、版本01–05、功能用例与本设计同步，经structure再baseline。
 2. 客户端主进程/界面/隔离与基础失败用例；更新/打包兼容探针；六例Playwright和数据编排并行，接口按本文。
 3. 基础检查、真实App启动与业务红测后修实现；总控本地`master`整合所有需求分支，在最终干净候选上构建原包并执行完整逐TC与六组补充E2E、父gate验原件。
-4. PASS后由总控统一推送远端`master`、建立Git源码索引并完成本地版本归档；给用户本地DMG链接。FAIL/BLOCKED保留诊断并修复，不签发通行证。
+4. 本版门禁PASS后先按SOP-020在本机归档同一原包、通行证和证据，提供正式稳定DMG供下一版真实升级；全部目标版本本机完成后由总控统一按远端保护登记源码并逐版建立Tag。FAIL/BLOCKED保留诊断并修复，不签发通行证。
 
 文件所有权：客户端agent负责apps/desktop除updater/e2e；打包agent负责src/main/updater.ts与local_package.py及对应基础测试；E2E agent负责apps/desktop/e2e、local_e2e.py及其负测；整合者负责规范/文档、local_gate/local_release与Git。不得覆盖另一个agent的修改。
 
@@ -101,7 +101,7 @@ GitHub工作流默认禁用自动触发；明确多环境需求时按当时矩�
 
 基础负测至少包括漏例/重复、失败/跳过/重试取绿、fixture或原包改动、错误SHA/平台、路径越界/symlink、旧run或时间、未完成清理和零原始结果。质量入口在execution_profile=local_electron时不允许落回native_e2e；未完成绑定返回BLOCKED，完成后委托本地新门禁，保持历史profile兼容仅供明确历史测试。
 
-`local_release.py`只接收已通过本机门禁的原件，归档前须机器核对本版固定的本地`master`里程碑SHA/tree及其祖先关系、被测候选、原包和通行证一致，再以独占新目录复制，保留关联的candidate/package/evidence原始层级，生成读回SHA清单；当前程序若缺里程碑归属检查，先补固定代码与负测，不能人工宣称通过。归档成功后才形成可供下一版升级的本机正式稳定包。全部目标版本完成后的远端受控PR、每版里程碑祖先/来源读回与Tag属于SOP-019后续单独步骤；远端登记收据另存，不改原归档或通行证。Git API写成功或Tag不替代本地发行验证。
+`local_release.py verify/archive`现在要求显式`--milestone-sha`和`--milestone-tree`，只接收已通过本机门禁的原件；归档前须机器核对干净检出的HEAD精确等于被测提交、本版固定的本地`master`里程碑SHA/tree及其祖先关系、原包和通行证同源，再以独占新目录复制，保留关联的candidate/package/evidence原始层级，生成schema 2读回SHA清单，记录`remote_source_state=PENDING`；该固定里程碑归属检查已由TM-001代码提交`fbab99b`提供，但仍须在最终整合树及真实原包上执行，不能以程序存在声称归档已通过。归档成功后才形成可供下一版升级的本机正式稳定包。全部目标版本完成后的远端受控PR、每版里程碑祖先/来源读回与Tag属于SOP-019后续单独步骤；远端登记收据另存，不改原归档或通行证。Git API写成功或Tag不替代本地发行验证。
 
 ## 升级后UI重连诊断接口
 

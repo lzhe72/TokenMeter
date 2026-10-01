@@ -10765,8 +10765,8 @@
       ],
       "type": "delivery_gate",
       "scenario_group": null,
-      "input": "已锁定候选 SHA/tree、0.2.0 最终 DMG 原件/清单、上一0.1本机正式稳定DMG及其SOP-018通行证、SOP-020归档收据、来源里程碑SHA/tree、签名和原包摘要、同机隔离签名更新源与每例隔离服务；若没有这些前置或真实升级入口，本例为 BLOCKED，不能用开发/候选包、受控101或同源码测试高版冒充。远端源码登记与Tag可待最终统一办理。TM-001 全部已交付 TC 和 除本例外 TM-002 其余 27 条父 TC 与 35 个稳定变体的固定清单在运行前确定。",
-      "preconditions": "已锁定候选 SHA/tree、0.2.0 最终 DMG 原件/清单、上一0.1本机正式稳定DMG及其SOP-018通行证、SOP-020归档收据、来源里程碑SHA/tree、签名和原包摘要、同机隔离签名更新源与每例隔离服务；若没有这些前置或真实升级入口，本例为 BLOCKED，不能用开发/候选包、受控101或同源码测试高版冒充。远端源码登记与Tag可待最终统一办理。TM-001 全部已交付 TC 和 除本例外 TM-002 其余 27 条父 TC 与 35 个稳定变体的固定清单在运行前确定。",
+      "input": "已锁定候选 SHA/tree、0.2.0 最终 DMG 原件/清单、上一0.1本机正式稳定DMG及其SOP-018通行证、SOP-020 schema 2 release-index.json（milestone_sha/tree、master_tip_sha、remote_source_state=PENDING、原DMG/manifest/passport摘要）、签名、同机隔离签名更新源与每例隔离服务；若没有这些前置或真实升级入口，本例为 BLOCKED，不能用开发/候选包、受控101或同源码测试高版冒充。远端源码登记与Tag可待最终统一办理。TM-001 全部已交付 TC 和 除本例外 TM-002 其余 27 条父 TC 与 35 个稳定变体的固定清单在运行前确定。",
+      "preconditions": "已锁定候选 SHA/tree、0.2.0 最终 DMG 原件/清单、上一0.1本机正式稳定DMG及其SOP-018通行证、SOP-020 schema 2 release-index.json（milestone_sha/tree、master_tip_sha、remote_source_state=PENDING、原DMG/manifest/passport摘要）、签名、同机隔离签名更新源与每例隔离服务；若没有这些前置或真实升级入口，本例为 BLOCKED，不能用开发/候选包、受控101或同源码测试高版冒充。远端源码登记与Tag可待最终统一办理。TM-001 全部已交付 TC 和 除本例外 TM-002 其余 27 条父 TC 与 35 个稳定变体的固定清单在运行前确定。",
       "steps": [
         {
           "step": 1,
@@ -10778,11 +10778,11 @@
         },
         {
           "step": 2,
-          "action": "只读核对上一0.1本机稳定原包归档/通行证/来源身份，从该原包安装，经 App 自主检查/安装 0.2.0 候选并重启，再真实选择与确认来源",
+          "action": "由固定消费者只读核对上一0.1本机稳定原包schema 2归档/通行证/来源身份与实际摘要，负测拒绝旧schema、候选包、错误里程碑或摘要，从该原包安装，经 App 自主检查/安装 0.2.0 候选并重启，再真实选择与确认来源",
           "expected_ui": "显示新版本、保留的 TM-001 合成账号/配置；0.2 来源初态 none，经真实面板确认 A 后同账号重启恢复",
           "expected_api_db": "真实 /v1/me 重新验证身份；网络/DB 只按更新与认证的已定合同发生",
-          "expected_file": "上一0.1稳定原包摘要/签名/通行证/归档/来源SHA/tree一致；新包签名、摘要和运行中进程版本与清单一致；0.1 无来源记录，新来源密文只在0.2确认后建立",
-          "expected": "上一0.1本机稳定原包来源与通行证一致，App 自主升级；0.2显示新版本、保留TM-001合成账号/配置且 /v1/me 复核身份；来源初态 none，真实面板确认A后重启恢复本版密文来源；两端包签名、摘要和进程版本吻合。"
+          "expected_file": "上一0.1稳定原包schema 2归档的milestone_sha/tree、master_tip_sha、remote_source_state=PENDING及DMG/manifest/passport摘要、签名/通行证均一致，固定负测拒绝旧schema、候选包与错误归属；新包签名、摘要和运行中进程版本与清单一致；0.1 无来源记录，新来源密文只在0.2确认后建立",
+          "expected": "上一0.1本机稳定原包schema 2归档、里程碑来源、通行证与实际摘要一致，负测按既定拒绝，App 自主升级；0.2显示新版本、保留TM-001合成账号/配置且 /v1/me 复核身份；来源初态 none，真实面板确认A后重启恢复本版密文来源；两端包签名、摘要和进程版本吻合。"
         },
         {
           "step": 3,
@@ -10794,9 +10794,9 @@
         }
       ],
       "db_operations": {
-        "prepare": "每个产品 TC 由共同 R 独立准备合成账号、隔离 SQLite 与来源；本门禁只读这些运行的原始摘要及 SQL/数据证据引用，并核对最终 DMG、升级源和候选 SHA/tree。 上一稳定0.1包须有SOP-018/020原件及来源里程碑身份，远端登记可待办。",
+        "prepare": "每个产品 TC 由共同 R 独立准备合成账号、隔离 SQLite 与来源；本门禁只读这些运行的原始摘要及 SQL/数据证据引用，并核对最终 DMG、升级源和候选 SHA/tree。 上一稳定0.1包须有SOP-018/020原件及来源里程碑身份，远端登记可待办。 稳定升级源消费者还须有旧schema/候选包/错误里程碑和摘要的固定拒绝负测。",
         "expected_changes": "本门禁自身无服务业务 SQL 写入；逐个产品 TC 的认证 sessions/audit 变化只按各自 NDA 与只读证据解释。",
-        "verification": "只读复核 TM-001 全部已交付 TC、其他 27 条 TM-002 父 TC/35 变体的隔离 DB/SQL 引用与原始逐步结果，并核对最终包、升级、清理和候选一致性；本例结果由这些原件派生，不连接生产库。 核对上一0.1稳定原包的通行证、归档、来源SHA/tree及真实升级链。",
+        "verification": "只读复核 TM-001 全部已交付 TC、其他 27 条 TM-002 父 TC/35 变体的隔离 DB/SQL 引用与原始逐步结果，并核对最终包、升级、清理和候选一致性；本例结果由这些原件派生，不连接生产库。 核对上一0.1稳定原包的通行证、归档、来源SHA/tree及真实升级链。 只读核对schema 2 release-index.json的milestone_sha/tree、master_tip_sha、remote_source_state及原件摘要。",
         "read_only_checks": [],
         "data_program": null,
         "sql_program": null,
