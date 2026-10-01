@@ -316,3 +316,9 @@ BUG-TM001-FIXTURE-006 的只读诊断与清理字段修订现已在未提交工�
 总控会话报告新缺口：TM002 的 `safeStorage.encryptStringAsync` 在 macOS 使用 Keychain，独立的 `--user-data-dir` 不覆盖该系统资源；未证明最终包实际测试 item 身份、与正式 App 分离以及清理归属前，TM002/003/004 的相关 E2E 不能启动。按 SOP-000 在独立分支修订 SOP-006/009/010/014 与索引、测试用例规范、Electron 架构、AGENTS 和 Changelog。Electron 44.5.1 主进程源码中的 `KeychainPassword` 命名只能用于设计推断，不能证明异步提供者和最终 DMG 的实际 item 身份。新合同要求首次调用前用同一最终 DMG 在隔离 macOS 测试账号或经证明独立的 Keychain 命名空间作原生探针；确认精确测试身份先前不存在，记录本次 owner 与创建元数据，仅清理确属本次创建的精确 item。预存、身份未知或与正式 App 冲突均阻断依赖场景，不能查询、覆盖、删除正式凭据。本条是后续 TM002/003/004 执行前置，不追溯改判正在运行的 TM001 候选证据。当前只有规范修订，没有该最终包的原生证明或产品 E2E PASS。
 
 独立规范树的实际检查：`python3 scripts/check_docs.py --mode structure` 与 `--mode baseline` 均退出0，74文档/441链接；`python3 scripts/quality_gate.py check`退出0，12功能/37场景/6绑定，`release_eligible=false`；`python3 -m unittest discover -s tests/governance -p 'test_*.py'`执行198项、全部通过。原始输出保存在本机`.local/git-sync/20261001-keychain-sop/`。这些只证明本轮规范与治理检查，不代表 Keychain 原生探针或产品E2E通过。
+
+### 2026-10-01：跨版本候选的用例并集与最终门禁派生项
+
+TM002与TM003会话按SOP-000报告：SOP-011/014/018把TM001的116行主原件、78父TC、38变体、11辅助、12审计、六组场景等写成通用候选总数，会截断0.2.0、0.3.0新增用例。TM002拟有28父TC、35固定变体、两组场景；TM003拟有27具体TC、四组场景，二者仍处设计/程序准备阶段，不能按此宣称任何产品PASS。按当前远端`master`的v0.1.0版本档案执行纯规范修订，SOP-006/011/014/017/018与索引、发布/用例规范和Changelog改为从固定候选机器清单及各来源release基线求目标版本与此前已交付功能并集，逐来源验证父TC、变体、辅助、聚合、审计及同一候选原件。TM001固定计数继续约束其历史原件和相同来源当前清单的专项核对，不能作为后续版本总数或用旧候选报告代替新回归。TM002的`TC-TM002-DELIVERY-01`属于最终gate自身派生TC；先保持BLOCKED，其他原件及真实升级验真后由独立门禁计算并留派生原件，全部PASS后才签通行证，不以尚未产生的通行证作本例输入。此修订只规定未来执行合同；当前主线尚无已实现的跨版本执行器/门禁，依赖产品验收继续BLOCKED。
+
+本次独立规范树实跑`python3 scripts/check_docs.py --mode structure`与`--mode baseline`，均退出0（74文档/441链接）；`python3 scripts/quality_gate.py check`退出0（12功能/37场景/6绑定，`release_eligible=false`）；完整治理`python3 -m unittest discover -s tests/governance -p 'test_*.py'`为198/198通过。原始输出保存于本机`.local/git-sync/20261001-cross-release-sop/`。这些检查只核对规范/治理，不是 TM002/003 跨版本产品门禁运行结果。
