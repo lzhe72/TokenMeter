@@ -138,6 +138,26 @@ class LocalPackageTests(unittest.TestCase):
             with self.assertRaisesRegex(package.PackageError, "duplicate"):
                 package.verify_zip_app(archive, base, config, "a" * 40, "0.2.0", "200", info, "candidate")
 
+    def test_tm002_ditto_zip_allows_only_the_macos_metadata_root_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory).resolve()
+            archive = base / "candidate.zip"
+            config = self.tm002_config()
+            info = {"native_helper": {"sha256": hashlib.sha256(b"signed helper").hexdigest()}}
+            with zipfile.ZipFile(archive, "w") as output:
+                output.writestr("__MACOSX/", b"")
+                output.writestr("TokenMeter.app/Contents/Helpers/source-helper", b"signed helper")
+            with mock.patch.object(package, "run", side_effect=package.PackageError("readback boundary")):
+                with self.assertRaisesRegex(package.PackageError, "readback boundary"):
+                    package.verify_zip_app(archive, base, config, "a" * 40, "0.2.0", "200", info, "candidate")
+            for name in ("__MACOSX", "rogue.txt"):
+                archive.unlink()
+                with zipfile.ZipFile(archive, "w") as output:
+                    output.writestr(name, b"not a directory")
+                    output.writestr("TokenMeter.app/Contents/Helpers/source-helper", b"signed helper")
+                with self.subTest(name=name), self.assertRaisesRegex(package.PackageError, "unexpected member"):
+                    package.verify_zip_app(archive, base, config, "a" * 40, "0.2.0", "200", info, "candidate")
+
     def test_local_contract_accepts_current_host_only(self):
         self.assertEqual(package.validate_config(self.config)["architectures"], ["x86_64"])
 

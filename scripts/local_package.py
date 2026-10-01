@@ -486,9 +486,12 @@ def verify_zip_app(archive, private, config, candidate, version, build, app_info
     if archive.is_symlink() or not archive.is_file() or not zipfile.is_zipfile(archive):
         raise PackageError("Original update ZIP is missing or unsafe")
     with zipfile.ZipFile(archive) as source:
-        names = [member.filename.rstrip("/") for member in source.infolist()]
+        members = source.infolist()
+        names = [member.filename.rstrip("/") for member in members]
         if not names or any(not name or not (name == "TokenMeter.app" or name.startswith("TokenMeter.app/")
-                                  or name.startswith("__MACOSX/")) for name in names):
+                                  or name.startswith("__MACOSX/")
+                                  or (name == "__MACOSX" and member.is_dir()))
+                            for name, member in zip(names, members)):
             raise PackageError("Original update ZIP has an unexpected member")
         if len(names) != len(set(names)):
             raise PackageError("Original update ZIP has duplicate members")
