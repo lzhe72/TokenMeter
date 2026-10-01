@@ -2,7 +2,9 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
-TM-005新增CORE06五步最小查询辅助输入：真实UsageStore双来源库到同一只读事务视图，固定partial/known330、缺失日null、模型null与字面unknown_model隔离及99字符冒号模型；程序未绑定/执行，待SOP-008干净切片核对。React静态组件、共享IPC/安装App和原产品TC另验。
+TM-005 `TC-TM005-CORE-06`五步查询辅助输入已按 SOP-008 在干净提交 `9b3cac3`（tree `2d3dbbf`）复核：结构136文档/1311链接、治理562/562、机器目录238父/766步、总表238父/42变体/40批次回读均PASS。本机收据为 `.local/docs-checks/20261002-tm005-query-view-slice/receipt.json`。此结论仅为开发切片就绪；程序绑定与执行仍空，真实App/IPC/产品E2E及发行未通过。
+
+TM-005新增CORE06五步最小查询辅助输入：真实UsageStore双来源库到同一只读事务视图，固定partial/known330、缺失日null、模型null与字面unknown_model隔离及99字符冒号模型；程序未绑定/执行。React静态组件、共享IPC/安装App和原产品TC另验。
 
 TM-004新增CORE06五步固定辅助输入：真实SourceAccess类+合成helper读四份2.1.126去敏投影到私有UsageStore，首扫5调用/117、合成追加后6调用/172及三个零新写故障；程序仍未绑定/执行；干净输入`c9352c6`的SOP-008收据判仅此辅助切片就绪，治理562/562 PASS。原20产品TC、Keychain/安装App与发行不由此通过。
 
