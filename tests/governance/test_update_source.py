@@ -35,6 +35,8 @@ class UpdateSourceTests(unittest.TestCase):
         tree = ET.fromstring(fixture.appcast("http://127.0.0.1:1234/update.zip", signature, 12))
         item = tree.find("channel/item")
         self.assertEqual(item.find("{http://www.andymatuschak.org/xml-namespaces/sparkle}version").text, "101")
+        self.assertEqual(item.find("{http://www.andymatuschak.org/xml-namespaces/sparkle}shortVersionString").text, "0.1.0")
+        self.assertEqual(item.find("{http://www.andymatuschak.org/xml-namespaces/sparkle}minimumSystemVersion").text, "15.0")
         enclosure = item.find("enclosure")
         self.assertEqual(enclosure.attrib["url"], "http://127.0.0.1:1234/update.zip")
         self.assertEqual(enclosure.attrib["{http://www.andymatuschak.org/xml-namespaces/sparkle}edSignature"], signature)
@@ -310,6 +312,57 @@ class LoopbackUpdateSourceTests(unittest.TestCase):
                     self.assertEqual(source._run(["xcrun", "swift", "public-key.swift"], "EdDSA public key"), "ok")
                 self.assertNotIn("TM_E2E_SIGNING_P12_PASSWORD", called.call_args.kwargs["env"])
                 self.assertNotIn("sentinel-secret", json.dumps(called.call_args.kwargs))
+            finally:
+                source.close()
+
+    def test_release_source_uses_existing_public_key_without_generating_private_material(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = fixture.UpdateSource(root / "secrets", root, port=0)
+            public = base64.b64encode(bytes(range(32))).decode()
+            try:
+                with mock.patch.object(source, "_run", side_effect=AssertionError("private key generation is forbidden")):
+                    self.assertEqual(source.prepare_existing_public_key(public), public)
+                self.assertFalse((source.private / "sparkle-seed.txt").exists())
+                source.start()
+                with urlopen(source.url + "/appcast.xml", timeout=3) as response:
+                    idle = ET.fromstring(response.read())
+                    self.assertEqual(response.status, 200)
+                    self.assertIsNone(idle.find("channel/item"))
+                package = root / "controlled-update.zip"
+                package.write_bytes(b"pre-signed package transport fixture")
+                signature = base64.b64encode(bytes(range(64))).decode()
+                source.publish(package, signature)
+                with urlopen(Request(source.url + "/control/valid", method="POST",
+                                     headers={"Authorization": "Bearer " + source.token}), timeout=3) as response:
+                    self.assertEqual(response.status, 200)
+                with urlopen(source.url + "/appcast.xml", timeout=3) as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertIn(signature.encode(), response.read())
+            finally:
+                source.close()
+
+    def test_release_source_rejects_invalid_or_replaced_public_key_and_signature_length(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = fixture.UpdateSource(root / "secrets", root, port=0)
+            public = base64.b64encode(bytes(range(32))).decode()
+            try:
+                for bad in ("not-base64!", base64.b64encode(bytes(31)).decode(),
+                            base64.b64encode(bytes(33)).decode()):
+                    with self.assertRaises(ValueError):
+                        source.prepare_existing_public_key(bad)
+                source.prepare_existing_public_key(public)
+                with self.assertRaises(RuntimeError):
+                    source.prepare_existing_public_key(base64.b64encode(bytes([1] * 32)).decode())
+                with self.assertRaises(RuntimeError):
+                    source.prepare()
+                source.start()
+                package = root / "controlled-update.zip"
+                package.write_bytes(b"pre-signed package transport fixture")
+                with self.assertRaises(ValueError):
+                    source.publish(package, base64.b64encode(bytes(63)).decode())
+                self.assertFalse((root / "update-fixture.json").exists())
             finally:
                 source.close()
 

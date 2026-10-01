@@ -1,0 +1,59 @@
+# v0.2.0-20261001T034118Z — 执行记录
+
+## SOP-001 立项（2026-10-01）
+
+- 输入：用户指定 `REQ-TM002` 独立会话开发；上版为未发布的 `v0.1.0-20260929T074814Z`，其完整产品 E2E 仍 FAIL/BLOCKED。用户将 REQ-TM003、REQ-TM005 分至独立会话。
+- 决定：按一个功能一个版本分配 `v0.2.0-20261001T034118Z`，仅纳入 `TM-002`；本分支为 `codex/v0.2.0-20261001T034118Z/permissions`。版本档案为草稿，产品结果仍未执行。
+- 源码基座：独立工作树从 `6e80dd12d60ee5dad641bca030445a2153a269c9` 建立，并复制了 TM-001 主工作区 281 个稳定文件的本机快照；来源中有未提交文件，不能作为锁定候选。快照收据位于本工作树 `.local/planning/tm001-source-snapshot-20261001T034118Z.json`。
+- SOP-024 结构检查：`python3 scripts/check_docs.py --mode structure`，退出码 0，`PASS`，108 份登记文档、898 条链接；原始命令/输出见 `.local/planning/tm002-sop001-structure.json`。这只证明草稿结构，不证明需求基线或产品通过。
+- 下一步：按 SOP-002 明确授权边界。TM-001 基线未锁定前，只推进不依赖其产品 PASS 的设计与准备。
+
+## SOP-000/002 待决冲突（2026-10-01）
+
+- 已核对非 MAS Electron 原生目录选择器不返回安全作用域书签，而现有本地 DMG 构建和 TM-001 原生更新器均按非 MAS 运行。既有“真实系统授权/撤销”不能直接解释为 macOS 沙盒的逐目录持久授权；依据与备选方案在[需求草稿](01-requirements.md#已确认的授权模型与本地存储边界)。已向用户提问，待决定后按 SOP-000 同步相关规范/用例。
+- 重启恢复已选目录与“不保存完整本机路径”存在定位信息冲突，须在需求/隐私规范中限定本机 locator 形式与保存范围；不得把完整路径写入用量、同步、诊断和证据。已向用户另问是否允许当前用户私有可解析目录书签并在撤销时删除；未解决前不将需求或后续文档标为 baselined。
+
+## SOP-003–007 草稿与结构检查（2026-10-01）
+
+- 已将 `REQ-TM002` 拆为三个功能点、九项具体 TASK，并在 04-test-plan.md 暂列 23 条逐 TASK TC；详细用例、数据程序和执行器仍待编制。采集意愿与未来同步意愿按独立布尔值设计：`false/true` 表示已确认但暂停采集，不能因未来同步意愿为 true 就读取或上传。
+- 05-release-plan.md 已登记上一实际稳定包升级、最终 DMG 安装、TM-001+TM-002 完整 E2E、原始证据与本机门禁、失败停发和恢复要求。此为发布**预案**，不是发布结果；上一稳定包和 TM-001 当前完整回归仍缺。
+- `python3 scripts/check_docs.py --mode structure`：退出码 0，`PASS`，108 份文档、924 条链接，原始输出收据 `.local/planning/tm002-sop007-structure.json`。SOP-008 的 `--mode baseline` 与 `quality_gate.py check` 尚未作为 TM-002 基线执行；授权语义、locator 规则、候选枚举与逐条 TC 未定，结构成功不能解除阻断。
+- 用户另外设立 SOP 会话负责 SOP 新增/修改/删除。本会话已向其登记授权和路径持久化的规范冲突；答案确定后由 SOP 会话按 SOP-000 修订，TM-002 再同步需求、设计与用例。开发总控已获知本分支只有草稿与未锁定 TM-001 源码快照，不作为可集成候选。
+
+## SOP-002 授权模型决定与追踪修订（2026-10-01）
+
+- 用户明确选择：“用 macOS 原生目录选择器，由 App 持久保存所选目录并强制限制读取”。本版验收是实际系统面板调用、App 主进程选中根 allowlist、明确同意、App 内撤销与访问失效停读；不声明 macOS App Sandbox 持久 security-scoped grant 或 TCC 撤销。原“真实系统授权”文案已开始在产品定义、`tests/acceptance.json`、矩阵、需求和技术设计同步改写；SOP 入口由 SOP 管理会话统一按 SOP-000 修订。
+- 候选预览规则已按技术设计固定为所选根内递归普通 `.jsonl` 的语法候选，最大深度 8、候选 1000、目录项 5000、2 秒，超限显示不完整；原生日志格式兼容由 TM-003/004 验证。详细用例草稿新增 Claude Code 与边界检查，现为 26 条父 TC、16 条稳定变体；时间截止由辅助单元用例验证，不充当真实 App E2E。
+- 另问用户是否允许当前用户私有的可解析目录书签以支持跨重启恢复。答案及 SOP 隐私规范尚未确定，所以本文档与发布仍是草稿，未执行产品测试或 SOP-008 完整基线检查。
+
+## SOP-002–006、024 授权与用例设计收敛（2026-10-01）
+
+- 本节记录前面“待决”段落之后的实际进展，不回写当时记录。用户已明确要求原生目录选择器、App 持久保存所选目录并强制限制读取；由此确定必要 locator 只在当前用户 0700/0600 私有来源记录中以系统密钥加密保存，撤销删除，密钥不可用/解密失败/根身份不符均停读要求重选。SOP 管理会话已将有限存储边界同步到 SOP-002/004/006；新的隔离回归 Keychain 证据要求已在其后续 SOP 修订中确定，尚待本工作树同步和基线复核。App 撤销和访问失效仍不声称为沙盒或 TCC 权限变化。
+- [详细 TM-002 用例](../../docs/testing/cases/02-TM-002-permissions.md)现设计 28 条父 TC、30 个稳定变体；其中 20 条父 TC 属安装后产品 E2E、8 条为辅助检查。`tests/test_cases.json` 已有对应 28 条父记录和 30 个变体；本轮据此更新 02/03/04 计划，并将版本 manifest 的 `traceability` 重建为 37 条不重复的需求/任务/组或父 TC 关系、30 个唯一测试 ID。根 `TEST_CASES.md` 与项目总表的最终同源回读仍由后续同步步骤完成；本节没有产品运行结果。
+- 技术设计将 UI 的 1000 候选/5000 目录项/2 秒截断与内部最多 256 项一页、稳定树穷尽后才完整的能力分开。对 1001 个可完整读取的候选须按相对名称 UTF-8 字节序先确定前 1000 项，不能按 `readdir` 偶然顺序截取。主进程目录访问设计为同 UID、随最终 App 打包签名的最小 C helper：私有 stdin 交根，目录描述符相对 no-follow 枚举/打开，控制 stdout 仅相对名/元数据/错误码。此时只是设计，helper 和竞态拒绝尚未实现或实测。
+- 测试 profile 的稳定派生 App 名称只是异步 `safeStorage` 隔离方案；同一最终 DMG 在首次调用前必须用受控证据确定实际 Keychain item 身份、签名访问边界及测试项此前不存在，并证明与正式 App 项分离。不能依据同步加密源码推定异步实现；不得查询或修改正式密钥项。未取得证据时相关产品 E2E 为 BLOCKED。
+- SOP-024 结构检查：`python3 scripts/check_docs.py --mode structure` 退出码 0，`PASS`，108 份登记文档、984 条链接；原始输出 `.local/planning/tm002-sop024-release-docs-structure.json`。`git diff --check` 退出码 0。该结果仅证明本阶段文档结构，不表示 SOP-008 基线、产品 E2E 或发行门禁通过。下一步同步本工作树的最新 SOP、生成/回读机器用例和总表，执行 SOP-008 语义及机器基线检查，再依 SOP-009–014 推进可重复测试与产品实现；TM-001 上游有源码候选但未有可用于本版升级的已发布稳定 DMG。
+
+## SOP-008 只读语义审阅后的计划修订（2026-10-01）
+
+- 审阅发现已确认来源缺少后续意愿修改入口。03 设计补 `updateSourceConsent({sourceId, collectAllowed, syncIntent})`：只允许当前验证过的 origin/account/tool/sourceId 原子更新，失败保留旧值；关闭采集须取消旧扫描及待提交刷新，重新开启前复核身份和根。02 任务和 04 用例摘要同步了关闭/重开的判据；同步意愿变更仍不在 TM-002 发起上传。
+- 同一 origin/account/tool 限一个已确认根。健康旧根上可暂选新根，但系统面板取消、预览失败或新根已加密后私有记录原子提交失败时健康旧根、意愿和读取能力不变；系统密钥整体不可用或旧密文解密失败则旧根也停读；新根只有密文及记录原子提交成功才替换旧根并使旧扫描失效。`needs_reselect` 允许主动撤销，删除残留密文。详细与机器用例正在增补 `SELECT-02#REPLACE_CONFIRMED`、`STORE-01#WRITE_FAIL_KEEP_OLD`、`CONSENT-04#TURN_COLLECT_OFF_ON` 和 `STATE-01#NORMAL_RESTORE/#CORRUPT_LOCATOR`；目标集合为 28 条父 TC、35 个稳定变体。此处是计划与用例设计修订，未将其写成已运行 PASS。
+- 05 发布预案纠正 0.1→0.2 升级预期：0.1 旧版没有 TM-002 来源记录；实际验收应保留 TM-001 合成账号/配置、经 `/v1/me` 再验证身份，进入 TM-002 `none`，然后在新版真实选择、确认、重启恢复。旧稳定 DMG 当前缺失时该升级链路仍 BLOCKED；不能要求恢复旧版不存在的来源。
+- 已将同一最终 DMG、异步 `safeStorage` 首次调用前取得实际测试 Keychain service/account、目标项不存在和签名访问边界证据列入 03/04/05。确定性派生的测试运行时 App 名称只是待原生验证的隔离机制；缺证据不运行依赖密钥的产品 TC，不读取或修改正式 App 密钥项。结构/基线检查及详细用例最终计数待全部文档与机器清单同步后重跑记录。
+- 分页算法进一步锁定为 helper 持根 FD、按相对名 UTF-8 字节序逐级遍历，记录每个已遍历目录的 dev/ino/mtime/ctime 纳秒快照；每页与宣布完整前安全重开逐项复核，变化或不可复核即使旧游标 invalid/incomplete。`ACCESS-06#TREE_CHANGED` 的计划负测改为第一页后在已返回范围内真实插入早排序候选，专门证明不会漏掉跨页新增项。内部 `openCandidateReadOnly` 仅在 helper 验当前令牌/身份/目标 dev+ino 后通过主进程私有有界流交字节；TM-002 本身不读正文。本轮仅记录设计及拟定负测，未运行 helper 或产品 E2E。
+
+## 文档会话接管与稳定升级前置（2026-10-01）
+
+用户指定所有非SOP文档（包括根项目总表和逐批测试结果Excel）由“文档”会话统一编写，原TM-002会话保留源码、固定数据/测试程序和原始结果的开发职责。文档会话从该需求工作树接管01–06、详细用例、机器目录、验收/数据/矩阵和总表草稿；没有从旧工作树继承产品通过结论。已确定的三功能点、九TASK、28条父TC和35个变体保留，完整动作/预期与DB/重置写在详细用例和机器目录，自动化绑定仍为null。当前0.1门禁优先，`releases/current.json`保持0.1；本版档案及详细用例在`docs/catalog.json`保持draft，28条父TC仍为`baseline_pending`/`unexecuted`，待0.1稳定前置及本版SOP-008内容基线后再切换当前版本。本版产品E2E、最终DMG与发布门禁均未执行。
+
+SOP-only `090d808`及总控本地`master`整合 `c6729ea`确定顺序：0.1在本地`master`固定不可变里程碑并完成同树最终原包全量E2E、SOP-018门禁PASS及SOP-020归档后，才存在供本版真实升级的本机正式稳定0.1 DMG；远端源码登记和Tag可等全部目标版本完成后统一办理。独立`d2db551`候选的门禁PASS不能代替上述里程碑、正式原包和归档。`TC-TM002-DELIVERY-01`须核对上一稳定原包摘要、通行证、归档、来源SHA/tree及0.1→0.2真实App自主升级；当前缺上一稳定原包，保持BLOCKED。0.1版没有TM-002来源记录，升级后初态为`none`，须在新版真实选择、确认并重启后才恢复本版密文来源。
+
+TM-002开发会话报告的隔离调查指出：仅改变profile或创建私有签名keychain，尚不能证明最终DMG的异步`safeStorage`写入独立Keychain命名空间；当前未取得独立macOS测试账号，也没有最终包原生item身份、签名边界和首次调用前不存在证明。该调查没有访问用户Keychain item，仅为执行风险输入，不是原生探针PASS。SOP-009第5步及所有依赖该密钥隔离的产品TC继续BLOCKED，直到受控测试账号或另一个经最终包实测证明的隔离方案具备。签名用临时keychain不等于产品存储目标。
+
+文档会话在独立整合树仅做规范检查：`python3 scripts/export_test_cases.py --check`返回CURRENT（137条父记录、437个父步骤；TM-002另有35个带有序步骤的固定变体）；`python3 scripts/check_docs.py --mode structure`和`--mode baseline`均PASS（110份登记文档、1028条链接，其中7份TM-002文档仍为草稿，严格基线只核对当前0.1）；`python3 scripts/quality_gate.py check`PASS、`release_eligible=false`；治理回归447/447 PASS，原件`.local/docs-checks/20261001-tm002-draft-and-milestones/governance.log`。根项目总表导出与回读PASS：11个Sheet、137条父用例、35个变体、172行用例、12次TM-001历史批次，SHA-256 `670e0a4c6185f8f038744b81a341168d6aed3c37e19eb657919c1fe11cb738f0`，回读收据`.local/workbook/verification.json`。这些检查未执行任何TM-002产品E2E，不构成本版SOP-008基线或发布资格；实际总表文件随本轮文档提交锁定，后续若再修改须更新上述摘要。
+
+## 稳定原包消费者和Keychain执行阻断补充（2026-10-01）
+
+总控已将TM-001里程碑归档校验代码`fbab99b`合入本地`master` `4bdeb13`。后续实际0.1归档使用schema2 `release-index.json`，含`milestone_sha/tree`、`master_tip_sha`、`remote_source_state=PENDING`和DMG/manifest/passport摘要；当前尚未产生由最终整合树门禁PASS的稳定原包。本版`TC-TM002-DELIVERY-01`及测试/发布计划已增固定消费者和负测：拒绝旧schema、开发/候选包、错误里程碑或摘要；只有读回原件、签名、通行证及真实App自主升级均符合，才可把它作为0.2升级源。消费者代码与程序绑定由TM-002开发会话负责，现未交付或执行，故该项仍BLOCKED。最终包异步`safeStorage`测试项身份探针也缺隔离macOS测试账号或实测独立命名空间；本版Keychain相关E2E保持BLOCKED。本轮只是计划与机器用例同步，不增加测试运行批次。
+
+文档分支随后合入含里程碑归档校验的本地`master` `4bdeb13`并重跑检查：治理454/454 PASS，原始日志`.local/docs-checks/20261001-tm002-draft-and-milestones/governance-after-milestone.log`；structure、当前0.1的baseline、quality、用例导出一致性、总表回读和`git diff --check`均退出0，同目录`*-milestone.log`留原始输出。总表最终SHA-256为`670e0a4c6185f8f038744b81a341168d6aed3c37e19eb657919c1fe11cb738f0`，仍是172用例行/12历史批次。以上只是文档/治理检查，TM-002草稿未取得SOP-008本版基线或任何产品PASS；未来代码与最终包还须另按SOP运行。

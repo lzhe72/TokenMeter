@@ -301,6 +301,353 @@ BUG-TM001-FIXTURE-006 的只读诊断与清理字段修订现已在未提交工�
 
 同机回环基础检查实际结果：更新fixture聚焦16/16通过（`.local/ci/loopback-fixture-focused.log`），更新包helper16/16通过（`.local/ci/loopback-integrated-helper.log`），本机Swift凭据组件13/13通过（`.local/ci/loopback-integrated-credentials.log`），本机Swift地址配置组件48项断言0失败（`.local/ci/loopback-integrated-endpoints.log`）。本次文档同步后实跑 `python3 scripts/check_docs.py --mode baseline`、`python3 scripts/quality_gate.py check` 和 `git diff --check` 均退出0：69份文档/436链接、12功能/37场景/6绑定，`release_eligible=false`。这些均为程序/规范基础验证，新候选尚未在两台Mac执行完整六例，PR合并和内部DMG发行仍不具资格。
 
+### 同机更新两平台通过与源码合并（2026-09-30）
+
+SOP-013/014/019/022：CI [36674477502](https://github.com/lzhe72/TokenMeter/actions/runs/36674477502) 在macOS15.7.9 arm64与x86_64各执行六例、子结果与父原始证据门禁均PASS，清理完成。分支头3ad0d7e、PR测试合成4f4d887与最终merge e011857的源码树一致（2b723f41d96256e962cf04ed9105dfb1e2985739）。PR#2已合并master并快进同步本地，未绕过检查。原始日志 `.local/ci/loopback-arm-job.log`、`loopback-intel-job.log` 与治理日志 `loopback-governance-ci.log`；两平台报告 `.local/ci/summaries/36674477502/`；远端核对 `.local/git-sync/loopback-3ad0d7e/handoff.json`。基础198治理、45服务、16helper通过，Mac凭据13项/地址48断言通过。`release_eligible=false`，没有正式Tag/Release/最终DMG。此前状态页停留在提交前的待运行事实，本次同步纠正；新旧候选不得混用。
+
+### 内部发布、详细用例与两日复盘任务（2026-09-30）
+
+用户明确继续发布，同时指出docs看不到每功能test case并要求梳理两天项目对话。按SOP-000/006/024补详细用例总索引和逐功能文件，不以机器矩阵摘要代替步骤/数据/预期；按SOP-023/024对对话与Git/CI交叉核对复盘。发布仍按017/018以实际生产bundle和最终DMG执行，内部应用不把付费Apple账号或公网域名作为前提。需要真实安装包程序、原生最终包矩阵和受保护机器通行证，现有缺口必须实现并测试，不能改写旧迭代报告作为发布报告。该版本尚未发布，继续原release_id和新internal-release分支。
+
+用户明确选择“以目前的测试条件为准，先走通链路”：内部首版支持范围调整为macOS15 arm64/Intel。官方可用矩阵显示个人仓库缺少macOS14 Intel大型runner条件，本机为macOS15，故不能维持未经测试的14承诺。该变化已同步产品、需求、设计、测试和发布计划；不是删除功能用例，六例全部保留。详见内部发布设计。
+
+### 2026-09-30 · 受保护发布环境准备（SOP-009/018/019）
+
+- 用户已授权自动提交、PR、合并和内部发布；据此配置远端master必须通过 `governance`、`product-e2e (macos-15)`、`product-e2e (macos-15-intel)`，要求与最新基线一致，禁止管理员绕过、强推及删除。release-validation环境仅允许master分支部署，不添加人工审批。
+- 三次GitHub API写入退出0，随后读取分支保护与环境部署策略确认生效。证据保存 `.local/git-sync/internal-protection/`；配置成立不表示最终包门禁已通过。
+- 已安装App采用 `XCUIApplication(url:)`，测试runner保留fixture控制变量，被测App启动环境主动移除测试与签名变量；两平台各顺序六例，标准用户目录仅允许专用托管runner在先不存在且已取得所有权后使用/清理。
+
+### 2026-09-30 · 本轮文档基线与用例门禁（SOP-006/008/011/024）
+
+- 补齐[逐功能详细用例](../../docs/testing/cases/README.md)，12份功能文件覆盖37个唯一用例；TM-001六例绑定真实SwiftUI测试，未来31例保留planned及数据/程序缺项。[两日复盘](../../docs/retrospectives/2026-09-29--2026-09-30-tokenmeter.md)最初整理24个案例，后续根据本机开发、Electron选型和DMG本地保存的用户决定增至27个；可恢复对话的覆盖限制已注明。
+- 用例文档机器检查拒绝缺少文档、缺漏/重复用例、没有独立预期、隐藏操作步骤和不匹配验收ID。治理红测45项中的6个失败观察保留 `.local/ci/case-documents-red.log`；实现后45项全部通过，见 `case-documents-green.log`。
+- 实施前严格基线83份文档/572链接及37用例追踪通过，证据 `.local/ci/internal-baseline-before-implementation.json`、`internal-trace-before-implementation.json`。复盘入档后重新核对。设计关键边界已确认，进入内部打包、已安装App执行器及父级门禁开发；原生验证尚未运行，不能沿用旧候选PASS。
+
+### 2026-09-30 · 内部包实现与基础验证（SOP-009/011/012/013/017–020）
+
+- 稳定自签代码签名与EdDSA密钥在本机私有目录生成，环境secret写入并读回名称；公开配置只含公钥/证书摘要。没有导入用户钥匙串或改变系统信任。root读取真实master保护与环境策略作为后续机器核验基准。
+- 内部打包工具、父级原件门禁、Git发布与本机分发程序已建立；最终安装包执行器与原生installed模式按同一清单整合。独立review发现并修复工作流未创建输出父目录、缺config参数、CI身份字段不一致；父门禁新增必需protection原始证据。
+- 官方Sparkle/Apple资料说明非Apple团队签名与默认library validation不兼容。因此内部构建明确关闭Hardened Runtime/library validation，仍强制稳定非ad-hoc代码签名、固定证书、EdDSA及真实升级。公开profile的Developer ID/hardened要求保留。此为基于资料的预先兼容修正，不宣称已经在本轮包重现崩溃；3项配置回归先失败后修复，内部16+公开14项通过，证据 `.local/ci/internal-runtime-{red,green}.log`。
+- 服务端45项通过（`internal-server-first.log`），升级helper16项通过（`internal-helper-first.log`）。首轮整合治理225项中仅1个正在编写的父门禁入口缺失错误，已保留 `internal-governance-first.log`，不作为通过；完成后重跑全部。相关155项独立复验已通过（`internal-release-independent-review-tests.log`）。
+- 新增本机分发4项工具检查、发布资产/远端约束7项检查、父门禁原始证据负测18项通过；packager另用本机CryptoKit验证真实有效签名并拒绝篡改（`internal-package-crypto-smoke.log`）。工具检查不冒充最终包或产品E2E。源码入口缺失的初始红记录只表示工具尚未建立，不称业务红测。
+- 工作流YAML曾在本机解析发现 `--only-binary=:all:` 未使用多行块，已在提交前修复并重新解析5个job及依赖链，证据 `internal-workflow-yaml.json`。最终包和正式发布结果尚待受保护CI实际产生。
+
+- 本机独立执行新SQLite恢复helper：在新临时根调用真实生产初始化程序，备份→另一库恢复→逐表与完整性核对→第三私有副本启动真实API验证管理员登录，并清理进程和DB/WAL/SHM。结果PASS但仅属隔离数据库/API检查，无产品E2E资格，证据 `.local/ci/internal-sqlite-restore-smoke.log`。用户生产库未访问或修改。
+- 精确DMG三项白名单新增行为红测发现额外文件会被旧工具接受，修复后内部19+公开14项通过，证据 `.local/ci/internal-dmg-layout-behavior-red.log`、`internal-package-layout-green.log`；另以临时合成镜像确认hdiutil正常布局，未使用用户App。
+
+### 2026-09-30 · 内部候选整合检查与提交（SOP-013/019/022）
+
+- 最终安装包runner与父门禁完成字段、清单、归档路径及资源清理合同核对；真实执行顺序001/002/003/005/006/004保持不变。稳定签名生产App的自动检查保持启用，测试源初始提供空合法feed，受控四阶段后才提供升级。
+- 全治理259项通过、服务端45项通过、升级工具16项通过；基线86文档/615链接和12功能/37用例追踪通过，工作流5个job及发布依赖解析通过，diff无空白错误。原始证据为 `.local/ci/internal-governance-final.log`、`internal-server-first.log`、`internal-helper-first.log`、`internal-baseline-final.json`、`internal-quality-final.json`、`internal-workflow-yaml-final.json`。
+- 最终包的原始双平台xcresult归档、逐例报告、父门禁判定与通行证将随原DMG作为Release资产保存；发布程序在上传前和GitHub摘要读回时核对。新增归档验证纳入发布工具9项检查。
+- 接下来推送源码PR，执行两台Mac完整开发回归并在检查通过后合并，再由同SHA master必需检查与内部最终包流程判定发布。未预填任何新候选产品PASS或Release结果。
+
+提交20e3936后的最终清理边界复核：对本次归属App发送终止后最多等待5秒，确认退出再清理标准凭据/defaults；不会终止其他路径的App，超时保持阻断。新增2项回归后全治理261项通过，证据 `.local/ci/internal-governance-cleanup-final.log`。此为执行器修复，不重试失败业务用例。
+
+## Electron本机发行基线修订（SOP-000/004–008/024）
+
+用户明确所有开发/测试/发行在本机、Git仅源码迭代、DMG本地保存，并提供DataBuddy技术栈。决定采用Electron/React/TypeScript/Vite/electron-vite/node:test/Playwright Electron/electron-builder，保留FastAPI/SQLite与全部六例；当前仅macOS15 Intel。完整Xcode从新路线前提移除，旧Swift与CI保留历史。
+
+先同步SOP索引与详细文件、AGENTS、版本01–05、当前架构、详细用例和目录。新执行器未实现仍BLOCKED，不以旧Swift绑定或旧CI通过放行。默认更新清单迁移version.json，Ed25519签ZIP、原生Squirrel负责安装，元数据版本需与签名包实际Info一致。现有用户App/库/49176服务不动；测试动态端口经真实UI设置。固定证书Security探针证据.local/ci/squirrel-signature-probe-l5vcxdzz/result.json只验证同签名要求，不代表完整升级已通过。
+
+文档基线实际检查结果将随后追加；此条不宣称通过。
+
+### 2026-09-30 · 两日复盘补审（SOP-023/024）
+
+根据用户要求，重新回读本项目可见的开发、仓库绑定与项目解释会话，并与版本记录、Git/CI 证据交叉核对。复盘原有24例已覆盖早期规范、实现和原生验收问题；本次补 RET-025–027，分别记录 Actions 耗时引起的本机执行决定、Xcode 依赖误解与 Electron + Playwright 选型、以及最终 DMG/证据仅在本地按版本保存。主开发会话本次回读快照为3页26个turn，其中11个空items且末轮仍在进行，故不宣称取得两天全部逐字对话；无法恢复的部分保留覆盖限制。历史 SwiftUI PASS 与新路线待验收状态分开记录。
+
+本次复盘文档、索引与状态同步后，`python3 scripts/check_docs.py --mode structure` 两次退出0（首次87份文档/613条链接，随后共享工作区其他文档同步时87份/600条链接，均无错误），`git diff --check` 退出0；27个 RET 编号连续，逐例检查问题、决策、方案、结果和经验五项，补齐 RET-007 原缺少的独立结果标签。以上只证明文档结构和复盘内容检查，不代表 Electron 产品 E2E 或本地发行门禁通过。新的设计/执行基线仍按本轮迁移工作另行核验。
+
+### SOP-008新基线实际检查
+
+structure、baseline与quality_gate check均退出0；87文档、600链接、12功能/37用例追踪通过。证据.local/ci/electron-doc-{structure,baseline,quality}.json。语义已同步Electron本机、version.json、TypeScript打包、六例不减少和本地发行；旧绑定明确只历史，新执行绑定planned不允许回落旧门禁。进入009–013并行实现，产品E2E仍BLOCKED。独立服务回归45例通过，日志.local/ci/electron-server-before.log，不计作Electron E2E。
+
+### Electron工程就绪与真实探针（SOP-009–014/017）
+
+- 绑定文件已真实建立，manifest执行绑定改为ready；baseline/quality检查通过（87文档、598链接、12功能/37用例/6绑定），证据`.local/ci/electron-bindings-{baseline,quality}.json`。ready不代表业务PASS。
+- 集成治理279项通过，日志`.local/ci/electron-governance-integrated-1.log`。父门禁新增004请求语义负测，先保留缺函数失败`local-update-gate-red.log`，实现后6项门禁检查通过`local-update-gate-green.log`；属于治理测试。
+- GitHub直接下载超时后，使用官方API取得同一Electron44.5.1 x64运行时，大小134208970字节，SHA256同时匹配npm官方checksums和GitHub资产。证据`.local/ci/electron-runtime-download.json`；没有修改代理或跳过校验。
+- 真实Playwright开窗探针通过，验证默认API与contextIsolation/sandbox/nodeIntegration以及renderer无require；证据`.local/electron-probe-c0922cf1-c1e6-4530-9563-154b92d0b55f/`。仅009环境验证，尚非六例业务E2E。
+- 签名包probe03独立检查拦截builder遗留ATS任意HTTP设置；保留失败并在代码签名前整段替换为仅127.0.0.1例外，继续新probe验证。Squirrel固定用户cache/launchd归属另外纳入004前置与清理，不能仅靠userData声称隔离。
+- 当前尚无Electron完整六例PASS、正式DMG通行证或Git版本发布。既有生产App、数据库和服务未用于测试。
+
+### 用户追加HIG界面与图标要求
+
+按SOP-004/006/024先更新设计/开发与测试计划，再实现。采用本机原生窗口/菜单与HIG内容布局，保留已选Electron路线满足无完整Xcode的本机E2E；原生优先偏好和现有技术约束同时记录，不冒充SwiftUI。图标由项目原创SVG导出ICNS，最终包待全部界面修正后重建；已有probe05仅开发联调。
+
+### 本机安装包与父门禁的真实问题（SOP-013–018/024）
+
+- probe05成功生成开发DMG并挂载复核签名/内容，原件在`.local/ci/electron-package-probe-05/`；当时未包含后续HIG/icon与指定要求参数修复，不能用作最终包。首轮runner全局Python缺alembic，改用009既有`.local/venv-tm001/bin/python`；缺依赖现在有明确BLOCKED原因。
+- 实际codesign指定要求需`-R =<表达式>`，没有等号时将字符串当文件路径；runner、updater、父门禁统一修正，原命令退出1、正确命令退出0及永久回归见`electron-requirement-red-green.json`和`electron-requirement-unit-{red,green}.log`。
+- 实际App启动仍失败，dyld显示主程序与Framework不同TeamID。检查发现osx-sign2.7.1顶层hardenedRuntime:false未作用于文件，probe05仍有runtime flag；修复逐文件optionsForFile配置并增加实际flags检查，不修改系统保护，稳定签名身份保持。新包必须再次启动验证。
+- 父门禁独立审查发现归档未检查passport自身发布资格；新增回归真实2失败，修复后4项通过。新增对原始trace ZIP/PNG格式、005真实恢复SQLite副本、全部trace段、进程/profile来源、服务退出和源码/原件解析前后的一致性检查。12项父级工具检查通过，证据`local-parent-final-contract.log`；属于治理验证，不冒充产品E2E。
+- 复盘新增RET-028，累计28例，记录本轮运行时、工具API、真实签名配置和隔离/证据问题。界面HIG视觉探针已实际运行，后续截图修正继续，最终包尚未放行。
+
+### HIG界面完成及开发包启动修复
+
+- 真实HIG辅助检查12项、10张截图通过，默认/最小尺寸、深浅色、弹窗焦点/Escape/Cmd+,、中文状态/审计及折叠改密已核对。可复现命令`.local/venv-tm001/bin/python apps/desktop/tests/visual_fixture.py`；最新证据`.local/ci/hig-visual-6ed1ef2dbad84374afbfa2d278b07014/`，服务正常关闭。截图不替代六例包级结果。
+- 客户端构建及16项node:test通过（`electron-hig-unit.log`）。probe06使用逐文件签名配置，包含最终UI/图标/-R修复，实际签名标志、嵌套代码签名、固定证书、ATS/资源、DMG挂载原App摘要均通过；随后原包App持续运行无dyld错误。仍是development，不具发行资格。
+- 六例开发回归已进入真实UI及服务；001执行到尾部，首次改密/撤销/重启恢复等真实断言通过，但异步React勾选触发Playwright同步check的假阴性，保留FAIL并修为点击后等待实际勾选。修复后必须全套重跑。
+- 集成治理290项通过（`electron-governance-integrated-2.log`）；随后本地版本查询新回归先真实失败，修为定位本地evidence通行证，14项registry检查通过（`local-registry-{red,green}.log`）。查询仅索引，不签发资格。
+
+
+### 需求阶段具体任务与精细用例，以及根Excel统一入口（2026-09-30）
+
+输入为用户最新明确要求：先确定需求和功能点，再拆具体开发任务，按任务设计可直接执行的TC/变体，写明每一步动作、独立预期、输入、数据库准备/预期变化/只读核验和类型，形成文档基线后再实现、测试并逐次记录。按SOP-003/006/008/014/018/022/024同步规范和版本文档。此前已存在的实现保留作差距核查，不把现在补写的用例追认为历史开发前已有。
+
+- 版本导航增加[需求到发布顺序](README.md)，关联功能点、具体TASK、[精细用例索引](../../docs/testing/cases/README.md)、[07实际测试结果](07-test-results.md)和[08实际发布记录](08-release-record.md)。登录/改密01a、会话/管理/配置/升级01b及交付检查01c承担不同任务范围，六个E2E编号继续作为聚合场景组。
+- 新TC执行状态全部`unexecuted`；关键预期待定标`baseline_pending`，数据/自动化/逐步记录绑定缺失如实为null。要求父门禁按精确TC/变体和步骤证据检查，不能只计六组。相关程序尚未补齐和验证，不声称这一新门禁已完成。
+- 用户先要求腾讯Excel统一查看并授权更新。在线内容没有成功写入；随后用户明确取消在线方案，改为仓库根[TokenMeter项目总表.xlsx](../../TokenMeter项目总表.xlsx)，随Git版本提交。后续按根工作簿汇总需求、功能点、任务、用例、运行结果与发布状态；原始DMG/trace/SQLite/通行证仍保留本机，不因提交Excel而上传这些原件。
+- 当前工作优先补齐文档/用例/工作簿链，不新增产品行为，不重新打包或运行E2E。结构与引用检查单独记录；文档检查不能授予发行资格。
+
+### dev07开发回归的真实结果与后续清理（2026-09-30）
+
+本条按已存原件补录，不是新一次运行。原始目录`.local/ci/e2e-dev-probe-07/`，run_id=`local-a1b2c3d4e5f60718293a4b5c6d7e8f94`，执行时间`2026-09-30T11:22:02.779752Z`至`11:24:17.173474Z`。macOS15.7.4 Intel；source_commit=`6e80dd12d60ee5dad641bca030445a2153a269c9`且dirty=true；原DMG来自probe06，scope=development。
+
+1. 六个聚合组实际尝试，001/002/003/005/006各Playwright PASS，004 FAIL；新增精细TC不继承这些结果。
+2. 004已观察到自动发现、三项拒绝、Squirrel自主新PID及runtime绑定；随后`new_process_profile_files`即时lsof断言预期true、实际false。只记录观察失败，尚不能把原因定为时序，也不能称完整升级/身份恢复通过。
+3. 缺`upgrade-result.json`/`upgrade-process.json`，原runner汇总报`Evidence is absent or outside the owned output`。`executed_cases=6`、`passed_cases=5`，suites仅包含前五组，`cleanup_completed=false`；原FAIL和不完整证据保留。
+4. 后续`E2E-TM001-004/cleanup-followup.json`另记scope=post_failure_owned_cleanup、original_result_state=FAIL，观察到隔离App为101，确认自有App/ShipIt/CDP及私有根清理。不得把此记录覆盖原报告、补写缺失升级断言或生成通行证。
+5. 此版本未发布、无正式通行证。下一步先完成TASK/TC/数据与逐次记录基线，再分别定位004和失败汇总缺口，补测试/门禁程序；仅在新的干净候选完整验证通过后执行本地发行。
+
+本次文档收尾实际执行`python3 scripts/check_docs.py --mode structure`，退出1；原件`.local/ci/document-chain-structure.json`。检查发现并行新增文档尚未登记，根`TEST_CASES.md`和`TokenMeter项目总表.xlsx`当时尚未生成，故不能记录结构PASS；后续整合完成再检查。本次未执行产品测试、重打包或发布。
+
+
+### 项目主表保留摘要，每次测试独立输出结果Excel（2026-09-30）
+
+用户进一步明确根目录`TokenMeter项目总表.xlsx`只汇总测试用例，每次执行单独输出测试结果Excel。按SOP-014/018/022/024记录此次展示和归档调整：
+
+1. 根主表目标为11个Sheet；`05测试用例`保留109条摘要，包含功能、任务、输入、独立预期、DB操作、类型与状态。`06测试批次`只保留run摘要和独立结果Excel入口。主表移除352条详细步骤、131条事件、逐例结果与SQL详情页。
+2. 详细设计、步骤、SQL和绑定继续保存在`tests/test_cases.json`与01a/01b/01c等用例文档；原始运行事件和资产不删除。主表简化不改变必测范围，也不把新增精细TC视为已执行。
+3. 每次实际运行单独输出`.local/test-results/<run_id>/TokenMeter测试结果-<run_id>.xlsx`，仅保存在本机；根主表继续按用户要求随Git版本提交。独立结果表按本次原件整理，保留候选/包/run_id、逐项实测、失败、缺证据与后续清理的区别。
+4. 当前dev07的run_id为`local-a1b2c3d4e5f60718293a4b5c6d7e8f94`，目标独立表为`.local/test-results/local-a1b2c3d4e5f60718293a4b5c6d7e8f94/TokenMeter测试结果-local-a1b2c3d4e5f60718293a4b5c6d7e8f94.xlsx`，**生成中，尚未登记生成和回读检查通过**。整理不启动新的App测试，不重打包、不发布。
+5. dev07仍为development/dirty、六组尝试五组PASS及004FAIL，原始汇总缺升级资产；后续清理不覆盖原FAIL。新增精细TC全部未执行，版本仍未发布且无正式通行证。腾讯在线方案已经取消，没有在线写入。
+
+工作簿生成与验证结果由对应执行记录追加，不能以本条文档同步声明表格已完成或产品通过。
+
+本次六份文档同步后实际执行`python3 scripts/check_docs.py --mode structure`，退出0（99份文档、856条链接，scope=documentation_structure_only、release_eligible=false）；限定这六份文件的`git diff --check`退出0。按SOP-022执行`python3 scripts/release_registry.py show`退出1：01需求、02拆解、03开发计划和04测试计划目前不是baselined，查询的严格版本合同未满足。文档仍处本轮基线修订阶段，保留该结果，由整合步骤处理；不把结构检查或工作簿生成当作产品通过。本次未执行产品测试、重打包或发布。
+
+
+### 项目摘要与独立结果表完成记录（2026-09-30）
+
+接续上一条“生成中”记录，现已完成以下实际工作，不改写历史阶段状态或dev07原始FAIL：
+
+- 根`TokenMeter项目总表.xlsx`已生成11个Sheet，`05测试用例`109条摘要，`06测试批次`1条run摘要及独立结果文件的相对路径。详细设计仍在JSON/文档，逐项实测在独立表；主表的最终整合回读由本轮整合步骤登记。
+- dev07独立文件`.local/test-results/local-a1b2c3d4e5f60718293a4b5c6d7e8f94/TokenMeter测试结果-local-a1b2c3d4e5f60718293a4b5c6d7e8f94.xlsx`已生成并经Python桥接校验和回读。5个Sheet记录6个历史场景组、131条事件、14条更新请求及37条证据/缺口。原件`.local/ci/e2e-dev-probe-07/excel-export.json`为`scope=test_result_excel_export`、`state=PASS`，同时明确`product_state=FAIL`。源报告SHA256为`0d165916cee6ed516b142c4c26bc54ec161ea2a5be52fee60e311d101ddfc9d3`；独立Excel SHA256为`d935a7eda35bfdccb6039e4383e8e6271a43c38ab730e7d35e8e1e89c746f2e1`。
+- `scripts/local_e2e.py`已接入自动导出，保留原产品JSON不变；导出失败返回非零并保留失败收据。runner工具11项和桥接18项检查通过，原始日志为`.local/planning/local-e2e-workbook-check.log`及`.local/planning/test-result-export-green.log`。它们验证报表工具，不算新一次产品E2E。环境修复后可指定全新目录补导原始结果，保留原失败收据，无需重跑App。
+- 候选测试期间仅写本机忽略目录，不修改受Git跟踪总表/登记数据；本次执行和门禁结束后再同步摘要，仍引用原被测SHA。此条不声明远端提交、正式发布或通行证完成。dev07保持六组尝试五PASS、一FAIL，新增精细TC全部未执行，本版仍未发布。
+
+本次文档更新未执行App测试、重新打包或发布；后续由整合步骤执行最终structure检查与工作簿回读。
+
+### dev07独立结果表时间显示修正与总表入口同步（2026-09-30）
+
+在独立结果表的视觉回读中发现，初次导出的ISO时间显示为Excel日期序号。保留原表、原导出收据及全部原始测试文件，在同一run目录的`revisions/02/`另存修订文件`TokenMeter测试结果-local-a1b2c3d4e5f60718293a4b5c6d7e8f94.xlsx`。时间列现在显示原UTC时间文本；工作簿5个Sheet、6个历史聚合场景、131条事件、14条更新请求及37条证据/缺口记录的数量未变。修订表SHA256为`2d476b47d1136916ac02ba3a063ea8c4db42b6881ac58f986b8c744f10726032`；源`result.json`仍为`0d165916cee6ed516b142c4c26bc54ec161ea2a5be52fee60e311d101ddfc9d3`。
+
+Python桥接对修订目录实际核验通过，独立新收据为`.local/ci/e2e-dev-probe-07/excel-export-b3c021927550bda4.json`，其中`state=PASS`是Excel归档结果，`product_state=FAIL`保持不变。根总表`06测试批次`已指向修订02；xlsx回读核对11个Sheet、109个不重复TC、无错误单元格。此处没有重新运行App、改写原失败、签发通行证或发布版本。
+
+### 仓库根dmg目录作为本机安装包入口（2026-09-30）
+
+用户反馈隐藏的`.local/`目录难以找到DMG，要求今后所有安装包放在根`dmg/`下。本轮按SOP-000、017、020、024将可见入口改为`dmg/<release_id>/`；完整原件和E2E证据仍按候选保存在独立目录。开发/候选包名称必须标记`NOT-RELEASED`，正式原名包只能在发布门禁PASS并完成归档校验后出现。
+
+已将probe06原始DMG复制为`dmg/v0.1.0-20260929T074814Z/TokenMeter-v0.1.0-20260929T074814Z-DEVELOPMENT-NOT-RELEASED.dmg`。原件与副本实际`shasum -a 256`均为`09f0854cefc7584e1cc77e911d92cf1024a826d407e24241bb38cef11d35a529`。这个可见副本仍是development/dirty包，dev07产品E2E升级004 FAIL，正式版本保持未发布。本轮没有新跑App、打包或部署；只复制并核对现有文件。
+
+### 文档现状复核与两日案例补全（2026-09-30）
+
+按SOP-000/024/008核对当前Electron实现、dev07原始结果、测试用例目录、本机发行位置及101份文档。修正导航和架构、测试执行、TM-001六组用例中仍把本机程序写作“未建立”或把开发包六组写作“完全未执行”的表述；保留正式候选和新增精细TC尚未执行的边界。同步SOP-011/017/018、索引修订号及项目总表的数据源。[决策输入](../../docs/decision-inputs.md)单列六类未批准边界及当前源码线索，避免由现有实现反推需求。两日复盘新增RET-029至031，分别记录dev07升级失败与证据缺口、精细TC/总表分层、开发DMG可见入口；现共31例，未改写历史失败。
+
+实际执行：`python3 scripts/check_docs.py --mode structure`退出0（101份文档、873条链接）；`python3 scripts/export_test_cases.py --check`为CURRENT（109例、352步、产品执行数0）；Codex捆绑artifact-tool重新生成根项目总表，回读11个Sheet、31个复盘ID、109例及1批次，SHA-256与生成收据一致，未发现公式错误；`git diff --check`退出0；`python3 -m unittest discover -s tests/governance -p 'test_*.py'`运行335项，退出0。检查仅验证文档/程序治理，不构成新一次App测试。
+
+严格基线检查`python3 scripts/check_docs.py --mode baseline`及`python3 scripts/quality_gate.py check`均退出1：版本01需求、02拆解、03开发计划、04测试计划及精细用例01a/01b共六份仍为draft，关键行为预期待定。没有将其标成baselined。dev07原始产品结论保持五组PASS、升级004 FAIL，109条精细TC全部未执行；没有正式DMG或通行证，不具发布资格。
+
+## 2026-09-30 已确认的验收边界
+
+依据：用户选择“采用这组规则（推荐）”。下述规则覆盖对应旧的待定项；设计已确定，运行结果仍按证据记录。
+
+- `TC-TM001-LOGIN-15`：登录请求15秒超时，显示可重试连接错误；等待期间不显示已登录。取消后的迟到响应不得覆盖新操作或保存其凭据。
+- `TC-TM001-LOGIN-16`：以规范化账号和来源IP分别计数：任一维度5分钟内连续5次认证失败后，后续登录返回429/rate_limited；包括受限期间正确密码。窗口结束自动恢复。
+- `TC-TM001-LOGIN-22`：用户名忽略ASCII字母大小写，使用原账号身份；含任何空白（包括首尾空格、制表、换行）直接拒绝，不trim后认证，不创建会话。
+- `TC-TM001-SESSION-04`：自动登录15秒超时显示可重试错误，不能使用缓存身份；重试后须经真实/v1/me确认。迟到响应不能覆盖新操作。
+- `TC-TM001-SESSION-10`：拒绝符号链接、硬链接、非当前uid、宽权限文件或目录等异常凭据对象；不跟随链接、不改哨兵，显示重新登录提示。缺其他uid测试条件记录BLOCKED。
+- `TC-TM001-UPDATE-05`：ZIP最大512 MiB（536870912字节），解压内容最大2 GiB（2147483648字节），边界本身允许、超过即拒绝；大小、摘要、签名或包身份校验失败均保留当前版本。
+
+本次需求确认只关闭设计缺项；产品、测试及发布状态不自动改变。测试包仍为开发诊断包。
+
+### 逐用例证据与受控故障执行器
+
+- 按SOP-010/011建立真实服务前的网络故障代理，记录是否转发，成功响应只能来自真实服务。offline代表请求发送前连接失败，不声称FastAPI进程被停止。
+- 文档基线和追踪检查均PASS（101文档、874链接）；该结果不表示产品通过。
+- 升级清理发现原生Squirrel会留下空ByHost plist。SOP-014限定仅清理本轮新建、空内容且可归属的文件，未知/有内容状态仍阻断，原失败证据保留。
+
+### 用户明确固定代码测试规则
+
+2026-09-30用户要求：“测试必须是固化的代码……可以让AI调用代码来进行测试。”已同步AGENTS、SOP-011/014和用例/Excel规范。实现单TC命令入口及全量入口，每次独立run；没有人工/AI操作替代机器断言。
+
+### 固定代码全量首轮中断与修复（2026-10-01）
+
+`local-7feea03dd72e4eddba0651cede8fd23d`前16条登录原始PASS，LOGIN-17#A因私有路径含`#`被SQLite只读URI截断，抛出`no such table: alembic_version`。机器汇总BLOCKED，16 PASS/93 BLOCKED（含父项和参数项，不能当作109项全部执行），清理全真；原报告保留。后续分析独立写`interruption-followup.json`。修复只将私有目录中的变体分隔符映射为`--`，TC编号不变；加入3条真实数据库路径回归，并让SQLite异常进入逐例错误记录。命令入口保存控制台日志，注册检查直接调用Playwright `--list`验证实际标题和精确选择。
+
+新批次先修复已识别的脚本/覆盖缺口再完整运行。限流的真实五分钟等待证据已保留，新固定程序用测试服务时钟检查299/300秒边界，避免重复等待；实际接口与认证均不替换。
+
+### 完整精细回归与测试程序修复计划（2026-10-01）
+
+`local-343e54113b0b442383e80f137013014b`已执行95个产品入口；原始78父项为57 PASS、8 FAIL、13 BLOCKED，38参数项为31 PASS、7 FAIL。父项含11条待独立辅助执行的占位，参数项不能与父项相加计数。清理完成，原始结论FAIL。随后由固定辅助程序和独立证据审计生成可复核结论，不能手改原报告。
+
+按SOP-015区分已发现的测试程序问题，保持产品源码及正确预期不变：
+
+1. PASSWORD-05第二App复用了第一App的安装路径，触发运行时存储归属校验。改用执行器复制的独立peer App及0700 profile，第二App重启沿用该路径。
+2. ADMIN-03已完成四步业务断言后，收尾再次访问已关闭Playwright对象的process，产生TypeError。记录已关闭状态，收尾只关闭仍存活的本例App。
+3. UPDATE-05身份负例已被拒绝，但错误提示先于异步临时目录删除完成。当前证据不足以证明最终清理正确；追加最长20秒的固定条件等待并保存采样，再按原预期断言目录为空，超时仍FAIL，不重试业务动作。
+
+修复后新建定向批次执行PASSWORD-05、ADMIN-03及UPDATE-05全部13变体，生成另一份结果Excel。原全量失败和审计保留；定向通过不构成完整迭代或正式发布通过。
+
+
+### 固定代码执行与独立复核归档（2026-10-01）
+
+用户补充的约束已写入AGENTS、SOP索引、SOP-011/014及测试规范：所有测试预先固化输入、动作、断言和数据；AI仅调用代码。使用`run_test_case.py --case-id <TC>`或`--all`选择产品用例，运行生成独立run目录；通过`--source-report`校验历史测试源码与包摘要，源码变化时禁止冒充同一条件重放。
+
+- 完整产品执行原件：`.local/ci/local-343e54113b0b442383e80f137013014b/result.json`，退出1，95个真实产品执行入口全部尝试；原始失败保留。另11条固定辅助检查10 PASS/1 FAIL。
+- 独立审计代码及导出程序核对证据后，78父用例62 PASS/9 FAIL/7 BLOCKED，38变体31 PASS/7 FAIL；两组不可相加。完整复核Excel：`.local/test-results/local-343e54113b0b442383e80f137013014b-reviewed/TokenMeter测试结果-local-343e54113b0b442383e80f137013014b.xlsx`，12张截图、3,397条原件链接，导出收据PASS只证明归档校验成功。
+- 定向验证原件：`.local/ci/local-877830fb340a4d12b4e29cf76fa422ed/result.json`，退出1，清理完成。PASSWORD05使用独立peer App及profile，ADMIN03避免二次访问已关闭对象，原始父结果为2 PASS/1 FAIL。UPDATE05的13个参数为8 PASS/5 FAIL，5个解压身份场景在固定20秒观察期后仍有本次临时目录残留。原始成功还需独立证据审计，不能人工放行。
+- UI01的#fff对比度解析缺陷先修纯函数并通过2项单元测试，再以新run `aux-ui01-local-343e54113b0b442383e80f137013014b-02`执行固定单例，原始PASS且清理完成。首次UI01 FAIL原件和完整复核表不覆盖。
+- 本轮基础验证55项服务端、378项治理测试通过；之后报表和审计代码的针对性回归另存自身结果。不把基础检查或定向PASS当作全部产品E2E通过。当前开发包与dirty源码仍未发布，不创建正式tag/通行证。
+
+
+定向原件随后由固定审计程序核对：`.local/ci/local-877830fb340a4d12b4e29cf76fa422ed-audit-peer-v3/audit.json`为审计PASS，确认PASSWORD05独立peer App/profile、重启trace与真实旧会话拒绝证据一致，ADMIN03四步证据齐全。原目标父结果2 PASS/1 FAIL可以保持；此审计PASS不改变UPDATE05失败或发布资格。旧审计原件不覆盖。审计程序12项自测通过。
+
+报表及辅助测试程序的最后定向检查原件为`.local/ci/workbook-aux-validation-20260930T173440Z/receipt.json`：32项granular治理检查、2项颜色解析单测通过，辅助TypeScript严格检查退出0。主结果Excel逐页回读、3,397/3,397个证据目标及摘要校验通过；UI01单例53/53通过。回读记录各自在结果目录`workbook-readback.json`。这些属于工具/归档检查，不能代替产品回归。
+
+
+最终归档：目标定向表为`.local/test-results/local-877830fb340a4d12b4e29cf76fa422ed-reviewed/TokenMeter测试结果-local-877830fb340a4d12b4e29cf76fa422ed.xlsx`（使用peer-v3审计），父2 PASS/1 FAIL、13变体8 PASS/5 FAIL、304条证据链接，其他75个TM001父用例范围外。UI01单例表为`.local/test-results/aux-ui01-local-343e54113b0b442383e80f137013014b-02-reviewed/TokenMeter测试结果-aux-ui01-local-343e54113b0b442383e80f137013014b-02.xlsx`。各次首次报告和历史复核保留。
+
+根目录`TokenMeter项目总表.xlsx`已更新为11个Sheet、109条设计用例、5条批次索引。`scripts/verify_project_workbook.py`实际回读PASS（`.local/workbook/readback.json`），各Sheet预览已核对。总表同时展示完整回归FAIL与后续定向验证，并给每个最近观察状态绑定实际run_id；来自不同批次的状态不能合成全量PASS。表格生成和只读校验没有重新运行App。
+
+最终规范校验记录：`.local/planning/fixed-tests-final-20261001/checks.json`。文档基线101份/877引用、质量追踪检查、109用例/352步骤索引、`git diff --check`均退出0；检查范围仅规范/索引，不赋予产品发布资格。
+
+
+### 2026-10-01：修复全部必测失败与阻断
+
+用户要求所有已开发功能测试通过。按SOP-015分类为六项产品缺陷、七项覆盖/证据缺口，已修复的三项脚本缺陷仍参加完整回归。新增09修复计划，沿用未发布v0.1.0编号和全部既定TC；不更改正确预期。多agent按文件边界实现，GUI/打包/完整回归由根串行调度。
+
+本轮实现与根因详见[09修复计划的实施进度](09-regression-fixes.md)：自动恢复真实重试和异常凭据重登提示已接入；管理员重置密码补可见校验和主进程拒绝；配置采用稀疏覆盖，恢复默认删除地址覆盖，登录/待退出/更新忙态均锁定总恢复。固定观察器在业务入口前安装，记录真实网络与原生更新器调用；SESSION-10的其他UID场景由自建HFS+镜像固定造数并核对UID、摘要及卸载，不操作用户真实凭据。
+
+UPDATE-05临时目录残留已由固定真实ZIP组件诊断定位：普通Node删除成功，Electron补丁`fs`把`app.asar`视为虚拟目录，递归删除留下真实文件并报`ENOTEMPTY`。诊断收据`.local/ci/updater-cleanup-diagnostic-20261001T004930Z/receipt.json`保留失败原件；实现改用`original-fs`清除且核对本次私有目录，清理失败不交接安装。原完整/定向产品FAIL记录及20秒采样没有覆盖。
+
+基础收据`.local/ci/fixes-basic-20261001T0125Z/receipt.json`：文档基线和质量检查退出0，治理388项、服务端55项、桌面单元25项PASS；定向更新器7项、主进程观察器4项单测和TypeScript检查分别记录于`.local/ci/updater-fix-static-20261001T010408Z/receipt.json`、`.local/ci/update-observer-freeze-20261001T012045Z/receipt.json`。这些基础及组件结果不等于新包产品E2E通过。
+
+新开发候选包已构建，清单`.local/ci/electron-package-fixes-20261001T0114Z/package-manifest.json`注明本机macOS 15 Intel、内部签名和`release_eligible=false`；本轮新包产品E2E正在执行，不能据上述基础检查判定全部用例通过。正式通行证、tag和发布仍未生成。
+
+### 2026-10-01：新包完整精细回归、失败修正与再次运行
+
+按SOP-014运行安装后App的全部精细产品入口。首次新包批次`local-571dd63bfe5b4d90a95ed9c70d80de07`的原始`result.json`为FAIL、清理完成、发布资格否：116行104 PASS/1 FAIL/11 BLOCKED，11条BLOCKED是后续独立辅助TC占位。38参数变体均PASS；审阅模型的78父TC为66 PASS/1 FAIL/11 BLOCKED。独立证据审计PASS，未修改SESSION-09的原始失败。其原始证据在`.local/ci/local-571dd63bfe5b4d90a95ed9c70d80de07/`，审计在同ID加`-audit/audit.json`，独立Excel在`.local/test-results/local-571dd63bfe5b4d90a95ed9c70d80de07-reviewed/`；Excel回读PASS而产品结论FAIL。此次结果不覆盖此前失败批次。
+
+SOP-015定位`TC-TM001-SESSION-09`的30秒点击超时：在退出待确认状态，固定脚本对已禁用的`configuration.reset-defaults`执行点击，并期待错误提示；既定SESSION-09和CONFIG-06用例要求该按钮锁定。产品的锁定是正确行为，故只纠正测试动作与断言为直接核验按钮禁用；原有API不可编辑、settings不变、无新origin/token请求、重试真实撤销及旧token 401断言保持。首批`playwright.log/json`保留为修正前失败证据，不把新结果回填旧run。
+
+新定点`local-4a8815e9d61e4b4bbdd41f7a2f897c52`实际执行SESSION-09四步，`result.json`为PASS、清理完成，独立Excel和回读收据位于`.local/test-results/local-4a8815e9d61e4b4bbdd41f7a2f897c52-reviewed/`。该单例只能证明修正后的固定脚本及产品行为在此输入下通过。随后启动第二次完整精细批次`local-f47f8257607c48458cc52b886d281d70`；实际结束结论及下一步见下节，未签发正式通行证。
+
+### 2026-10-01：第二次完整回归在owned资源清理阶段失败
+
+`local-f47f8257607c48458cc52b886d281d70`原始报告`.local/ci/local-f47f8257607c48458cc52b886d281d70/result.json`记`state=FAIL`、`cleanup_completed=false`、`release_eligible=false`。116行103 PASS/1 FAIL/12 BLOCKED；11条为辅助用例占位，UPDATE-08因上一例未清理而安全阻断。审阅模型78父TC为65 PASS/1 FAIL/12 BLOCKED，38变体PASS；审计`.local/ci/local-f47f8257607c48458cc52b886d281d70-audit/audit.json`为PASS。结果Excel及回读记录在`.local/test-results/local-f47f8257607c48458cc52b886d281d70-reviewed/`，导出PASS而产品FAIL，原报告未修改。
+
+UPDATE-07本轮真实Playwright入口及五项逐步断言均PASS，包括自主升级后的新进程、原profile、`/v1/me`身份、配置及打开文件归属。runner在结束时发现本例`shipit=false`、`private=false`，将其判为FAIL；这不是产品步骤断言失败，也不能因步骤PASS而忽略清理条件。现场诊断指向本run创建的空ByHost偏好文件，`defaults -currentHost read`报告该域不存在，当前owner清理流程因此未完成。修复仍在进行，且本批UPDATE-08未执行；在核实残留归属并安全清理前不启动新的GUI测试，不改写这次原件。
+
+用户提出全量回归耗时问题。本包首次完整精细运行`local-571dd63bfe5b4d90a95ed9c70d80de07`从报告起止时间计为36分44秒，完成95个真实Playwright执行入口。按每例开始/结束时间与各`playwright.json`的`stats.duration`求和，Playwright累计20分56秒、逐例准备约13分33秒、清理约2分13秒，另约2秒为批次管理开销。SESSION-09定点批次`local-4a8815e9d61e4b4bbdd41f7a2f897c52`的Playwright阶段约8秒，整批起止约17秒。后续可优先优化逐例准备效率并保留每例隔离、真实安装App与全部固定断言；这些时间是实测基线，不承诺尚未验证的提速幅度，也不能以定点运行代替正式一次完整全量回归。
+
+下一步：按SOP-015修正并验证本run所拥有的ShipIt/ByHost清理，保留原失败；新run执行完整精细，再串行执行11辅助及六组补充回归、独立审计与Excel，满足最终候选门禁后方可正式发布。
+
+### 2026-10-01：清理规则首修后的UPDATE-07/08定点仍失败
+
+首次代码修正处理`defaults -currentHost read`返回“域不存在”的空ByHost偏好情况；固定治理检查`.local/ci/shipit-absent-domain-governance-20261001T0445Z/receipt.json`退出0。该检查只证明程序规则在隔离样例通过。随后使用相同开发包、固定UPDATE-07/08用例新建`local-c8e31657d5e4428584a6f316936113e1`。原始报告`.local/ci/local-c8e31657d5e4428584a6f316936113e1/result.json`为FAIL、`cleanup_completed=false`、`release_eligible=false`：UPDATE-07五步Playwright全部PASS，但runner的`shipit=false`、`private=false`使整例FAIL；UPDATE-08因前例资源未清理而BLOCKED。本次结果不改变`local-f47f8257607c48458cc52b886d281d70`的全量FAIL，也不能据五步业务断言签发通行证。
+
+单独结果Excel`.local/test-results/local-c8e31657d5e4428584a6f316936113e1-reviewed/TokenMeter测试结果-local-c8e31657d5e4428584a6f316936113e1.xlsx`已生成；`verification.json`为导出/回读PASS、`product_state=FAIL`，只覆盖本次两例。失败后执行仅本run资源的只读归属预检，原件`.local/ci/local-c8e31657d5e4428584a6f316936113e1-cleanup-followup-01/pre-cleanup.json`记录私有根与缓存owner、空ByHost偏好、对应安装App进程为0及无现存ShipIt job；它不证明资源已移除，也不改原失败报告。
+
+第一次规则修正未解决即时升级后的清理时间差。ShipIt可能异步收尾，因此继续实现有界等待：仅对核对owner的本run状态重复观察并保存诊断，不能放宽清理成功判据或删除未知文件。当时完成安全清理前暂停新GUI；修正后的定点与完整回归须产生新的原始run，再执行辅助11例和六组补充场景。当前发布资格仍为否。
+
+### 2026-10-01：UPDATE-07/08环境阻断与定点通过
+
+在完成归属核对及安全清理后，新定点`local-70e531d3092c4cbea30160117c379287`误用系统Python，运行准备缺少`alembic`，UPDATE-07/08均记BLOCKED，`cleanup_completed=true`。原件`.local/ci/local-70e531d3092c4cbea30160117c379287/result.json`保留；独立审计`.local/ci/local-70e531d3092c4cbea30160117c379287-audit/audit.json`为PASS，Excel`.local/test-results/local-70e531d3092c4cbea30160117c379287-reviewed/TokenMeter测试结果-local-70e531d3092c4cbea30160117c379287.xlsx`回读PASS、`product_state=BLOCKED`。该批没有形成升级功能通过证据。
+
+改用项目venv重新执行固定UPDATE-07/08，生成`local-b6627e4379c64386bfc1a535fb432c16`。两例原始结果均PASS、`cleanup_completed=true`，各例的ShipIt、私有目录、App进程及服务清理字段均为true；原件`.local/ci/local-b6627e4379c64386bfc1a535fb432c16/result.json`。独立审计`.local/ci/local-b6627e4379c64386bfc1a535fb432c16-audit/audit.json`为PASS；Excel`.local/test-results/local-b6627e4379c64386bfc1a535fb432c16-reviewed/TokenMeter测试结果-local-b6627e4379c64386bfc1a535fb432c16.xlsx`回读PASS、`product_state=PASS`。本次只覆盖两例，`release_eligible=false`，不改写之前两次完整回归的FAIL。
+
+此条写入时，新完整精细批次`local-534748ff47cb44229183a6bd878c1674`刚启动、尚无结果；后续实际结果与11条辅助、六组补充场景见下方新记录。任一必要项FAIL/BLOCKED仍须保持不发布。
+
+### 2026-10-01：SOP 维护会话统一接收修订需求
+
+用户明确指定当前「SOP」会话（thread ID `01a0f5a5-63f7-76b0-aa53-ac6befec91ef`）为本项目 SOP 新增、修改、删除的统一执行入口。按 SOP-000 和 SOP-024 检查现行规范后，决定保持既有 SOP 编号与工作依赖，仅调整维护分工：其他会话提供缺口、依据和受影响流程，管理会话修订并回告；依赖修订的步骤在同步前阻断。已向当前列表中的六个其他 TokenMeter 会话逐一发送通知（开发总控、开发-REQ-TM002-首次授权、开发-REQ-TM001-账号与更新、文档、解释 TokenMeter 项目用途、绑定 TokenMeter Git 仓库），发送工具均返回成功。未来新会话从 AGENTS、SOP 索引和文档规范读取该约定。
+
+修订 `sop/README.md`、SOP-000（修订 5）、AGENTS、文档规范、目录元数据和 Changelog。初次 `python3 scripts/check_docs.py --mode structure` 退出 1，因新增索引链接被检查器识别为重复 SOP-000 映射；改为纯文字引用后同命令退出 0（102 文档、894 链接）。随后 `python3 scripts/check_docs.py --mode baseline` 退出 0（102 文档、894 链接），`python3 scripts/quality_gate.py check` 退出 0（12 功能、37 场景、6 测试绑定，`release_eligible=false`），治理测试 `python3 -m unittest discover -s tests/governance -p 'test_*.py'` 退出 0（405 项）。这些是规范/治理结果，不改变现有产品 E2E 失败、阻断或未发布状态。
+
+开发总控会话另报告 SOP-019 索引修订 6 与独立文件修订 5 冲突。本会话即时核对共享工作区，独立文件现已为修订 6，正文与索引均采用本地 `master` 总控集成和统一推送规则；已把该核对结论回告开发总控。若后续出现新的实际差异，按本会话统一维护流程处理。
+
+### 2026-10-01：需求分支改为本地 master 总控集成
+
+用户明确要求各需求分支先由总控在本地`master`依门禁整合，再由总控统一推送远端`master`。按SOP-000核对发现：SOP-019修订5以推送需求分支、远端PR合并为默认；发布规范与Electron本机设计沿用PR head/远端合并判据；版本规范仍写默认分支`release-candidate.yml`。这些现行文字与新指令及“Actions仅在明确多环境要求时执行”冲突，故修订SOP-019至6，并同步SOP索引、AGENTS、版本/发布规范、Electron本机设计、本版发布预案和Changelog；SOP编号及版本release_id不变。旧PR/CI结果仍是当时真实历史，不改写。
+
+新规则区分分支进入本地整合的适用检查与**本地`master`最终整合提交**的完整产品E2E及最终包门禁。分支单独PASS不授予整合后候选发布资格；所有需求分支、冲突处理及后续代码/依赖变化完成后，才用最终SHA/tree测试，再由总控普通快进推送远端`master`并读回SHA。远端保护拒绝直推或强制PR时保持BLOCKED，按保护规则处理，不强推、不伪造检查。此处是流程规范修订：尚未切换/合并本地`master`，也未推送、创建PR或Tag；当前完整产品回归仍以其原始run单独判定，不能由本次文档修订声称PASS。
+
+本次只改规范与执行记录，未更改运行中的granular执行输入或启动GUI。`docs/project-register.json`及根项目总表的SOP快照待当前产品执行与候选冻结后按SOP-024同步并回读；不能在运行中以工作簿刷新覆盖被测源码状态。实际检查：`python3 scripts/check_docs.py --mode structure`、`--mode baseline`均退出0（102文档、893链接，101 baselined、1 superseded）；`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6测试绑定，`release_eligible=false`）；限定本轮文件的`git diff --check`退出0。这些只证明文档/追踪一致，不代表产品E2E、最终包门禁或Git集成已通过。
+
+### 2026-10-01：新包完整精细、辅助与六组回归原件
+
+按SOP-014用项目`.local/venv-tm001/bin/python`在本机串行执行固定程序。三批共同输入为`.local/ci/electron-package-fixes-20261001T0114Z/`中的`package-manifest.json`、`TokenMeter-v0.1.0-20260929T074814Z-internal.dmg`与`update.zip`；精细和六组使用候选标识`6e80dd12d60ee5dad641bca030445a2153a269c9`及`--development`。各批采用全新run_id/output，未并行GUI、未修改测试源码、未重试取绿，原件互不覆盖。
+
+1. `.local/venv-tm001/bin/python scripts/granular_e2e.py`以完整集合运行、不加`--case-id`，run_id=`local-534748ff47cb44229183a6bd878c1674`，退出码2。原始`.local/ci/local-534748ff47cb44229183a6bd878c1674/result.json`为`state=BLOCKED`、`cleanup_completed=true`：116条结果105 PASS/0 FAIL/11 BLOCKED。95个真实Playwright入口均PASS，10条父TC由各自变体推导PASS；11条UI/CATALOG/RECORDS/GATE辅助TC在主runner中只是无步骤占位。实时控制日志为`.local/ci/local-534748ff47cb44229183a6bd878c1674-progress.log`，不能据105条PASS改写原始状态。
+2. 上批退出且清理完成后，`.local/venv-tm001/bin/python scripts/granular_auxiliary.py --with-ui`绑定该主报告，同一包资产生成`aux-818fe55e1e8940e4a3196b9d03b76563`，退出码0。原始`.local/ci/aux-818fe55e1e8940e4a3196b9d03b76563/result.json`为11/11 PASS、`cleanup_completed=true`；控制日志为同ID的`.local/ci/aux-818fe55e1e8940e4a3196b9d03b76563-progress.log`。这是独立执行原件，主run的11条占位仍保留BLOCKED。
+3. 辅助进程退出后，`.local/venv-tm001/bin/python scripts/local_e2e.py`以六组完整集合和`--development`生成`local-5197628d58ac4136b004b87da438220c`，退出码0。原始`.local/ci/local-5197628d58ac4136b004b87da438220c/result.json`为6/6 PASS、`cleanup_completed=true`，mount、服务、App进程、profile、安装目录、端口、ShipIt清理均true。`shipit-cleanup/cleanup-stage.json`与本轮空ByHost偏好副本由报告中的SHA描述符绑定；独立Excel在`.local/test-results/local-5197628d58ac4136b004b87da438220c/TokenMeter测试结果-local-5197628d58ac4136b004b87da438220c.xlsx`。六组补充证据不替代逐TC结果。
+
+随后固定独立审计v1`.local/ci/local-534748ff47cb44229183a6bd878c1674-audit/audit.json`为BLOCKED，唯一`PASSWORD-05`的peer fixture源码与已审阅绑定不一致。本条写入时新绑定复核/审计v2仍在进行，故当时不预判其结论；完成结果见下方新增记录。正式候选门禁当时未通过，也不能以主run、辅助和六组局部原件替代独立复核。
+
+本次按SOP-024仅同步`docs/status.md`及本版本06/07/09四份状态/结果文档；`python3 scripts/check_docs.py --mode structure`退出0（102份登记文档、894条链接）。已跟踪的status/06执行`git diff --check`退出0；07/09当前仍未纳入Git索引，对两份文件单独检查空白和冲突标记，结果为零问题，待总控按版本提交时纳入。结构检查只验证文档合同，不提升上述BLOCKED或发布资格。
+
+### 2026-10-01：审计绑定修复后联合逐例复核完成
+
+上一条记录时审计v2尚未结束。当前固定审计v2原件`.local/ci/local-534748ff47cb44229183a6bd878c1674-audit-v2/audit.json`已经为12/12 PASS；此前v1原件仍是BLOCKED，唯一`PASSWORD-05` peer fixture绑定差异作为历史保留。新审计只核对原始证据与冻结代码绑定，不改写主run的105 PASS/0 FAIL/11辅助占位BLOCKED、辅助11/11 PASS或六组6/6 PASS。
+
+固定合并结果已导出至`.local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/TokenMeter测试结果-local-534748ff47cb44229183a6bd878c1674.xlsx`。同目录`granular-source.json`登记`auxiliary_bound=true`，核对同一候选、原DMG和执行时间；`verification.json`为Excel导出/回读PASS，78父TC（67产品、11辅助）PASS/0 FAIL/0 BLOCKED、38变体PASS/0 FAIL/0 BLOCKED、六组PASS、12条审计PASS。该`verification.json`仍记`product_state=BLOCKED`，与主run原始11条辅助占位一致；复核模型的逐例PASS与主run原始状态分开保存。
+
+至此开发包的联合逐例复核完成且全部必测条目通过，但该包清单仍为`release_eligible=false`，不是干净正式候选的发布判定。尚未对最终DMG完成SOP-017/018门禁、签发通行证或正式发布；下一步由总控锁定干净候选并运行适用完整门禁，不能用本次Excel回读替代。
+
+本轮四份状态/结果文档同步后，`python3 scripts/check_docs.py --mode structure`与`--mode baseline`均退出0（102份登记文档、894条链接），`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6测试绑定，`release_eligible=false`）。已跟踪的status/06执行`git diff --check`退出0；07/09仍待Git纳入，另行检查空白和冲突标记均无问题。上述检查只证明文档与追踪合同，不取代开发包E2E或最终发布门禁。
+
+### 2026-10-01：项目总表同步12批次及当前回读
+
+根[TokenMeter项目总表.xlsx](../../TokenMeter项目总表.xlsx)已根据现有机器原件重新导出，当前SHA-256为`cda277e40c77d46d5825ab47782c07ccbac772485f46efe6346ec61c15899e50`。`.local/workbook/verification.json`登记11个Sheet、109条用例及12条测试批次；本轮执行`python3 scripts/verify_project_workbook.py`退出0，回读同一SHA、11/109/12及零错误，`product_tests_executed=false`、`release_eligible=false`。旧`.local/workbook/readback.json`仍对应以前5批次文件，不能用于核验当前SHA。此处只同步状态与证据索引，不重跑App、不改变原始测试或审计报告。
+
+总表的第12条以主run`local-534748ff47cb44229183a6bd878c1674`为标识，登记联合复核模型的PASS，并指向`.local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/TokenMeter测试结果-local-534748ff47cb44229183a6bd878c1674.xlsx`；辅助11例和六组证据在该独立复核表中绑定，并非另占两条总表批次行。审计v2及复核模型显示78父TC和38变体全PASS；主raw仍为11条辅助占位导致的BLOCKED。总表的复核状态不改写原始报告，也不替代最终干净DMG与SOP-018发布门禁；正式通行证仍未签发。
+
+### 2026-10-01：远端 master 保护与本机门禁不兼容的 SOP-019 修订
+
+开发总控报告远端保护缺口。本会话只读核对 `gh api repos/lzhe72/TokenMeter/branches/master/protection`：当前`master`强制PR、`enforce_admins=true`、strict required checks 为 `governance`、`product-e2e (macos-15)`、`product-e2e (macos-15-intel)`，三项均绑定GitHub Actions app_id 15368，禁止强推/删除。总控先前快照为其隔离工作树`.local/git-sync/20261001T053249Z-remote-master-protection.json`；本次API读回与其列出的关键字段一致。当前TM001工作流只有`workflow_dispatch`，而GitHub官方required checks排障说明指出手动触发PR head工作流产生的检查可能不会出现在PR检查中、也不能满足保护规则。因此现有本机PASS不能满足这三项远端检查，直接推送也受PR保护限制；无最终候选可推，本次未推送、改保护、写状态或启动Actions。
+
+按SOP-000将SOP-019修订至7，同步SOP索引、发布/版本规范、Electron本机设计与Changelog。新流程在本地整合前和远端操作前只读保存保护快照，要求实际满足指定来源与strict最新提交检查。无法满足时远端阶段保持BLOCKED，并列两条需用户明确决定的受控路径：真实多环境Actions在PR最新候选产生所需检查；或接受以本机原始门禁为依据的保护规则迁移及其远端检查强度变化。任何路径都须保存旧/新规则、用户决定、真实运行或机器核验证据，不能手写状态、临时关保护、管理员绕过或借用旧SHA。本条仅是规范修订，产品E2E及发布资格仍由实际最终候选门禁决定。
+
+本轮实际检查：`python3 scripts/check_docs.py --mode structure`及`--mode baseline`均退出0（102文档、899链接）；`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6绑定，`release_eligible=false`）；本轮相关文件`git diff --check`退出0。这些是规范/追踪检查，不改变远端集成的BLOCKED状态。
+
+### 2026-10-01：TM-002 目录选择授权模型的通用 SOP 边界
+
+TM-002 会话传来用户决定：本版使用 macOS 原生目录选择器、App 持久保存已选来源并由主进程强制限制读取；不要求 App Sandbox 的持久 security-scoped grant 或 TCC 撤销。[Electron 官方目录选择器文档](https://www.electronjs.org/docs/latest/api/dialog)仅对 macOS MAS 的 `securityScopedBookmarks` 返回书签，非 MAS 返回空数组，故真实面板选择不能被记为沙盒持久授权。TM-002 需求、设计与用例草稿已按该模型更新，持久 locator 的可逆信息与本机保存边界仍待用户答复。
+
+按 SOP-000 将 SOP-002/004/006 分别修订至 4/4/6：需求阶段明确系统与 App 各自负责的选择、限制、撤销和持久性；设计阶段约束主进程只读能力、身份/根绑定与停读；测试计划驱动真实面板并区分 App 撤销/访问失效与系统权限。AGENTS 仅登记当前已确定模型和 locator 待决，不为保存可解析路径或书签开例外；TM-002 依赖重启恢复的基线仍保持待决。本轮通用规范在当前工作树核对，TM-002 分支的版本档案/Changelog 由其会话在同步这些 SOP 后维护。
+
+实际检查：`python3 scripts/check_docs.py --mode structure`和`--mode baseline`退出0（102文档、899链接）；`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6绑定，`release_eligible=false`）；相关 SOP、AGENTS 与目录 `git diff --check`退出0。检查仅证明当前规范结构，不解除 TM-002 的 locator 待决或任何产品 E2E 阻断。
+
+### 2026-10-01：移除旧 GitHub Actions 必需检查，保留本机门禁
+
+用户再次明确：应用程序在本机完成测试，远端 Git 只做源码版本管理；此前把旧 GitHub Actions 必需检查当成新流程验收条件应修正。本会话按 SOP-000 和 SOP-019 核对当前远端 `master`：修改前 `required_status_checks.strict=true`，三项 `governance`、`product-e2e (macos-15)`、`product-e2e (macos-15-intel)` 均绑定 Actions app_id 15368。执行 `gh api --method DELETE repos/lzhe72/TokenMeter/branches/master/protection/required_status_checks`，退出0；随后 GET 读回 `required_status_checks=null`。PR、管理员执行、对话解决、禁止强推/删除的字段与修改前逐项相同。前后原始JSON和机器比较结果保存于本机 `.local/git-sync/20261001T055756Z-local-only-protection/`；远端 `master` 在操作前为 `e011857443b503c2bfafcb9cd1c9e6d52f5ff5f2`，本次未推送源码、合并PR、建Tag或启动Actions。
+
+SOP-019修订至8并同步索引、AGENTS、发布/版本规范、Electron本机设计及Changelog。旧三项远端检查不再是当前验收条件；远端PR及其余实际保护继续满足，最终本地`master`整合树的完整产品E2E、同一最终包和本机机器门禁仍须真实PASS。此次仅完成远端配置与规范迁移，不宣称产品E2E或发布通过。
+
+本次规范检查：`scripts/check_docs.py --mode structure`、`--mode baseline`及`scripts/quality_gate.py check`均退出0（102文档、904链接，12功能/37场景/6绑定，`release_eligible=false`）；治理单测417项通过，相关文件`git diff --check`退出0。上述结果只验证文档和治理程序，不代替安装后App产品E2E。
+
+### 2026-10-01：最终候选门禁程序接入与文档同步
+
+同一候选的本机门禁已在代码层编排完整精细主runner、独立辅助11例、证据审计12项、六组补充E2E和逐例Excel。`scripts/local_gate.py`从各自原始证据复算78条父TC与38条变体的最终状态，输出`final-product-result.json`；主runner的11条辅助占位继续保留原始BLOCKED，只有真实辅助批次逐条PASS才能获得最终集合PASS。`scripts/local_release.py`在归档前后复核摘要、最终结果及证据副本。固定负测覆盖缺失/篡改/伪造映射与错误退出码。代码就绪不等于最终候选产品验收；当前未生成新的正式run、通行证或Tag。SOP-018修订11中关于精细集合校验“仍待实现”的文字已报告SOP管理会话，规范同步前依赖步骤仍待完成。
+
+固定入口核对`python3 scripts/check_granular_bindings.py --output .local/ci/final-registration-20261001T0526Z.json`实际95/95 PASS，精确选择器匹配，仅证明Playwright用例注册。`apps/desktop/tests/visual_fixture.py`在`.local/ci/hig-visual-c759e9f93b2f40cf9f72a40d438ca3f2/`生成10张界面图、12项布局/键盘辅助检查和`service_closed=true`；该辅助检查不代替最终安装包E2E。主任务已执行服务端55项、桌面单元25项与桌面构建，结果用于准备候选，不提升产品发布状态。
+
+本次按SOP-024同步Changelog、状态、07/08/09及本记录。`docs/project-register.json`的25份SOP快照与当前磁盘文件逐章节、修订号比较为0差异，故无需修改登记；根`TokenMeter项目总表.xlsx`按现有登记重导，`python3 scripts/verify_project_workbook.py`退出0，回读11个Sheet、109条用例、12条批次、零错误，SHA-256为`a53f219f6f17c6cdc32609c98b66fd1641a38c31168d87f0c3563236e58ee64f`，`release_eligible=false`。`python3 scripts/export_test_cases.py --check`退出0，109例、352步。`python3 scripts/release_registry.py show`退出0，显示本版工作树档案且没有正式Tag或已验证通行证。
+
+文档`python3 scripts/check_docs.py --mode structure`与`--mode baseline`均退出0（102份文档、904条链接），`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6绑定，`release_eligible=false`），`git diff --check`退出0。一次完整治理`python3 -m unittest discover -s tests/governance -p 'test_*.py'`在门禁代码及fixture仍被并发修改期间运行，422项中1 FAIL、7 ERROR，退出1：7个错误是归档fixture未满足新增补充run绑定，1个失败是PASSWORD-05冻结源码摘要改变。它不是最终稳定候选检查，不能记为治理PASS；源码/测试负责人修复后须重新运行并保留新的结果。最终包E2E与发布门禁仍未执行。
+
 ### 2026-10-01：SOP 独立分支先行整合（纯规范）
 
 用户本轮明确要求将SOP改动作为独立分支提交到远端`master`；此前各需求分支由总控统一整合的常规顺序在本次规范分支上让位于这条明确指令。以当时远端`master` `e011857443b503c2bfafcb9cd1c9e6d52f5ff5f2`为基线创建`codex/v0.1.0-20260929T074814Z/sop-governance`隔离工作树，只承载SOP、使其链接和治理检查可执行的设计/规范附件、目录、AGENTS、Changelog、总表格式快照及关闭旧自动Actions触发的配置；不带入TM001产品实现、原始测试结果、候选包或版本指针。产品分支以后须以新远端基线重新整合并在最终产品树完整回归。
@@ -316,3 +663,69 @@ BUG-TM001-FIXTURE-006 的只读诊断与清理字段修订现已在未提交工�
 总控会话报告新缺口：TM002 的 `safeStorage.encryptStringAsync` 在 macOS 使用 Keychain，独立的 `--user-data-dir` 不覆盖该系统资源；未证明最终包实际测试 item 身份、与正式 App 分离以及清理归属前，TM002/003/004 的相关 E2E 不能启动。按 SOP-000 在独立分支修订 SOP-006/009/010/014 与索引、测试用例规范、Electron 架构、AGENTS 和 Changelog。Electron 44.5.1 主进程源码中的 `KeychainPassword` 命名只能用于设计推断，不能证明异步提供者和最终 DMG 的实际 item 身份。新合同要求首次调用前用同一最终 DMG 在隔离 macOS 测试账号或经证明独立的 Keychain 命名空间作原生探针；确认精确测试身份先前不存在，记录本次 owner 与创建元数据，仅清理确属本次创建的精确 item。预存、身份未知或与正式 App 冲突均阻断依赖场景，不能查询、覆盖、删除正式凭据。本条是后续 TM002/003/004 执行前置，不追溯改判正在运行的 TM001 候选证据。当前只有规范修订，没有该最终包的原生证明或产品 E2E PASS。
 
 独立规范树的实际检查：`python3 scripts/check_docs.py --mode structure` 与 `--mode baseline` 均退出0，74文档/441链接；`python3 scripts/quality_gate.py check`退出0，12功能/37场景/6绑定，`release_eligible=false`；`python3 -m unittest discover -s tests/governance -p 'test_*.py'`执行198项、全部通过。原始输出保存在本机`.local/git-sync/20261001-keychain-sop/`。这些只证明本轮规范与治理检查，不代表 Keychain 原生探针或产品E2E通过。
+
+### 2026-10-01：SOP 基线合入后的 TM-001 文档与候选前检同步
+
+独立规范PR#4已进入远端`master`，读回合并提交`f3b29f6b4203fe22ae8a40533e775291253bb7b3`。当前工作树正将TM-001分支与该基线合并；本条只记录规范和门禁程序对齐，**不表示这次产品合并已经提交、测试或发布**。现行SOP-014修订23、SOP-018修订12明确保留主精细run的11条辅助占位BLOCKED，从同一候选辅助11例、审计12项、补充六组及原始目录独立复算78父TC/38变体的最终规范化结果；SOP-024修订6规定候选输入先进入干净提交，通行证及本机归档完成后再用后续文档提交登记总表批次与被测SHA。原本“SOP-018修订11尚未同步”的描述属于前一阶段事实，当前已由上述修订替代。
+
+候选前检代码已补：补充六组使用独立`local-<uuid>`运行编号，并以`--parent-report`绑定主精细报告、候选及DMG；门禁重新核对独立Excel与`final-product-result.json`，归档时再从原件复算；PASSWORD-05受审查的peer源码摘要已同步。此前治理422项的1 FAIL/7 ERROR原件继续保留为并发改动阶段诊断。源码负责人报告修复后治理424/424通过；本次合并树的完整治理仍须由总控在冲突全部解决后重新执行并保存原始日志/收据，未有该证据前不把候选治理写为最终PASS。最终签名/安装DMG的全量产品E2E、发布门禁和通行证也尚未执行。
+
+本次文档冲突解决后，`docs/project-register.json`的25份SOP快照与现行文件修订号、十章节内容逐项比较为0差异。根项目总表使用捆绑artifact-tool重新导出，`python3 scripts/verify_project_workbook.py`回读11个Sheet、109条用例、12条批次、零错误，SHA-256为`ef94e5e15c1c6c0b4fe4a0ae8d550728c54ad502e317262b7dc02ffba41c8ae3`；`product_tests_executed=false`、`release_eligible=false`。`python3 scripts/check_docs.py --mode structure`和`--mode baseline`均退出0（102文档、902链接），`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6绑定，发布资格否），`python3 scripts/export_test_cases.py --check`退出0（109例、352步），`git diff --check`退出0。以上仅是文档、总表与追踪检查；本次合并树完整治理仍由总控另行保存原始结果。
+
+
+### 2026-10-01：合并后治理原始检查
+
+TM-001源码提交`44e3844ce566eb3120f17ee555321434fcac4231`与已合入的SOP规范提交`f3b29f6b4203fe22ae8a40533e775291253bb7b3`在本地合并，冲突按现行SOP内容及TM-001用例合同解决；本条检查发生在合并提交前的已暂存树，不冒充最终包验收。原始命令输出及各文件SHA-256保存在`.local/ci/tm001-merge-preflight-20261001T0716Z/receipt.json`及同目录日志。`python3 scripts/check_docs.py --mode structure`、`--mode baseline`、`python3 scripts/quality_gate.py check`和`git diff --cached --check`均退出0；`python3 -m unittest discover -s tests/governance -p 'test_*.py'`在46.0秒内实际运行426项、全部通过，退出0。先前并发改动期间422项的1 FAIL/7 ERROR仍按历史保留，由本次新原件证明合并后的治理检查已修复。上述结果仍不是最终签名DMG的产品E2E或SOP-018发布门禁；正式候选尚无通行证。
+
+
+### 2026-10-01：首次干净候选门禁及两项固定测试证据缺口
+
+本地合并提交`3467dc143b2e2fc71f51515f483f0ecff8637947`（tree `136c200d20f6e399928b06fee65780f39e7b99b1`）在隔离工作树构建签名内部DMG，包清单`.local/ci/tm001-final-package-3467dc1-20261001T0726Z/package-manifest.json`；DMG SHA-256 `e310a0aa5f05cc08930b4a2f57453c51a564ca16e5f3d756c65e25443ef1ac4d`。正式门禁`.local/gates/tm001-final-gate-3467dc1-20261001T0730Z/gate.json`运行约48分钟后返回**FAIL**、`release_eligible=false`、`No actual identity verification`。95个实际精细Playwright入口PASS，主原件116条105 PASS/0 FAIL/11辅助占位BLOCKED；辅助11/11、审计12/12、补充六组6/6分别PASS，Excel已导出并回读PASS；这些分项不使最终门禁通过，未生成`final-product-result.json`或通行证。
+
+按SOP-015复核保留原件。补充003组管理员管理操作通过，但固定脚本仅对撤销后的成员会话请求`/v1/me`并得到预期401，没有有效管理员身份200。只读继续核验发现补充004组的`lsof -Fn`包含一条无文件名的`n`行，固定采集器将其记为空路径，后续发布校验会报`Incomplete restarted-process open-file list`。两者均属于固定测试/证据采集缺口，未发现产品认证或升级的确定性失败。现已在003脚本增加真实App重启、自动恢复管理员身份和服务账号/角色断言；在003及精细更新采集器用同一解析器忽略空名称，保留所有具名路径，并添加解析单元测试及003缺200的门禁负测。修改后基础检查与新候选完整门禁需重新运行，旧FAIL原件不覆盖。
+
+修订后候选前检日志保存在`.local/ci/tm001-gate-fix-preflight-20261001T0837Z/`：文档严格基线与质量追踪均退出0（102文档、904链接；质量检查仍`release_eligible=false`），完整治理426/426、服务端55/55、桌面单元26/26（含`lsof`解析回归）通过，Electron构建退出0。固定精细Playwright注册95/95、补充六组注册6/6，`git diff --check`通过。补充列表首次因预检命令遗漏执行器所需`TM_E2E_JSON`而退出1，补齐隔离输出路径后同一固定六组列表核对通过；该列表检查没有执行App。所有基础与列表检查仅用于新候选前检，不能替代再次完整E2E。
+
+### 2026-10-01：文档会话归口与跨版本门禁附件接管
+
+用户明确指定“文档”会话为除 SOP 外所有项目文档的唯一编写者，新增、修改、删除都由该会话实施，并要求把项目会话体系写入文档。“SOP”会话继续维护 `sop/`，开发总控继续整合本地 `master`，需求会话负责实现、固定测试与原始证据。文档会话先核对 SOP-024、文档规范、可见会话清单及相关会话近况，再通知开发总控、SOP、TM-001、TM-002 停止继续直接改写非 SOP 文档并交接既有差异。新增[会话体系](../../docs/project-sessions.md)，同步 AGENTS、文档规范、导航、状态、Changelog 和机器目录；TM-003/004/005 的工作分支不能误记为已核实的用户可见会话。历史和当前分支中未集成的文档差异保留为待核对输入，不能把草稿改写成已测试通过。
+
+SOP 会话交接独立提交 `3303c0b0a7adf8d92630388d9dadc2946f1085b7`：SOP-006/011/014/017/018 与索引修订跨版本门禁计数，同时含四份非 SOP 附件。文档会话核对其中发布规范、用例规范和 Changelog 的语义后，独立写入当前文档分支。TM-001 固定计数仍用于原来源核对；TM-002/003 的实际集合及门禁执行器必须在最终整合树核实，不能由本次文字修订宣称通过。SOP 规则与文档附件在总控整合时须一并核对。此处不修改 SOP 原文件、不执行 App 或产品 E2E；旧 `3467dc1` 门禁继续为 FAIL，新 `d2db551` 的门禁终态待原始文件交接。
+
+### 2026-10-01：TM-001 独立候选 PASS 与文档/Excel 接续
+
+上述记录写成时 `d2db551` 门禁尚未交接。随后只读核对 `.local/gates/tm001-final-gate-d2db551-20261001T0904Z/gate.json` 和开发会话交接：独立候选 `d2db5514e3dde2abb0b039f6188ae82f1ba3d53e`、tree `3854696e6212aa68aeccfdc720add187a4f92759`，DMG SHA-256 `acc86a9f04ed19fe91f1b63481988d615f5d81680602eed1305b3896bb284492`。完整门禁约 2882 秒，机器 `state=PASS`、`release_eligible=true`；主 116 行为 105 PASS/11 辅助占位 BLOCKED，辅助 11/11、审计 12/12、补充六组 6/6 均 PASS，`final-product-result.json` 规范化 78 父 TC 与 38 变体全 PASS。机器通行证 SHA-256 `193bf39ca6bd2aed5a802f817ba5aa7bcfdaeeb442e272f1d843e381c941de53`；独立 Excel SHA-256 `131a5e4038d5d4a11825e934484ec4e2c895819681bd8f189fbcf2b45e9d76d4`。E2E-003 有有效 `/v1/me` 200，E2E-004 具名打开文件 125 项、零空项。旧 `3467dc1` FAIL 原件不改写。原 DMG 的同摘要便捷副本已以 `CANDIDATE-NOT-RELEASED` 标在根 `dmg/<release_id>/`，不是正式原名包。总控本地 `master` 后续整合形成新树，仍须按 SOP-019 重做适用产品门禁、归档和远端核对；当前不记正式发行。
+
+用户补充明确 Excel 也全部由文档会话负责并随开发进度更新。文档会话把本版 06/07/08、状态、用例导航、复盘 RET-032–038、机器目录和项目登记同步；根总表重导后 11 个 Sheet、109 条用例、12 条**旧批次**，当前 SHA-256 `fa2b4efc47bed36caa67a4c011fdee2968ec36e4764510713bb2af1e9f4c076e`，`python3 scripts/verify_project_workbook.py` 回读退出 0、零错误、`product_tests_executed=false`。版本 Sheet 已记录独立候选 PASS 但未发布，`06测试批次`按 SOP-024 待通行证及原件归档后再以独立文档提交登记本次 run 与被测 SHA，不能把旧 12 批次冒充新 run。根总表生成首次在隔离文档工作树退出 1，原因是该树缺历史 `.local/test-results/.../revisions/02/` 文件；只读链接至主工作区已存在的历史结果文件后重新导出并回读 PASS，未覆盖该原件。
+
+本次独立文档工作树的 `python3 scripts/check_docs.py --mode structure` 与 `--mode baseline` 均退出 0（104 文档、929 链接、103 baselined、1 superseded）；`python3 scripts/quality_gate.py check` 退出 0（12 功能、37 概要场景、6 绑定，`release_eligible=false`）；`python3 scripts/export_test_cases.py --check` 为 109 例/352 步 CURRENT；`git diff --check` 退出 0。完整治理初次执行 426 项有 1 ERROR，固定用例报告隔离文档工作树缺 Playwright 依赖；对照锁文件 SHA 与已验证工作区一致后临时只读复用固定依赖，重跑 426/426 PASS，日志在本树 `.local/docs-checks/20261001-session-governance/governance.log`。总控指出该依赖链接不满足独立环境证据后，本会话只移除自己创建的符号链接，在本工作树按锁文件执行 `npm ci --cache ../../.local/npm-cache` 与 `ELECTRON_CACHE=../../.local/electron-cache npm run runtime:install`，均退出 0；再次完整运行治理 426/426 PASS，退出 0，独立原始日志在同目录 `npm-ci.log`、`runtime-install.log` 与 `governance-independent.log`。没有改动主项目的依赖目录。这些文档、工作簿和治理检查不在本树执行 App，不能替代总控最终整合树的产品 E2E。
+
+SOP 会话最终交付组合 SOP-only 提交 `afee30d28f9952559dacd895b2313298045b635d`，只含根 `sop/` 的跨版本门禁和文档归口规则。文档会话将其中七份 SOP 的修订号与十章节快照同步至 `docs/project-register.json`，工作簿 `09执行SOP` 随之刷新；本次文档分支须与该 SOP 提交在总控整合树一起复核严格基线，不能单独声称全部规则集成完成。
+
+### 2026-10-01：本机稳定里程碑顺序与TM-002草稿预登记
+
+SOP管理会话提交 `afee30d28f9952559dacd895b2313298045b635d` 与 `090d8081f22d2c94dceec29e9e538ab903c6316d`，总控在本地 `master` 经 `bc52923`、`c6729ea` 整合。新SOP-017/018/019/020规定逐版固定本地`master`里程碑，完整最终包E2E与门禁PASS后先经SOP-020归档本机正式稳定DMG，下一版从该原包真实升级；全部目标版本完成后再统一按远端保护登记源码和Tag。文档会话同步AGENTS、发布/版本规范、Electron架构、0.1/0.2发布预案、状态、Changelog及SOP快照，并预登记TM-002设计草稿。该流程修订不是产品E2E；`d2db551`仍仅是独立候选PASS，本地`master`的0.1里程碑尚未完成同树最终门禁、正式原包归档或稳定发行。
+
+当前 `releases/current.json` 保持指向本版0.1，供总控以明确release_id和固定里程碑执行本版门禁。TM-002的28条父TC/35个变体在机器目录与根总表中标为未来设计草稿、`baseline_pending`/`unexecuted`，其程序绑定为null；0.1门禁按本版清单排除未来0.2项，不能把它们计入0.1必测集合，也不能删掉未来设计。待0.1稳定原包取得并完成TM-002的SOP-008基线后，再由文档会话把当前版本指针切到0.2。本机稳定归档和后续远端源码登记分别留原始收据，不能用本段文档替代固定程序核对。
+
+### 2026-10-01：本地里程碑归档程序补齐，产品门禁仍待最终树
+
+TM-001开发会话的代码提交`fbab99b13022d7178a96dc344fb5ff9db8dd85f0`已由总控合入本地`master` `4bdeb13abb581c6b5650ed937db661d81079bb4f`；这是文档候选整合前的master状态，后续文档合并会产生新的最终里程碑SHA/tree。`scripts/local_release.py verify/archive`现在要求`--milestone-sha`与`--milestone-tree`，在干净的被测提交检出中核对HEAD与候选精确相等、该提交为本地master祖先、原包/通行证同源。归档收据schema2记录里程碑SHA/tree、master tip及原DMG/manifest/passport摘要，`remote_source_state=PENDING`，远端登记仍为后续独立步骤。该代码分支局部23/23、治理433/433 PASS，总控整合树治理亦433/433 PASS；这些均不是整合后最终包E2E或SOP-018/020实际通过。独立`d2db551`PASS不能借给新的最终树；总控须先冻结新SHA/tree再构建、运行与归档。
+
+### 2026-10-01：SOP-019 远端源码检查点与本地 master 门禁失败
+
+SOP 会话提交 `1bc01e38e8de5ab2786a2b5207dbaff434206156`，总控已在本地 `master` 以 `3ce5e06654369c03a23e89d6775381dac596e6c6` 合入 SOP-019 修订11及索引。本会话从该实际树另建独立文档分支，只同步适用于当前0.1的非 SOP Git 规范、状态、机器SOP快照和项目总表；`releases/current.json` 保持0.1，TM-002/003后续基线不借此并入。远端同名功能分支或单一integration镜像的代码检查点只表示已提交源码可读回；此次文档工作没有执行推送，也没有核实`remote_code_saved=true`。本机产品/稳定发行、远端`master`、Tag分开记录。
+
+总控独立整合树 `c2911bc65d55579fcf71e5ba11db87357a01a5e4`、tree `d4555b207b50e7cbe313b54ba9bfec1b7fdccb54` 的首次最终包门禁已于2026-10-01 12:02:59Z结束为FAIL，原件 `.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/{gate.json,granular/result.json}`。精细原始116项91 PASS/14 FAIL/11 BLOCKED；UPDATE-05父项及13变体缺私有签名输入，11项为辅助占位。独立结果Excel `TokenMeter测试结果-local-0512d4fc44544eba97f9d1ae79cbfc37.xlsx` 由固定程序新建并回读PASS，报告模型78父TC为66 PASS/1 FAIL/11 BLOCKED、38变体25 PASS/13 FAIL；它是原件整理，不改变产品FAIL。根总表追加第13批并标明被测SHA，不覆盖旧12批。
+
+TM-001开发会话根因调查指出，原执行器把签名输入指向旧worktree的`.local`；新整合树缺该目录，13变体在App启动前失败。正在修为门禁显式必填`--key-dir`，长跑前核对ZIP Ed25519签名和p12公证书指纹，并透传至精细与单例回放；缺环境BLOCKED、真实FAIL保留TC摘要。此时修复尚未形成新固定候选或产品PASS，0.1无SOP-020稳定原包，下一次门禁必须重建并完整重跑。
+
+文档会话同步SOP-009修订20、010修订16、014修订26、018修订16、019修订12到架构、测试策略、UPDATE-05详细用例、发布规范及机器登记。新SOP要求`--key-dir`目录祖先路径安全、uid/权限核对，按原ZIP字节重签名比对清单，p12仅提公有证书比对指纹；私有内容、密码和完整路径不得进入报告。预检不等于产品PASS，对有效包缺私有输入为本次前置BLOCKED；公开配置、原ZIP或包清单自身不一致为候选完整性FAIL。原c291的13变体FAIL不重分类。SOP-019另要求记录实际Git可执行文件路径/版本，HTTP 400或超时后先读回精确远端ref/SHA/tree，无法读回不得记代码已保存。本次是非SOP文档更新；固定实现、负测、最终候选完整产品门禁另待核对，发行资格仍为否。
+
+TM-001开发会话交接：`883bf567b16d57527acdb887537699a082c53c97`定向真实App run `local-67f0e7832e284f2d8986b03c0da716b3`为14/14 PASS、清理完成，原件`.local/ci/local-67f0e7832e284f2d8986b03c0da716b3/result.json`在该开发worktree。它未覆盖c291旧FAIL，也不是本地master全量门禁；祖先路径安全检查与报告/普通输出中的绝对私有路径脱敏仍需代码修复与负测。文档侧实际运行：`python3 scripts/export_test_cases.py`生成137父TC/437步骤，根总表导出11 Sheet、137父TC/35变体/172行、13历史批次，SHA-256 `ee4ad2d5682e5bff156ca271b2b1c53d2d3a530274049640af2c84f591aab89e`；`python3 scripts/check_docs.py --mode structure`、`--mode baseline`、`scripts/quality_gate.py check`、`scripts/verify_project_workbook.py`、`scripts/export_test_cases.py --check`均退出0，回读总表11/137/35/172/13且`release_eligible=false`。`python3 -m unittest discover -s tests/governance -p 'test_*.py'`454/454 PASS，原始输出`.local/git-doc-sync-governance-after-sop.log`。这些是文档/治理核对，不是产品E2E或发行PASS。
+
+SOP会话再交付010修订16与018修订16，明确先检查公开配置、原ZIP与包清单：自身不一致为候选完整性FAIL；对已核对的有效包，私有seed/p12缺失、不安全或身份不符为App启动前BLOCKED。文档会话同步机器登记、详细用例和总表，不改变c291原件。重导出的根总表SHA-256为`89b7481b51adb882655d693de5c35ec551654a2bfec768275a884aee92896599`，11 Sheet、137父TC/35变体/172行及13批次；`scripts/verify_project_workbook.py`回读PASS、`release_eligible=false`。结构、基线、质量与用例导出检查均退出0；治理`python3 -m unittest discover -s tests/governance -p 'test_*.py'`退出0，454/454 PASS，原始输出`.local/git-doc-sync-governance-after-classification.log`。本轮未运行完整产品E2E。
+
+本 0.1 独立文档树的结构、严格基线、追踪质量、用例导出检查均退出0；110份登记文档、1031链接，137条父用例/437步，质量检查只授`traceability_only`且`release_eligible=false`。根项目总表导出及回读退出0：11个Sheet、137父用例、35变体、172用例行、13测试批次，SHA-256 `30aef388608450d0d9b8dc89752ac56ff6905a2f9e6917b76634ef4b95c37dc0`。首次导表因本工作树缺打包运行时而退出1，复用已配置的本机工作簿依赖后在本树新目录重跑通过；失败日志`.local/git-doc-sync-workbook.log`、成功日志`.local/git-doc-sync-workbook-success.log`均留存。这些是SOP-024/008文档与Excel核对，不是c291被测树的产品重跑。
+
+完整治理首次执行454项中1个环境ERROR：独立树未安装锁定的Playwright依赖，原件`.local/git-doc-sync-governance.log`。在本树按`apps/desktop/package-lock.json`执行`npm ci --cache ../../.local/npm-cache`退出0，安装日志`.local/git-doc-sync-npm-ci.log`；随后相同完整治理命令退出0、454/454 PASS，原件`.local/git-doc-sync-governance-after-npm.log`。没有把首次ERROR改写为PASS，也没有据此宣称产品E2E通过。

@@ -6,7 +6,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "有效账号可登录；首次改密生效；默认自动登录经 /v1/me 恢复，关闭后仅内存会话且重启回登录；退出后的凭据不能继续访问",
+      "criterion": "有效账号可登录；首次改密生效；默认自动登录经 /v1/me 恢复，关闭后仅内存会话且重启回登录；退出后的凭据不能继续访问；登录与自动登录15秒超时可重试，迟到响应不覆盖新操作；异常凭据拒绝读取并提示重新登录",
       "data_requirements": [
         "account_roles",
         "forced_password_change",
@@ -18,7 +18,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "成员只能查看本人身份且不能调用管理员账号管理；停用账号不能登录，UI 显示对应错误",
+      "criterion": "成员只能查看本人身份且不能调用管理员账号管理；停用账号不能登录，UI 显示对应错误；账号忽略大小写且拒绝空白；账号或来源5分钟内连续5次失败后限流，窗口结束恢复",
       "data_requirements": [
         "account_roles",
         "forced_password_change",
@@ -42,7 +42,7 @@
       "feature_id": "TM-001",
       "requirement_id": "REQ-TM001",
       "spec": "docs/product/README.md",
-      "criterion": "最小更新器随首个产品版本交付；默认更新源为本机 http://127.0.0.1:49177/appcast.xml，管理页可配置并保留手动覆盖；仅回环允许 HTTP、非回环必须 HTTPS，非法 URL 被拒绝；无效签名拒绝并保留原版，有效包经 Sparkle 安装重启且自动登录经服务确认恢复账号状态",
+      "criterion": "最小更新器随首个产品版本交付；默认更新源为本机 http://127.0.0.1:49177/version.json，管理页可配置并保留手动覆盖；仅回环允许 HTTP、非回环必须 HTTPS，非法 URL 被拒绝；无效签名拒绝并保留原版，有效包经Ed25519及App签名校验、Electron原生更新器安装重启且自动登录经服务确认恢复账号状态；ZIP最大512 MiB、解压最大2 GiB，校验失败保留当前版本",
       "data_requirements": [
         "valid_eddsa",
         "invalid_eddsa",
@@ -76,16 +76,33 @@
       "feature_id": "TM-002",
       "requirement_id": "REQ-TM002",
       "spec": "docs/product/README.md",
-      "criterion": "真实系统授权完成，只读取选定目录；确认前不开始持续扫描；选择和同意状态可在重启后恢复",
-      "data_requirements": []
+      "criterion": "已验证账号通过 macOS 原生目录选择器选定来源；App 强制只读取所选目录；确认前不持续扫描，选择和两项意愿在同一身份重启后恢复",
+      "data_requirements": [
+        "native_directory_picker",
+        "selected_root_a_b",
+        "candidate_metadata",
+        "consent_state",
+        "restart_identity",
+        "access_audit",
+        "encrypted_private_locator",
+        "keychain_fault_injection",
+        "paged_candidate_scan"
+      ]
     },
     {
       "id": "AC-TM002-002",
       "feature_id": "TM-002",
       "requirement_id": "REQ-TM002",
       "spec": "docs/product/README.md",
-      "criterion": "App 不崩溃、不继续读取失效目录；重新授权后可读取目录并恢复授权状态",
-      "data_requirements": []
+      "criterion": "用户在 App 内撤销来源或所选目录失效后，App 不崩溃并停止读取；再次通过原生目录选择器选定并明确确认后恢复读取和来源状态",
+      "data_requirements": [
+        "selected_root_a_b",
+        "access_loss",
+        "reselect",
+        "access_audit",
+        "owner_cleanup",
+        "stale_selection_and_cursor"
+      ]
     },
     {
       "id": "AC-TM003-001",

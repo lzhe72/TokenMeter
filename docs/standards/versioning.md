@@ -26,8 +26,9 @@ v<MAJOR>.<MINOR>.<PATCH>-<YYYYMMDD>T<HHMMSS>Z
 | 项目 | 规范 |
 | --- | --- |
 | 功能分支 | `codex/<release_id>/<短功能名>` |
+| 可选整合镜像分支 | `codex/<首个release_id>/integration`，本轮固定一个 |
 | commit 标题 | `[<release_id>][TM-编号] 类型: 具体变更` |
-| Git annotated tag | 与 `release_id` 完全相同，通过门禁后才创建 |
+| Git annotated tag | 与 `release_id` 完全相同；本机门禁及归档通过、最终远端`master`来源读回后逐版创建 |
 | 本地发行目录 | 以 `release_id` 命名，不创建GitHub Release |
 | Changelog 二级标题 | `## <release_id>`，不使用模糊的“本次更新” |
 | 发布资产 | `<release_id>-<平台/组件>.<后缀>` |
@@ -35,7 +36,7 @@ v<MAJOR>.<MINOR>.<PATCH>-<YYYYMMDD>T<HHMMSS>Z
 
 Changelog 每个版本记录状态、关联功能、变更、兼容/迁移影响、测试计划和发布文档链接。计划中或阻断中的版本也可提前写 Changelog，但必须明确“未发布”，不能据此创建产品 tag。
 
-用户授权后，各需求分支先在本地提交并由总控集成到本地`master`；对最终整合候选完成适用检查与完整产品E2E后，由总控统一推送远端`master`并读回SHA。需求分支单独的测试或提交不能作为远端整合候选通过证据。源码提交、正式源码Tag与本地发行分别记录，正式发布继续要求有效通行证；步骤见[SOP-019](../../sop/SOP-019-git-release.md)。
+用户授权后，各需求在独立worktree按同名功能分支提交；干净且范围可核对的WIP/候选源码可普通快进推送远端同名分支并读回SHA/tree，标记`remote_code_saved=true`与WIP/候选，`release_eligible=false`。总控可选一个整合镜像保存本地祖先链。上述源码检查点不等于本机产品验收。总控仍按依赖顺序集成本地`master`，逐版冻结不可变里程碑SHA/tree；每版最终原包经完整产品E2E和本机门禁PASS后按SOP-020归档为本机稳定包，下一版从它真实升级。全部目标版本完成后才以一次受保护PR登记远端`master`并逐版建立Tag。四种状态——远端功能分支代码已保存、本机产品/发行、远端`master`登记、Tag——分别记录；步骤见[SOP-019](../../sop/SOP-019-git-release.md)。
 
 ## 每个编号对应的版本档案
 
@@ -81,9 +82,9 @@ git show <release_id>:CHANGELOG.md
 
 先提交全部源码、计划、测试、数据和 Changelog，形成干净候选提交；再构建、执行 E2E 和生成通行证。通行证引用被测提交，不回写到该提交中，避免“提交内的文件必须包含自己的 commit SHA”的循环依赖。
 
-通行证作为本机版本档案保存：release ID、internal profile、被测SHA/tree、原包摘要、用例/fixture/SOP摘要、实际平台、原始报告、运行身份、签名/Gatekeeper实际结果、通过时间与判定。只有机器复核通过才创建源码Tag并归档原件，不创建GitHub Release。
+通行证作为本机版本档案保存：release ID、internal profile、被测里程碑SHA/tree、原包摘要、用例/fixture/SOP摘要、实际平台、原始报告、运行身份、签名/Gatekeeper实际结果、通过时间与判定。机器复核通过后按SOP-020先归档原件并形成可供下一版升级的本机稳定包；正式源码Tag在全部目标版本完成、远端逐版来源读回后由总控登记，不创建GitHub Release。
 
-发布前以本地`master`最终整合提交为完整候选，核对真实HEAD、源码tree、同名Tag尚不存在，再执行最终包与本机发布门禁。只有PASS且远端保护实际可满足，才由总控按SOP-019推送或受控PR合并、读回远端SHA/tree，随后创建源码Tag；不能将“推送Tag后才测试”作为首次验证。GitHub Actions完整测试只在用户明确要求多环境时运行；2026-10-01已移除远端`master`旧Actions必需检查，当前仍强制PR及其他保护。不得用旧候选或手写状态创建Tag。
+发布前以本地`master`本版冻结的整合提交为完整候选，核对真实HEAD、源码tree、同名Tag尚不存在，再执行最终包与本机发布门禁。只有本版PASS并完成原包/通行证归档，才能称为本机正式稳定版并供下一版升级；远端源码登记与Tag此时可以待办。全部目标版本本机完成后，总控按SOP-019以保留各里程碑祖先的受控PR统一推送、逐版读回远端来源，再建立源码Tag；不能将“推送Tag后才测试”作为首次验证。GitHub Actions完整测试只在用户明确要求多环境时运行；2026-10-01已移除远端`master`旧Actions必需检查，当前仍强制PR及其他保护。不得用旧候选或手写状态创建Tag。
 
 失败或缺环境只产生 FAIL/BLOCKED 执行记录，不签发通行证。不得手写、复制旧版本或接受任意外部 PASS JSON；验证规则见 [发布门禁](release.md)。
 
