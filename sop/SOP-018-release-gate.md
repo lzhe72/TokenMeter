@@ -1,48 +1,52 @@
 # SOP-018 发布门禁
 
-**修订：** 7　**状态：** baselined　**适用：** all
+**修订：** 11　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
-以真实原生结果和可信构建来源自动判断候选是否可发布，只有通过后签发版本通行证。
+由本机程序独立核验原始证据，只有PASS签发通行证。
 
 ## 触发条件
 
-最终候选完成产品回归与安装包验证，准备按 `distribution_profile=internal/public` 正式分发。
+固定最终候选准备内部本地发行。
 
 ## 前置条件
 
-确定且干净的完整候选 SHA、明确的 distribution_profile、SOP-014/017 所需运行环境、profile 对应最终包与完整证据，以及受保护 CI、远端 required checks 和凭据隔离已真实配置。正式 Tag 不得作为启动本步骤的前置条件。
+013/014/017真实执行、干净候选和原始产物齐全。
 
 ## 输入
 
-release_id、distribution_profile、commit、客户端/服务端摘要、场景/fixture/平台清单、原生报告、签名/公证和版本档案。
+release_id、候选SHA/tree、包清单、全部细化 TC/变体与六组补充场景的原始结果、数据/SOP与实际平台。
 
 ## 执行步骤
 
-1. 核对版本范围、distribution_profile、目标及所有此前已交付功能、平台矩阵、Changelog、文档/数据/测试与同一候选一致；internal 与 public 的包和结果不能互换。
-2. internal执行[内部发布设计](../docs/releases/01-internal-v0.1.0.md)的受保护流程。在master全部必需检查通过后执行 `gh workflow run internal-release.yml --ref master -f candidate_sha=<已核实master完整SHA>`。preflight读取真实分支保护、环境master策略、同SHA必需检查并分配nonce；构建一次最终生产DMG；两平台从同一DMG安装各执行六例；父级 `scripts/internal_release_gate.py` 对照同次run/attempt与清单重解析全部原始xcresult，再签发通行证；发布job重新读回远端前提并上传原包。具体CLI参数固定在工作流，禁止手改报告或以本机输出替换CI产物。对于public，继续用默认分支 `.github/workflows/release-candidate.yml` 的完整candidate_sha，执行 `quality_gate.py release`，其公开签名/公证前提独立保留。两条路径都要求candidate_sha等于本次dispatch GITHUB_SHA和实际HEAD，正式Tag必须尚不存在。
-3. 真实执行器必须核对本次运行身份、原生报告来源与摘要、场景集合相等、零失败/跳过、产物签名及有效时限。
-4. 仅受保护 CI 完整 PASS 后生成 <release_id>.passport.json，绑定 distribution_profile、提交、构建物和执行证据，保存在候选源码之外。
-5. 候选先通过SOP-013治理/服务端/工具检查及两平台完整开发回归，再进入上述最终包链路。v0.1.0使用SQLite，真实生产库只做非破坏性就绪与备份检查，隔离同构副本验证初始化、恢复和真实业务；MySQL留迁移版本。内部最终包六例、两架构、清理、恢复、受保护身份或报告缺任一项即FAIL/BLOCKED，不创建Tag或通行证。公开版缺Developer ID/公证保持BLOCKED，不改变内部profile的已定边界。
-6. 保存失败与阻塞记录；任何代码、测试、数据、构建或发布配置变化均使旧候选证据失效，重新验证。
+1. 核对需求阶段建立的具体 TASK→TC 清单及每个 TC/变体的逐步记录，不能只数六个 E2E 场景组。细化用例、数据或记录绑定未就绪时保留发布阻断；未实现的逐 TC 校验不能声称已完成，须先按计划实现并负测门禁，再接受正式证据。
+
+2. 按本机设计核对目标六例、全部历史已交付场景和实际平台；默认本机macOS15 Intel，未测架构不得宣称通过。
+3. 已建立的`scripts/local_gate.py`必须独立读取原始Playwright结果/断言、fixture/DB验证、更新请求与签名记录，重算所有产物/证据摘要，不能仅信runner的PASS。检查trace可解析且含Playwright操作、截图为有效PNG；005实际备份和恢复SQLite须留本地原件，只读核对表/schema/初始管理员与零会话。解析使用同一已校验字节；包校验前后摘要一致，签发前再次核对源码SHA/tree/clean。当前精细TC/变体集合校验仍待实现和负测，不得据现有脚本签发正式通行证。
+4. 要求完整执行、零失败/跳过/重试取绿、证据时间和本次run/候选/原包相符、资源清理完成。缺环境、数据、程序、系统交互或原始证据均BLOCKED。
+5. 仅PASS时在候选源码之外生成<release_id>.passport.json，绑定被测SHA/tree、实际平台、原包摘要、用例/数据/SOP清单和本机执行身份。FAIL/BLOCKED不得签发。归档复核通行证自身release_eligible=true且phase=release，必需源码输入清单精确一致。
+6. 本机机器门禁替代旧受保护CI必需条件，这是用户明确流程变更；测试强度不降低。本地同uid可写记录不具有第三方不可篡改保证，保留原始日志与可复核摘要。
+7. 发行前重新核对原件一致，源码/依赖/产品变更必须新候选完整回归。Git合并仅tree完全相同可记录来源映射，不能给另一个包借报告。
 
 ## 输出
 
-经可信证据校验的 PASS 通行证，或明确 FAIL/BLOCKED 运行记录。
+PASS通行证或明确FAIL/BLOCKED，原始证据保持本地。
 
 ## 成功与失败判据
 
-只有对应 distribution_profile 的最终产品门禁 PASS 才具备该 profile 的发布资格；缺平台/权限/报告、伪造或过期证据、空用例、跳过、未解释不稳定结果一律不通过。
+完整独立核验通过才具有本机内部发行资格；文档/基础检查与旧候选PASS不替代。
 
 ## 异常恢复
 
-保存失败来源，返回对应环境、测试、实现或签名步骤修复；不删除阻断、不手写/拷贝通行证、不调整状态替代实际检查。
+保留失败回对应步骤，不手写通行证、不删阻断。
 
 ## 证据位置
 
-受保护 CI 原始产物、机器门禁报告及通行证；本机 .local 报告仅用于诊断，不能冒充正式发布证据。
+本机.local/gates运行目录及最终本地版本归档。
 
 ## 下一步
 
-有效 PASS 后进入 [SOP-019 Git 发布](SOP-019-git-release.md)；否则回对应修复步骤。
+019源码追踪与020本地归档。
+
+具体合同见[Electron本机设计](../docs/architecture/01-electron-local.md)。旧云端/Swift路径仅用于历史查询，不能覆盖用户本机优先规则。

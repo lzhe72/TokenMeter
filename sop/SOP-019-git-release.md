@@ -1,62 +1,49 @@
-# SOP-019 Git 发布
+# SOP-019 Git 版本追踪
 
-**修订：** 4　**状态：** baselined　**适用：** all
+**修订：** 6　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
-将源码与文档基线推送到授权远端；产品门禁通过后，将同一版本的通行证和已验证产物固化为正式 Git 发布。先按本次任务选择对应分支。
+由项目总控把各需求分支先集成到本地 `master`，对最终整合树执行适用门禁，再统一推送远端 `master`；保存源码、版本与本地发行的关联。安装包及原始证据不上传 Git。
 
 ## 触发条件
 
-用户授权推送源码，或候选取得有效通行证且已有正式发布授权。
+需求分支达到本地集成条件，或已通过正式本机发布门禁、需要建立源码 Tag。PR 只在远端策略要求时作为受控替代路径，不再是默认集成步骤。
 
 ## 前置条件
 
-源码推送：明确目标远端、分支、版本范围和授权，文档及适用工具检查通过，保留实际产品测试状态。正式 Tag 创建前还须 SOP-018 针对确定候选 SHA 完整 PASS 并生成有效通行证；受保护发布任务和远端权限已配置，预期 tag/Release 不存在且候选提交/产物未改变。不得先建 Tag 以触发首次发布验证。
+用户已授权总控自主整合、推送和适用门禁后的发行。分支具有对应 release_id、文档基线、固定测试程序和适用检查结果；本地与远端 `master` 的实际状态可核对。产品迭代/修复在推送前须有**本地 master 最终整合提交**对应的完整产品 E2E；正式 Tag 还须 SOP-017/018 的最终包和 PASS 通行证。未提交的用户改动不得覆盖或带入整合。
 
 ## 输入
 
-release_id、源码提交、版本 manifest、Changelog、实际检查证据及目标 Git 远端；正式发布另需通行证和最终资产。
+需求分支及其提交、版本档案与 Changelog、`origin/master`、最终整合候选 SHA/tree、适用检查、原始 E2E/包证据和通行证摘要。
 
 ## 执行步骤
 
-### 源码基线推送
-
-1. 用 `git status --short --branch`、`git remote -v`、`git ls-remote --heads origin` 核对改动、远端和目标分支；其他远端使用已确认名称。提交前同步版本说明与执行记录，按版本规范保留历史和提交标题。
-2. 执行 `python3 scripts/check_docs.py --mode baseline`、`python3 scripts/quality_gate.py check` 及适用回归。基础规范版本允许上传源码和文档，产品 E2E 的 BLOCKED 必须如实保留；源码上传不触发正式发布步骤。
-3. 确认提交范围后，按授权目标执行 `git push --set-upstream origin HEAD`，默认推送当前版本分支。不得隐式强推、改写远端历史或改推主分支；冲突先检查原因。
-4. 用 `git rev-parse HEAD` 和 `git ls-remote --heads origin <实际分支名>` 核对完整 SHA；保存命令、退出码、远端引用与结果到本轮证据。仅推送源码时转 SOP-022，不创建 Tag/Release 或通行证。
-
-### PR 创建与合并
-
-用户已授权后续由 Codex 自行创建 PR 并在适用检查通过后合并。源码推送后先用 `gh pr list --head <实际分支>` 查重；不存在时用 `gh pr create --base <已核实默认分支> --head <实际分支> --title <版本标题> --body-file <说明文件>` 创建。说明写最终范围、实际测试、阻塞与版本档案；创建后将 PR 链接附加到当前任务。
-
-用 `gh pr view <PR> --json headRefOid,mergeable,statusCheckRollup` 和 `gh pr checks <PR>` 核对实际候选及检查，失败先读取日志并按 SOP-015 修复。产品功能 PR 必须有完整本轮与历史 E2E，通过后以 `gh pr merge <PR> --merge --match-head-commit <已验证SHA>` 合并；不得使用管理员绕过、删除失败检查或把产品改成基础规范逃避。合并后核对 PR merged 状态、merge SHA 与远端主分支，再快进同步本地；保留失败证据。缺环境时可以创建带明确阻塞的 PR，不能宣称功能验收完成或强行合并。
-
-### 正式产品发布步骤
-
-1. 执行 python3 scripts/release_registry.py show 核对当前档案；如发布其他版本，使用 --release-id 指定实际编号，并核对返回编号。
-2. 受保护发布任务消费候选 CI 生成的原通行证，重新核验受信运行身份、来源、签名产物摘要、对应 commit 和精确 Changelog 标题。若后续配置 Tag 触发，仅用于核对已经通过的发布，不补做或替代创建 Tag 前的候选门禁。
-3. 仅创建与 release_id 完全相同的 annotated tag，指向通过验证的提交；创建同名 Git Release 并附原包、原报告和原通行证。
-4. 检查远端 tag 指向、Release 名称、资产摘要与查询链；不能成功后再替换包或移动 tag。
-5. 实际结果写入不可覆盖的发布记录，源文档不得为写入自身 SHA 而反复提交。内部版由 `internal-release.yml` 的publish job调用 `scripts/internal_publish.py publish` 消费本次通行证，重新读回远端必需检查、依赖job与环境策略后创建annotated Tag和同名Release，并核对GitHub资产SHA256；基础建设版无产品PASS，不创建产品tag。
+1. 由总控运行 `git status --short --branch`、`git remote -v`、`git ls-remote --heads origin master`，核对当前分支、远端及未提交改动。保存各需求分支提交和 release_id；只将源码、文档、配置、测试及数据程序纳入 Git。DMG/ZIP、数据库、密钥、`node_modules`、原始报告和通行证保留本机忽略目录。
+2. 每个需求分支先按其任务和既定 TC 完成适用基础检查及开发阶段回归，记录失败与阻断。总控先以 `git fetch origin master` 获取远端状态，在干净检出中执行 `git switch master`、`git merge --ff-only origin/master`；若远端与本地已分叉则停止并查明差异，不覆盖本地独有提交、用户改动或强制重置。按既定顺序逐支执行 `git merge --no-ff <需求分支>`，遇冲突按原需求/用例修正并保存整合记录。需求分支不各自推送或合并远端 `master`。
+3. 最后一支整合后记录 `git rev-parse master`、`git rev-parse 'master^{tree}'`、父提交和工作树状态。对这个**实际本地 master 候选**执行 SOP-008/013/014 的适用检查与本次及此前已交付功能的完整 E2E；正式发行继续 SOP-017/018，从同一最终 DMG 安装验证。分支单独 PASS、旧候选报告、PR 状态或仅 tree 相似均不能替代整合后完整验收。任何整合、冲突修复、源码/依赖/包输入改变均生成新候选并重新核验。
+4. 只有整合候选的适用门禁 PASS、工作树与候选一致时，总控再次核对 `origin/master` 未前进，并以普通快进推送 `git push origin master:master`；禁止强推、删分支保护或手写 PASS。推送后用 `git ls-remote --heads origin master` 核对远端 SHA 等于本地 `master`。远端前进、拒绝推送或强制 PR/状态检查时记录 BLOCKED，先按现有保护规则解决冲突并对新的最终整合树重跑门禁，不绕过保护。
+5. 默认不触发 GitHub Actions 完整测试；仅用户明确要求多环境时按已定矩阵运行。若远端规则必须经 PR，总控使用同一整合候选走受控 PR，核对远端实际合并提交与被测候选的严格 tree 映射；有内容差异或无法证明一致时重新执行完整门禁。记录不同的远端合并 SHA，不能把它写成原被测 SHA；不要让各需求分支绕开本地整合直接在远端分别合并。
+6. 正式发布仅在本机 SOP-018 PASS、通行证与本地 `master` 最终候选/原包一致且远端已读回后，创建同 release_id 的 annotated 源码 Tag，绑定被测提交或第5步已证明严格 tree 相同的远端合并提交，并核对远端 Tag；不创建 GitHub Release，不上传安装包或测试原件。首次尚未发行可继续同版本修候选，已正式发行的 Tag 不移动。
+7. 在本机 `.local/git-sync/`、版本 06 和本地发行记录保存需求分支→本地合并 SHA/tree→门禁 run/package/passport→远端 `master` SHA/Tag 的映射及实际命令、退出码；未执行的步骤只记待办，不写 PASS。
 
 ## 输出
 
-源码推送产出已核对 SHA 的远端分支；正式发布产出不可变 tag、同名 Release、已验证资产/报告/通行证和可查询关联。
+本地 `master` 整合与门禁记录、远端 `master` 读回、必要时的源码 Tag 和可查询的本地发行索引。
 
 ## 成功与失败判据
 
-源码推送成功须远端目标分支等于本地提交且未改写未授权历史。正式发布须所有标识、commit、资产与通行证一致且远端操作成功；源码推送成功、单有 Git tag 或同名 JSON 均不构成产品发布通过证明。
+成功要求所有需求分支按顺序纳入最终本地候选，适用检查和产品完整 E2E 在该候选上真实 PASS；默认快进推送时远端 `master` 读回 SHA 与本地一致，远端强制PR时须有第5步的严格 tree 映射及远端提交记录。正式 Tag 另须最终包门禁和通行证 PASS。任一 FAIL/BLOCKED、无法解释的远端差异、未清理工作树、缺证据或推送拒绝均不得记完成。
 
 ## 异常恢复
 
-部分失败时停止后续部署，保留已发生操作的事实并核验远端状态；不盲目重建已存在 tag/Release，不改写历史来掩盖失败。
+保留原始失败和已发生的远端事实；不强推、改写历史、移动 Tag 或修改门禁结果。重新核对远端与本地变更，形成新的整合候选并重跑受影响的完整产品门禁；保护策略不允许直推时保持 BLOCKED，按受控规则处理，不自行降低要求。
 
 ## 证据位置
 
-源码推送保存本轮 `.local/git-sync/` 命令日志、远端引用/提交及工作记录；正式发布保存受保护任务日志、远端 tag/Release URL、资产摘要和版本查询结果。失败同样保留，推送后证据引用已有提交，避免将自身 SHA 回写成循环提交。
+本机 `.local/git-sync/`、`releases/<release_id>/06-iteration-record.md`、原始测试/门禁目录和本地发行档案。
 
 ## 下一步
 
-正式发布后执行 [SOP-020 部署分发](SOP-020-deployment.md)；源码基线推送或只需归档时执行 [SOP-022](SOP-022-archive-handoff.md)。
+源码整合后走 [SOP-022](SOP-022-archive-handoff.md)；正式发行继续 [SOP-020](SOP-020-deployment.md)。具体产品与候选合同见[Electron本机设计](../docs/architecture/01-electron-local.md)。

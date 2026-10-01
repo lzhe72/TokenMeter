@@ -1,54 +1,57 @@
 # SOP-014 自动 E2E
 
-**修订：** 16　**状态：** baselined　**适用：** all
+**修订：** 22　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
-对每次产品迭代、补丁和测试版自动执行目标及历史功能的真实端到端回归。
+自动执行全部目标及已交付功能，验证真实桌面App端到端行为。
 
 ## 触发条件
 
-任何产品候选需要验收，或修复后需要确认目标及既有能力仍正确。
+每次迭代、修复及发布候选。
 
 ## 前置条件
 
-SOP-009–013 就绪；具备实际 App、服务、数据库、原生 UI runner、数据与完整场景集合。当前缺这些条件时保持 BLOCKED。
+009–013、本机GUI、Electron/Playwright及真实服务/隔离DB。
 
 ## 输入
 
-候选提交/产物、release_id、场景与 fixture 清单、支持矩阵和 [执行规范](../docs/testing/execution.md)。
+固定候选、tests/test_cases.json本轮全部用例及已声明参数变体、数据/SQL、独立预期、包与执行目录；六组聚合场景作为补充证据，不能代替逐TC结果。
 
 ## 执行步骤
 
-1. 固定应执行集合和场景/fixture 摘要，创建唯一 run_id 与隔离环境。
-2. 运行 python3 scripts/quality_gate.py iteration；它先检查元数据再调用产品入口，不接收任意外部 PASS JSON。
-3. 真实 runner 必须自动构建/初始化账号、驱动原生 UI 和系统交互、贯通真实服务/数据库并断言用户结果与关键持久化。
-4. 收集原生测试包、服务日志、截图附件、命令/退出码及实际用例集合；逐项比较预期集合、平台和实际结果。
-5. TM-001 入口由 `scripts/e2e.py` 调用 `scripts/native_e2e.py`：在现有两平台 CI 检查完整 Xcode 和已登录桌面，逐例建立隔离 SQLite，启动真实服务，构建候选，并用 `xcodebuild test-without-building` 执行清单的 `native_test`。每例保存 `native.xcresult`、原生命令日志、候选包和 fixture 摘要；当前六例都需要执行。001–003使用临时回归账号；005在独立临时根验证生产首建程序，但绝不访问用户实际生产库；006在执行 App 的 Mac 上独占 API 默认端口49176，再由同机第二隔离服务验证可配置 API 地址与会话隔离。
+1. 测试必须是仓库中固化、可按TC编号重复执行的代码。输入、动作、预期和断言在运行前确定；AI只能调用这些代码并分析原始结果，不能以临场操作、看图判断或手填结果代替测试。缺自动化绑定或缺可执行判据为BLOCKED。 运行前冻结测试代码并记录摘要；运行中改变断言、数据或代码使本批次证据失效，修复后必须创建新run。
 
-   004 的真实 App 与更新服务必须在同一台 Mac：先独占该机默认更新端口49177，核对 App 设置管理页显示 `http://127.0.0.1:49177/appcast.xml`；第006例另在配置页保存合法合成更新地址、重启再读、恢复默认以删除显式覆盖，并拒绝非法 URL；该场景不请求合成地址，004只使用固定49177默认源升级，公钥不随 URL 改变。该页保留登录页 `auth.server`，配置项的稳定 UI ID 见本版设计；已登录或待撤销会话时不能改 API，更新执行时不能改 feed。URL 验证拒绝 userinfo、query、fragment、空host、非法端口及非回环 HTTP；允许合规非回环 HTTPS，但本轮 fixture 不连接公网。对选中的 appcast 下载地址与重定向执行同一安全边界负测，不能用关闭 ATS 取绿。
+2. 先确定运行原因和 TC 集合：开发定位只执行与具体改动/缺陷有关的用例，避免相同条件下无依据反复全量运行；正式迭代/发布候选仍完整回归。按 TC/变体及步骤逐项记录实际输入、动作、预期、实测、证据、失败与清理；聚合场景通过不能代替缺失子用例。记录合同见[测试规范](../docs/standards/test-cases.md)。
 
-   在本例隔离根只创建一组活跃签名身份与 `UpdateSource`，候选/高版本使用同一专用凭据目录与 EdDSA 公钥；测试私钥只在隔离 fixture 内。准备时先用 `/healthz` 的一次性 source nonce 验证本次回环服务的状态、来源及进程归属；发布fixture后由真实App及请求核验程序验证 `/appcast.xml` 与包响应，保持同一源至真实 App 无效签名拒绝、有效包安装重启、构建号变化、更新请求校验与 `/v1/me` 无交互恢复完成，然后统一 `finally` 清理。在单一49177源上，004先经鉴权 `control/forbidden` 发布 `http://example.invalid/update.zip` enclosure，App选中包URL校验须以 `update_source_rejected` 在传输前拒绝且仍为build100；再经 `control/redirect` 发布本机 `/redirect.zip`，其302指向该非回环HTTP URL，必须由ATS返回 `NSURLErrorDomain -1022`（`update_transport_rejected`）且仍为build100，DNS失败不算命中；随后原 `control/invalid` 恢复完整坏签名包并确认拒绝/build100，最后原 `control/valid` 真实升级至build101并经 `/v1/me` 验证。三条负测控制URL由runner注入 `TM_TEST_UPDATE_{FORBIDDEN,REDIRECT,INVALID}_CONTROL_URL`，控制鉴权与签名key不变。完整004仍是一个原生用例，600秒上限不延长；任一阶段未执行或错误类型不符即不能PASS。准备快照 READY 只属于同一候选、run、进程和端口，不算产品004 PASS。端口被占或源不明时 BLOCKED；失败时不跳过安装、不自动重试产品用例、不改签名或结果判据。不得访问用户 `/Applications/TokenMeter.app`、生产数据库或凭据。
-6. 第004例的 `environment.json` 是不可变准备快照：`snapshot_stage=preparation`、`cleanup_owner=parent_run_result`；此时资源仍活跃，`cleanup_completed=false`，最终清理结果以父运行报告为准。父验证器必须重新读取本例环境文件并核对受限相对路径、SHA256、候选提交、干净状态、READY、零产品用例、非发布资格与快照标记；缺失、篡改或混用候选均拒绝。该检查不替代原始原生结果。父门禁为本次子进程分配唯一 nonce；子进程须先完成本例所有 `xcresulttool` 解析与附件导出，随后计算完整 `native.xcresult` bundle 摘要并返回；父门禁在子进程返回后先逐文件核算整个 bundle，再重新用 `xcresulttool` 解析原始结果，对照提交、清单摘要、原生测试 ID、数量、零失败/跳过及清理结果；解析完成后对同一 bundle 再次逐文件核算并与子进程摘要比较。两次核算均不得排除 SQLite 文件，任一次不符即 FAIL。治理负测须使父级解析过程修改 bundle 并验证拒绝，不能只覆盖解析前改动。只返回退出0或写 PASS JSON 均不能放行。每个 CI 平台分别出结果，开发矩阵全部通过才可验收。
-7. 本机缺 Xcode 时记录本机 XCUITest 无法执行；现有迭代门禁使用版本计划指定的 GitHub 托管 `macos-15` 与 `macos-15-intel`，每台 runner 都在自己机器上运行 App、API、SQLite 和回环更新源，分别执行完整六例并用原始 `xcresult` 核对同一候选。两台 CI 的 `127.0.0.1` 均不指向用户此 Mac。若用户此 Mac 另做体验部署，先核对旧安装包与新候选的来源、版本、签名、服务和数据库；本机只有 Command Line Tools、AX 权限未授且无本机自动执行器时，不将其记录为已通过 E2E，也不因此抹去有效 CI 结果。独立 `environment_probe_only` 若继续存在，只能产生零产品用例的诊断，不得用于004、PR合并或发布；其公网 Quick Tunnel 旧实现不可作为本轮新的准备结果。内部包级门禁仍须最终 DMG 安装升级与完整支持矩阵，公开 profile 另需 Developer ID/公证；迭代 PASS 不授予发布资格。
-8. 保存失败证据；修复后新建运行完整回归，不通过重复重试覆盖失败。
+3. 先读Electron本机设计与详细用例；默认只在本机执行，Actions仅明确多环境要求后启用。新客户端必须有新证据，不能借旧Swift/CI PASS。
+4. 本轮测试计划程序为scripts/granular_e2e.py逐TC及scripts/local_e2e.py六组补充回归、apps/desktop/e2e；未实现/绑定时BLOCKED。建立后由runner检查候选SHA、包/DMG摘要、平台和归属，在全新目录执行。
+5. 正式包模式从最终DMG安装并逐例用Playwright executablePath启动该App；API/SQLite、主进程/IPC均为真实链路。每例新profile与测试库，动态独占端口经真实设置UI选择。
+6. 006先核对内置默认127.0.0.1:49176与更新源，再UI切两套动态服务验证实际登录、重启和origin隔离，不能为了默认端口使用用户生产服务。
+7. 004启动前检查Squirrel固定用户缓存和launchd job；两者均不存在才创建本次owner标记并执行，已有未知状态返回BLOCKED，不能覆盖。结束时核对ShipIt目标属于本次安装，再清理本次状态。只有启动前不存在、当前uid且内容为空、创建时间不早于本次owner的ByHost偏好文件，才允许随本次状态清理，先保存文件摘要/副本。含内容、归属不明或旧偏好保持BLOCKED。历史失败残留另存恢复记录，不能改写原失败。先证明账号验证后自动发现当前204源，再执行同一更新源四阶段：非法下载URL在传输前拒绝，非回环HTTP重定向在跟随前拒绝，完整坏签名包验签失败保持原版，正确包经成熟原生更新器安装并自主重启到101。Electron不要求旧Swift ATS错误码-1022；必须用独立请求日志证明拒绝边界。
+8. 升级后只连接已自行启动的新PID，不调用launch高版；核对实际包路径/版本/hash、同一runtime侧文件与profile、/v1/me自动登录、配置与token保留。
+9. 保存原始JSON/trace/截图、fixture与SQL摘要、服务审计/DB验证、更新请求和清理；关闭本次进程并验证端口/镜像/profile清理。全部必需TC及变体零跳过、零重试、零失败且证据齐全才能交父门禁；六组聚合场景不能覆盖缺失细例。
+10. 精细用例执行后，调用`python3 scripts/audit_granular_evidence.py --report <本批次result.json> --output <新的audit.json>`检查固定规则要求的旁证。审计绑定原报告和代码摘要，不改原件；缺断言/旁证为BLOCKED，原FAIL不得升级为PASS。测试准备缺陷与产品断言失败分别记录。修复测试准备后可按步骤2作新run的单例验证，不能用新结果覆盖旧失败或声称完整发布回归通过。
+11. `scripts/local_e2e.py`在结果落盘后调用`test_result_export.py`，从本批次原始结果生成独立 `TokenMeter测试结果-<run_id>.xlsx`，包括FAIL/BLOCKED。精细结果使用`granular_test_result.py`，传入同批次原报告、辅助报告和独立审计。运行前按[总表规范](../docs/standards/project-workbook.md)准备Codex捆绑Node与artifact-tool。结果保存在`.local/test-results/<run_id>/`；同源重复导出只验证，禁止覆盖历史。逐步实测、失败和证据放在该文件；执行和门禁结束后，根项目总表更新批次摘要与入口。导出收据为独立`excel-export.json`，不改产品结果；生成失败保留原始结论并非零返回，不能声称本步完成。
 
 ## 输出
 
-真实原生结果和机器 PASS/FAIL/BLOCKED，或当前诚实的阻断报告。
+完整原始产品结果与清理、独立批次结果Excel，或真实FAIL/BLOCKED及缺失项。
 
 ## 成功与失败判据
 
-只有完整目标及历史回归全部执行、零失败/跳过/xfail、平台齐全、证据与候选一致才可能 PASS；缺环境/报告/执行器为 BLOCKED，断言错误为 FAIL。
+应测集合精确相等、每例实际成功且证据一致；API/截图/构建成功不等于E2E，零例/跳过/假报告/重试取绿无效。
 
 ## 异常恢复
 
-按原始数据复现并由 SOP-015 修复；环境缺失返回 SOP-009。不稳定结果查明原因前不得隔离用例或人工放行。
+按015保留首个失败、复现、修复后完整回归；不接管用户App/库/端口。
 
 ## 证据位置
 
-本次 .local/e2e/<run-id>/result.json 及实际原生附件；对外发布证据由受保护 CI 归档并校验来源。
+本机0700原始执行目录，按run_id关联候选和版本06。
 
 ## 下一步
 
-失败执行 [SOP-015](SOP-015-bugfix.md)；通过且需发布进入 [SOP-017](SOP-017-package-validation.md) 和 [SOP-018](SOP-018-release-gate.md)。
+失败015；通过017/018。
+
+具体合同见[Electron本机设计](../docs/architecture/01-electron-local.md)。旧云端/Swift路径仅用于历史查询，不能覆盖用户本机优先规则。

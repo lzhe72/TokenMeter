@@ -1,6 +1,6 @@
 # SOP-024 文档变更
 
-**修订：** 3　**状态：** baselined　**适用：** all
+**修订：** 5　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -26,6 +26,10 @@
 4. 在 docs/catalog.json 登记稳定 doc_id、path、type、status、适用/基线、inputs、updated_at 和实际 SOP 文件；同步导航和入站链接。
 5. 编制中执行 `python3 scripts/check_docs.py --mode structure`，检查已登记骨架、文件、引用和版本合同；允许未完成文档保留 draft。结合语义核对修正文档，保存结果后返回原步骤继续编制，不触发完整基线或质量门禁。SOP-001–007 全部完成或已有基线的修订整合完毕后，再由 SOP-008 执行 `--mode baseline` 与 `python3 scripts/quality_gate.py check`。
 6. 已发布历史以旧 tag 留存，纠错记录到新版本；源文档在候选提交前完成，运行证据/通行证在其后生成，不预填通过。
+
+## 项目总表同步
+
+维护根目录TokenMeter项目总表.xlsx时，按[总表规范](../docs/standards/project-workbook.md)汇总真实内容与编号。用例一例一行，总表的测试批次只保留摘要及独立结果Excel入口。每次实际执行按run_id生成独立结果Excel，包含失败/阻塞，历史文件不覆盖。源需求/任务/用例/批次/版本改变时同步总表，回读各Sheet与导出文件后随Git提交；详细执行结果留本机。只有生成和核对成功才记录“已更新”；用户已要求本地Excel，不继续操作腾讯在线表格。
 
 ## 输出
 

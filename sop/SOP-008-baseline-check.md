@@ -1,6 +1,6 @@
 # SOP-008 基线检查
 
-**修订：** 3　**状态：** baselined　**适用：** all
+**修订：** 4　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -20,11 +20,13 @@ docs/catalog.json、当前 manifest、需求/拆解/设计/开发/测试/发布�
 
 ## 执行步骤
 
-1. 对照索引确认必需文档、十章节 SOP、release_id、基线和引用一致。检查完整需求→任务→测试计划追踪；待在 SOP-009–011 建立的程序登记 `program_bindings_status=planned`，可用 `test_programs=[]`、`test_data_program=null`，但 `test_sop` 必须真实，已填程序路径必须存在，补齐任务可追踪。不能要求计划中的工程与测试预先实现，也不能虚构程序绑定通过本步骤。
-2. 执行 `python3 scripts/check_docs.py --mode baseline`，保存完整结果并逐项修正错误。不带参数也执行严格基线检查；`--mode structure` 的成功不能替代本步骤。
-3. 执行 python3 scripts/quality_gate.py check，核对功能、数据和实际测试绑定的状态规则。
-4. 做内容核对：每个目标验收条件是否有任务与场景；需求定义表、`tests/acceptance.json` 和用例矩阵是否双向齐全；所需数据能力是否与已提供能力一致或有明确准备任务。检查关键决定、未来依赖及范围，不允许将目标排除来过门禁。
-5. 记录基线实际检查结论；文档 baselined 只表示可执行设计就绪，不改变产品运行结果。
+1. 检查每个功能点→具体 TASK→TC 的双向关系；每条用例须有具体输入、步骤、预期、DB操作、类型、数据/重置方案与结果入口。只有模块级任务或汇总 E2E ID 不算齐全。关键预期仍为 baseline_pending 时记录 draft，并阻断依赖开发；未实现的自动化允许如实为空，安排后续任务，不预填 PASS。
+
+2. 对照索引确认必需文档、十章节 SOP、release_id、基线和引用一致。检查完整需求→任务→测试计划追踪；待在 SOP-009–011 建立的程序登记 `program_bindings_status=planned`，可用 `test_programs=[]`、`test_data_program=null`，但 `test_sop` 必须真实，已填程序路径必须存在，补齐任务可追踪。不能要求计划中的工程与测试预先实现，也不能虚构程序绑定通过本步骤。
+3. 执行 `python3 scripts/check_docs.py --mode baseline`，保存完整结果并逐项修正错误。不带参数也执行严格基线检查；`--mode structure` 的成功不能替代本步骤。
+4. 执行 python3 scripts/quality_gate.py check，核对功能、数据和实际测试绑定的状态规则。
+5. 做内容核对：每个目标验收条件是否有任务与场景；需求定义表、`tests/acceptance.json` 和用例矩阵是否双向齐全；所需数据能力是否与已提供能力一致或有明确准备任务。检查关键决定、未来依赖及范围，不允许将目标排除来过门禁。
+6. 记录基线实际检查结论；文档 baselined 只表示可执行设计就绪，不改变产品运行结果。
 
 ## 输出
 
