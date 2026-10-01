@@ -4,7 +4,7 @@ export type ClaudeDiagnosticCode =
   | 'invalid_json' | 'incomplete_tail' | 'unsupported_version' | 'missing_usage'
   | 'invalid_usage' | 'ambiguous_zero' | 'identity_conflict'
   | 'unverified_inheritance' | 'unverified_parent' | 'invalid_timestamp' | 'invalid_structure'
-  | 'invalid_utf8' | 'cursor_reset' | 'read_limit';
+  | 'invalid_utf8' | 'cursor_reset' | 'read_limit' | 'invalid_model_id';
 
 export interface ClaudeDiagnostic { code: ClaudeDiagnosticCode; count: number }
 
@@ -109,12 +109,17 @@ export function collectClaudeJsonl(files: readonly string[]): ClaudeCollection {
       if (usage.input_tokens === 0 && usage.output_tokens === 0) {
         diagnose('ambiguous_zero'); continue;
       }
+      const rawModel = row.message.model;
+      const model = typeof rawModel === 'string'
+        && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(rawModel) ? rawModel : null;
+      if (rawModel !== undefined && rawModel !== null && model === null)
+        diagnose('invalid_model_id');
       const candidate: ClaudeCall = {
         canonicalCallId: row.message.id, rowUuid: row.uuid, sessionId: row.sessionId,
         agentId: nonempty(row.agentId) ? row.agentId : null,
         isSidechain: row.isSidechain === true, attribution: 'main',
         occurredAtUtc: row.timestamp,
-        model: nonempty(row.message.model) ? row.message.model : null,
+        model,
         inputTokens: usage.input_tokens, outputTokens: usage.output_tokens,
         cachedReadInputTokens: cachedRead, cachedWriteInputTokens: cachedWrite,
         sourceVersion: '2.1.126',

@@ -12,6 +12,20 @@ export interface ConfirmedClaudeCandidate {
   fileIdentityDigest: string;
 }
 
+/** Keyed root scope; no path or raw source digest is stored. */
+export function claudeRootKey(sourceId: string, secret: Buffer): string {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuid.test(sourceId) || !Buffer.isBuffer(secret) || secret.length !== 32)
+    throw new Error('claude_source_invalid');
+  const mac = createHmac('sha256', secret);
+  for (const bytes of [Buffer.from('claude-root-v1', 'utf8'), Buffer.from(sourceId, 'utf8')]) {
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(bytes.length);
+    mac.update(length).update(bytes);
+  }
+  return mac.digest('hex');
+}
+
 /** Adapts a confirmed TM-002 scan token; no renderer path or direct filesystem open. */
 export function claudeCandidateFromSource(
   access: ConfirmedClaudeSourceAccess, scanId: string, sourceId: string,

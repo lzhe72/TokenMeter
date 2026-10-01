@@ -25,6 +25,8 @@ export interface ClaudePreparedBatch {
   events: ClaudeUsageProposal[];
   diagnostics: ClaudeDiagnostic[];
   cursors: ClaudeFileCursor[];
+  files: Array<{sourceKey: string; fileIdentity: string; events: ClaudeUsageProposal[];
+    diagnostics: ClaudeDiagnostic[]; cursor: ClaudeFileCursor}>;
   coverage: {scanIncomplete: boolean; candidateCount: number};
 }
 
@@ -52,6 +54,9 @@ export function prepareClaudeBatch(plan: ClaudeScanPlan): ClaudePreparedBatch {
     events: plan.calls.map(claudeUsageProposal),
     diagnostics: plan.diagnostics,
     cursors: plan.cursors,
+    files: plan.files.map(file => ({sourceKey: file.sourceKey, fileIdentity: file.fileIdentity,
+      events: file.calls.map(claudeUsageProposal), diagnostics: file.diagnostics,
+      cursor: file.cursor})),
     coverage: {scanIncomplete: plan.scanIncomplete, candidateCount: plan.candidateCount},
   };
 }

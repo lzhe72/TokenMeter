@@ -22,6 +22,8 @@ export interface ClaudeScanPlan {
   calls: ClaudeCall[];
   diagnostics: ClaudeDiagnostic[];
   cursors: ClaudeFileCursor[];
+  files: Array<{sourceKey: string; fileIdentity: string; calls: ClaudeCall[];
+    diagnostics: ClaudeDiagnostic[]; cursor: ClaudeFileCursor}>;
   scanIncomplete: boolean;
   candidateCount: number;
 }
@@ -34,7 +36,9 @@ async function withClaudeScanLease<T>(
 ): Promise<T> {
   const calls: ClaudeCall[] = [];
   const diagnostics: ClaudeDiagnostic[] = [];
+  const files: ClaudeScanPlan['files'] = [];
   const byCallId = new Map<string, ClaudeCall>();
+  const diagnosticOwner = new Map<string, ClaudeDiagnostic[]>();
   const agentParents = new Map<string, Set<string>>();
   const cursors: ClaudeFileCursor[] = [];
   const seen = new Set<string>();
@@ -52,6 +56,12 @@ async function withClaudeScanLease<T>(
         if (seen.has(readable.fileIdentity)) throw new Error('claude_scan_duplicate_candidate');
         seen.add(readable.fileIdentity);
         candidateCount++;
+        const fileCalls: ClaudeCall[] = [];
+        const fileDiagnostics: ClaudeDiagnostic[] = [];
+        const diagnose = (item: ClaudeDiagnostic): void => {
+          diagnostics.push(item);
+          fileDiagnostics.push(item);
+        };
         let cursor = await loadCursor(readable.fileIdentity);
         for (let pass = 0; pass < 1024; pass++) {
           const oldOffset = cursor?.committedByteOffset ?? 0;
@@ -64,31 +74,35 @@ async function withClaudeScanLease<T>(
           for (const call of read.calls) {
             const prior = byCallId.get(call.canonicalCallId);
             if (prior) {
-              if (!sameClaudeUsage(prior, call)) diagnostics.push({code: 'identity_conflict', count: 1});
+              if (!sameClaudeUsage(prior, call)) diagnose({code: 'identity_conflict', count: 1});
               else if (prior.rowUuid !== call.rowUuid &&
                   (prior.sessionId !== call.sessionId || prior.agentId !== call.agentId))
-                diagnostics.push({code: 'unverified_inheritance', count: 1});
+                diagnose({code: 'unverified_inheritance', count: 1});
             } else {
               byCallId.set(call.canonicalCallId, call);
               calls.push(call);
+              fileCalls.push(call);
+              diagnosticOwner.set(call.canonicalCallId, fileDiagnostics);
             }
           }
-          diagnostics.push(...read.diagnostics.filter(item => item.code !== 'read_limit' &&
-            item.code !== 'incomplete_tail' && item.code !== 'unverified_parent'));
+          for (const item of read.diagnostics.filter(item => item.code !== 'read_limit' &&
+            item.code !== 'incomplete_tail' && item.code !== 'unverified_parent')) diagnose(item);
           cursor = read.cursor;
           if (!read.scanIncomplete) break;
           if (read.cursor.committedByteOffset <= oldOffset ||
               !read.diagnostics.some(item => item.code === 'read_limit')) {
             scanIncomplete = true;
             if (read.diagnostics.some(item => item.code === 'read_limit'))
-              diagnostics.push({code: 'read_limit', count: 1});
-            diagnostics.push({code: 'incomplete_tail', count: 1});
+              diagnose({code: 'read_limit', count: 1});
+            diagnose({code: 'incomplete_tail', count: 1});
             break;
           }
           if (pass === 1023) throw new Error('claude_scan_limit');
         }
         if (!cursor) throw new Error('claude_scan_failed');
         cursors.push(cursor);
+        files.push({sourceKey: readable.fileIdentity, fileIdentity: readable.fileIdentity,
+          calls: fileCalls, diagnostics: fileDiagnostics, cursor});
       }
       if (page.complete) {
         for (const call of calls) {
@@ -97,10 +111,13 @@ async function withClaudeScanLease<T>(
           if (sessions?.size === 1 && sessions.has(call.sessionId)) call.attribution = 'parent_verified';
           else {
             call.attribution = 'unverified_parent';
-            diagnostics.push({code: 'unverified_parent', count: 1});
+            const item: ClaudeDiagnostic = {code: 'unverified_parent', count: 1};
+            diagnostics.push(item);
+            diagnosticOwner.get(call.canonicalCallId)?.push(item);
+            scanIncomplete = true;
           }
         }
-        return await finish({calls, diagnostics, cursors, scanIncomplete, candidateCount}, scanId);
+        return await finish({calls, diagnostics, cursors, files, scanIncomplete, candidateCount}, scanId);
       }
       page = await access.nextCandidatePage(scanId);
     }
