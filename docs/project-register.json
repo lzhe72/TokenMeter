@@ -519,8 +519,8 @@
       "scope": "实际已验证版本日志、子代理、重复/分支去重、部分写入处理",
       "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
       "version": "0.4.0",
-      "status": "planned",
-      "source": "docs/product/README.md:21"
+      "status": "in_progress",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
     },
     {
       "feature_id": "TM-005",
@@ -1165,6 +1165,110 @@
       "historical_test_mapping": "",
       "status": "pending_case_mapping_and_acceptance",
       "source": "releases/v0.1.0-20260929T074814Z/02-breakdown.md:56"
+    },
+    {
+      "task_id": "TASK-TM004-SOURCE",
+      "level": "concrete_task",
+      "feature_point_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
+      "input": "TM-002授权句柄、项目目录",
+      "output_and_done": "只遍历授权根下已确认的主/子日志；失权停扫、重授补扫；越界拒绝；预览与采集分别判定",
+      "dependencies": "TM-002授权接口及可续扫合同",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
+    },
+    {
+      "task_id": "TASK-TM004-PARSER",
+      "level": "concrete_task",
+      "feature_point_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
+      "input": "版本来源明确的完整原始行",
+      "output_and_done": "抽取usage、模型、UTC时间、主/子标志及来源标识；不保留正文",
+      "dependencies": "raw样本、TM-003事件合同",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
+    },
+    {
+      "task_id": "TASK-TM004-LINEAGE",
+      "level": "concrete_task",
+      "feature_point_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
+      "input": "父子与fork来源证据",
+      "output_and_done": "证实父子关系时正确归属；证实继承历史时跨会话去重；歧义诊断且不污染可信量",
+      "dependencies": "raw父子/fork样本、PARSER",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
+    },
+    {
+      "task_id": "TASK-TM004-INCREMENTAL",
+      "level": "concrete_task",
+      "feature_point_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
+      "input": "追加、半行、重复片段、跨来源ID、重启",
+      "output_and_done": "持久游标、唯一键及事务；完整行才提交；跨来源不误去重；重扫幂等",
+      "dependencies": "TM-003 SQLite身份合同、PARSER",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
+    },
+    {
+      "task_id": "TASK-TM004-DIAGNOSTIC",
+      "level": "concrete_task",
+      "feature_point_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
+      "input": "缺usage、未知格式、读取失败",
+      "output_and_done": "UI区分可信零、未知、缺失、无授权；诊断不泄露正文或完整路径",
+      "dependencies": "TM-003诊断接口、PARSER",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
+    },
+    {
+      "task_id": "TASK-TM004-DATA",
+      "level": "concrete_task",
+      "feature_point_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
+      "input": "隔离Claude Code 2.1.126原生投影与合成反例",
+      "output_and_done": "版本化fixture生成、追加/半行/撤权程序、独立expected及SQLite只读检查",
+      "dependencies": "raw来源、TM-002/003数据合同",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
+    },
+    {
+      "task_id": "TASK-TM004-E2E",
+      "level": "concrete_task",
+      "feature_point_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
+      "input": "最终安装App、真实服务、隔离SQLite",
+      "output_and_done": "全部细TC绑定固定Playwright Electron测试；逐步原始记录及历史功能全量回归",
+      "dependencies": "SOURCE→DATA、TM-001包执行器",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
+    },
+    {
+      "task_id": "TASK-TM004-RELEASE",
+      "level": "concrete_task",
+      "feature_point_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "ac_ids": "AC-TM004-001\nAC-TM004-002\nAC-TM004-003\nAC-TM004-004",
+      "input": "完整候选",
+      "output_and_done": "文档、矩阵、总表、Changelog同步；DMG安装门禁；交总控集成",
+      "dependencies": "E2E与此前版本全回归",
+      "historical_test_mapping": "",
+      "status": "baseline_pending",
+      "source": "releases/v0.4.0-20261001T040433Z/02-breakdown.md"
     }
   ],
   "sops": [
@@ -1624,6 +1728,21 @@
       "historical_evidence": "旧SwiftUI PR #2 已合并、历史双平台六例PASS；不继承给Electron",
       "source": "releases/v0.1.0-20260929T074814Z/00-manifest.json",
       "status_source": "releases/v0.1.0-20260929T074814Z/06-iteration-record.md"
+    },
+    {
+      "release_id": "v0.4.0-20261001T040433Z",
+      "version": "0.4.0",
+      "created_at": "2026-10-01T04:04:33Z",
+      "kind": "product_feature",
+      "feature_ids": "TM-004",
+      "manifest_state": "not_published",
+      "distribution_profile": "internal",
+      "asset_storage": "dmg/<release_id>/：仅门禁PASS后放正式DMG",
+      "github_release": false,
+      "actual_state": "设计草案：20条细TC已登记；程序、SQL、产品E2E与发布门禁尚未完成",
+      "historical_evidence": "Claude Code 2.1.126 隔离CLI原生投影与独立oracle；非产品通过证据",
+      "source": "releases/v0.4.0-20261001T040433Z/00-manifest.json",
+      "status_source": "releases/v0.4.0-20261001T040433Z/06-iteration-record.md"
     }
   ],
   "retrospectives": [

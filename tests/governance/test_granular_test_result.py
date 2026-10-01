@@ -16,6 +16,7 @@ from scripts import granular_test_result as granular
 CATALOG = json.loads((granular.ROOT / "tests/test_cases.json").read_text())
 VARIANTS = json.loads((granular.ROOT / "tests/granular_login_variants.json").read_text())
 CURRENT = [case for case in CATALOG["cases"] if case["feature_id"] == "TM-001"]
+FUTURE_IDS = {case["id"] for case in CATALOG["cases"] if case["feature_id"] != "TM-001"}
 
 
 def descriptor(root: Path, path: Path) -> dict:
@@ -72,7 +73,7 @@ class GranularResultTests(unittest.TestCase):
             self.assertEqual([row["id"] for row in model["cases"]], [case["id"]])
             self.assertEqual(model["tc_counts"], {"PASS": 1, "FAIL": 0, "BLOCKED": 0})
             self.assertEqual(len(model["out_of_scope"]), 77)
-            self.assertEqual(len(model["future"]), 31)
+            self.assertEqual({row["id"] for row in model["future"]}, FUTURE_IDS)
 
     def test_standalone_auxiliary_single_tc_has_only_one_result(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -187,7 +188,7 @@ class GranularResultTests(unittest.TestCase):
                       "suites": [{"case_id": "E2E-TM001-001", "state": "PASS", "events": descriptor(root, event_file)}]}
             model = granular.build_model(CATALOG, report, run_root=root)
             self.assertEqual(len(model["cases"]), 78)
-            self.assertEqual(len(model["future"]), 31)
+            self.assertEqual({row["id"] for row in model["future"]}, FUTURE_IDS)
             self.assertEqual(model["tc_counts"], {"PASS": 0, "FAIL": 0, "BLOCKED": 78})
             self.assertEqual(model["suites"][0]["state"], "PASS")
             self.assertTrue(all(case["state"] == "BLOCKED" for case in model["cases"]))

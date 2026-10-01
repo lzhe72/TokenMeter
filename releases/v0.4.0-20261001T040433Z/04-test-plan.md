@@ -11,7 +11,7 @@
 | E2E-TM004-003 | AC-TM004-003 | PARSER→TC-TM004-PARSER-02；DIAGNOSTIC→TC-TM004-DIAG-01；DATA→TC-TM004-DATA-01 | 支持结构完整 usage 可核对；未知结构和缺usage非零值，可信汇总不变 |
 | E2E-TM004-004 | AC-TM004-004 | SOURCE→TC-TM004-SOURCE-02、TC-TM004-SOURCE-04；DIAGNOSTIC→TC-TM004-DIAG-02；E2E→TC-TM004-E2E-01；RELEASE→TC-TM004-RELEASE-01 | 失权不读取，恢复后旧M/S/继承不增，新N50/5，total385；页间失权的覆盖仍不完整 |
 
-表内细TC使用完整稳定ID。逐条输入、动作和分步预期见[04详细场景的细TC章节](../../docs/testing/cases/04-TM-004-claude-collection.md#本版细tc设计草稿)。每个 TASK 至少有一条 TC；正式基线必须把这些条目补入 `tests/test_cases.json`、`TEST_CASES.md`、总表，并与版本 manifest 核对，不能仅以本表覆盖。原有四个 E2E ID 保留为场景组，本版细TC现为20条。本机原生探针使主、单层子代理、未改写 UUID 的 `--fork-session` 及同 ID/usage 的双内容块有可追溯样本；PARSER-03 双块子样本的独立预期为31+9=40、一次调用，不能逐行累加为80。畸形合成 API 无 usage 却被 CLI 写成0/0，不能用于证明有效零。新增 SOURCE-04 将 TM-002 预览上限与内部续扫覆盖分开，新增 INCREMENTAL-03 固定跨来源同字面调用ID、Claude复制与冲突的独立数字。SOURCE-03 嵌套、LINEAGE-03 改写 UUID、LINEAGE-04 `fork-context-ref` 及 LINEAGE-05 冲突反例仍须原生样本与真实产品绑定，不能据静态字段或单次探针判通过。
+表内细TC使用完整稳定ID。逐条输入、动作和分步预期见[04详细场景的细TC章节](../../docs/testing/cases/04-TM-004-claude-collection.md#本版细tc设计草稿)。每个 TASK 至少有一条 TC；这些条目现已以 `baseline_pending`、`unexecuted` 和 `binding=null` 进入 `tests/test_cases.json` 与生成的 `TEST_CASES.md`；仍须在设计与数据就绪后更新项目总表、冻结可执行绑定并与版本 manifest 核对，不能仅以目录登记冒充基线或产品执行。原有四个 E2E ID 保留为场景组，本版细TC现为20条。本机原生探针使主、单层子代理、未改写 UUID 的 `--fork-session` 及同 ID/usage 的双内容块有可追溯样本；PARSER-03 双块子样本的独立预期为31+9=40、一次调用，不能逐行累加为80。畸形合成 API 无 usage 却被 CLI 写成0/0，不能用于证明有效零。新增 SOURCE-04 将 TM-002 预览上限与内部续扫覆盖分开，新增 INCREMENTAL-03 固定跨来源同字面调用ID、Claude复制与冲突的独立数字。SOURCE-03 嵌套、LINEAGE-03 改写 UUID、LINEAGE-04 `fork-context-ref` 及 LINEAGE-05 冲突反例仍须原生样本与真实产品绑定，不能据静态字段或单次探针判通过。
 
 ## 已固化的窄范围来源投影
 
@@ -28,6 +28,10 @@
 ## 自动化与证据
 
 仓库固定入口计划为 `scripts/run_test_case.py --case-id TC-TM004-... --package-manifest <原始包清单>`。当前基点 TM-001 候选 `3467dc1` 已有此入口，但其 `granular_e2e.py` 只接受 `TC-TM001-*`、只映射 TM-001 spec，不能执行本版20条 TC；须在最终整合树按固定清单扩展 runner/Playwright/数据与门禁绑定。真正绑定后每步由 Playwright Electron 操作 DMG 安装 App，真实服务/SQLite 与授权 UI，不注入解析/认证 IPC mock。按 SOP-010 造数据，SOP-011 固定程序，SOP-014 逐TC运行并留 JSON、trace、必要截图、DB只读结果、fixture摘要与清理记录；输出独立 `TokenMeter测试结果-<run_id>.xlsx` 并汇总到项目总表。程序、SQL或 raw 证据任一缺失即 BLOCKED；测试断言失败为 FAIL，不能重试覆盖。当前暂无 run_id、包摘要或 PASS 原件。
+
+## 跨来源身份的固定字节判据
+
+`usage-identity-v1` 的四字段 uint32 大端字节长度、严格UTF-8、无trim/大小写/Unicode归一化和32字节 profile 秘钥，现已在[设计](03-development-plan.md#usage-identity-v1-字节合同与边界)及[公开密钥测试向量](../../tests/fixtures/tm004/identity-v1-vectors.json)冻结。`TC-TM004-INCREMENTAL-03` 后续固定程序须让实际 TM-003 主进程实现对相同向量给出完全相同的前像/HMAC，并通过真实App证明跨source同字面ID各入账一次、同source复制/重命名不增加、冲突保留首事件且覆盖不完整。当前仅参考验证器的3项治理测试通过，TM-003 产品键生成、secret恢复及SQLite迁移未绑定，故本TC仍BLOCKED。
 
 ## 固定执行器与门禁的实际阻断
 

@@ -30,7 +30,7 @@
 | 01 | [TM-001 账号、登录及最小更新器](01-TM-001-accounts.md) | E2E-TM001-001–006，6个聚合场景组 | dev07五组PASS、004FAIL属历史；精细全量首轮BLOCKED，新版FAIL，独立复核78父用例62/9/7；旧SwiftCI结果仅历史 |
 | 02 | [TM-002 首次授权](02-TM-002-permissions.md) | E2E-TM002-001–002，2例 | planned，缺权限fixture和原生绑定 |
 | 03 | [TM-003 Codex采集](03-TM-003-codex-collection.md) | E2E-TM003-001–004，4例 | planned，缺已验证raw与采集程序 |
-| 04 | [TM-004 Claude Code采集](04-TM-004-claude-collection.md) | E2E-TM004-001–004，4例 | planned，缺已验证raw/子代理/分支数据 |
+| 04 | [TM-004 Claude Code采集](04-TM-004-claude-collection.md) | E2E-TM004-001–004四组、TC-TM004-*二十条细用例 | 细用例已入机器/根目录但均baseline_pending、unexecuted；原生变体、SQL和产品绑定仍缺 |
 | 05 | [TM-005 用量统计](05-TM-005-usage-statistics.md) | E2E-TM005-001–002，2例 | planned，仅有部分标准化语义样例 |
 | 06 | [TM-006 费用估算](06-TM-006-cost-estimates.md) | E2E-TM006-001–002，2例 | planned，基础价格样例可生成，扩展数据待建 |
 | 07 | [TM-007 团队同步](07-TM-007-team-sync.md) | E2E-TM007-001–004，4例 | planned，缺故障fixture/同步与权限绑定 |

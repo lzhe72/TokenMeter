@@ -114,3 +114,11 @@
 
 本轮原件 `.local/ci/tm004-planned/receipt.json` 记录显式研究根来源核对、私有生成、验证、精确清理均退出0；治理429项通过、结构检查PASS（109文档/934链接）、diff检查退出0。仅使用本工作树拥有的私有目录与合成账号，不访问用户真实日志或生产库。没有 TM-003 稳定schema时不写猜测的产品SQL；SOP-008完整基线、TM-004逐TC Playwright和最终DMG产品E2E仍 BLOCKED。
 本次合成数据修订后又临时将 current 指向 TM-004 运行目标版本严格检查，并在 `finally` 恢复原字节。原件 `.local/ci/tm004-planned/target-baseline-receipt.json`、`target-baseline.log`、`target-quality.log`：两项均退出1，各13条 draft 基线错误；不改变前述阻断，也没有以合成数据取得基线。
+
+## 2026-10-01：机器用例目录、身份向量与项目总表
+
+在基点 `3467dc1` 的独立 Electron 工作树纳入共享用例导出器提交 `f7b83ed` 的程序与治理逻辑；Changelog冲突保留本版内容并补来源。`tests/test_cases.json`新增20条`baseline_pending`/`unexecuted`、无执行绑定的设计记录，根`TEST_CASES.md`重生为129例/428步。固定`usage-identity-v1`字节合同与五组独立HMAC向量见03设计和`tests/fixtures/tm004/identity-v1-vectors.json`；参考程序只校验字节与摘要，不涉及真实主体密钥或产品数据库。
+
+`docs/project-register.json`新增本版8个TASK和未发布版本；总表导出、回读为11个Sheet、129条用例、12个历史批次，SHA-256 `f844e8e2f7e8358bb5f1259337d62e9429c742b4c008c78a64e2f7c49cecbec3`。历史结果Excel从主工作区本机归档逐文件核对SHA后复制到本工作树忽略目录，未补造或覆盖实测。新增20条均显示预期待明确、未执行；导出不构成新测试批次。回读原件为`.local/workbook/verification.json`。
+
+`.local/ci/tm004-catalog/`保存结构PASS（109文档/959链接）、用例导出CURRENT、目标版本严格baseline与quality各FAIL 13项（仅本版draft）、治理原始输出。首次全治理452项中2项因旧测试硬编码未来用例数31而失败；用例增加20条后实际51，已改为逐ID集合断言，定向17项PASS，最终全治理452项PASS（`governance-final.log`）。严格检查后`releases/current.json`已恢复TM-001。真实产品SQL、固定Playwright绑定、安装App E2E、DMG与通行证仍BLOCKED。

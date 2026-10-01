@@ -27,3 +27,8 @@ python3 scripts/tm004_fixture.py reset --run-id demo
 | `raw-missing-usage` | **不把0/0当已知有效零** | 畸形合成 SSE 缺usage，CLI仍写出0/0 |
 
 这些投影可用于固定数据与解析/去重基础测试，**不能单独证明对原始 JSONL 的兼容，更不能代替安装后 App E2E**。M/S/N/P规划数字、改写 UUID、`fork-context-ref`、嵌套 Agent、真实有效零、半行恢复、TM-002 授权与 TM-003 SQLite 仍待独立 fixture 和固定产品测试；`claude_raw` 数据集继续 planned。不得从本目录样本向用户生产库、真实日志或默认凭据读写。
+
+
+## 跨来源身份 v1 固定向量
+
+[字节级向量](identity-v1-vectors.json)与`python3 scripts/tm004_identity_vectors.py`固定四字段UTF-8长度前缀（每段uint32大端）和HMAC-SHA256小写十六进制。公开测试密钥仅用于向量，不能进入产品profile；同字面Codex/Claude ID产生不同键，原生ID大小写、尾空格和Unicode字节不作隐式规范化。它验证设计合同，不说明 TM-003 产品实现或SQLite已通过。

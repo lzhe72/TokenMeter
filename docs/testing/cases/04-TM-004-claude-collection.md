@@ -106,7 +106,7 @@
 
 ### TC-TM004-LINEAGE-02 · fork继承和ID改写（TASK-TM004-LINEAGE，AC-002，E2E-002）
 
-输入：原M100/10、fork复制或引用M但消息ID改写、fork新N50/5。步骤：①原M入账110；②导入可证明继承的fork历史，仍110；③追加N，total165且调用数2；④复制N片段及重启，仍165。若缺能证明继承的原始线索，步骤②/判据 `baseline_pending`，不得以数值相同伪造兼容。SQL：只读可信唯一调用2/165及继承诊断/关系；待schema确定。
+输入：原M100/10、fork复制或引用M但消息ID改写、fork新N50/5。步骤：①原M入账110；②导入可证明继承的fork历史，仍110；③追加N，total165且调用数2；④复制N片段及重启，仍165。SQL：只读可信唯一调用2/165及继承诊断/关系；待schema确定。若缺能证明继承的原始线索，步骤②/判据 `baseline_pending`，不得以数值相同伪造兼容。
 
 ### TC-TM004-INCREMENTAL-01 · 半行完成（TASK-TM004-INCREMENTAL，AC-002，E2E-002）
 
@@ -162,4 +162,4 @@
 
 ### TC-TM004-INCREMENTAL-03 · 跨工具同 ID 与 Claude 复制历史（TASK-TM004-INCREMENTAL，AC-001/002，E2E-001/002）
 
-输入：同一合成主体、各自经 UI 授权的 Codex 与 Claude 隔离根。固定本地响应使 Codex 原生 `payload.response_id` 与 Claude 主 `assistant.message.id` 字面均为 `shared-call-01`，分别有 C=11/1 与 M=100/10；Claude 原生 `--fork-session` 复制M，再有独立 Agent 子调用S=200/20（新 message.id、与父同 sessionId 但带 agentId）。另以明确标记的衍生故障数据令同一 Claude message.id 出现矛盾101/10，该行不冒称 CLI 原件。步骤：①经安装 App 扫描C，可信1次/total12；②扫描M，可信2次/input111/output11/total122，跨工具同字面 ID 不冲突；③扫描 fork 复制M与 Agent S，可信3次/input311/output31/total342；④加入矛盾行并重扫/重启，可信仍3次/342，出现 `identity_conflict` 与覆盖不完整。SQL：只读同一 `principal_key` 下 `source=codex` 与 `source=claude_code` 各自事件数1/2、`source_event_key` 不同，Agent `source_scope_key` 与主来源可区分，复制M不多行，冲突不覆写原M；键与归属均不得存原生ID/完整路径。类型：产品E2E；`usage-identity-v1` 长度前缀/HMAC、TM-003 schema 和迁移、两工具原生同字面ID固定程序、安装 App/SQL绑定均待稳定实现，`baseline_pending`、`automated_test=null`。
+输入：同一合成主体、各自经 UI 授权的 Codex 与 Claude 隔离根。固定本地响应使 Codex 原生 `payload.response_id` 与 Claude 主 `assistant.message.id` 字面均为 `shared-call-01`，分别有 C=11/1 与 M=100/10；Claude 原生 `--fork-session` 复制M，再有独立 Agent 子调用S=200/20（新 message.id、与父同 sessionId 但带 agentId）。另以明确标记的衍生故障数据令同一 Claude message.id 出现矛盾101/10，该行不冒称 CLI 原件。步骤：①经安装 App 扫描C，可信1次/total12；②扫描M，可信2次/input111/output11/total122，跨工具同字面 ID 不冲突；③扫描 fork 复制M与 Agent S，可信3次/input311/output31/total342；④加入矛盾行并重扫/重启，可信仍3次/342，出现 `identity_conflict` 与覆盖不完整。SQL：只读同一 `principal_key` 下 `source=codex` 与 `source=claude_code` 各自事件数1/2、`source_event_key` 不同，Agent `source_scope_key` 与主来源可区分，复制M不多行，冲突不覆写原M；键与归属均不得存原生ID/完整路径。类型：产品E2E；[字节级固定向量](../../../tests/fixtures/tm004/identity-v1-vectors.json)和参考验证器已固定编码期望，但 TM-003 产品 HMAC/schema/迁移、两工具原生同字面ID固定程序、安装 App/SQL绑定仍待稳定实现，`baseline_pending`、`automated_test=null`。

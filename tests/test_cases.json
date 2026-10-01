@@ -7768,6 +7768,1499 @@
       "overall_expected": "恢复前total330，恢复后唯一M/S/N共3调用、total385；继承M和复制S均不重复；读取失败期间不生成成功零值。"
     },
     {
+      "id": "TC-TM004-SOURCE-01",
+      "title": "授权根限定（TASK-TM004-SOURCE，AC-001，E2E-001）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-SOURCE"
+      ],
+      "ac_ids": [
+        "AC-TM004-001"
+      ],
+      "type": "product_e2e",
+      "input": "用户经 TM-002 UI 只选择隔离项目A目录；目录内有 M=100/10 完整原始行，旁边未授权目录有 X=999/99。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "选择但未确认",
+          "expected_ui": "UI 显示待确认，事件表无新增",
+          "expected_api_db": "UI 显示待确认，事件表无新增；确切产品SQL待TM-003实际schema",
+          "expected": "UI 显示待确认，事件表无新增",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "确认授权并扫描",
+          "expected_ui": "UI 显示1次 M、total110，SQLite只读见唯一M",
+          "expected_api_db": "UI 显示1次 M、total110，SQLite只读见唯一M；确切产品SQL待TM-003实际schema",
+          "expected": "UI 显示1次 M、total110，SQLite只读见唯一M",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "重扫",
+          "expected_ui": "调用数仍1、total110",
+          "expected_api_db": "调用数仍1、total110；确切产品SQL待TM-003实际schema",
+          "expected": "调用数仍1、total110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "核对未授权X的读取记录和事件表",
+          "expected_ui": "无X读取请求且事件表无X",
+          "expected_api_db": "无X读取请求且事件表无X；确切产品SQL待TM-003实际schema",
+          "expected": "无X读取请求且事件表无X",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读按来源/项目统计 M 行数与 token，总数1/110；检查 X 键不存在；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-SOURCE-01 · 授权根限定（TASK-TM004-SOURCE，AC-001，E2E-001）",
+        "line": 87
+      },
+      "missing": [
+        "TM-002原生授权/分页/只读打开和撤销接口尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-SOURCE-02",
+      "title": "撤权和重新授权（TASK-TM004-SOURCE，AC-004，E2E-004）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-SOURCE"
+      ],
+      "ac_ids": [
+        "AC-TM004-004"
+      ],
+      "type": "product_e2e",
+      "input": "已扫描 M=100/10、S=200/20；撤权期间子代理新增 N=50/5。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "UI撤销目录",
+          "expected_ui": "状态显示不可读且保留total330",
+          "expected_api_db": "状态显示不可读且保留total330；确切产品SQL待TM-003实际schema",
+          "expected": "状态显示不可读且保留total330",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "追加N并触发扫描",
+          "expected_ui": "仍330且诊断为读取受阻",
+          "expected_api_db": "仍330且诊断为读取受阻；确切产品SQL待TM-003实际schema",
+          "expected": "仍330且诊断为读取受阻",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "UI重授并补扫",
+          "expected_ui": "唯一 M/S/N、total385",
+          "expected_api_db": "唯一 M/S/N、total385；确切产品SQL待TM-003实际schema",
+          "expected": "唯一 M/S/N、total385",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "重启并重扫",
+          "expected_ui": "M/S/N仍为三次且total385",
+          "expected_api_db": "M/S/N仍为三次且total385；确切产品SQL待TM-003实际schema",
+          "expected": "M/S/N仍为三次且total385",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读唯一键数3与 token总385，撤权阶段无N。重置同共用配方；TM-002失权模拟与子目录绑定待补；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-SOURCE-02 · 撤权和重新授权（TASK-TM004-SOURCE，AC-004，E2E-004）",
+        "line": 91
+      },
+      "missing": [
+        "TM-002原生授权/分页/只读打开和撤销接口尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-PARSER-01",
+      "title": "主/子实际调用（TASK-TM004-PARSER，AC-001，E2E-001）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-PARSER"
+      ],
+      "ac_ids": [
+        "AC-TM004-001"
+      ],
+      "type": "product_e2e",
+      "input": "同一项目原始主M100/10与子S200/20，模型各自保留，父关系有原始证据。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "写M并扫描",
+          "expected_ui": "可信total110",
+          "expected_api_db": "可信total110；确切产品SQL待TM-003实际schema",
+          "expected": "可信total110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "写S并扫描",
+          "expected_ui": "可信input300/output30/total330",
+          "expected_api_db": "可信input300/output30/total330；确切产品SQL待TM-003实际schema",
+          "expected": "可信input300/output30/total330",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "重扫及重启",
+          "expected_ui": "仍2次调用/330",
+          "expected_api_db": "仍2次调用/330；确切产品SQL待TM-003实际schema",
+          "expected": "仍2次调用/330",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读两条唯一事件和模型/父项目归属；不读取正文。版本化raw和模型字段待补；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-PARSER-01 · 主/子实际调用（TASK-TM004-PARSER，AC-001，E2E-001）",
+        "line": 95
+      },
+      "missing": [
+        "已验证原生raw与TM-003解析/诊断SQL尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-PARSER-02",
+      "title": "未知结构/缺字段（TASK-TM004-PARSER，AC-003，E2E-003）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-PARSER"
+      ],
+      "ac_ids": [
+        "AC-TM004-003"
+      ],
+      "type": "product_e2e",
+      "input": "已支持版本完整 M100/10、未知结构 U、JSONL 原始行真正缺 usage 的 Q。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "加载M",
+          "expected_ui": "可信total110",
+          "expected_api_db": "可信total110；确切产品SQL待TM-003实际schema",
+          "expected": "可信total110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "加载U",
+          "expected_ui": "可信仍110且出现未知结构诊断",
+          "expected_api_db": "可信仍110且出现未知结构诊断；确切产品SQL待TM-003实际schema",
+          "expected": "可信仍110且出现未知结构诊断",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "加载Q",
+          "expected_ui": "可信仍110、缺usage诊断新增",
+          "expected_api_db": "可信仍110、缺usage诊断新增；确切产品SQL待TM-003实际schema",
+          "expected": "可信仍110、缺usage诊断新增",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "重扫/重启仍110",
+          "expected_ui": "诊断可见且不显示 U/Q 为零调用",
+          "expected_api_db": "诊断可见且不显示 U/Q 为零调用；确切产品SQL待TM-003实际schema",
+          "expected": "诊断可见且不显示 U/Q 为零调用",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读可信事件1条/110，诊断各1条；具体版本标识、缺字段schema和SQL待补。隔离负测中 API SSE 省略 usage 后 CLI 仍在原生 JSONL 写0/0，**不是** Q 的原生缺字段样本；Q 需另证来源或标明故障注入，不得把0/0回填解释成已知零；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-PARSER-02 · 未知结构/缺字段（TASK-TM004-PARSER，AC-003，E2E-003）",
+        "line": 99
+      },
+      "missing": [
+        "已验证原生raw与TM-003解析/诊断SQL尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-LINEAGE-01",
+      "title": "子代理父项目（TASK-TM004-LINEAGE，AC-001，E2E-001）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-LINEAGE"
+      ],
+      "ac_ids": [
+        "AC-TM004-001"
+      ],
+      "type": "product_e2e",
+      "input": "项目A主M100/10、子S200/20，另有项目B同名会话标识但无父关系。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "扫描主",
+          "expected_ui": "A=110",
+          "expected_api_db": "A=110；确切产品SQL待TM-003实际schema",
+          "expected": "A=110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "扫描子",
+          "expected_ui": "A=330、B=0",
+          "expected_api_db": "A=330、B=0；确切产品SQL待TM-003实际schema",
+          "expected": "A=330、B=0",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "重复主引用子结果",
+          "expected_ui": "A仍330",
+          "expected_api_db": "A仍330；确切产品SQL待TM-003实际schema",
+          "expected": "A仍330",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "查看归属",
+          "expected_ui": "S标为子代理且使用原模型",
+          "expected_api_db": "S标为子代理且使用原模型；确切产品SQL待TM-003实际schema",
+          "expected": "S标为子代理且使用原模型",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读S的父项目键为A、事件数2；原始父链线索缺失时不得假称通过；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-LINEAGE-01 · 子代理父项目（TASK-TM004-LINEAGE，AC-001，E2E-001）",
+        "line": 103
+      },
+      "missing": [
+        "改写UUID/fork-context-ref/嵌套父链证明尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-LINEAGE-02",
+      "title": "fork继承和ID改写（TASK-TM004-LINEAGE，AC-002，E2E-002）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-LINEAGE"
+      ],
+      "ac_ids": [
+        "AC-TM004-002"
+      ],
+      "type": "product_e2e",
+      "input": "原M100/10、fork复制或引用M但消息ID改写、fork新N50/5。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "扫描原始M",
+          "expected_ui": "M仅入账一次且total110",
+          "expected_api_db": "M仅入账一次且total110；确切产品SQL待TM-003实际schema",
+          "expected": "M仅入账一次且total110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "导入可证明继承的fork历史",
+          "expected_ui": "仍110",
+          "expected_api_db": "仍110；确切产品SQL待TM-003实际schema",
+          "expected": "仍110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "追加N",
+          "expected_ui": "total165且调用数2",
+          "expected_api_db": "total165且调用数2；确切产品SQL待TM-003实际schema",
+          "expected": "total165且调用数2",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "复制N片段及重启",
+          "expected_ui": "仍165",
+          "expected_api_db": "仍165；确切产品SQL待TM-003实际schema",
+          "expected": "仍165",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读可信唯一调用2/165及继承诊断/关系；待schema确定；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-LINEAGE-02 · fork继承和ID改写（TASK-TM004-LINEAGE，AC-002，E2E-002）",
+        "line": 107
+      },
+      "missing": [
+        "改写UUID/fork-context-ref/嵌套父链证明尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-INCREMENTAL-01",
+      "title": "半行完成（TASK-TM004-INCREMENTAL，AC-002，E2E-002）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-002"
+      ],
+      "type": "product_e2e",
+      "input": "已计M+N total165，P=20/2 原始JSONL行分成两次写入。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "写P前半且无换行",
+          "expected_ui": "扫描后仍165、读取游标未越过半行",
+          "expected_api_db": "扫描后仍165、读取游标未越过半行；确切产品SQL待TM-003实际schema",
+          "expected": "扫描后仍165、读取游标未越过半行",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "写余段和换行",
+          "expected_ui": "扫描后total187、调用数3",
+          "expected_api_db": "扫描后total187、调用数3；确切产品SQL待TM-003实际schema",
+          "expected": "扫描后total187、调用数3",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "重扫并重启",
+          "expected_ui": "P仅入账一次且total187",
+          "expected_api_db": "P仅入账一次且total187；确切产品SQL待TM-003实际schema",
+          "expected": "P仅入账一次且total187",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读P只一条，可信事件3/187，游标处于完整行末；具体游标schema待补；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-INCREMENTAL-01 · 半行完成（TASK-TM004-INCREMENTAL，AC-002，E2E-002）",
+        "line": 111
+      },
+      "missing": [
+        "TM-003事务游标、身份schema和只读SQL尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-INCREMENTAL-02",
+      "title": "重复与事务恢复（TASK-TM004-INCREMENTAL，AC-002/004，E2E-002/004）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-002",
+        "AC-TM004-004"
+      ],
+      "type": "product_e2e",
+      "input": "完整M100/10、重复相同片段及移动/复制文件；在扫描提交边界中断App。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "扫描M",
+          "expected_ui": "M仅入账一次且total110",
+          "expected_api_db": "M仅入账一次且total110；确切产品SQL待TM-003实际schema",
+          "expected": "M仅入账一次且total110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "复制/移动并重扫",
+          "expected_ui": "仍110",
+          "expected_api_db": "仍110；确切产品SQL待TM-003实际schema",
+          "expected": "仍110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "按固定故障程序在事务提交边界中断并重启",
+          "expected_ui": "仍唯一M/110",
+          "expected_api_db": "仍唯一M/110；确切产品SQL待TM-003实际schema",
+          "expected": "仍唯一M/110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "新增N50/5",
+          "expected_ui": "total165",
+          "expected_api_db": "total165；确切产品SQL待TM-003实际schema",
+          "expected": "total165",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读唯一键数2/165且游标一致；故障注入不得绕过产品事务。TM-003事务接口待补；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-INCREMENTAL-02 · 重复与事务恢复（TASK-TM004-INCREMENTAL，AC-002/004，E2E-002/004）",
+        "line": 115
+      },
+      "missing": [
+        "TM-003事务游标、身份schema和只读SQL尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-DIAG-01",
+      "title": "未知值不是零（TASK-TM004-DIAGNOSTIC，AC-003，E2E-003）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-DIAGNOSTIC"
+      ],
+      "ac_ids": [
+        "AC-TM004-003"
+      ],
+      "type": "product_e2e",
+      "input": "可信M100/10、U未知格式、Q的JSONL原始行缺usage，以及另有独立来源证明的有效零usage记录Z。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "加载M",
+          "expected_ui": "显示110",
+          "expected_api_db": "显示110；确切产品SQL待TM-003实际schema",
+          "expected": "显示110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "加载U/Q",
+          "expected_ui": "显示可信110和两个不同未覆盖提示",
+          "expected_api_db": "显示可信110和两个不同未覆盖提示；确切产品SQL待TM-003实际schema",
+          "expected": "显示可信110和两个不同未覆盖提示",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "仅在Z的真实有效性可证明时加载Z",
+          "expected_ui": "零值记录可见但总量仍110",
+          "expected_api_db": "零值记录可见但总量仍110；确切产品SQL待TM-003实际schema",
+          "expected": "零值记录可见但总量仍110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "重启",
+          "expected_ui": "三种状态不混淆",
+          "expected_api_db": "三种状态不混淆；确切产品SQL待TM-003实际schema",
+          "expected": "三种状态不混淆",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读可信M和已证实的Z，U/Q仅诊断，不以0写入；Z的原始有效性仍 `baseline_pending`。2.1.126 遇到畸形合成 API 缺usage会自己写0/0，不能拿该行充当Z；未经额外证据不能由0/0 raw推断上游已知零；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-DIAG-01 · 未知值不是零（TASK-TM004-DIAGNOSTIC，AC-003，E2E-003）",
+        "line": 119
+      },
+      "missing": [
+        "未知/有效零来源和受限诊断UI尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-DIAG-02",
+      "title": "失权提示及隐私（TASK-TM004-DIAGNOSTIC，AC-004，E2E-004）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-DIAGNOSTIC"
+      ],
+      "ac_ids": [
+        "AC-TM004-004"
+      ],
+      "type": "product_e2e",
+      "input": "M已入账，撤权目录含合成 prompt、代码和密钥哨兵字符串。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "撤权触发扫描",
+          "expected_ui": "UI显示读取受阻而非零用量，保留110",
+          "expected_api_db": "UI显示读取受阻而非零用量，保留110；确切产品SQL待TM-003实际schema",
+          "expected": "UI显示读取受阻而非零用量，保留110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "核对UI、服务请求、日志和SQLite",
+          "expected_ui": "无哨兵文本及完整源路径",
+          "expected_api_db": "无哨兵文本及完整源路径；确切产品SQL待TM-003实际schema",
+          "expected": "无哨兵文本及完整源路径",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "重新授权并重扫",
+          "expected_ui": "受阻提示消除且M不重计",
+          "expected_api_db": "受阻提示消除且M不重计；确切产品SQL待TM-003实际schema",
+          "expected": "受阻提示消除且M不重计",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读事件1/110、诊断状态与仅白名单字段；隐私哨兵由固定生成器构造，不使用真实秘密；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-DIAG-02 · 失权提示及隐私（TASK-TM004-DIAGNOSTIC，AC-004，E2E-004）",
+        "line": 123
+      },
+      "missing": [
+        "未知/有效零来源和受限诊断UI尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-DATA-01",
+      "title": "原始fixture和独立oracle（TASK-TM004-DATA，AC-001–004，E2E-003）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-DATA"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-002",
+        "AC-TM004-003",
+        "AC-TM004-004"
+      ],
+      "type": "data_fixture",
+      "input": "固定版本 CLI/公开来源、隔离 `CLAUDE_CONFIG_DIR`、固定合成任务；禁止访问真实 `~/.claude`。",
+      "preconditions": "仅在本次拥有的私有测试根及固定候选上运行；未有产品PASS",
+      "steps": [
+        {
+          "step": 1,
+          "action": "运行来源记录程序",
+          "expected_ui": "本治理步骤不依赖产品UI",
+          "expected_api_db": "版本、来源、原始SHA及父子/fork证据有原件",
+          "expected": "版本、来源、原始SHA及父子/fork证据有原件"
+        },
+        {
+          "step": 2,
+          "action": "固定独立预期",
+          "expected_ui": "本治理步骤不依赖产品UI",
+          "expected_api_db": "M/S/N/P的330、165、187、385在运行前记录",
+          "expected": "M/S/N/P的330、165、187、385在运行前记录"
+        },
+        {
+          "step": 3,
+          "action": "重建隔离数据并比对",
+          "expected_ui": "本治理步骤不依赖产品UI",
+          "expected_api_db": "SHA一致且SQL初态只有合成账号与零事件",
+          "expected": "SHA一致且SQL初态只有合成账号与零事件"
+        },
+        {
+          "step": 4,
+          "action": "清理本次来源目录",
+          "expected_ui": "本治理步骤不依赖产品UI",
+          "expected_api_db": "仅删除本次拥有目录且保留原始报告",
+          "expected": "仅删除本次拥有目录且保留原始报告"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：本例不直接写入产品用量表；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-DATA-01 · 原始fixture和独立oracle（TASK-TM004-DATA，AC-001–004，E2E-003）",
+        "line": 127
+      },
+      "missing": [
+        "完整原生变体及真实账号/产品SQL初态尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-018-release-gate.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-E2E-01",
+      "title": "安装包真实链路（TASK-TM004-E2E，AC-001–004，E2E-001/004）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-E2E"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-002",
+        "AC-TM004-003",
+        "AC-TM004-004"
+      ],
+      "type": "product_e2e",
+      "input": "本版固定候选SHA、原DMG、TM-001–004完整必测TC清单。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "从原DMG安装App并经真实UI配置",
+          "expected_ui": "仅连接本次独占服务和隔离授权根",
+          "expected_api_db": "仅连接本次独占服务和隔离授权根；确切产品SQL待TM-003实际schema",
+          "expected": "仅连接本次独占服务和隔离授权根",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "调用仓库固定按TC编号的Playwright Electron程序",
+          "expected_ui": "逐步断言UI、IPC后果和只读SQLite",
+          "expected_api_db": "逐步断言UI、IPC后果和只读SQLite；确切产品SQL待TM-003实际schema",
+          "expected": "逐步断言UI、IPC后果和只读SQLite",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "比较实际运行集合和冻结清单",
+          "expected_ui": "目标及历史已交付TC全部执行且无跳过/重试/失败",
+          "expected_api_db": "目标及历史已交付TC全部执行且无跳过/重试/失败；确切产品SQL待TM-003实际schema",
+          "expected": "目标及历史已交付TC全部执行且无跳过/重试/失败",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "核对JSON、trace、Excel及清理",
+          "expected_ui": "结果与候选包一致且本次资源清理完成",
+          "expected_api_db": "结果与候选包一致且本次资源清理完成；确切产品SQL待TM-003实际schema",
+          "expected": "结果与候选包一致且本次资源清理完成",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：本例不直接写入产品用量表；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-E2E-01 · 安装包真实链路（TASK-TM004-E2E，AC-001–004，E2E-001/004）",
+        "line": 131
+      },
+      "missing": [
+        "逐TC Playwright和完整必测集合门禁尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-RELEASE-01",
+      "title": "候选与证据一致（TASK-TM004-RELEASE，AC-001–004，E2E-004）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-RELEASE"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-002",
+        "AC-TM004-003",
+        "AC-TM004-004"
+      ],
+      "type": "release_gate",
+      "input": "同一已提交SHA/tree、DMG摘要、完整TM-001–004结果。",
+      "preconditions": "仅在本次拥有的私有测试根及固定候选上运行；未有产品PASS",
+      "steps": [
+        {
+          "step": 1,
+          "action": "机器重读候选与包",
+          "expected_ui": "本治理步骤不依赖产品UI",
+          "expected_api_db": "SHA/tree和DMG摘要一致",
+          "expected": "SHA/tree和DMG摘要一致"
+        },
+        {
+          "step": 2,
+          "action": "机器重读逐例结果和清理",
+          "expected_ui": "本治理步骤不依赖产品UI",
+          "expected_api_db": "完整集合逐例PASS且清理完成，否则阻断",
+          "expected": "完整集合逐例PASS且清理完成，否则阻断"
+        },
+        {
+          "step": 3,
+          "action": "机器重读独立Excel",
+          "expected_ui": "本治理步骤不依赖产品UI",
+          "expected_api_db": "Excel行和源摘要一致",
+          "expected": "Excel行和源摘要一致"
+        },
+        {
+          "step": 4,
+          "action": "仅在完整原件PASS后申请门禁整合",
+          "expected_ui": "本治理步骤不依赖产品UI",
+          "expected_api_db": "SOP-018真实PASS才进入SOP-019",
+          "expected": "SOP-018真实PASS才进入SOP-019"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：本例不直接写入产品用量表；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-RELEASE-01 · 候选与证据一致（TASK-TM004-RELEASE，AC-001–004，E2E-004）",
+        "line": 135
+      },
+      "missing": [
+        "同一最终候选DMG及完整逐TC/清理原件尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-018-release-gate.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-SOURCE-03",
+      "title": "嵌套子代理目录（TASK-TM004-SOURCE，AC-001，E2E-001）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-SOURCE"
+      ],
+      "ac_ids": [
+        "AC-TM004-001"
+      ],
+      "type": "product_e2e",
+      "input": "2.1.126 已安装二进制显示子代理路径可在 `subagents/` 下继续嵌套；确切层级与父链由待取得的原始样本决定。固定数据应含项目A主M100/10、一级子S200/20、嵌套子T=50/5，以及授权根外同名文件X=999/99。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "经真实UI只授权隔离根并扫描",
+          "expected_ui": "项目A可信total385/3次调用",
+          "expected_api_db": "项目A可信total385/3次调用；确切产品SQL待TM-003实际schema",
+          "expected": "项目A可信total385/3次调用",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "遍历嵌套层级并核对T父链",
+          "expected_ui": "不读取X",
+          "expected_api_db": "不读取X；确切产品SQL待TM-003实际schema",
+          "expected": "不读取X",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "重启重扫",
+          "expected_ui": "总量和归属不变",
+          "expected_api_db": "总量和归属不变；确切产品SQL待TM-003实际schema",
+          "expected": "总量和归属不变",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "父链缺失变体仅显示未归属诊断",
+          "expected_ui": "不猜A",
+          "expected_api_db": "不猜A；确切产品SQL待TM-003实际schema",
+          "expected": "不猜A",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读事件唯一键、父项目与总量3/385；缺链变体的T不得纳入A可信聚合；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-SOURCE-03 · 嵌套子代理目录（TASK-TM004-SOURCE，AC-001，E2E-001）",
+        "line": 139
+      },
+      "missing": [
+        "TM-002原生授权/分页/只读打开和撤销接口尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-PARSER-03",
+      "title": "同一消息多内容块和 Agent 摘要（TASK-TM004-PARSER，AC-001，E2E-001）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-PARSER"
+      ],
+      "ac_ids": [
+        "AC-TM004-001"
+      ],
+      "type": "product_e2e",
+      "input": "同一次主调用M100/10拆为至少两个带相同 `message.id` 与 usage 的 assistant 内容块，另有 Agent 工具结果的 `totalTokens/usage` 摘要与子S200/20原始调用；本机独立结构探针已实际生成31/9双块，CLI 写两行相同 ID 和完整 usage，子代理19/6的父工具结果出现 `total_tokens: 25`。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "只写M的两个块并扫描",
+          "expected_ui": "UI/SQLite为1次调用、total110",
+          "expected_api_db": "UI/SQLite为1次调用、total110；确切产品SQL待TM-003实际schema",
+          "expected": "UI/SQLite为1次调用、total110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "写S及父Agent结果",
+          "expected_ui": "可信为M+S两次、total330",
+          "expected_api_db": "可信为M+S两次、total330；确切产品SQL待TM-003实际schema",
+          "expected": "可信为M+S两次、total330",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "重复块与摘要、重扫重启",
+          "expected_ui": "仍330",
+          "expected_api_db": "仍330；确切产品SQL待TM-003实际schema",
+          "expected": "仍330",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读源消息调用键2个/330，父Agent汇总不能额外成为第三次调用；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-PARSER-03 · 同一消息多内容块和 Agent 摘要（TASK-TM004-PARSER，AC-001，E2E-001）",
+        "line": 143
+      },
+      "missing": [
+        "已验证原生raw与TM-003解析/诊断SQL尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-LINEAGE-03",
+      "title": "forkedFrom 复制与改写 UUID（TASK-TM004-LINEAGE，AC-002，E2E-002）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-LINEAGE"
+      ],
+      "ac_ids": [
+        "AC-TM004-002"
+      ],
+      "type": "product_e2e",
+      "input": "已计M100/10；分别用2.1.126真实生成的 fork 复制记录（保留 UUID）和改写 UUID 记录，依据实际 raw 的跨文件调用身份/父链判定，不能假定两者都含 `forkedFrom`；再追加真正新N50/5。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "扫描M",
+          "expected_ui": "M仅计一次且total110",
+          "expected_api_db": "M仅计一次且total110；确切产品SQL待TM-003实际schema",
+          "expected": "M仅计一次且total110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "逐个加入两个继承形态",
+          "expected_ui": "均仍110并在诊断/关系中可追溯原M",
+          "expected_api_db": "均仍110并在诊断/关系中可追溯原M；确切产品SQL待TM-003实际schema",
+          "expected": "均仍110并在诊断/关系中可追溯原M",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "追加N",
+          "expected_ui": "total165/2次",
+          "expected_api_db": "total165/2次；确切产品SQL待TM-003实际schema",
+          "expected": "total165/2次",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "重启并重扫",
+          "expected_ui": "仍两次可信调用且total165",
+          "expected_api_db": "仍两次可信调用且total165；确切产品SQL待TM-003实际schema",
+          "expected": "仍两次可信调用且total165",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读可信调用键2个、继承引用指向M；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-LINEAGE-03 · forkedFrom 复制与改写 UUID（TASK-TM004-LINEAGE，AC-002，E2E-002）",
+        "line": 147
+      },
+      "missing": [
+        "改写UUID/fork-context-ref/嵌套父链证明尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-LINEAGE-04",
+      "title": "fork-context-ref 父链（TASK-TM004-LINEAGE，AC-002，E2E-002）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-LINEAGE"
+      ],
+      "ac_ids": [
+        "AC-TM004-002"
+      ],
+      "type": "product_e2e",
+      "input": "2.1.126真实子代理 fork 记录中带 `agentId,parentSessionId,parentLastUuid,contextLength`；父会话存在M100/10，子代理仅新增S200/20。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "先扫描父M",
+          "expected_ui": "可信110",
+          "expected_api_db": "可信110；确切产品SQL待TM-003实际schema",
+          "expected": "可信110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "扫描引用及子S",
+          "expected_ui": "可信330/2次而非440",
+          "expected_api_db": "可信330/2次而非440；确切产品SQL待TM-003实际schema",
+          "expected": "可信330/2次而非440",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "重扫并重启",
+          "expected_ui": "可信M/S两次且total330",
+          "expected_api_db": "可信M/S两次且total330；确切产品SQL待TM-003实际schema",
+          "expected": "可信M/S两次且total330",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "只读核对父链引用",
+          "expected_ui": "引用解析到M的既有调用键",
+          "expected_api_db": "引用解析到M的既有调用键；确切产品SQL待TM-003实际schema",
+          "expected": "引用解析到M的既有调用键",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读M/S各一条及引用，total330；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-LINEAGE-04 · fork-context-ref 父链（TASK-TM004-LINEAGE，AC-002，E2E-002）",
+        "line": 151
+      },
+      "missing": [
+        "改写UUID/fork-context-ref/嵌套父链证明尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-LINEAGE-05",
+      "title": "缺失或矛盾父链（TASK-TM004-LINEAGE，AC-002/003，E2E-002/003）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-LINEAGE"
+      ],
+      "ac_ids": [
+        "AC-TM004-002",
+        "AC-TM004-003"
+      ],
+      "type": "product_e2e",
+      "input": "在上一例的合成同构目录中分别移除引用父文件、指向不存在的 `parentLastUuid`、或提供无 `forkedFrom` 但UUID改写的复制历史；这些是测试故障注入，不能标为厂商实际输出。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "扫描完整父链的M",
+          "expected_ui": "M仅计一次且total110",
+          "expected_api_db": "M仅计一次且total110；确切产品SQL待TM-003实际schema",
+          "expected": "M仅计一次且total110",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "逐一制造缺失/矛盾",
+          "expected_ui": "App显示未确定来源诊断，可信总量仍110、不能把不明副本计为新调用或有效零",
+          "expected_api_db": "App显示未确定来源诊断，可信总量仍110、不能把不明副本计为新调用或有效零；确切产品SQL待TM-003实际schema",
+          "expected": "App显示未确定来源诊断，可信总量仍110、不能把不明副本计为新调用或有效零",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "恢复可验证父链并重扫",
+          "expected_ui": "若真实新增S200/20可独立识别则总量330",
+          "expected_api_db": "若真实新增S200/20可独立识别则总量330；确切产品SQL待TM-003实际schema",
+          "expected": "若真实新增S200/20可独立识别则总量330",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "重启并重扫",
+          "expected_ui": "可信总量保持且诊断随恢复更新",
+          "expected_api_db": "可信总量保持且诊断随恢复更新；确切产品SQL待TM-003实际schema",
+          "expected": "可信总量保持且诊断随恢复更新",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读未确定记录与可信M/S计数，不能借SQL灌成功；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-LINEAGE-05 · 缺失或矛盾父链（TASK-TM004-LINEAGE，AC-002/003，E2E-002/003）",
+        "line": 155
+      },
+      "missing": [
+        "改写UUID/fork-context-ref/嵌套父链证明尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-SOURCE-04",
+      "title": "预览截断后的可续扫覆盖（TASK-TM004-SOURCE，AC-001/004，E2E-001/004）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-SOURCE"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-004"
+      ],
+      "type": "product_e2e",
+      "input": "本例独占授权根，固定程序按 TM-002 已提交枚举顺序生成至少1025个普通 `.jsonl` 文件及足够目录项；前段有主M100/10，预览截断范围外且至少第五个256项采集页的深层 `subagents/` 文件有子S50/5，其余文件没有可计量调用。另备可控制的页间撤权/恢复点。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "真实 UI 选择并确认根",
+          "expected_ui": "1000文件预览显示被截断，不声称全量",
+          "expected_api_db": "1000文件预览显示被截断，不声称全量；确切产品SQL待TM-003实际schema",
+          "expected": "1000文件预览显示被截断，不声称全量",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "经 TM-002 草稿 `beginCandidateScan`/`nextCandidatePage` 取得至多256候选的第一页且 opaque continuation 未耗尽",
+          "expected_ui": "UI 可显示已见M110，但 TM-003 `coverage.scan_incomplete=1`",
+          "expected_api_db": "UI 可显示已见M110，但 TM-003 `coverage.scan_incomplete=1`；确切产品SQL待TM-003实际schema",
+          "expected": "UI 可显示已见M110，但 TM-003 `coverage.scan_incomplete=1`",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "跨至少第五页继续至深层S",
+          "expected_ui": "使用 `openCandidateReadOnly(candidateToken)` 读原始行；在另一次固定变体于页间撤权，下一页或打开须拒绝，`cancelScan` 后 `scan_incomplete=1`，重授后以新授权世代续扫",
+          "expected_api_db": "使用 `openCandidateReadOnly(candidateToken)` 读原始行；在另一次固定变体于页间撤权，下一页或打开须拒绝，`cancelScan` 后 `scan_incomplete=1`，重授后以新授权世代续扫；确切产品SQL待TM-003实际schema",
+          "expected": "使用 `openCandidateReadOnly(candidateToken)` 读原始行；在另一次固定变体于页间撤权，下一页或打开须拒绝，`cancelScan` 后 `scan_incomplete=1`，重授后以新授权世代续扫",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "全部页面 `complete=true` 且完整行提交后",
+          "expected_ui": "可信 M+S 两调用、input150/output15/total165，`scan_incomplete=0` 才可显示本次覆盖完成；重启重扫总量不变",
+          "expected_api_db": "可信 M+S 两调用、input150/output15/total165，`scan_incomplete=0` 才可显示本次覆盖完成；重启重扫总量不变；确切产品SQL待TM-003实际schema",
+          "expected": "可信 M+S 两调用、input150/output15/total165，`scan_incomplete=0` 才可显示本次覆盖完成；重启重扫总量不变",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读各来源事件键、聚合 `(2,150,15)`、游标及 `coverage.scan_incomplete`；中途必须为1；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-SOURCE-04 · 预览截断后的可续扫覆盖（TASK-TM004-SOURCE，AC-001/004，E2E-001/004）",
+        "line": 159
+      },
+      "missing": [
+        "TM-002原生授权/分页/只读打开和撤销接口尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
+      "id": "TC-TM004-INCREMENTAL-03",
+      "title": "跨工具同 ID 与 Claude 复制历史（TASK-TM004-INCREMENTAL，AC-001/002，E2E-001/002）",
+      "feature_id": "TM-004",
+      "requirement_id": "REQ-TM004",
+      "release_id": "v0.4.0-20261001T040433Z",
+      "task_ids": [
+        "TASK-TM004-INCREMENTAL"
+      ],
+      "ac_ids": [
+        "AC-TM004-001",
+        "AC-TM004-002"
+      ],
+      "type": "product_e2e",
+      "input": "同一合成主体、各自经 UI 授权的 Codex 与 Claude 隔离根。固定本地响应使 Codex 原生 `payload.response_id` 与 Claude 主 `assistant.message.id` 字面均为 `shared-call-01`，分别有 C=11/1 与 M=100/10；Claude 原生 `--fork-session` 复制M，再有独立 Agent 子调用S=200/20（新 message.id、与父同 sessionId 但带 agentId）。另以明确标记的衍生故障数据令同一 Claude message.id 出现矛盾101/10，该行不冒称 CLI 原件。",
+      "preconditions": "安装后真实Electron App、隔离test-alice/项目A、动态独占回环服务、每例新profile/SQLite/授权日志根；TM-002/003稳定接口待接入",
+      "steps": [
+        {
+          "step": 1,
+          "action": "经安装 App 扫描C",
+          "expected_ui": "可信1次/total12",
+          "expected_api_db": "可信1次/total12；确切产品SQL待TM-003实际schema",
+          "expected": "可信1次/total12",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 2,
+          "action": "扫描M",
+          "expected_ui": "可信2次/input111/output11/total122，跨工具同字面 ID 不冲突",
+          "expected_api_db": "可信2次/input111/output11/total122，跨工具同字面 ID 不冲突；确切产品SQL待TM-003实际schema",
+          "expected": "可信2次/input111/output11/total122，跨工具同字面 ID 不冲突",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 3,
+          "action": "扫描 fork 复制M与 Agent S",
+          "expected_ui": "可信3次/input311/output31/total342",
+          "expected_api_db": "可信3次/input311/output31/total342；确切产品SQL待TM-003实际schema",
+          "expected": "可信3次/input311/output31/total342",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        },
+        {
+          "step": 4,
+          "action": "加入矛盾行并重扫/重启",
+          "expected_ui": "可信仍3次/342，出现 `identity_conflict` 与覆盖不完整",
+          "expected_api_db": "可信仍3次/342，出现 `identity_conflict` 与覆盖不完整；确切产品SQL待TM-003实际schema",
+          "expected": "可信仍3次/342，出现 `identity_conflict` 与覆盖不完整",
+          "expected_file": "App对原始日志只读；仅本例固定数据程序执行明确的源写入"
+        }
+      ],
+      "db_operations": {
+        "prepare": "按SOP-010新建隔离账号与SQLite；不得SQL直灌规范化成功事件",
+        "expected_changes": "仅由真实App读取受控原始日志后按步骤产生事件或诊断；当前未执行",
+        "verification": "规划只读核对：只读同一 `principal_key` 下 `source=codex` 与 `source=claude_code` 各自事件数1/2、`source_event_key` 不同，Agent `source_scope_key` 与主来源可区分，复制M不多行，冲突不覆写原M；键与归属均不得存原生ID/完整路径；确切可执行SQL待TM-003稳定schema"
+      },
+      "design_status": "baseline_pending",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "source": {
+        "path": "docs/testing/cases/04-TM-004-claude-collection.md",
+        "heading": "TC-TM004-INCREMENTAL-03 · 跨工具同 ID 与 Claude 复制历史（TASK-TM004-INCREMENTAL，AC-001/002，E2E-001/002）",
+        "line": 163
+      },
+      "missing": [
+        "TM-003事务游标、身份schema和只读SQL尚未稳定或验证",
+        "本例逐步固定产品执行代码和原始结果尚未建立"
+      ],
+      "aggregate_planned": false,
+      "evidence": null,
+      "reset": "只清理本例拥有的隔离profile、授权目录、服务和SQLite；保留运行原件",
+      "sops": [
+        "sop/SOP-006-test-plan.md",
+        "sop/SOP-010-test-data.md",
+        "sop/SOP-011-test-implementation.md",
+        "sop/SOP-014-e2e.md"
+      ]
+    },
+    {
       "id": "E2E-TM005-001",
       "title": "日期筛选、趋势和明细",
       "feature_id": "TM-005",
