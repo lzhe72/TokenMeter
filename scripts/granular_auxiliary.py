@@ -114,7 +114,8 @@ def catalog_01(case_dir: Path, context: dict) -> dict:
     rendered = export_test_cases.render_markdown(catalog)
     workbook = ROOT / "TokenMeter项目总表.xlsx"
     from_workbook = workbook_case_ids(workbook)
-    identifiers = [case["id"] for case in catalog["cases"]]
+    identifiers = [identity for case in catalog["cases"]
+                   for identity in [case["id"], *(variant["id"] for variant in case.get("variants", []))]]
     concrete = [case for case in catalog["cases"] if not case.get("aggregate_planned")]
     actual = {"catalog_errors": errors, "catalog_count": len(identifiers),
               "unique_count": len(set(identifiers)), "all_concrete_have_tasks_and_ac":
@@ -212,7 +213,7 @@ def _fixture_record(case: dict, identity: str, root: Path, run_id: str, *, fail:
             "step_results": steps, "evidence": evidence, "started_at": now(), "finished_at": now()}
 
 
-def records_fixture(case_dir: Path, context: dict, *, fail: bool = False) -> tuple[Path, Path, Path, dict]:
+def records_fixture(case_dir: Path, context: dict, *, fail: bool = False) -> tuple[Path, Path, Path, Path, dict]:
     root = case_dir / "fixture"
     root.mkdir(mode=0o700)
     catalog = deepcopy(context["catalog"])
@@ -230,30 +231,33 @@ def records_fixture(case_dir: Path, context: dict, *, fail: bool = False) -> tup
                         "started_at": None, "finished_at": None})
     else:
         records.append(_fixture_record(selected[1], selected[1]["id"], root, run_id))
+    source_release = results.tm001_case_release(catalog)
     report = {"schema_version": 2, "scope": "governance_records_fixture", "run_id": run_id,
-              "release_id": catalog["release_id"], "state": "FAIL" if fail else "BLOCKED",
+              "release_id": source_release, "state": "FAIL" if fail else "BLOCKED",
               "release_eligible": False, "expected_cases": [entry["case_id"] for entry in records],
               "tc_results": records, "suites": []}
     source = root / "result.json"
     catalog_file = root / "catalog.json"
     variant_file = root / "variants.json"
+    update_variant_file = root / "update-variants.json"
     save(source, report)
     save(catalog_file, catalog)
-    save(variant_file, {"release_id": results.tm001_case_release(catalog), "variants": []})
-    return source, catalog_file, variant_file, report
+    save(variant_file, {"release_id": source_release, "variants": []})
+    save(update_variant_file, {"release_id": source_release, "variants": []})
+    return source, catalog_file, variant_file, update_variant_file, report
 
 
 def records_01(case_dir: Path, context: dict) -> dict:
-    source, catalog, variants, _ = records_fixture(case_dir, context)
+    source, catalog, variants, update_variants, _ = records_fixture(case_dir, context)
     report_before = results.read_file(source)
     output = case_dir / "excel"
     receipt = results.export(source, output, catalog_path=catalog, variants_path=variants,
-                             update_variants_path=None)
+                             update_variants_path=update_variants)
     workbook = output / receipt["workbook"]["path"]
     saved_before = results.read_file(workbook)
     modified_before = workbook.stat().st_mtime_ns
     repeated = results.export(source, output, catalog_path=catalog, variants_path=variants,
-                              update_variants_path=None)
+                              update_variants_path=update_variants)
     actual = {"first_export": receipt["state"], "repeat_same_receipt": receipt == repeated,
               "repeat_did_not_overwrite": workbook.stat().st_mtime_ns == modified_before and results.read_file(workbook) == saved_before,
               "fixture_source_unchanged": results.read_file(source) == report_before,
@@ -267,19 +271,19 @@ def records_01(case_dir: Path, context: dict) -> dict:
 
 
 def records_02(case_dir: Path, context: dict) -> dict:
-    source, catalog, variants, fixture = records_fixture(case_dir, context, fail=True)
+    source, catalog, variants, update_variants, fixture = records_fixture(case_dir, context, fail=True)
     first_events = case_dir / "fixture" / fixture["tc_results"][0]["evidence"]["events"]["path"]
     original_events = results.read_file(first_events)
     output = case_dir / "excel"
     receipt = results.export(source, output, catalog_path=catalog, variants_path=variants,
-                             update_variants_path=None)
+                             update_variants_path=update_variants)
     failed_before = receipt["tc_counts"] == {"PASS": 0, "FAIL": 1, "BLOCKED": 77}
     previous = os.environ.get("TOKENMETER_WORKBOOK_NODE")
     os.environ["TOKENMETER_WORKBOOK_NODE"] = "/definitely-missing-tokenmeter-node"
     try:
         try:
             results.export(source, case_dir / "missing-runtime", catalog_path=catalog, variants_path=variants,
-                           update_variants_path=None)
+                           update_variants_path=update_variants)
         except results.Blocked:
             missing_runtime_blocked = True
         else:
@@ -294,7 +298,7 @@ def records_02(case_dir: Path, context: dict) -> dict:
         stream.write(b"tampered")
     try:
         results.export(source, output, catalog_path=catalog, variants_path=variants,
-                       update_variants_path=None)
+                       update_variants_path=update_variants)
     except results.Invalid:
         tamper_rejected = True
     else:
@@ -553,8 +557,10 @@ def execute(args: argparse.Namespace) -> int:
         if (not isinstance(frozen, dict) or raw is None
                 or frozen.get(relative) != results.sha(raw)):
             raise results.Invalid(f"Auxiliary {relative} differs from parent frozen input")
-    if parent.get("release_id") != catalog["release_id"]:
-        raise results.Invalid("Parent release differs from current catalog")
+    source_releases = {case.get("release_id", catalog["release_id"])
+                       for case in catalog["cases"] if case.get("feature_id") == "TM-001"}
+    if source_releases != {parent.get("release_id")}:
+        raise results.Invalid("Parent release differs from TM-001 source cases")
     cases = [case for case in catalog["cases"] if case["id"] in CASES]
     if len(cases) != len(CASES) or {case["id"] for case in cases} != set(CASES):
         raise results.Invalid("Auxiliary 11 TC catalog is incomplete")
@@ -590,7 +596,7 @@ def execute(args: argparse.Namespace) -> int:
     report = {"schema_version": 3,
               "scope": "granular_auxiliary_targeted_probe" if args.case_id else "granular_auxiliary_package",
               "state": "BLOCKED", "release_eligible": False, "run_id": args.run_id,
-              "parent_run_id": parent["run_id"], "release_id": catalog["release_id"],
+              "parent_run_id": parent["run_id"], "release_id": parent["release_id"],
               "source_commit": parent.get("source_commit"), "candidate_tree": parent.get("candidate_tree"),
               "package": parent.get("package"), "started_at": now(), "finished_at": None,
               "parent_report_sha256": results.sha(parent_bytes),
