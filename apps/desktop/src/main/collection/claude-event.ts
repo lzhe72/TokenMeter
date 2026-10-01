@@ -8,6 +8,8 @@ export interface ClaudeUsageProposal {
   canonicalCallId: string;
   sessionId: string;
   agentId: string | null;
+  isSidechain: boolean;
+  attribution: 'main' | 'parent_verified' | 'unverified_parent';
   occurredAtUtc: string;
   modelId: string | null;
   sourceVersion: '2.1.126';
@@ -37,7 +39,8 @@ export function claudeUsageProposal(call: ClaudeCall): ClaudeUsageProposal {
   return {
     source: 'claude_code', providerCallScope: 'provider-message',
     canonicalCallId: call.canonicalCallId, sessionId: call.sessionId,
-    agentId: call.agentId, occurredAtUtc: call.occurredAtUtc,
+    agentId: call.agentId, isSidechain: call.isSidechain, attribution: call.attribution,
+    occurredAtUtc: call.occurredAtUtc,
     modelId: call.model, sourceVersion: call.sourceVersion,
     usage: {
       inputTokens: call.inputTokens, outputTokens: call.outputTokens,
