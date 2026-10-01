@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync, appendFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync, appendFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -13,7 +13,18 @@ const T0 = '2026-10-01T06:00:00Z';
 const VERSION = '0.158.0-alpha.2.1';
 const TEST_SECRET = Buffer.from('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f', 'hex');
 const PRINCIPAL = 'a'.repeat(64);
+const CORE01 = 'TC-TM003-CORE-01';
+const CORE02 = 'TC-TM003-CORE-02';
+const CORE03 = 'TC-TM003-CORE-03';
 function sha(bytes: Buffer): string { return createHash('sha256').update(bytes).digest('hex'); }
+function step(t: {diagnostic(message: string): void}, caseId: string, index: number, actual: Json): void {
+  t.diagnostic(JSON.stringify({kind: 'step', case_id: caseId, step: index, actual}));
+}
+function cleanup(t: {diagnostic(message: string): void}, caseId: string, root: string): void {
+  rmSync(root, {recursive: true, force: true});
+  assert.equal(existsSync(root), false);
+  t.diagnostic(JSON.stringify({kind: 'cleanup', case_id: caseId, owned_root_removed: true}));
+}
 
 type Json = Record<string, unknown>;
 function line(value: Json): Buffer { return Buffer.from(JSON.stringify(value) + '\n', 'utf8'); }
@@ -57,8 +68,8 @@ test('TC-TM003-CORE-01 complete LF lines advance the byte cursor without adding 
     const stage1 = scanCodexFile(readFileSync(file), 0);
     assert.deepEqual(numbers(stage1.events), {count: 1, input: 100, output: 10, cached: 20});
     assert.equal(stage1.committedByteOffset, first.length);
-    t.diagnostic(JSON.stringify({step: 1, source_sha256: sha(first), source_bytes: first.length,
-      actual: numbers(stage1.events), committed_byte_offset: stage1.committedByteOffset}));
+    step(t, CORE01, 1, {source_sha256: sha(first), source_bytes: first.length,
+      usage: numbers(stage1.events), committed_byte_offset: stage1.committedByteOffset});
 
     const second = usage('response-B', 200, 20, 40);
     const half = Math.floor(second.length / 2);
@@ -66,8 +77,8 @@ test('TC-TM003-CORE-01 complete LF lines advance the byte cursor without adding 
     const stage2 = scanCodexFile(readFileSync(file), stage1.committedByteOffset);
     assert.deepEqual(stage2.events, []);
     assert.equal(stage2.committedByteOffset, first.length);
-    t.diagnostic(JSON.stringify({step: 2, source_sha256: sha(readFileSync(file)), source_bytes: first.length + half,
-      new_events: stage2.events.length, committed_byte_offset: stage2.committedByteOffset}));
+    step(t, CORE01, 2, {source_sha256: sha(readFileSync(file)), source_bytes: first.length + half,
+      new_events: stage2.events.length, committed_byte_offset: stage2.committedByteOffset});
 
     const third = usage('response-C', 300, 30, 60);
     const snapshot = cumulative({total_token_usage: {input_tokens: 600, output_tokens: 60, total_tokens: 660}});
@@ -80,10 +91,10 @@ test('TC-TM003-CORE-01 complete LF lines advance the byte cursor without adding 
     assert.deepEqual(rescan.events, []);
     assert.equal(rescan.committedByteOffset, complete.length);
     assert.equal(statSync(file).mode & 0o777, 0o600);
-    t.diagnostic(JSON.stringify({step: 3, source_sha256: sha(complete), source_bytes: complete.length,
-      actual: numbers([...stage1.events, ...stage3.events]), total: 660,
-      committed_byte_offset: stage3.committedByteOffset, rescan_events: rescan.events.length}));
-  } finally { rmSync(root, {recursive: true, force: true}); }
+    step(t, CORE01, 3, {source_sha256: sha(complete), source_bytes: complete.length,
+      usage: numbers([...stage1.events, ...stage3.events]), total: 660,
+      committed_byte_offset: stage3.committedByteOffset, rescan_events: rescan.events.length});
+  } finally { cleanup(t, CORE01, root); }
 });
 
 test('TC-TM003-CORE-02 cumulative, missing and invalid usage stay diagnostic', t => {
@@ -96,8 +107,8 @@ test('TC-TM003-CORE-02 cumulative, missing and invalid usage stay diagnostic', t
     const stage1 = scanCodexFile(readFileSync(file), 0);
     assert.deepEqual(stage1.events, []);
     assert.deepEqual(stage1.diagnostics.map(item => item.code), ['unverified_cumulative', 'missing_usage']);
-    t.diagnostic(JSON.stringify({step: 1, source_sha256: sha(stage1Bytes), new_events: stage1.events.length,
-      diagnostics: stage1.diagnostics.map(item => item.code)}));
+    step(t, CORE02, 1, {source_sha256: sha(stage1Bytes), new_events: stage1.events.length,
+      diagnostics: stage1.diagnostics.map(item => item.code)});
 
     const valid = usage('valid-A', 100, 10, 20);
     const missing = usage('missing', 100, 10, 20, {usage: undefined});
@@ -111,16 +122,16 @@ test('TC-TM003-CORE-02 cumulative, missing and invalid usage stay diagnostic', t
     assert.deepEqual(numbers(stage2.events), {count: 1, input: 100, output: 10, cached: 20});
     assert.deepEqual(stage2.diagnostics.map(item => item.code),
       ['missing_usage', 'negative_input', 'invalid_cached', 'invalid_total']);
-    t.diagnostic(JSON.stringify({step: 2, source_sha256: sha(readFileSync(file)), actual: numbers(stage2.events),
-      diagnostics: stage2.diagnostics.map(item => item.code)}));
+    step(t, CORE02, 2, {source_sha256: sha(readFileSync(file)), usage: numbers(stage2.events),
+      diagnostics: stage2.diagnostics.map(item => item.code)});
 
     const unsupported = Buffer.concat([metadata('0.999.0-unknown'), usage('unsupported', 100, 10, 20)]);
     const stage3 = scanCodexFile(unsupported, 0);
     assert.deepEqual(stage3.events, []);
     assert.deepEqual(stage3.diagnostics.map(item => item.code), ['unsupported_source_version']);
-    t.diagnostic(JSON.stringify({step: 3, source_sha256: sha(unsupported), new_events: stage3.events.length,
-      diagnostics: stage3.diagnostics.map(item => item.code)}));
-  } finally { rmSync(root, {recursive: true, force: true}); }
+    step(t, CORE02, 3, {source_sha256: sha(unsupported), new_events: stage3.events.length,
+      diagnostics: stage3.diagnostics.map(item => item.code)});
+  } finally { cleanup(t, CORE02, root); }
 });
 
 test('TC-TM003-CORE-03 identity v1 and SQLite preserve first event across replay and conflict', t => {
@@ -139,17 +150,17 @@ test('TC-TM003-CORE-03 identity v1 and SQLite preserve first event across replay
       }
       assert.equal(store.record(PRINCIPAL, TEST_SECRET, event('shared-call-01', 100, 10)), 'inserted');
       assert.deepEqual(store.summary(PRINCIPAL), {count: 1, input: 100, output: 10, cached: 20, total: 110});
-      t.diagnostic(JSON.stringify({step: 1, source_event_key: key, actual: store.summary(PRINCIPAL)}));
+      step(t, CORE03, 1, {source_event_key: key, usage: store.summary(PRINCIPAL)});
       assert.equal(store.record(PRINCIPAL, TEST_SECRET, event('shared-call-01', 100, 10)), 'duplicate');
       assert.equal(store.record(PRINCIPAL, TEST_SECRET, event('shared-call-02', 100, 10)), 'inserted');
       assert.deepEqual(store.summary(PRINCIPAL), {count: 2, input: 200, output: 20, cached: 40, total: 220});
-      t.diagnostic(JSON.stringify({step: 2, actual: store.summary(PRINCIPAL)}));
+      step(t, CORE03, 2, {usage: store.summary(PRINCIPAL)});
       assert.equal(store.record(PRINCIPAL, TEST_SECRET, event('shared-call-01', 999, 99)), 'conflict');
       assert.deepEqual(store.summary(PRINCIPAL), {count: 2, input: 200, output: 20, cached: 40, total: 220});
       assert.deepEqual(store.diagnostics(PRINCIPAL), [{code: 'identity_conflict', count: 1}]);
-      t.diagnostic(JSON.stringify({step: 3, actual: store.summary(PRINCIPAL),
+      step(t, CORE03, 3, {usage: store.summary(PRINCIPAL),
         diagnostics: store.diagnostics(PRINCIPAL), claude_key: sourceEventKey(TEST_SECRET,
-          'claude_code', 'provider-message', 'shared-call-01')}));
+          'claude_code', 'provider-message', 'shared-call-01')});
     } finally { store.close(); }
     const readonly = new DatabaseSync(database, {readOnly: true});
     try {
@@ -160,5 +171,5 @@ test('TC-TM003-CORE-03 identity v1 and SQLite preserve first event across replay
     } finally { readonly.close(); }
     assert.equal(readFileSync(database).includes(Buffer.from('shared-call-01')), false);
     assert.equal(statSync(database).mode & 0o777, 0o600);
-  } finally { rmSync(root, {recursive: true, force: true}); }
+  } finally { cleanup(t, CORE03, root); }
 });
