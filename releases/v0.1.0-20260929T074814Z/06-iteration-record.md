@@ -748,3 +748,5 @@ TM-001开发会话交接`709d21253a0f88bc703a431cbf3adba3df17e508`原始`local-6
 709d候选再有`LOGIN-VALIDATION`十父/十二变体22行、36步的独立run`local-5e076fa3d05b4d949877333a3b5339e0`和`LOGIN-RATE`单父/三步的run`local-09f2c4fd672848a9a68ba851a5d7b3c9`；两者原报告、独立Excel及verification均回读PASS，分列总表第21/22批次。四批累计覆盖709d登录任务22父+12变体，但并非一次TM-001全功能回归，旧c291完整门禁FAIL和正式发行NOT_RUN保持；逐批SHA与派生父例口径见07。
 
 同一709d候选的`CHANGE-PASSWORD`十一父/六变体另有17行、32步PASS的独立run`local-64cdbd1050d84763928c0b6a7f30e2c3`，清理及独立Excel回读PASS，作为总表第25批次。仅`PASSWORD-05`的独立审计PASS，不能称12项全量审计已通过；其他功能和完整发行状态不变，逐原件见07。
+
+709d候选`SESSION`十父/两变体另有12行、44步PASS的独立run`local-ff24478631134a96bd7d40f2bbc5e254`，清理及独立Excel回读PASS，作为总表第26批次。独立审计仅`SESSION-04` PASS；本轮其余功能及完整门禁另验，逐原件见07。
