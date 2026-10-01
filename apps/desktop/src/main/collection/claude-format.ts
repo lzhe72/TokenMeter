@@ -3,7 +3,8 @@
 export type ClaudeDiagnosticCode =
   | 'invalid_json' | 'incomplete_tail' | 'unsupported_version' | 'missing_usage'
   | 'invalid_usage' | 'ambiguous_zero' | 'identity_conflict'
-  | 'unverified_inheritance' | 'unverified_parent' | 'invalid_timestamp' | 'invalid_structure';
+  | 'unverified_inheritance' | 'unverified_parent' | 'invalid_timestamp' | 'invalid_structure'
+  | 'invalid_utf8' | 'cursor_reset' | 'read_limit';
 
 export interface ClaudeDiagnostic { code: ClaudeDiagnosticCode; count: number }
 
