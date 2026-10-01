@@ -6,7 +6,7 @@
 
 - [本版需求与功能点](01-requirements.md)、[具体任务](02-breakdown.md)、[产品验收定义](../../docs/product/README.md)、[当前 Electron 架构](../../docs/architecture/README.md)及[本机执行合同](../../docs/architecture/01-electron-local.md)是行为输入；[TM-002 详细用例](../../docs/testing/cases/02-TM-002-permissions.md)已按 [SOP-006 测试计划](../../sop/SOP-006-test-plan.md)拆成每项 TASK 的固定 TC，机器清单和总表须与其逐项回读。
 - 当前 `apps/desktop/src/main/index.ts` 只接受来自主窗口主 frame 的 `tokenmeter:invoke`；`src/preload/index.ts` 暴露列举的业务方法，renderer 无 Node/任意文件访问。`Accounts` 在 `src/main/accounts.ts` 以规范化服务 origin 管理会话，经真实登录或 `/v1/me` 设置 `account.id` 和 `identityVerified`；退出、无效会话、切换服务会清除身份。现有 `src/main/storage.ts` 提供私有目录/文件归属和原子写基础，但未保存来源目录。服务端没有 TM-002 接口，客户端尚无来源模块或客户端用量 SQLite。
-- `TM-001` 的干净源码候选已纳入本工作树，但尚无该候选最终包的正式门禁 PASS；旧设计工作树中的未提交源码快照没有移入本候选。不能把历史 Swift 结果、开发包联合复核或此计划当作本版产品通过。实施和最后回归须重新确认上游稳定提交、原始报告与候选树。
+- `TM-001` 独立候选 `d2db551` 有本机门禁 PASS；本地 `master` 整合树 `ec71aaf`/SOP里程碑后续提交尚无同树最终包门禁或 SOP-020 稳定归档。TM-002 的旧设计快照不能代替上一实际稳定0.1原包。不能把历史 Swift 结果、开发包联合复核或此计划当作本版产品通过。实施和最后回归须重新确认上游稳定提交、原始报告与候选树。
 
 ## SOP-004：技术设计
 

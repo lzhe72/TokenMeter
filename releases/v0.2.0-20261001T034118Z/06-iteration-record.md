@@ -41,3 +41,13 @@
 - 05 发布预案纠正 0.1→0.2 升级预期：0.1 旧版没有 TM-002 来源记录；实际验收应保留 TM-001 合成账号/配置、经 `/v1/me` 再验证身份，进入 TM-002 `none`，然后在新版真实选择、确认、重启恢复。旧稳定 DMG 当前缺失时该升级链路仍 BLOCKED；不能要求恢复旧版不存在的来源。
 - 已将同一最终 DMG、异步 `safeStorage` 首次调用前取得实际测试 Keychain service/account、目标项不存在和签名访问边界证据列入 03/04/05。确定性派生的测试运行时 App 名称只是待原生验证的隔离机制；缺证据不运行依赖密钥的产品 TC，不读取或修改正式 App 密钥项。结构/基线检查及详细用例最终计数待全部文档与机器清单同步后重跑记录。
 - 分页算法进一步锁定为 helper 持根 FD、按相对名 UTF-8 字节序逐级遍历，记录每个已遍历目录的 dev/ino/mtime/ctime 纳秒快照；每页与宣布完整前安全重开逐项复核，变化或不可复核即使旧游标 invalid/incomplete。`ACCESS-06#TREE_CHANGED` 的计划负测改为第一页后在已返回范围内真实插入早排序候选，专门证明不会漏掉跨页新增项。内部 `openCandidateReadOnly` 仅在 helper 验当前令牌/身份/目标 dev+ino 后通过主进程私有有界流交字节；TM-002 本身不读正文。本轮仅记录设计及拟定负测，未运行 helper 或产品 E2E。
+
+## 文档会话接管与稳定升级前置（2026-10-01）
+
+用户指定所有非SOP文档（包括根项目总表和逐批测试结果Excel）由“文档”会话统一编写，原TM-002会话保留源码、固定数据/测试程序和原始结果的开发职责。文档会话从该需求工作树接管01–06、详细用例、机器目录、验收/数据/矩阵和总表草稿；没有从旧工作树继承产品通过结论。已确定的三功能点、九TASK、28条父TC和35个变体保留，完整动作/预期与DB/重置写在详细用例和机器目录，自动化绑定仍为null。当前0.1门禁优先，`releases/current.json`保持0.1；本版档案及详细用例在`docs/catalog.json`保持draft，28条父TC仍为`baseline_pending`/`unexecuted`，待0.1稳定前置及本版SOP-008内容基线后再切换当前版本。本版产品E2E、最终DMG与发布门禁均未执行。
+
+SOP-only `090d808`及总控本地`master`整合 `c6729ea`确定顺序：0.1在本地`master`固定不可变里程碑并完成同树最终原包全量E2E、SOP-018门禁PASS及SOP-020归档后，才存在供本版真实升级的本机正式稳定0.1 DMG；远端源码登记和Tag可等全部目标版本完成后统一办理。独立`d2db551`候选的门禁PASS不能代替上述里程碑、正式原包和归档。`TC-TM002-DELIVERY-01`须核对上一稳定原包摘要、通行证、归档、来源SHA/tree及0.1→0.2真实App自主升级；当前缺上一稳定原包，保持BLOCKED。0.1版没有TM-002来源记录，升级后初态为`none`，须在新版真实选择、确认并重启后才恢复本版密文来源。
+
+TM-002开发会话报告的隔离调查指出：仅改变profile或创建私有签名keychain，尚不能证明最终DMG的异步`safeStorage`写入独立Keychain命名空间；当前未取得独立macOS测试账号，也没有最终包原生item身份、签名边界和首次调用前不存在证明。该调查没有访问用户Keychain item，仅为执行风险输入，不是原生探针PASS。SOP-009第5步及所有依赖该密钥隔离的产品TC继续BLOCKED，直到受控测试账号或另一个经最终包实测证明的隔离方案具备。签名用临时keychain不等于产品存储目标。
+
+文档会话在独立整合树仅做规范检查：`python3 scripts/export_test_cases.py --check`返回CURRENT（137条父记录、437个父步骤；TM-002另有35个带有序步骤的固定变体）；`python3 scripts/check_docs.py --mode structure`和`--mode baseline`均PASS（110份登记文档、1028条链接，其中7份TM-002文档仍为草稿，严格基线只核对当前0.1）；`python3 scripts/quality_gate.py check`PASS、`release_eligible=false`；治理回归447/447 PASS，原件`.local/docs-checks/20261001-tm002-draft-and-milestones/governance.log`。根项目总表导出与回读PASS：11个Sheet、137条父用例、35个变体、172行用例、12次TM-001历史批次，SHA-256 `9b0cc66162da2e83c4e358c9862ec97120c1d5719eb1863effdffb4ff9705eb4`，回读收据`.local/workbook/verification.json`。这些检查未执行任何TM-002产品E2E，不构成本版SOP-008基线或发布资格；实际总表文件随本轮文档提交锁定，后续若再修改须更新上述摘要。

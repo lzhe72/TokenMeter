@@ -13,8 +13,8 @@
 | 历史失败 | dev07六组的004 FAIL；首轮完整精细`local-343e54113b0b442383e80f137013014b`及随后新包全量失败原件继续留存，不能由后续开发包结果覆盖，详见07与06记录 |
 | 本机正式门禁 | `.local/gates/tm001-final-gate-d2db551-20261001T0904Z/gate.json` 对独立候选为 PASS、`release_eligible=true`；机器最终结果 78 父 TC、38 变体全 PASS，原始 11 辅助占位仍为 BLOCKED，另有真实辅助 11/11、审计 12/12、六组 6/6 PASS。最终 `master` 整合树必须重新门禁 |
 | 通行证、正式DMG和更新源 | 独立候选机器通行证已生成，SHA-256 `193bf39ca6bd2aed5a802f817ba5aa7bcfdaeeb442e272f1d843e381c941de53`；被测原 DMG SHA-256 `acc86a9f04ed19fe91f1b63481988d615f5d81680602eed1305b3896bb284492`。根 `dmg/<release_id>/` 目前仅有同摘要的 `CANDIDATE-NOT-RELEASED` 便捷副本；正式原名包、归档和稳定更新源尚未发布 |
-| Git版本 | 旧Swift实现的[PR#2](https://github.com/lzhe72/TokenMeter/pull/2)已合并至`e011857443b503c2bfafcb9cd1c9e6d52f5ff5f2`，不授予Electron候选发布资格。当前需求分支仍待总控在本地`master`整合、对最终树重验并按远端保护完成同步；本版正式Tag未创建 |
-| 用户查看入口 | 根目录[TokenMeter项目总表.xlsx](../../TokenMeter项目总表.xlsx)现汇总11个Sheet、109条用例和12条历史运行批次；`d2db551` 的独立逐例 Excel 已生成并核对，门禁/通行证/原件归档完成后才在后续总表文档提交登记本批次与被测SHA；当前版本 Sheet 已注明独立门禁通过且未发布 |
+| Git版本 | 旧Swift实现的[PR#2](https://github.com/lzhe72/TokenMeter/pull/2)已合并至`e011857443b503c2bfafcb9cd1c9e6d52f5ff5f2`，不授予Electron候选发布资格。本地`master`已整合TM-001与最新SOP，但该树尚未锁定并完成最终包全量门禁。总控将先固定本版里程碑、完成本机稳定包归档；全部目标版本完成后再统一远端源码登记和Tag。本版正式Tag未创建 |
+| 用户查看入口 | 根目录[TokenMeter项目总表.xlsx](../../TokenMeter项目总表.xlsx)现汇总11个Sheet、137条父用例与35个未来TM-002变体（172行）及12条TM-001历史运行批次；未来TM-002保持草稿/未执行。`d2db551` 的独立逐例 Excel 已生成并核对，稳定里程碑门禁/通行证/原件归档完成后才在后续总表文档提交登记被测批次与SHA；当前版本 Sheet 保留独立候选门禁通过且未发布的区别 |
 
 总表的用例状态和批次摘要不替代原始`result.json`、Playwright trace、SQLite、安装包及本机机器门禁。测试AI只能调用已固定程序并分析机器结果，不能临场手填PASS。
 
@@ -26,6 +26,6 @@
 
 1. 以已合入的SOP-014/018规范核对主raw占位、辅助映射和机器复算程序，完成当前整合树的治理回归；文档/总表与候选源码保持一致。
 2. 对总控整合后的新 `master` SHA/tree 按 SOP-017 重建并验证同一最终 DMG；从该包安装 App，执行全部 TM-001 父 TC/变体、独立辅助、审计和六组补充场景，保留新候选的每份原始证据与独立 Excel。
-3. 独立 `d2db551` 候选已完成上述测试，后续由总控把最新 SOP、文档和产品分支整合为**新的本地 `master` 候选**，对其重新执行适用完整 E2E/包门禁并保存原始通行证；再按 SOP-019 核对远端树、按 SOP-020 归档正式原名 DMG。任一 FAIL/BLOCKED 保留原件并返回 SOP-015。
+3. 独立 `d2db551` 候选已完成上述测试；总控须把最新SOP、文档和产品分支整合为本地`master`的不可变0.1里程碑，对该里程碑重新执行适用完整E2E/包门禁并保存原始通行证。PASS后先按SOP-020核对本地里程碑、原包与通行证，归档正式原名稳定DMG，供TM-002从真实0.1原包升级。全部目标版本完成后才由总控按SOP-019统一远端源码登记、逐版读回来源与Tag。任一FAIL/BLOCKED保留原件并返回SOP-015。
 
 导航：[本版本流程](README.md) · [全部用例](../../TEST_CASES.md) · [测试结果](07-test-results.md) · [执行记录](06-iteration-record.md)。

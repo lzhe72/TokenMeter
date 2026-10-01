@@ -701,3 +701,9 @@ SOP 会话交接独立提交 `3303c0b0a7adf8d92630388d9dadc2946f1085b7`：SOP-00
 本次独立文档工作树的 `python3 scripts/check_docs.py --mode structure` 与 `--mode baseline` 均退出 0（104 文档、929 链接、103 baselined、1 superseded）；`python3 scripts/quality_gate.py check` 退出 0（12 功能、37 概要场景、6 绑定，`release_eligible=false`）；`python3 scripts/export_test_cases.py --check` 为 109 例/352 步 CURRENT；`git diff --check` 退出 0。完整治理初次执行 426 项有 1 ERROR，固定用例报告隔离文档工作树缺 Playwright 依赖；对照锁文件 SHA 与已验证工作区一致后临时只读复用固定依赖，重跑 426/426 PASS，日志在本树 `.local/docs-checks/20261001-session-governance/governance.log`。总控指出该依赖链接不满足独立环境证据后，本会话只移除自己创建的符号链接，在本工作树按锁文件执行 `npm ci --cache ../../.local/npm-cache` 与 `ELECTRON_CACHE=../../.local/electron-cache npm run runtime:install`，均退出 0；再次完整运行治理 426/426 PASS，退出 0，独立原始日志在同目录 `npm-ci.log`、`runtime-install.log` 与 `governance-independent.log`。没有改动主项目的依赖目录。这些文档、工作簿和治理检查不在本树执行 App，不能替代总控最终整合树的产品 E2E。
 
 SOP 会话最终交付组合 SOP-only 提交 `afee30d28f9952559dacd895b2313298045b635d`，只含根 `sop/` 的跨版本门禁和文档归口规则。文档会话将其中七份 SOP 的修订号与十章节快照同步至 `docs/project-register.json`，工作簿 `09执行SOP` 随之刷新；本次文档分支须与该 SOP 提交在总控整合树一起复核严格基线，不能单独声称全部规则集成完成。
+
+### 2026-10-01：本机稳定里程碑顺序与TM-002草稿预登记
+
+SOP管理会话提交 `afee30d28f9952559dacd895b2313298045b635d` 与 `090d8081f22d2c94dceec29e9e538ab903c6316d`，总控在本地 `master` 经 `bc52923`、`c6729ea` 整合。新SOP-017/018/019/020规定逐版固定本地`master`里程碑，完整最终包E2E与门禁PASS后先经SOP-020归档本机正式稳定DMG，下一版从该原包真实升级；全部目标版本完成后再统一按远端保护登记源码和Tag。文档会话同步AGENTS、发布/版本规范、Electron架构、0.1/0.2发布预案、状态、Changelog及SOP快照，并预登记TM-002设计草稿。该流程修订不是产品E2E；`d2db551`仍仅是独立候选PASS，本地`master`的0.1里程碑尚未完成同树最终门禁、正式原包归档或稳定发行。
+
+当前 `releases/current.json` 保持指向本版0.1，供总控以明确release_id和固定里程碑执行本版门禁。TM-002的28条父TC/35个变体在机器目录与根总表中标为未来设计草稿、`baseline_pending`/`unexecuted`，其程序绑定为null；0.1门禁按本版清单排除未来0.2项，不能把它们计入0.1必测集合，也不能删掉未来设计。待0.1稳定原包取得并完成TM-002的SOP-008基线后，再由文档会话把当前版本指针切到0.2。本机稳定归档和后续远端源码登记分别留原始收据，不能用本段文档替代固定程序核对。

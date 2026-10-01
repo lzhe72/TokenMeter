@@ -4,7 +4,7 @@
 
 ## 执行集合与前置
 
-- 目标平台：当前本机 macOS 15 Intel。TM-002 全部产品 TC、TM-001 已交付功能的全部细化 TC 和六组补充场景均需同一最终候选重新执行；TM-001 当前尚有 FAIL/BLOCKED，0.2.0 不能借用其历史局部 PASS。
+- 目标平台：当前本机 macOS 15 Intel。TM-002 全部产品 TC、TM-001 已交付功能的全部细化 TC 和六组补充场景均需同一最终候选重新执行；TM-001 独立 `d2db551` 候选门禁 PASS，但本地 `master` 整合树尚未通过同树完整门禁或形成稳定0.1原包；0.2.0 不能借用其旧候选结果。
 - 每例由固定程序建立新的 0700 私有 profile、动态独占回环 FastAPI/隔离 SQLite、合成账号、专用来源 A/B 与独立 expected。通过真实登录界面指向本例服务。测试 profile 的运行时 App 名称拟按其规范化路径稳定派生，正式 profile 仍为 `TokenMeter`；这是待验证设计。须在同一最终 DMG 的异步 `safeStorage` 首次调用前取得实际目标 Keychain item 身份和签名访问边界证据，确认本例测试 item 此前不存在且与正式 App 项分离，再用仅匹配本例测试名称的精确元数据探针核对调用后状态；不得查询、修改或删除正式项。未证实隔离时依赖密钥的用例为 BLOCKED。不得扫描用户 `~/.codex`、`~/.claude` 或操作用户 App、49176 服务、生产库与默认凭据。
 - 目录选择由真实 `dialog.showOpenDialog` 启动，固定系统 UI 自动化驱动原生面板；observer 只记录调用、取消和来源标签，原方法照常执行。Playwright 的 DOM/IPC stub 或直接注入目录路径不构成产品 E2E。环境缺少系统 UI 自动化权限则相关 TC 为 BLOCKED。
 - 独立来源读取审计须覆盖实际主进程与随包同 UID C helper 的读取通道。helper 从私有 stdin 首帧取得受控根，以 `open(O_RDONLY|O_DIRECTORY|O_NOFOLLOW_ANY|O_CLOEXEC)`、`fdopendir`、目录描述符相对 `openat`/`fstatat(AT_SYMLINK_NOFOLLOW)` 和 no-follow 打开；控制 stdout 只返回相对名/元数据/安全错误码，stderr 不含路径。测试需在最终安装包中核对 helper 架构、签名、摘要及拒绝 symlink 竞态的固定用例；内部分页负测还须在第一页后真实插入一个按字节序落在已返回范围内的候选，核对目录 dev/ino/mtime/ctime 纳秒快照于下一页复核时失效旧游标，不能继续拼页或宣称完整。`openCandidateReadOnly` 只许 helper 复核令牌/身份/目标 dev+ino 后以有界私有流向主进程适配器供字节，不向 renderer/日志/报告；TM-002 产品预览不得调用它。缺失或不符不退回绝对路径扫描。审计记录 TC/步骤、来源标签 A/B、相对候选名、操作、时间和结果，不记录绝对路径、正文或密钥；未覆盖的读取通道不能仅凭 UI 未显示 B 判 PASS。测试代码与审计器均需固定治理负测。

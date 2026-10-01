@@ -101,7 +101,7 @@ GitHub工作流默认禁用自动触发；明确多环境需求时按当时矩�
 
 基础负测至少包括漏例/重复、失败/跳过/重试取绿、fixture或原包改动、错误SHA/平台、路径越界/symlink、旧run或时间、未完成清理和零原始结果。质量入口在execution_profile=local_electron时不允许落回native_e2e；未完成绑定返回BLOCKED，完成后委托本地新门禁，保持历史profile兼容仅供明确历史测试。
 
-`local_release.py`只接收已通过本机门禁的原件，再次调用同验证逻辑核对后以独占新目录复制，保留关联的candidate/package/evidence原始层级，生成读回SHA清单。Git同步前必须核对本地`master`最终SHA/tree与被测候选一致，推送后远端`master`读回相同SHA；若远端强制PR，还须核对实际合并tree，无一致性证明则重验。Git API写成功或tag不替代本地发行验证。
+`local_release.py`只接收已通过本机门禁的原件，归档前须机器核对本版固定的本地`master`里程碑SHA/tree及其祖先关系、被测候选、原包和通行证一致，再以独占新目录复制，保留关联的candidate/package/evidence原始层级，生成读回SHA清单；当前程序若缺里程碑归属检查，先补固定代码与负测，不能人工宣称通过。归档成功后才形成可供下一版升级的本机正式稳定包。全部目标版本完成后的远端受控PR、每版里程碑祖先/来源读回与Tag属于SOP-019后续单独步骤；远端登记收据另存，不改原归档或通行证。Git API写成功或Tag不替代本地发行验证。
 
 ## 升级后UI重连诊断接口
 
