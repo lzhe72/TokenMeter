@@ -1,6 +1,6 @@
 # SOP-014 自动 E2E
 
-**修订：** 23　**状态：** baselined　**适用：** all
+**修订：** 24　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
@@ -26,11 +26,11 @@
 
 3. 先读Electron本机设计与详细用例；默认只在本机执行，Actions仅明确多环境要求后启用。新客户端必须有新证据，不能借旧Swift/CI PASS。
 4. 本轮测试计划程序为scripts/granular_e2e.py逐TC及scripts/local_e2e.py六组补充回归、apps/desktop/e2e；未实现/绑定时BLOCKED。建立后由runner检查候选SHA、包/DMG摘要、平台和归属，在全新目录执行。
-5. 正式包模式从最终DMG安装并逐例用Playwright executablePath启动该App；API/SQLite、主进程/IPC均为真实链路。每例新profile与测试库，动态独占端口经真实设置UI选择。
+5. 正式包模式从最终DMG安装并逐例用Playwright executablePath启动该App；API/SQLite、主进程/IPC均为真实链路。每例新profile与测试库，动态独占端口经真实设置UI选择。TM002/003/004 中调用 macOS `safeStorage` 的用例在任何首次密钥调用前，核对SOP-009最终包原生探针的实际 Keychain item 身份和SOP-010本次独占所有权；`--user-data-dir`本身不证明 Keychain 隔离。身份未证实、测试 item 已存在或可能访问正式 item 即BLOCKED，不启动依赖该能力的场景。
 6. 006先核对内置默认127.0.0.1:49176与更新源，再UI切两套动态服务验证实际登录、重启和origin隔离，不能为了默认端口使用用户生产服务。
 7. 004启动前检查Squirrel固定用户缓存和launchd job；两者均不存在才创建本次owner标记并执行，已有未知状态返回BLOCKED，不能覆盖。结束时核对ShipIt目标属于本次安装，再清理本次状态。只有启动前不存在、当前uid且内容为空、创建时间不早于本次owner的ByHost偏好文件，才允许随本次状态清理，先保存文件摘要/副本。含内容、归属不明或旧偏好保持BLOCKED。历史失败残留另存恢复记录，不能改写原失败。先证明账号验证后自动发现当前204源，再执行同一更新源四阶段：非法下载URL在传输前拒绝，非回环HTTP重定向在跟随前拒绝，完整坏签名包验签失败保持原版，正确包经成熟原生更新器安装并自主重启到101。Electron不要求旧Swift ATS错误码-1022；必须用独立请求日志证明拒绝边界。
 8. 升级后只连接已自行启动的新PID，不调用launch高版；核对实际包路径/版本/hash、同一runtime侧文件与profile、/v1/me自动登录、配置与token保留。
-9. 保存原始JSON/trace/截图、fixture与SQL摘要、服务审计/DB验证、更新请求和清理；关闭本次进程并验证端口/镜像/profile清理。精细主run的116行原始记录必须保留：其中105行实际执行/可从执行变体推导的项均须PASS，只有11条明确无步骤、未执行且由独立辅助程序接管的占位可保持BLOCKED。辅助11例须同候选独立执行并11/11 PASS；审计12/12及六组补充6/6均须PASS。阶段报告的BLOCKED历史不改写，也不能直接当作最终产品PASS。父门禁从冻结原件及目录生成并独立重算最终规范化产品结果，精确证明78父TC与38变体零跳过、零重试、零FAIL/BLOCKED、证据齐全，才可继续；六组聚合场景不能覆盖缺失细例。
+9. 保存原始JSON/trace/截图、fixture与SQL摘要、服务审计/DB验证、更新请求和清理；关闭本次进程并验证端口/镜像/profile及适用的精确测试 Keychain item 清理，只操作本次拥有的资源，记录清理前后元数据和归属，不能清理正式 item。精细主run的116行原始记录必须保留：其中105行实际执行/可从执行变体推导的项均须PASS，只有11条明确无步骤、未执行且由独立辅助程序接管的占位可保持BLOCKED。辅助11例须同候选独立执行并11/11 PASS；审计12/12及六组补充6/6均须PASS。阶段报告的BLOCKED历史不改写，也不能直接当作最终产品PASS。父门禁从冻结原件及目录生成并独立重算最终规范化产品结果，精确证明78父TC与38变体零跳过、零重试、零FAIL/BLOCKED、证据齐全，才可继续；六组聚合场景不能覆盖缺失细例。
 10. 精细用例执行后，调用`python3 scripts/audit_granular_evidence.py --report <本批次result.json> --output <新的audit.json>`检查固定规则要求的旁证。审计绑定原报告和代码摘要，不改原件；缺断言/旁证为BLOCKED，原FAIL不得升级为PASS。测试准备缺陷与产品断言失败分别记录。修复测试准备后可按步骤2作新run的单例验证，不能用新结果覆盖旧失败或声称完整发布回归通过。
 11. `scripts/local_e2e.py`在结果落盘后调用`test_result_export.py`，从本批次原始结果生成独立 `TokenMeter测试结果-<run_id>.xlsx`，包括FAIL/BLOCKED。精细结果使用`granular_test_result.py`，传入同批次原报告、辅助报告和独立审计。运行前按[总表规范](../docs/standards/project-workbook.md)准备Codex捆绑Node与artifact-tool。结果保存在`.local/test-results/<run_id>/`；同源重复导出只验证，禁止覆盖历史。逐步实测、失败和证据放在该文件。导出收据为独立`excel-export.json`，不改产品结果；生成失败保留原始结论并非零返回，不能声称本步完成。候选门禁和发行归档先在干净被测树上完成，根项目总表的批次摘要与入口在其后按SOP-024作为只索引原件的文档提交同步，明确所指被测SHA，不将总表提交冒充被测候选。
 

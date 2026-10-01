@@ -658,6 +658,12 @@ SOP-019修订至8并同步索引、AGENTS、发布/版本规范、Electron本机
 
 初次治理单测198项中2项失败：旧`test_candidate_gate.py`仍强制要求PR/push自动运行原生门禁，与用户本机流程冲突；原失败保留在本轮执行记录。调整固定负测为断言工作流仅`workflow_dispatch`、无PR/push/schedule自动触发，手动占位流程明确退出2且不含产品门禁或上传步骤；单文件11/11通过，随后完整治理198/198通过。此处修改的是旧触发要求的测试合同，不更改产品用例预期或借测试通过宣称产品E2E成功。
 
+### 2026-10-01：TM002/003/004 macOS Keychain 测试隔离规范
+
+总控会话报告新缺口：TM002 的 `safeStorage.encryptStringAsync` 在 macOS 使用 Keychain，独立的 `--user-data-dir` 不覆盖该系统资源；未证明最终包实际测试 item 身份、与正式 App 分离以及清理归属前，TM002/003/004 的相关 E2E 不能启动。按 SOP-000 在独立分支修订 SOP-006/009/010/014 与索引、测试用例规范、Electron 架构、AGENTS 和 Changelog。Electron 44.5.1 主进程源码中的 `KeychainPassword` 命名只能用于设计推断，不能证明异步提供者和最终 DMG 的实际 item 身份。新合同要求首次调用前用同一最终 DMG 在隔离 macOS 测试账号或经证明独立的 Keychain 命名空间作原生探针；确认精确测试身份先前不存在，记录本次 owner 与创建元数据，仅清理确属本次创建的精确 item。预存、身份未知或与正式 App 冲突均阻断依赖场景，不能查询、覆盖、删除正式凭据。本条是后续 TM002/003/004 执行前置，不追溯改判正在运行的 TM001 候选证据。当前只有规范修订，没有该最终包的原生证明或产品 E2E PASS。
+
+独立规范树的实际检查：`python3 scripts/check_docs.py --mode structure` 与 `--mode baseline` 均退出0，74文档/441链接；`python3 scripts/quality_gate.py check`退出0，12功能/37场景/6绑定，`release_eligible=false`；`python3 -m unittest discover -s tests/governance -p 'test_*.py'`执行198项、全部通过。原始输出保存在本机`.local/git-sync/20261001-keychain-sop/`。这些只证明本轮规范与治理检查，不代表 Keychain 原生探针或产品E2E通过。
+
 ### 2026-10-01：SOP 基线合入后的 TM-001 文档与候选前检同步
 
 独立规范PR#4已进入远端`master`，读回合并提交`f3b29f6b4203fe22ae8a40533e775291253bb7b3`。当前工作树正将TM-001分支与该基线合并；本条只记录规范和门禁程序对齐，**不表示这次产品合并已经提交、测试或发布**。现行SOP-014修订23、SOP-018修订12明确保留主精细run的11条辅助占位BLOCKED，从同一候选辅助11例、审计12项、补充六组及原始目录独立复算78父TC/38变体的最终规范化结果；SOP-024修订6规定候选输入先进入干净提交，通行证及本机归档完成后再用后续文档提交登记总表批次与被测SHA。原本“SOP-018修订11尚未同步”的描述属于前一阶段事实，当前已由上述修订替代。
