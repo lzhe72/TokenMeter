@@ -68,7 +68,10 @@ test('TC-TM003-CORE-08 owner profile protects and preserves one identity secret'
       reopened.store.commitBatch({principalKey: fixture.identities[0].principal_key, secret: reopened.secret,
         source: 'codex', sourceKey: SOURCE, rootKey: ROOT, fileIdentity: FILE, committedByteOffset: 410,
         prefixMac: MAC, events: [a], diagnostics: [], coverage: {missingBefore: false, scanIncomplete: false}});
-      for (const other of fixture.identities.slice(1)) assert.equal(reopened.store.summary(other.principal_key).count, 0);
+      for (const other of fixture.identities.slice(1)) {
+        assert.equal(reopened.store.summary(other.principal_key).count, 0);
+        assert.equal(reopened.store.codexState(other.principal_key, null).usage, null);
+      }
     } finally { reopened.close(); }
     const replay = state(dbPath);
     assert.deepEqual([replay.events, replay.total, replay.cursors, replay.marker], [1,110,1,first.marker]);
