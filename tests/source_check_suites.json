@@ -24,6 +24,18 @@
       "file": "apps/desktop/tests/tm003-core07.test.ts",
       "cases": ["TC-TM003-CORE-07"],
       "reset_kind": "owned_root"
+    },
+    "tm005-core04": {
+      "release_id": "v0.5.0-20261001T034729Z",
+      "file": "apps/desktop/tests/tm005-iana.test.ts",
+      "cases": ["TC-TM005-CORE-04"],
+      "reset_kind": "memory_only"
+    },
+    "tm005-core05": {
+      "release_id": "v0.5.0-20261001T034729Z",
+      "file": "apps/desktop/tests/tm005-sqlite-snapshot.test.ts",
+      "cases": ["TC-TM005-CORE-05"],
+      "reset_kind": "owned_root"
     }
   }
 }

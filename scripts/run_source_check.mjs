@@ -99,7 +99,9 @@ for (const line of stdout.split(/\r?\n/)) {
     else actualSteps.get(item.case_id).set(item.step, item.actual);
   } else if (item.kind === 'cleanup' &&
       ((suite.reset_kind === 'owned_root' && item.owned_root_removed === true && item.memory_reset_complete === undefined) ||
-       (suite.reset_kind === 'memory_only' && item.memory_reset_complete === true && item.owned_root_removed === undefined))) {
+       (suite.reset_kind === 'memory_only' && item.owned_root_removed === undefined &&
+        (item.memory_reset_complete === true ||
+         (item.resource_scope === 'memory_only' && item.external_resources_created === false))))) {
     if (cleanup.has(item.case_id)) parseErrors.push('duplicate_cleanup');
     else cleanup.set(item.case_id, true);
   } else parseErrors.push('invalid_step_or_cleanup');
