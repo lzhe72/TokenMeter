@@ -77,3 +77,6 @@
 项目总表重新导出、回读 PASS：11 Sheet、164 父用例、35 个 TM-002 变体、共199行用例、12次历史 TM-001 批次，SHA-256 `c865d2c504c1867f022638f07990d69801319e747598b6939703473bc51193d1`；收据 `.local/docs-checks/20261001-tm003-draft/workbook-verify.log` 明确 `product_tests_executed=false`、`release_eligible=false`。没有新增或覆盖任何 TM-003 测试结果 Excel。0.2 文档分支完整治理回归仍有9项跨版本程序ERROR，由TM-002开发会话修复中；本版不借用旧治理或原生研究结果声称可执行、产品PASS或发布资格。
 
 SOP-019修订11随后加入独立文档树：TM-003开发会话可在自己的worktree把干净且范围可核对的WIP/候选源码普通快进推送到远端同名功能分支并读回；总控可选一个integration镜像。`remote_code_saved`只是源码保存状态，TM-003本版SOP-008、固定产品E2E、本地稳定包、远端`master`及Tag仍分别未完成。文档会话的草稿提交`4f9fba442fade041b09b32ee5f1aa0c3a2cfcfef`尚无远端分支读回记录；不得从提交存在推定远端已保存。本段同步规范，未改0.1正在执行的被测本地`master`。
+## 2026-10-02 · 模块逐步运行与Excel导出边界
+
+TM-003开发分支在原`311deedf19d54a77e4c2d5c99eaeb3a1ea45c787`模块3/3的基础上提交干净候选`44379e6d8546ba3a8cef9f000a99695c6027a9d4`、tree`2df6e47f388def16618144358b5dd28d89ca5334`，仅补Node测试的CORE逐步实测/源字节摘要诊断，不改变行为断言。新原始运行`.local/ci/tm003-core-step-evidence-20261002/`记录CORE-01/02/03各步实际值与3/3 PASS、桌面单元29/29、typecheck、Electron runtime安装和build退出0；旧运行及最初红测/临时目录权限失败仍保留。代码与逐步原件只在TM-003开发工作树，本文件所在文档树尚未合入程序，`tests/test_cases.json`绑定为空。SOP会话修订`4cca918`已规定模块`source_check`须由固定导出程序生成独立Excel并回读；该导出器尚未实现，本次模块Excel与根总表批次登记BLOCKED，原始模块3/3事实保留。原27条产品TC、真实授权/Keychain/App/服务/SQLite产品E2E均没有据此通过，正式发行NOT_RUN。
