@@ -31,7 +31,7 @@ SOP 维护由本项目的「SOP」管理会话（thread ID `01a0f5a5-63f7-76b0-a
 
 ## 必须遵守的完成标准
 
-1. 在需求阶段先写功能点，再拆具体 TASK，再基于每个 TASK 设计逐条 TC（实际输入、有序动作、逐步预期、DB操作、类型、数据/重置和 SOP）；文档基线后才开发。按已定 TC 执行并逐项记录，不能根据现有代码倒推预期。规则见[任务与用例规范](docs/standards/test-cases.md)，根目录[全部用例](TEST_CASES.md)。功能/测试/数据/规范同轮交付。
+1. 在需求阶段先写功能点，再拆具体 TASK，再基于每个 TASK 设计逐条 TC（实际输入、有序动作、逐步预期、DB操作、类型、数据/重置和 SOP）；文档基线后才开发。按已定 TC 执行并逐项记录，不能根据现有代码倒推预期。规则见[任务与用例规范](docs/standards/test-cases.md)；根目录`TEST_CASES.md`须随产品分支的用例基线进入最终整合树，进入前依赖它的产品验收保持BLOCKED。功能/测试/数据/规范同轮交付。
 2. 用户2026-09-30明确：Electron + React/TypeScript + Vite/electron-vite；Playwright Electron真实桌面E2E；electron-builder打包。默认在本机完成开发、全量测试和发行，无需完整Xcode。详见[当前设计](docs/architecture/01-electron-local.md)。旧Swift/XCUITest证据仅作历史。
 3. 每次迭代/修复/发布执行目标及此前已交付功能全部E2E。本轮TM-001六个场景组及其细化必测 TC 全部覆盖；最终DMG安装后的正式App贯通UI、IPC、真实服务与隔离SQLite。单元/API/mock/截图不能替代产品E2E。
 4. 失败、跳过、零例、缺环境/报告、重试取绿、证据与提交/包不匹配均阻断。禁止手填通过、认证旁路、删除失败用例、continue-on-error或伪造数据。
@@ -59,8 +59,8 @@ python3 -m unittest discover -s tests/governance -p 'test_*.py'
 ## 数据与实现约束
 
 - 只读取用户授权的日志目录，不改写其他工具的配置或原始日志。
-- 不保存/上传提示词、回复、代码、API key 或完整本机路径；只保留用量及必要去重元数据。
-- TM-002 已确定使用 macOS 原生目录选择器与 App 强制的读取范围；App 内撤销及系统访问失效不宣称为沙盒持久授权或 TCC 撤销。重启恢复所需可解析目录 locator 的本机保存边界仍待用户决定，决定前不得持久化该信息或将依赖它的验收标为基线。
+- 不保存/上传提示词、回复、代码、API key 或完整本机路径；只保留用量及必要去重元数据。唯一的本机持久例外是用户已选目录的必要 locator：只可加密保存于当前用户私有来源配置，目录0700、文件0600，不回退明文，且不得进入用量、同步、诊断、报告或Git。
+- TM-002 使用 macOS 原生目录选择器与 App 主进程强制的读取范围；App 持久保存已选目录的加密 locator 以跨重启恢复，撤销时删除。密钥不可用、解密失败或来源/账号/根身份不符即停读并要求重选；App 内撤销及系统访问失效不宣称为沙盒持久授权或 TCC 撤销。
 - 累计计数、缓存子项、会话分支、子代理及重复同步必须有专门用例；未知值不能用零掩盖。
 - 测试只使用隔离目录与合成账号。不能扫描开发者真实 `~/.codex`、`~/.claude` 生成测试数据。
 - 时间统一存 UTC，团队默认 Asia/Shanghai；费用以价格版本计算，并标注估算。
@@ -69,7 +69,7 @@ python3 -m unittest discover -s tests/governance -p 'test_*.py'
 
 ## 文档、Git 与交接
 
-- 用户统一查看入口为根目录 `TokenMeter项目总表.xlsx`；测试用例一例一行汇总，每次实际测试单独生成 `TokenMeter测试结果-<run_id>.xlsx`，总表仅登记批次摘要和文件入口。按[总表规范](docs/standards/project-workbook.md)同步需求、任务、用例、版本及稳定ID，总表随Git提交；详细运行结果留本机且不覆盖历史。腾讯在线表格未更新，用户已改为本地Excel。
+- 用户统一查看入口为根目录 `TokenMeter项目总表.xlsx`；测试用例一例一行汇总，每次实际测试单独生成 `TokenMeter测试结果-<run_id>.xlsx`，总表仅登记批次摘要和文件入口。按[总表规范](docs/standards/project-workbook.md)在候选测试前提交需求、任务、用例和版本输入；门禁与本机归档完成后由后续文档提交登记批次及被测SHA，不能回写被测树或冒充新包验收。总表随Git提交，详细运行结果留本机且不覆盖历史。腾讯在线表格未更新，用户已改为本地Excel。
 
 - 统一编号使用 `vMAJOR.MINOR.PATCH-YYYYMMDDTHHMMSSZ`，在立项时分配 UTC 时间；贯穿版本档案、Changelog 标题、commit、通行证和最终 tag。见 [版本规范](docs/standards/versioning.md)。
 - 分支使用 `codex/<release_id>/<功能名>`，commit 标题带 `[release_id][TM-编号]`；一个可验收功能一个版本，修复升补丁版本。不要把每个中间提交都当作发布。

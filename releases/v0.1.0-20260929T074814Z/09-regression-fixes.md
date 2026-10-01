@@ -89,10 +89,10 @@
 
 主run独立证据审计v1`.local/ci/local-534748ff47cb44229183a6bd878c1674-audit/audit.json`保留**BLOCKED**，当时唯一`PASSWORD-05`提示peer fixture源码与已审阅绑定不一致。重新核对固定绑定的审计v2`.local/ci/local-534748ff47cb44229183a6bd878c1674-audit-v2/audit.json`为12/12 PASS。联合逐例复核Excel`.local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/TokenMeter测试结果-local-534748ff47cb44229183a6bd878c1674.xlsx`和同目录`verification.json`导出/回读PASS，绑定辅助11/11及六组6/6原件后，78父TC、38变体均PASS。原主run的`state=BLOCKED`与`verification.json`的`product_state=BLOCKED`仍准确保留11条辅助占位的原始事实；复核表没有修改这些原件。目标的开发包联合逐例复核已通过，但该包`release_eligible=false`，仍须冻结干净候选、验证最终DMG并执行正式门禁；任一必需项失败或阻断仍保持本版未发布、无通行证。
 
-根[项目总表](../../TokenMeter项目总表.xlsx)当前为11个Sheet、109条用例及12条批次索引，本次重新导出后的SHA-256为`a53f219f6f17c6cdc32609c98b66fd1641a38c31168d87f0c3563236e58ee64f`；`.local/workbook/verification.json`与`python3 scripts/verify_project_workbook.py`回读同一文件为PASS。第12条是上述联合复核PASS索引，主raw的BLOCKED及正式门禁未过仍以各自原件为准。
+根[项目总表](../../TokenMeter项目总表.xlsx)当前为11个Sheet、109条用例及12条批次索引；SOP基线合并后重新导出的SHA-256为`ef94e5e15c1c6c0b4fe4a0ae8d550728c54ad502e317262b7dc02ffba41c8ae3`，`.local/workbook/verification.json`与`python3 scripts/verify_project_workbook.py`回读同一文件为PASS。第12条是上述联合复核PASS索引，主raw的BLOCKED及正式门禁未过仍以各自原件为准。
 
 ## 最终候选门禁程序与待完成项（2026-10-01）
 
 已将完整精细主runner、辅助11例、独立审计12项、六组补充E2E和逐例Excel接入同一候选门禁。机器从各自原始结果复算78条父TC及38条变体的最终状态，保留主报告11条辅助占位的原始BLOCKED；占位必须逐条映射至真实辅助PASS，不能以修改主报告或旧运行结果放行。归档程序再次核对结果与副本、候选SHA/tree和DMG摘要；缺失、篡改与伪造映射有固定负测。固定Playwright注册核对95/95通过，基础构建/单元/服务检查通过，均只证明程序准备就绪。
 
-本版下一步是同步SOP-018过时的“精细集合校验未实现”文字、冻结干净提交并从其最终DMG执行**新的**完整门禁。正式run未生成前保持未发布、无通行证；即使文档、测试程序和开发包联合复核通过，也不能提前把结果标为正式产品PASS。最新证据与检查命令见[06执行记录](06-iteration-record.md)。
+SOP-018修订12已明确精细集合及最终结果复算合同。本版下一步是完成整合树治理回归、冻结干净提交，并从其最终DMG执行**新的**完整门禁。正式run未生成前保持未发布、无通行证；即使文档、测试程序和开发包联合复核通过，也不能提前把结果标为正式产品PASS。最新证据与检查命令见[06执行记录](06-iteration-record.md)。

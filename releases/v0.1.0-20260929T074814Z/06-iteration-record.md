@@ -647,3 +647,26 @@ SOP-019修订至8并同步索引、AGENTS、发布/版本规范、Electron本机
 本次按SOP-024同步Changelog、状态、07/08/09及本记录。`docs/project-register.json`的25份SOP快照与当前磁盘文件逐章节、修订号比较为0差异，故无需修改登记；根`TokenMeter项目总表.xlsx`按现有登记重导，`python3 scripts/verify_project_workbook.py`退出0，回读11个Sheet、109条用例、12条批次、零错误，SHA-256为`a53f219f6f17c6cdc32609c98b66fd1641a38c31168d87f0c3563236e58ee64f`，`release_eligible=false`。`python3 scripts/export_test_cases.py --check`退出0，109例、352步。`python3 scripts/release_registry.py show`退出0，显示本版工作树档案且没有正式Tag或已验证通行证。
 
 文档`python3 scripts/check_docs.py --mode structure`与`--mode baseline`均退出0（102份文档、904条链接），`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6绑定，`release_eligible=false`），`git diff --check`退出0。一次完整治理`python3 -m unittest discover -s tests/governance -p 'test_*.py'`在门禁代码及fixture仍被并发修改期间运行，422项中1 FAIL、7 ERROR，退出1：7个错误是归档fixture未满足新增补充run绑定，1个失败是PASSWORD-05冻结源码摘要改变。它不是最终稳定候选检查，不能记为治理PASS；源码/测试负责人修复后须重新运行并保留新的结果。最终包E2E与发布门禁仍未执行。
+
+### 2026-10-01：SOP 独立分支先行整合（纯规范）
+
+用户本轮明确要求将SOP改动作为独立分支提交到远端`master`；此前各需求分支由总控统一整合的常规顺序在本次规范分支上让位于这条明确指令。以当时远端`master` `e011857443b503c2bfafcb9cd1c9e6d52f5ff5f2`为基线创建`codex/v0.1.0-20260929T074814Z/sop-governance`隔离工作树，只承载SOP、使其链接和治理检查可执行的设计/规范附件、目录、AGENTS、Changelog、总表格式快照及关闭旧自动Actions触发的配置；不带入TM001产品实现、原始测试结果、候选包或版本指针。产品分支以后须以新远端基线重新整合并在最终产品树完整回归。
+
+本次SOP-019修订为纯规范先行提供边界：SOP-008结构/基线/治理PASS仅允许源码规范整合，`release_eligible=false`；不生成产品E2E PASS、通行证或Tag。SOP-014/018补明确主run的11条辅助占位BLOCKED必须原样保留，只有同候选辅助、审计、六组及独立重算的78父TC/38变体最终规范化结果均零失败/阻断才可发布。SOP-014/018/024补清晰的两阶段顺序：干净候选先产本机原件、独立结果Excel、通行证和归档，根总表测试批次作为引用被测SHA的后续文档提交，不回写被测树。TM002依据用户已选目录跨重启保存决定，仅允许私有加密locator，撤销删除、失钥停读；不把App访问控制冒充系统授权。
+
+独立树编制期实跑`python3 scripts/check_docs.py --mode structure`和`--mode baseline`均退出0；最终去除不属于纯规范范围的总表数据文件后重查为74文档、441链接。`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6绑定，`release_eligible=false`）。这些为文档/追踪条件，尚未运行本版Electron最终DMG产品E2E；不授予任何产品发布资格。远端PR、合并SHA/tree与候选提交后的治理复核记录在本机`.local/git-sync/`，不得预填在本条。
+
+初次治理单测198项中2项失败：旧`test_candidate_gate.py`仍强制要求PR/push自动运行原生门禁，与用户本机流程冲突；原失败保留在本轮执行记录。调整固定负测为断言工作流仅`workflow_dispatch`、无PR/push/schedule自动触发，手动占位流程明确退出2且不含产品门禁或上传步骤；单文件11/11通过，随后完整治理198/198通过。此处修改的是旧触发要求的测试合同，不更改产品用例预期或借测试通过宣称产品E2E成功。
+
+### 2026-10-01：SOP 基线合入后的 TM-001 文档与候选前检同步
+
+独立规范PR#4已进入远端`master`，读回合并提交`f3b29f6b4203fe22ae8a40533e775291253bb7b3`。当前工作树正将TM-001分支与该基线合并；本条只记录规范和门禁程序对齐，**不表示这次产品合并已经提交、测试或发布**。现行SOP-014修订23、SOP-018修订12明确保留主精细run的11条辅助占位BLOCKED，从同一候选辅助11例、审计12项、补充六组及原始目录独立复算78父TC/38变体的最终规范化结果；SOP-024修订6规定候选输入先进入干净提交，通行证及本机归档完成后再用后续文档提交登记总表批次与被测SHA。原本“SOP-018修订11尚未同步”的描述属于前一阶段事实，当前已由上述修订替代。
+
+候选前检代码已补：补充六组使用独立`local-<uuid>`运行编号，并以`--parent-report`绑定主精细报告、候选及DMG；门禁重新核对独立Excel与`final-product-result.json`，归档时再从原件复算；PASSWORD-05受审查的peer源码摘要已同步。此前治理422项的1 FAIL/7 ERROR原件继续保留为并发改动阶段诊断。源码负责人报告修复后治理424/424通过；本次合并树的完整治理仍须由总控在冲突全部解决后重新执行并保存原始日志/收据，未有该证据前不把候选治理写为最终PASS。最终签名/安装DMG的全量产品E2E、发布门禁和通行证也尚未执行。
+
+本次文档冲突解决后，`docs/project-register.json`的25份SOP快照与现行文件修订号、十章节内容逐项比较为0差异。根项目总表使用捆绑artifact-tool重新导出，`python3 scripts/verify_project_workbook.py`回读11个Sheet、109条用例、12条批次、零错误，SHA-256为`ef94e5e15c1c6c0b4fe4a0ae8d550728c54ad502e317262b7dc02ffba41c8ae3`；`product_tests_executed=false`、`release_eligible=false`。`python3 scripts/check_docs.py --mode structure`和`--mode baseline`均退出0（102文档、902链接），`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6绑定，发布资格否），`python3 scripts/export_test_cases.py --check`退出0（109例、352步），`git diff --check`退出0。以上仅是文档、总表与追踪检查；本次合并树完整治理仍由总控另行保存原始结果。
+
+
+### 2026-10-01：合并后治理原始检查
+
+TM-001源码提交`44e3844ce566eb3120f17ee555321434fcac4231`与已合入的SOP规范提交`f3b29f6b4203fe22ae8a40533e775291253bb7b3`在本地合并，冲突按现行SOP内容及TM-001用例合同解决；本条检查发生在合并提交前的已暂存树，不冒充最终包验收。原始命令输出及各文件SHA-256保存在`.local/ci/tm001-merge-preflight-20261001T0716Z/receipt.json`及同目录日志。`python3 scripts/check_docs.py --mode structure`、`--mode baseline`、`python3 scripts/quality_gate.py check`和`git diff --cached --check`均退出0；`python3 -m unittest discover -s tests/governance -p 'test_*.py'`在46.0秒内实际运行426项、全部通过，退出0。先前并发改动期间422项的1 FAIL/7 ERROR仍按历史保留，由本次新原件证明合并后的治理检查已修复。上述结果仍不是最终签名DMG的产品E2E或SOP-018发布门禁；正式候选尚无通行证。

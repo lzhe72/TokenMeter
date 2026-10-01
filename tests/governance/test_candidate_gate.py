@@ -97,6 +97,29 @@ class CandidateGateTests(unittest.TestCase):
             self.assertNotIn("internal_publish.py", workflow)
             self.assertNotIn("continue-on-error:", workflow)
 
+    def test_workflows_do_not_start_remote_tests_automatically(self):
+        for filename in ("quality.yml", "release-candidate.yml", "internal-release.yml"):
+            workflow = (REPO / ".github/workflows" / filename).read_text()
+            with self.subTest(workflow=filename):
+                self.assertIn("on:\n  workflow_dispatch:", workflow)
+                self.assertNotIn("  pull_request:", workflow)
+                self.assertNotIn("  push:", workflow)
+                self.assertNotIn("  schedule:", workflow)
+                self.assertIn("explicit-environment-required:", workflow)
+                self.assertIn("exit 2", workflow)
+                self.assertNotIn("product-e2e:", workflow)
+                self.assertNotIn("quality_gate.py release", workflow)
+
+    def test_manual_environment_placeholder_cannot_qualify_product_or_package(self):
+        workflow = (REPO / ".github/workflows/quality.yml").read_text()
+        self.assertIn('echo "BLOCKED: TokenMeter builds, tests and archives DMG locally."', workflow)
+        self.assertIn("exit 2", workflow)
+        self.assertNotIn("quality_gate.py", workflow)
+        self.assertNotIn("native_e2e.py", workflow)
+        self.assertNotIn("package_preview_dmg.py", workflow)
+        self.assertNotIn("upload-artifact", workflow)
+        self.assertNotIn("continue-on-error:", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
