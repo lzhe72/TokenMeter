@@ -43,7 +43,7 @@ const reportBytes = await regular(reportPath);
 const report = JSON.parse(reportBytes.toString('utf8'));
 const runDir = path.dirname(reportPath);
 if (report.schema_version !== 1 || report.execution_type !== 'source_check' ||
-    !/^[a-z0-9][a-z0-9-]{7,100}$/.test(report.run_id) || path.basename(runDir) !== report.run_id ||
+    !/^[a-z0-9][A-Za-z0-9-]{7,100}$/.test(report.run_id) || path.basename(runDir) !== report.run_id ||
     path.basename(outputDir) !== report.run_id || !['PASS', 'FAIL', 'BLOCKED'].includes(report.state) ||
     report.product_e2e !== 'NOT_RUN' || report.release_gate !== 'NOT_RUN' ||
     !/^[0-9a-f]{40}$/.test(report.candidate_commit) || !/^[0-9a-f]{40}$/.test(report.candidate_tree))

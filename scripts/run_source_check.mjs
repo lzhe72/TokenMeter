@@ -26,7 +26,7 @@ if (args.length !== 4 || !args.includes('--suite') || !args.includes('--run-id')
 const suiteName = option('--suite');
 const runId = option('--run-id');
 const suite = suites[suiteName];
-if (!suite || !/^[a-z0-9][a-z0-9-]{7,100}$/.test(runId)) throw new Error('Invalid suite or run ID');
+if (!suite || !/^[a-z0-9][A-Za-z0-9-]{7,100}$/.test(runId)) throw new Error('Invalid suite or run ID');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const git = (...argv) => execFileSync('git', argv, {cwd: root, encoding: 'utf8'}).trim();
 if (git('status', '--porcelain')) throw new Error('Source tree must be clean before the run');
