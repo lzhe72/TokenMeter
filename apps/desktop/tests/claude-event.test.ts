@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { claudeUsageProposal } from '../src/main/collection/claude-event.ts';
+import { claudeUsageProposal, collectClaudeUsage } from '../src/main/collection/claude-event.ts';
 import type { ClaudeCall } from '../src/main/collection/claude-format.ts';
+import {readFileSync} from 'node:fs';
+import {join} from 'node:path';
+import type {GuardedClaudeSourceScanAccess} from '../src/main/collection/claude-scan.ts';
 
 test('TC-TM004-PARSER-01 module: cache is a child count and never inflates total', () => {
   const call: ClaudeCall = {
@@ -34,4 +37,42 @@ test('TC-TM004-DIAG-01 module: absent cache fields remain unknown', () => {
   assert.equal(event.usage.cachedInputTokens, null);
   assert.equal(event.usage.cacheWriteInputTokens, null);
   assert.equal(event.modelId, null);
+});
+
+test('TM004 collection module boundary: guarded source reaches synchronous batch adapter', async () => {
+  const fixture = join(import.meta.dirname,
+    '../../../tests/fixtures/tm004/native-2.1.126-projection/raw-main.jsonl');
+  const raw = readFileSync(fixture, 'utf8').split('\n').filter(Boolean)
+    .map(line => JSON.parse(line) as Record<string, unknown>).find(row => row.type === 'assistant')!;
+  const bytes = Buffer.from(JSON.stringify(raw) + '\n');
+  const scanId = '00000000-0000-4000-8000-000000000001';
+  const sourceId = '00000000-0000-4000-8000-000000000002';
+  const secret = Buffer.alloc(32, 0x42);
+  let guardCalled = false, canceled = false, committed = false;
+  const access: GuardedClaudeSourceScanAccess = {
+    async beginCandidateScan() { return {scanId, complete: true, candidates: [{
+      relativeName: 'project/session.jsonl', size: bytes.length,
+      candidateToken: 'a'.repeat(32), fileIdentityDigest: 'b'.repeat(64),
+    }]}; },
+    async nextCandidatePage() { throw new Error('unexpected_page'); },
+    async readCandidateChunk(_scan, _token, offset, maxBytes) { return bytes.subarray(offset, offset + maxBytes); },
+    async commitGuard() { return () => { guardCalled = true; assert.equal(canceled, false); }; },
+    cancelScan() { canceled = true; },
+  };
+  const receipt = await collectClaudeUsage(access, sourceId, secret, async () => null, batch => {
+    committed = true;
+    assert.equal(guardCalled, true);
+    assert.equal(canceled, false);
+    assert.equal(batch.events.length, 1);
+    assert.deepEqual(batch.events[0].usage, {inputTokens: 13, outputTokens: 7,
+      cachedInputTokens: 0, cacheWriteInputTokens: 0, reasoningOutputTokens: null, totalTokens: 20});
+    assert.equal(batch.cursors.length, 1);
+    assert.equal(batch.cursors[0].committedByteOffset, bytes.length);
+    assert.deepEqual(batch.coverage, {scanIncomplete: false, candidateCount: 1});
+    assert.equal(JSON.stringify(batch).includes('project/session.jsonl'), false);
+    return {accepted: batch.events.length};
+  });
+  assert.deepEqual(receipt, {accepted: 1});
+  assert.equal(committed, true);
+  assert.equal(canceled, true);
 });
