@@ -1,5 +1,9 @@
 # TM-005 执行记录
 
+## 2026-10-02 · CORE-01 UTC界输入纠错
+
+开发会话指出已提交纯统计实现由调用方直接传`start_utc/end_exclusive_utc`，原CORE-01“按当地日调用”措辞可能误导为同函数负责IANA换算。核对冻结fixture同时给出`timezone/local_day`与UTC界后，文档会话明确CORE-01只按固定UTC半开界筛选、输入主体及事件；`Asia/Shanghai`当地日到UTC、纽约春秋23/25小时日界另设固定辅助TC，不把现有模块3/3当日期转换PASS。原32条产品TC/6变体及RANGE-11真实App判据不变；03a、04a、机器目录和总表随本纠错重新核对，旧SOP-008切片收据只对应此前文本，新内容需新的切片收据。
+
 ## 2026-10-02 · 固定模块程序原件交接
 
 TM-005开发工作树干净提交`6a0f6f44096b04052ce5a0d1d4ff8939a421abd1`、tree`a7f9c40036df81f98c2cf247eb03df25833b5531`中，`apps/desktop/tests/tm005-core.test.ts`按`TC-TM005-CORE-01/02/03`各有固定Node入口。原始`.local/tm005-core-postcommit-20261001T162401Z/{summary.json,core.txt,desktop_tests.txt,build.txt}`显示fixture摘要与文档冻结值一致、CORE3/3逐步PASS、桌面29/29和build退出0；此前预期红测3/3失败原件在`.local/tm005-core-red-20261002/`，未被绿测覆盖。代码尚未进入本文档工作树，机器binding保持null；原32条产品TC/6变体、双来源真实SQLite/IPC/App及产品E2E仍未执行。按SOP会话新提交`4cca918`，模块独立结果Excel须用固定`source_check`导出器从原始逐TC字段生成；现行产品导出器不适用，模块Excel和总表批次登记BLOCKED，正式发行NOT_RUN。模块结果可作为后续独立切片的实现证据，不能写为整版0.5或产品PASS。

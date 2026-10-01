@@ -9,7 +9,7 @@
 - 执行原因（具体变更/缺陷/首次候选）、范围和平台：
 - 预期 TC/变体清单、实际执行清单、开始/结束时间：
 - 本次独立Excel位置、原始来源摘要、导出/回读结果：`.local/test-results/<run_id>/TokenMeter测试结果-<run_id>.xlsx`；未接通导出器时记BLOCKED，不预填路径为已生成。
-- `source_check`另记固定模块测试代码、数据/重置、逐TC断言与步骤原始值、退出码及清理；`product_e2e`另记原包/App/服务/SQLite与适用审计。两类结论独立。
+- `source_check`另记固定模块测试代码、数据/重置、逐TC断言与步骤原始值、退出码及清理；测试拥有目录的套件须核`owned_root_removed=true`，只用内存的套件须核`memory_reset_complete=true`，缺项或互冒均BLOCKED。`product_e2e`另记原包/App/服务/SQLite与适用审计。两类结论独立。
 
 ## 每条用例与每一步
 

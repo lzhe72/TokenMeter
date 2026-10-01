@@ -2,6 +2,12 @@
 
 ## 2026-10-02 · 已打开句柄reader辅助TC编制
 
+SOP-008独立切片核对以输入提交`fea41fe494d655d279470b5032d87cdb10b57689`及后续SOP同步干净候选`ebbcfd01062939ca872f9f2f2ffba269158d894f`为准，收据`.local/docs-checks/20261002-tm004-reader-slice-final/receipt.json`：structure退出0、治理477/477退出0、用例目录225父/712步CURRENT、总表11 Sheet/225父/41变体/266行/13旧批次回读PASS、工作树clean。逐TC语义核对分别覆盖LF半行及754字节限额、keyed prefixMAC及同长度/mtime改写、非法UTF8/未知版本和无产品DB的重置；只对`CORE-01/02/03`与`TASK-TM004-INCREMENTAL/PARSER`已打开句柄纯模块部分判`development_slice_ready`。原20产品TC、四组摘要、TM-002授权与稳定产品文件身份、TM-003事务及App E2E继续draft/BLOCKED；0.4整版baseline、模块在本树实际运行、产品E2E、正式发行均NOT_RUN。
+
+TM-004代码会话随后交接`e52b62e81f5f02b78c5c09241d7db0cd685f874b`（tree`eeac3b3df706eeef6617f2463e9a304bfb22b4c2`）的reader/适配/分页/事件模块，报告目标reader9/9、桌面49/49、build PASS；逐步测试提交`816ecd8cb5594743b33f9ebf9fb1dddbb5d2bb6a`（tree`fda54d4e12564e7e1061be77160d47dc8226e5fe`）报告CORE三例3/3、桌面52/52及typecheck PASS。原始模块结果尚无本版`source_check`独立Excel及批次回读，且代码未合入本文档树，机器binding保持null；更广的分页/归属/事件映射还需新辅助TC，不能把模块日志回填原SOURCE/LINEAGE等产品TC。
+
+新的模块代码检查点`1c785082cf91fd5a017f1aae5080398646174256`（tree`63893ef27577841f524f3a06698315db9da109e2`）使扫描租约持续到受TM-002 `commitGuard`核对的同步提交回调结束，guard失败不调用回调；开发会话报告定向模块4/4及typecheck PASS。该代码仍依赖TM-002实际guard合同与TM-003 SQLite适配器和App触发，未完成本版`source_check`独立Excel或产品TC，故本记录只作源码进度，不登记模块/产品批次PASS。
+
 TM-004新代码工作树报告 `claude-reader.ts` 以已打开的只读FileHandle、完整LF游标和32字节秘密进行限额读取，模块红测0/3、修后绿测3/3及typecheck PASS原件位于其`.local/ci/tm004-reader-*`；源码目前尚未形成该切片的干净提交，以上只作为设计交接证据，不能回填产品`INCREMENTAL-01/02`或`PARSER-02` PASS。文档会话按SOP-002–008、024冻结 `TC-TM004-CORE-01/02/03` 的合成输入和逐步独立预期，保留原20条产品TC、四组摘要及真实授权/SQLite/IPC/App阻断。特别核对TM-002当前候选`fileIdentityDigest`包含size/mtime，追加即改变，不能当作稳定游标身份；同长度/同mtime前缀改写也须用keyed prefixMAC检出，密钥失效时不得提交新游标。纯reader模块既不完成事件与游标的SQLite原子事务，也不证明已授权文件身份。0.4整版基线、产品E2E和正式发行均NOT_RUN/BLOCKED。
 
 SOP-024编制检查：structure退出0（134文档、1219链接），用例目录生成225父TC/712步退出0，治理457/457退出0（原始日志`.local/docs-checks/20261002-tm004-reader-governance.log`），`git diff --check`退出0，根总表回读退出0（11 Sheet、225父TC、41变体、266行、13旧批次；SHA-256 `671ed5da0024d11e9bcd9d0276d3d9d145628302b373ec483b0c536717def3cb`）。此前导出器因TM-005两条E2E标题移动报告stale失败，已把来源行从19/36更新为21/38并重生；不删测试以求通过。固定reader fixture SHA-256 `26c98b52b0af648fd591d6a42eeda83115746cab3f8c920ca7d815a4b5387a49`，逐TC文档 `9ac6b4aaa920ea1eecd3790455fbe648fccd9906346e4eb8a8ceee494f264bb4`，机器用例 `863273f87932606840d963b7b537be2e64c742d63ae9d360a9cb2928bd7c974e`。输入提交后另做SOP-008逐TC语义与依赖核对；本段结构/治理PASS不等于切片或产品PASS。

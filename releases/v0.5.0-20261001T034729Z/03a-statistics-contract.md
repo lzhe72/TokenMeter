@@ -5,7 +5,7 @@
 
 ## 无原生日志依赖的纯统计开发切片
 
-本节只冻结 `TASK-TM005-EVENT-CONTRACT`、`TASK-TM005-RANGE-QUERY`、`TASK-TM005-COVERAGE` 中独立的纯函数部分及 `TC-TM005-CORE-01/02/03`。输入不是来源原生日志或产品 SQLite 行，而是固定 `tests/fixtures/tm005-core-slice.json` 中的合成 `TrustedUsageEvent`：`principal_key`、`source=codex|claude_code`、不含原生ID的测试 `source_event_key`、UTC时间、`model_id|null`、非负整数 input/output 与可为 null 的缓存读/写、推理子项。输入已经由调用方判为可信且在 `(principal_key,source,source_event_key)` 上唯一；模块只做统计，不重新推断上游身份或继承。只接收固定两个来源；未知来源、负数、子项超出总项或不合法UTC时刻应拒绝，不能默认为0。
+本节只冻结 `TASK-TM005-EVENT-CONTRACT`、`TASK-TM005-RANGE-QUERY`、`TASK-TM005-COVERAGE` 中独立的纯函数部分及 `TC-TM005-CORE-01/02/03`。输入不是来源原生日志或产品 SQLite 行，而是固定 `tests/fixtures/tm005-core-slice.json` 中的合成 `TrustedUsageEvent`：`principal_key`、`source=codex|claude_code`、不含原生ID的测试 `source_event_key`、UTC时间、`model_id|null`、非负整数 input/output 与可为 null 的缓存读/写、推理子项。CORE-01的范围输入由调用方直接给出fixture固定`start_utc/end_exclusive_utc`，不在该统计函数中把`timezone/local_day`换算为UTC；IANA当地日及夏令时换算另设辅助TC，产品RANGE-11仍待真实App E2E。输入事件已经由调用方判为可信且在 `(principal_key,source,source_event_key)` 上唯一；模块只做统计，不重新推断上游身份或继承。只接收固定两个来源；未知来源、负数、子项超出总项或不合法UTC时刻应拒绝，不能默认为0。
 
 在固定主体 `synthetic-p1` 和 `Asia/Shanghai` 的 `2026-09-29` 半开当地日中，A（Codex 100/10、未知模型）与 B（Claude Code 200/20、`sonnet-test`）的可信已知合计为330，来源分别110/220，模型分别 `unknown_model=110`/`sonnet-test=220`；另一主体 C=10 必须排除。A 的缓存读20、推理2是 input/output 的子项，不加到330；B 的缓存读和两来源缓存写为 null 时，相应子项输出保持未知而非0。固定当地日 UTC 界为 `2026-09-28T16:00:00Z` 至 `2026-09-29T16:00:00Z`，边界外事件不得纳入。
 
