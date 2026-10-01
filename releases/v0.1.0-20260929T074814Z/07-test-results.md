@@ -135,8 +135,6 @@ UI-01修复后独立单例Excel为`.local/test-results/aux-ui01-local-343e54113b
 
 总控在独立整合树对固定候选 `c2911bc65d55579fcf71e5ba11db87357a01a5e4`、tree `d4555b207b50e7cbe313b54ba9bfec1b7fdccb54` 运行正式包门禁；原件 `.local/gates/tm001-master-gate-c2911bc-20261001T113036Z/{gate.json,granular/result.json}` 为 FAIL、`release_eligible=false`。精细原始 116 项 91 PASS/14 FAIL/11 BLOCKED；UPDATE-05 父项及其 13 个变体因签名输入不可用失败。11 个 BLOCKED 是辅助程序占位，不能因其他独立候选的旧辅助结果而填成通过。
 
-TM-001 开发会话后续定位：旧测试执行器把 UPDATE-05 私有签名输入固定指向原需求 worktree 的 `.local`；本地 `master` 整合 worktree 不含该目录，13 个变体在启动 App 前失败。修复方案是由门禁入口显式接收必填 `--key-dir`，在长跑前用原 ZIP Ed25519 签名和 p12 公证书指纹核验，再透传到精细与单例回放；缺环境保持 BLOCKED，真实 FAIL/退出码1保留失败 TC 摘要。当前只是开发会话的根因与方案交接，尚未有新提交或新产品原件；本次 FAIL 不更改。
-
 本次 run `local-0512d4fc44544eba97f9d1ae79cbfc37` 的独立结果 Excel `TokenMeter测试结果-local-0512d4fc44544eba97f9d1ae79cbfc37.xlsx`按固定程序从原件导出，摘要 SHA-256 `d57cc4827cfae8e7076a77f1ebfe3c9e21900346b5a4e1cc5f6e9232e3b50a62`；78 父 TC 为 66 PASS/1 FAIL/11 BLOCKED，38 变体为 25 PASS/13 FAIL。报表生成 PASS 只证明逐例记录一致，产品仍 FAIL；本地正式稳定包、通行证和 SOP-020 归档均不存在。TM-001 开发会话已收到 SOP-015 修复交接，新候选需完整重跑。
 
 ## 4. 精细用例的固定代码与执行缺口

@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.4.0-20261001T040433Z",
+  "version": "0.4.0",
+  "created_at": "2026-10-01T04:04:33Z",
+  "kind": "product_feature",
+  "feature_ids": [
+    "TM-004"
+  ],
+  "product_feature_matrix": "tests/feature_matrix.json",
+  "documents": {
+    "requirements": "releases/v0.4.0-20261001T040433Z/01-requirements.md",
+    "breakdown": "releases/v0.4.0-20261001T040433Z/02-breakdown.md",
+    "development_plan": "releases/v0.4.0-20261001T040433Z/03-development-plan.md",
+    "test_plan": "releases/v0.4.0-20261001T040433Z/04-test-plan.md",
+    "release_plan": "releases/v0.4.0-20261001T040433Z/05-release-plan.md",
+    "iteration_record": "releases/v0.4.0-20261001T040433Z/06-iteration-record.md"
+  },
+  "global_design": "docs/design-plan.md",
+  "lifecycle": "docs/lifecycle.md",
+  "documentation_standard": "docs/standards/documentation.md",
+  "changelog": "CHANGELOG.md",
+  "changelog_heading": "v0.4.0-20261001T040433Z",
+  "traceability": [
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-SOURCE",
+      "test": "E2E-TM004-001",
+      "description": "汇总场景；详细程序绑定尚缺"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-PARSER",
+      "test": "E2E-TM004-001",
+      "description": "汇总场景；详细程序绑定尚缺"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-LINEAGE",
+      "test": "E2E-TM004-002",
+      "description": "汇总场景；详细程序绑定尚缺"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-INCREMENTAL",
+      "test": "E2E-TM004-002",
+      "description": "汇总场景；详细程序绑定尚缺"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-DIAGNOSTIC",
+      "test": "E2E-TM004-003",
+      "description": "汇总场景；详细程序绑定尚缺"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-DATA",
+      "test": "E2E-TM004-003",
+      "description": "汇总场景；详细程序绑定尚缺"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-E2E",
+      "test": "E2E-TM004-004",
+      "description": "汇总场景；详细程序绑定尚缺"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-RELEASE",
+      "test": "E2E-TM004-004",
+      "description": "汇总场景；详细程序绑定尚缺"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-SOURCE",
+      "test": "TC-TM004-SOURCE-01",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-SOURCE",
+      "test": "TC-TM004-SOURCE-02",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-PARSER",
+      "test": "TC-TM004-PARSER-01",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-PARSER",
+      "test": "TC-TM004-PARSER-02",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-LINEAGE",
+      "test": "TC-TM004-LINEAGE-01",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-LINEAGE",
+      "test": "TC-TM004-LINEAGE-02",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-INCREMENTAL",
+      "test": "TC-TM004-INCREMENTAL-01",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-INCREMENTAL",
+      "test": "TC-TM004-INCREMENTAL-02",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-DIAGNOSTIC",
+      "test": "TC-TM004-DIAG-01",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-DIAGNOSTIC",
+      "test": "TC-TM004-DIAG-02",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-DATA",
+      "test": "TC-TM004-DATA-01",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-E2E",
+      "test": "TC-TM004-E2E-01",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-RELEASE",
+      "test": "TC-TM004-RELEASE-01",
+      "description": "细TC设计；raw/SQL/程序绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-SOURCE",
+      "test": "TC-TM004-SOURCE-03",
+      "description": "2.1.126静态线索对应原始日志反例；绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-PARSER",
+      "test": "TC-TM004-PARSER-03",
+      "description": "2.1.126静态线索对应原始日志反例；绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-LINEAGE",
+      "test": "TC-TM004-LINEAGE-03",
+      "description": "2.1.126静态线索对应原始日志反例；绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-LINEAGE",
+      "test": "TC-TM004-LINEAGE-04",
+      "description": "2.1.126静态线索对应原始日志反例；绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-LINEAGE",
+      "test": "TC-TM004-LINEAGE-05",
+      "description": "2.1.126静态线索对应原始日志反例；绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-SOURCE",
+      "test": "TC-TM004-SOURCE-04",
+      "description": "预览截断与可续扫覆盖；TM-002内部能力/产品绑定待补"
+    },
+    {
+      "requirement": "REQ-TM004",
+      "feature": "TM-004",
+      "task": "TASK-TM004-INCREMENTAL",
+      "test": "TC-TM004-INCREMENTAL-03",
+      "description": "跨来源同ID与Claude复制历史；TM-003身份键/产品绑定待补"
+    }
+  ],
+  "test_programs": [],
+  "test_data_program": null,
+  "test_sop": "sop/SOP-014-e2e.md",
+  "program_bindings_status": "planned",
+  "publication": {
+    "planned_git_tag": "v0.4.0-20261001T040433Z",
+    "expected_passport_asset": "v0.4.0-20261001T040433Z.passport.json",
+    "passport_policy": "issued_locally_after_verified_final_package_e2e",
+    "state": "not_published",
+    "asset_storage": "local_only",
+    "github_release": false
+  },
+  "lookup_command": "python3 scripts/release_registry.py show --release-id v0.4.0-20261001T040433Z",
+  "sop_index": "sop/README.md",
+  "document_catalog": "docs/catalog.json",
+  "test_case_index": "docs/testing/cases/README.md",
+  "test_case_documents": [
+    "docs/testing/cases/04-TM-004-claude-collection.md"
+  ],
+  "execution_profile": "local_electron"
+}

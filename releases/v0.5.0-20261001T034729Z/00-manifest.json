@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.5.0-20261001T034729Z",
+  "version": "0.5.0",
+  "created_at": "2026-10-01T03:47:29Z",
+  "status": "draft",
+  "feature_ids": [
+    "TM-005"
+  ],
+  "documents": {
+    "requirements": "releases/v0.5.0-20261001T034729Z/01-requirements.md",
+    "breakdown": "releases/v0.5.0-20261001T034729Z/02-breakdown.md",
+    "development_plan": "releases/v0.5.0-20261001T034729Z/03-development-plan.md",
+    "test_plan": "releases/v0.5.0-20261001T034729Z/04-test-plan.md",
+    "release_plan": "releases/v0.5.0-20261001T034729Z/05-release-plan.md",
+    "iteration_record": "releases/v0.5.0-20261001T034729Z/06-iteration-record.md"
+  },
+  "changelog": "CHANGELOG.md",
+  "changelog_heading": "v0.5.0-20261001T034729Z",
+  "traceability": [
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-01"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-02"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-DATA",
+      "test": "TC-TM005-DATA-01"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-DATA",
+      "test": "TC-TM005-DATA-02"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-01"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-02"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-03"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-04"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-05"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-06"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-07"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-08"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-09"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-10"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-COVERAGE",
+      "test": "TC-TM005-STATE-01"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-COVERAGE",
+      "test": "TC-TM005-STATE-02"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-COVERAGE",
+      "test": "TC-TM005-STATE-03"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-COVERAGE",
+      "test": "TC-TM005-STATE-04"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-UI",
+      "test": "TC-TM005-MODEL-01"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-E2E",
+      "test": "TC-TM005-E2E-01"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-E2E",
+      "test": "E2E-TM005-001"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-E2E",
+      "test": "E2E-TM005-002"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-03"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-04"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-05"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-06"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-07"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-COVERAGE",
+      "test": "TC-TM005-STATE-05"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-08"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-09"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-10"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-10#USAGE"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-EVENT-CONTRACT",
+      "test": "TC-TM005-CONTRACT-10#MODEL"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-COVERAGE",
+      "test": "TC-TM005-STATE-06"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-10#START_EMPTY"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-10#END_EMPTY"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-11"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-11#SPRING"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-RANGE-QUERY",
+      "test": "TC-TM005-RANGE-11#FALL"
+    },
+    {
+      "requirement": "REQ-TM005",
+      "feature": "TM-005",
+      "task": "TASK-TM005-UI",
+      "test": "TC-TM005-MODEL-02"
+    }
+  ],
+  "program_bindings_status": "planned",
+  "test_programs": [],
+  "test_data_program": null,
+  "test_sop": "sop/SOP-014-e2e.md",
+  "publication": {
+    "planned_git_tag": "v0.5.0-20261001T034729Z",
+    "state": "not_published",
+    "asset_storage": "local_only",
+    "github_release": false
+  },
+  "test_case_documents": [
+    "releases/v0.5.0-20261001T034729Z/04a-test-cases.md"
+  ],
+  "semantic_oracle": "tests/fixtures/tm005-semantic-expected.json",
+  "technical_design": "releases/v0.5.0-20261001T034729Z/03a-statistics-contract.md"
+}

@@ -62,10 +62,25 @@
     },
     {
       "id": "codex_raw",
-      "description": "已验证发布版本的 Codex 原生 JSONL、分支与累计值",
+      "description": "Codex CLI 0.158.0-alpha.2.1 隔离原生来源研究及原生形状衍生数据；正式 SOP-010 数据/重置、逐 TC 绑定待完成",
       "status": "planned",
       "generator": null,
-      "capabilities": []
+      "capabilities": [
+        "native_rollout_0158",
+        "incremental_complete_lines",
+        "response_identity",
+        "permission_boundary",
+        "fork_lineage",
+        "unknown_diagnostics",
+        "partial_line",
+        "historical_coverage",
+        "permission_recovery",
+        "utc_window",
+        "principal_isolation",
+        "cross_source_identity",
+        "bounded_candidate_overflow",
+        "identity_secret_recovery"
+      ]
     },
     {
       "id": "claude_raw",

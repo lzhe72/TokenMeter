@@ -709,10 +709,17 @@ def build_model(catalog: dict, report: dict, *, run_root: Path, checks: dict | N
     future = [case for case in all_cases if case.get("feature_id") != "TM-001"]
     if not all_current:
         raise Invalid("No TM-001 detailed cases in the catalog")
+    source_releases = [case.get("release_id", catalog["release_id"]) for case in all_current]
+    if (any(not isinstance(value, str) or not value for value in source_releases)
+            or len(set(source_releases)) != 1):
+        raise Invalid("TM-001 parent cases have mixed or invalid source releases")
+    source_release = source_releases[0]
     current_map = {case["id"]: case for case in all_current}
     variant_list = variants.get("variants", []) if variants is not None else []
-    if variants is not None and (variants.get("release_id") != report.get("release_id") or not isinstance(variant_list, list)):
-        raise Invalid("Variant catalog release or shape differs from this run")
+    if variants is not None and (not isinstance(variant_list, list)
+            or (variant_list and variants.get("release_id") != source_release)
+            or (not variant_list and variants.get("release_id") not in (source_release, report["release_id"]))):
+        raise Invalid("Variant source release or shape differs from TM-001 parent cases")
     variant_map = {}
     variants_by_parent = defaultdict(list)
     for variant in variant_list:
@@ -1021,9 +1028,9 @@ def export(report_path: Path, output_dir: Path, checks_path: Path | None = None,
         if update_variants_path == variants_path:
             raise Invalid("Login and update variant manifests must be separate files")
         update_variants, update_variants_bytes = read_json(update_variants_path)
-        if (update_variants.get("release_id") != catalog.get("release_id")
+        if (update_variants.get("release_id") != variants.get("release_id")
                 or not isinstance(update_variants.get("variants"), list)):
-            raise Invalid("Update variant manifest differs from the catalog release")
+            raise Invalid("Update variant manifest differs from the login source release")
         variants = {**variants, "variants": [*variants.get("variants", []), *update_variants["variants"]]}
     checks = None
     source_hashes = {display_path(report_path): sha(report_bytes), display_path(catalog_path): sha(catalog_bytes),

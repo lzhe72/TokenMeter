@@ -1,6 +1,8 @@
-# v0.2.0-20261001T034118Z — 技术设计与开发计划（草稿）
+# v0.2.0-20261001T034118Z — 技术设计与开发计划（已基线）
 
-**doc_id：** `DOC-RELEASES-V0-2-0-20261001T034118Z-DEVELOPMENT-PLAN`　**状态：** `draft`　**适用：** `REQ-TM002` / `TM-002`。本文件先按 [SOP-004](../../sop/SOP-004-technical-design.md)设计，再按 [SOP-005](../../sop/SOP-005-development-plan.md)安排实施；文档修改遵循 [SOP-024](../../sop/SOP-024-document-change.md)。授权与加密 locator 边界已确定，仍需将逐条用例、机器清单和版本追踪核对一致并通过 SOP-008，才形成开发基线。
+**公开构建输入补充：** [0.2 local-release 配置](local-release.json)固定0.2.0/build200及仅供受控更新器测试的0.2.1/build201，沿用0.1公开bundle/API/feed/签名身份，上一正式升级源为SOP-018/020验证的0.1稳定原包。打包器的0.1硬编码与桌面开发入口须在本版实现中改为按已核对release配置选用，并以错误version/build、旧候选包、签名身份不符作固定负测；当前尚未实现0.2绑定或最终包验收。
+
+**doc_id：** `DOC-RELEASES-V0-2-0-20261001T034118Z-DEVELOPMENT-PLAN`　**状态：** `baselined`　**适用：** `REQ-TM002` / `TM-002`。本文件先按 [SOP-004](../../sop/SOP-004-technical-design.md)设计，再按 [SOP-005](../../sop/SOP-005-development-plan.md)安排实施；文档修改遵循 [SOP-024](../../sop/SOP-024-document-change.md)。授权与加密 locator 边界已确定，逐条用例、机器清单和版本追踪已核对一致并经 SOP-008 形成开发基线；程序绑定与运行验证留待后续步骤。
 
 ## 输入与当前实现事实
 
@@ -46,15 +48,15 @@ UI 候选预览只在选择后的显式预览或确认采集后的显式刷新�
 
 候选名称可能包含用户名或项目线索，因此仅在当前账号 UI 显示，不送服务端、不写诊断或逐步证据原文；E2E 仅使用合成名称并记录允许/拒绝集合摘要。主进程操作原始日志始终只读，不调用写入或修改其他工具配置。目录失效、I/O 错误、超时、预览取消分别给安全状态/错误；App 的登录、配置和账号页面仍可用。无后台来源扫描由本版启动；后续采集节奏和正文处理在 `TM-003/004` 另行验收。
 
-### 设计决定与仍待完成的基线项
+### 设计决定与待实现的执行前置
 
 1. **授权模型已定。** 用户选择非 MAS 本地 DMG 中的真实 macOS 原生目录面板、App 内明确同意与主进程目录 allowlist；App 撤销或访问失效后停读，重新经面板选择并确认。产品 E2E 必须驱动真实面板、审计实际来源访问与停止；不得把它称作 App Sandbox 的逐目录 security-scoped grant 或 TCC 撤销。此决定已在[本版需求](01-requirements.md#已确认的授权模型与本地存储边界)、产品验收定义及 SOP-002/004/006 同步。
 2. **持久 locator 方案与隐私规范已定。** 用户要求 App 跨重启保存所选目录；主进程以 Electron `safeStorage.encryptStringAsync` 将规范化路径加密，密文仅存当前用户 0700/0600 的 `sources/` 记录。系统密钥不可用、解密失败或旧格式不兼容均进入 `needs_reselect`，不回退明文；撤销即删除密文。此 locator 不授予 OS 沙盒权限，绝不进入同步字段或原始证据。SOP 会话已按 SOP-000 将有限私有存储例外和隔离回归前的密钥项证据门槛写入规范；仍须以同一最终签名 DMG 验证异步密钥提供者、首次调用前测试项不存在、签名访问边界、正式项隔离及升级后解密行为。
-3. **逐条设计已形成，机器同步与程序待完成。** [详细用例](../../docs/testing/cases/02-TM-002-permissions.md)已写 28 条父 TC 与 35 个稳定变体，其中 20 条父 TC 属安装后产品 E2E、8 条为辅助检查；`tests/test_cases.json`、`TEST_CASES.md`、版本 manifest 和总表须与该集合逐项回读后才可称为设计同步。SOP-006/008 尚须复核每个 TC 的输入、预期、SQL/不适用理由、重置和逐步证据。`program_bindings_status=planned` 表示 SOP-011 固定程序尚不存在，不能声称可执行或产品通过；设计基线可在程序实现前形成。
+3. **逐条设计已形成，机器同步与程序待完成。** [详细用例](../../docs/testing/cases/02-TM-002-permissions.md)已写 28 条父 TC 与 35 个稳定变体，其中 20 条父 TC 属安装后产品 E2E、8 条为辅助检查；`tests/test_cases.json`、`TEST_CASES.md`、版本 manifest 和总表已与该集合逐项回读；SOP-006/008 已复核每个 TC 的输入、预期、SQL/不适用理由、重置和逐步证据计划。`program_bindings_status=planned` 表示 SOP-011 固定程序尚不存在，不能声称可执行或产品通过；设计基线可在程序实现前形成。
 
 ## SOP-005：分阶段实施顺序
 
-下表逐项承接 [02-breakdown 的九项具体 TASK](02-breakdown.md)。TC 栏使用已设计的稳定 ID 前缀；[本版测试计划](04-test-plan.md)和[详细用例](../../docs/testing/cases/02-TM-002-permissions.md)已有逐条草稿，机器目录、版本 manifest 与总表仍须完成同源核对及 SOP-008 语义基线复核。所有阶段保留输入、原始输出、退出码和下一步于 [06-iteration-record](06-iteration-record.md)。
+下表逐项承接 [02-breakdown 的九项具体 TASK](02-breakdown.md)。TC 栏使用已设计的稳定 ID 前缀；[本版测试计划](04-test-plan.md)和[详细用例](../../docs/testing/cases/02-TM-002-permissions.md)已形成逐条设计基线，机器目录、版本 manifest 与总表已完成同源核对及 SOP-008 语义复核。所有阶段保留输入、原始输出、退出码和下一步于 [06-iteration-record](06-iteration-record.md)。
 
 | 顺序 / TASK | 输入、文件所有权与实施动作 | 产出与局部完成条件 | 验证与 SOP / TC 组 |
 | --- | --- | --- | --- |
@@ -77,8 +79,8 @@ DATA、CATALOG、RUNNER 的设计可并行，但实际业务红测要等可运�
 - `TM-002` 需求分支负责本版 `releases/v0.2.0-20261001T034118Z/`、来源模块、其 UI/IPC 与本版 fixture/TC；更改 TM-001 共享 `index.ts`、`accounts.ts`、`types.ts`、preload 或本机门禁前先基于其稳定提交核对接口和原始测试。并行工作只分配不同文件，合入者处理共享文件冲突并重跑绑定候选。当前文件分工是计划，不表示这些产品代码已实现。
 - 给 `TM-003/004` 的交接合同是：经 `/v1/me` 验证的身份键、确认且允许采集的来源 ID、主进程内部分页候选与只读文件能力、穷尽后才完整的覆盖状态、失效与重新选择通知；不交出持久 locator、renderer 任意路径入口或服务端上传能力。下游在固定合同和本需求稳定源码提交前不得依赖本工作树快照，也不得把 UI 的 1000 项预览上限当作完整采集上限。本版选定非 MAS 原生面板与 App 受限读取，后续版本若迁移沙盒须独立设计更新器和打包。
 - `program_bindings_status` 目前为 `planned`，`test_programs=[]`、`test_data_program=null`；只有固定 TC、数据程序、真实 runner 路径存在且可按 ID 启动时才更新为 `ready`，`ready` 仍不表示测试 PASS。主表、功能矩阵、`TEST_CASES.md`、`tests/acceptance.json`、`docs/catalog.json`、Changelog 和版本 manifest 在相应源事实变化时同轮更新并回读；此文档不能代替它们。
-- 恢复顺序：读 [状态页](../../docs/status.md)与 [06-iteration-record](06-iteration-record.md) 的最新原始证据 → 检查本分支/上游 SHA、工作树及已确定授权边界 → 核对 28 条父 TC、35 个变体与机器清单/总表 → `python3 scripts/check_docs.py --mode structure` → 全部计划完整后由 SOP-008 执行 baseline/质量检查 → 依阶段准备数据/红测/实现/完整回归。当前只形成设计草稿，未执行本版产品 E2E、DMG 或发布。
+- 恢复顺序：读 [状态页](../../docs/status.md)与 [06-iteration-record](06-iteration-record.md) 的最新原始证据 → 检查本分支/上游 SHA、工作树及已确定授权边界 → 核对 28 条父 TC、35 个变体与机器清单/总表 → `python3 scripts/check_docs.py --mode structure` → 全部计划完整后由 SOP-008 执行 baseline/质量检查 → 依阶段准备数据/红测/实现/完整回归。当前仅有设计基线，未执行本版产品 E2E、DMG 或发布。
 
 ## 退出条件
 
-SOP-004/005 的**草稿输出**是有模块边界、数据/状态/失败路径、九项 TASK 的顺序与验证入口。逐条用例已形成，但机器清单/总表同步、SOP-006 语义复核与 SOP-008 基线尚未有完整通过证据；结构检查仅验证文档合同，不证明功能完成或发布资格。依赖基线的产品实现须在这些检查通过后按 SOP-009–012 推进。
+SOP-004/005 的**基线输出**是有模块边界、数据/状态/失败路径、九项 TASK 的顺序与验证入口。逐条用例已形成，机器清单/总表同步、SOP-006 语义复核与 SOP-008 基线的实际检查已记录在 06；这不证明功能完成或发布资格。产品实现按 SOP-009–012 的依赖推进，缺 Keychain 原生隔离或上一稳定包时只阻断依赖它们的执行步骤。

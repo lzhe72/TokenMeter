@@ -306,5 +306,6 @@
   },
   "lookup_command": "python3 scripts/release_registry.py show --release-id v0.2.0-20261001T034118Z",
   "sop_index": "sop/README.md",
-  "document_catalog": "docs/catalog.json"
+  "document_catalog": "docs/catalog.json",
+  "local_release_config": "releases/v0.2.0-20261001T034118Z/local-release.json"
 }

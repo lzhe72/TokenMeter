@@ -1,6 +1,6 @@
 # 全流程版本编号与查询
 
-> 2026-09-30当前执行基线：[Electron本机设计](../architecture/01-electron-local.md)。Electron/React/TypeScript、Vite/electron-vite、Playwright Electron、electron-builder；本机开发/全量测试/打包，当前仅macOS15 Intel实测范围。Git保存源码/文档/版本；DMG、更新包、报告和通行证只存本地，Actions仅明确多环境要求时启用。旧流程在历史提交与明确标记的历史设计中查询。每项功能真实E2E与发布门禁不变。
+> 2026-10-01当前执行基线：[Electron本机设计](../architecture/01-electron-local.md)。Electron/React/TypeScript、Vite/electron-vite、Playwright Electron、electron-builder；开发期按功能固定TC回归，用户启动正式发行后对最终候选完整E2E、打包与门禁，当前仅macOS15 Intel实测范围。Git保存源码/文档/版本；DMG、更新包、报告和通行证只存本地，Actions仅明确多环境要求时启用。旧流程在历史提交与明确标记的历史设计中查询。
 
 ## 唯一编号
 
@@ -28,7 +28,7 @@ v<MAJOR>.<MINOR>.<PATCH>-<YYYYMMDD>T<HHMMSS>Z
 | 功能分支 | `codex/<release_id>/<短功能名>` |
 | 可选整合镜像分支 | `codex/<首个release_id>/integration`，本轮固定一个 |
 | commit 标题 | `[<release_id>][TM-编号] 类型: 具体变更` |
-| Git annotated tag | 与 `release_id` 完全相同；本机门禁及归档通过、最终远端`master`来源读回后逐版创建 |
+| Git annotated tag | 与实际正式发行的 `release_id` 完全相同；用户启动正式发布、最终候选门禁与归档PASS、远端来源读回后创建；开发里程碑不打正式Tag |
 | 本地发行目录 | 以 `release_id` 命名，不创建GitHub Release |
 | Changelog 二级标题 | `## <release_id>`，不使用模糊的“本次更新” |
 | 发布资产 | `<release_id>-<平台/组件>.<后缀>` |
@@ -36,7 +36,7 @@ v<MAJOR>.<MINOR>.<PATCH>-<YYYYMMDD>T<HHMMSS>Z
 
 Changelog 每个版本记录状态、关联功能、变更、兼容/迁移影响、测试计划和发布文档链接。计划中或阻断中的版本也可提前写 Changelog，但必须明确“未发布”，不能据此创建产品 tag。
 
-用户授权后，各需求在独立worktree按同名功能分支提交；干净且范围可核对的WIP/候选源码可普通快进推送远端同名分支并读回SHA/tree，标记`remote_code_saved=true`与WIP/候选，`release_eligible=false`。总控可选一个整合镜像保存本地祖先链。上述源码检查点不等于本机产品验收。总控仍按依赖顺序集成本地`master`，逐版冻结不可变里程碑SHA/tree；每版最终原包经完整产品E2E和本机门禁PASS后按SOP-020归档为本机稳定包，下一版从它真实升级。全部目标版本完成后才以一次受保护PR登记远端`master`并逐版建立Tag。四种状态——远端功能分支代码已保存、本机产品/发行、远端`master`登记、Tag——分别记录；步骤见[SOP-019](../../sop/SOP-019-git-release.md)。
+用户授权后，各需求在独立worktree按同名功能分支提交；干净且范围可核对的WIP/候选源码可普通快进推送远端同名分支并读回SHA/tree，标记`remote_code_saved=true`与WIP/候选，`release_eligible=false`。总控可选一个整合镜像保存本地祖先链。上述源码检查点不等于本机产品验收。总控按依赖顺序集成本地`master`，逐版冻结源码里程碑SHA/tree并记录功能TC的真实状态；全部目标源码完成后可按保护规则一次登记远端`master`。用户另行明确正式发布后，对最终候选执行跨需求完整E2E、适用真实升级和本机门禁，SOP-020归档后才登记正式Tag；未发布版本不虚构稳定包。四种状态——远端功能分支代码已保存、本机产品/发行、远端`master`登记、Tag——分别记录；步骤见[SOP-019](../../sop/SOP-019-git-release.md)。
 
 ## 每个编号对应的版本档案
 
@@ -80,11 +80,11 @@ git show <release_id>:CHANGELOG.md
 
 ## 通行证与源码提交的关系
 
-先提交全部源码、计划、测试、数据和 Changelog，形成干净候选提交；再构建、执行 E2E 和生成通行证。通行证引用被测提交，不回写到该提交中，避免“提交内的文件必须包含自己的 commit SHA”的循环依赖。
+开发阶段先提交源码、计划、固定TC与数据，并记录该功能回归的实际状态；源码提交和远端登记不生成通行证。用户另行启动正式发布后，冻结最终候选，再构建、执行跨需求完整E2E和生成通行证。通行证引用被测提交，不回写到该提交中，避免“提交内的文件必须包含自己的 commit SHA”的循环依赖。
 
-通行证作为本机版本档案保存：release ID、internal profile、被测里程碑SHA/tree、原包摘要、用例/fixture/SOP摘要、实际平台、原始报告、运行身份、签名/Gatekeeper实际结果、通过时间与判定。机器复核通过后按SOP-020先归档原件并形成可供下一版升级的本机稳定包；正式源码Tag在全部目标版本完成、远端逐版来源读回后由总控登记，不创建GitHub Release。
+通行证作为本机版本档案保存：release ID、internal profile、被测里程碑SHA/tree、原包摘要、用例/fixture/SOP摘要、实际平台、原始报告、运行身份、签名/Gatekeeper实际结果、通过时间与判定。用户正式发布时机器复核通过后按SOP-020归档最终原件并形成实际本机稳定包；总控在远端来源读回后登记该正式发行Tag，不创建GitHub Release。
 
-发布前以本地`master`本版冻结的整合提交为完整候选，核对真实HEAD、源码tree、同名Tag尚不存在，再执行最终包与本机发布门禁。只有本版PASS并完成原包/通行证归档，才能称为本机正式稳定版并供下一版升级；远端源码登记与Tag此时可以待办。全部目标版本本机完成后，总控按SOP-019以保留各里程碑祖先的受控PR统一推送、逐版读回远端来源，再建立源码Tag；不能将“推送Tag后才测试”作为首次验证。GitHub Actions完整测试只在用户明确要求多环境时运行；2026-10-01已移除远端`master`旧Actions必需检查，当前仍强制PR及其他保护。不得用旧候选或手写状态创建Tag。
+正式发布前以本地`master`冻结的最终整合提交为候选，核对真实HEAD、源码tree和同名Tag不存在，再执行最终包、适用真实升级与完整本机发布门禁。只有最终候选PASS并完成原包/通行证归档，才称本机正式稳定版；开发里程碑及开发DMG一直标未发布。远端master源码可在此前按SOP-019保护规则登记，正式Tag只能在本次门禁和归档通过、远端来源读回后创建；不能先打Tag再测试。GitHub Actions完整测试只在用户明确要求多环境时运行；2026-10-01已移除远端`master`旧Actions必需检查，当前仍强制PR及其他保护。不得用旧候选或手写状态创建Tag。
 
 失败或缺环境只产生 FAIL/BLOCKED 执行记录，不签发通行证。不得手写、复制旧版本或接受任意外部 PASS JSON；验证规则见 [发布门禁](release.md)。
 
