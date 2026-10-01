@@ -1,49 +1,49 @@
 # SOP-013 构建与检查
 
-**修订：** 5　**状态：** baselined　**适用：** all
+**修订：** 7　**状态：** baselined　**适用：** all
 
 ## 目的与范围
 
-构建候选并运行适当的静态、单元、集成和迁移检查，尽早定位问题。
+在本机运行文档、基础工具、服务与Electron构建检查。
 
 ## 触发条件
 
-实现或依赖变化后、整合 agent 工作后、进入产品 E2E 或正式包验证前。
+实现/依赖变化后、进入完整E2E前。
 
 ## 前置条件
 
-SOP-009 环境可用，待测实现及构建入口真实存在；清楚哪些检查属于基础工具、哪些属于产品。
+012实现、009本机运行时和锁文件就绪。
 
 ## 输入
 
-候选源码、依赖锁定、测试计划、构建配置和适用数据库。
+候选源码、依赖和真实命令。
 
 ## 执行步骤
 
-1. 运行 python3 scripts/check_docs.py 与 python3 scripts/quality_gate.py check，核对规范、版本和追踪关系。
-2. 当前治理工具自测执行 python3 -m unittest discover -s tests/governance -p 'test_*.py'，保存测试数量、退出码和结果。
-3. TM-001 服务端先在隔离 Python 环境安装 `python3 -m pip install --only-binary=:all: -r server/requirements-dev.txt`，再执行 `python3 -m pytest tests/server -q`。依赖安装失败单独记录，不能当成业务红测；不在缺编译器的本机退回源码包安装。
-4. 在 macOS 上执行 `python3 scripts/test_device_credentials.py`，用本机 Swift 工具链编译真实 `Auth.swift` 与 Foundation 断言程序 `tests/macos/DeviceCredentialsTests.swift`，检查凭据文件权限、类型、符号链接、origin 隔离和原子替换等边界。Command Line Tools 足以执行此检查，无需 XCTest 或完整 Xcode；非 macOS 或缺 Swift 编译器须记录 BLOCKED。保存命令、退出码与原始结果。该组件检查不代替产品原生 E2E。
-   地址配置变化还要执行 `python3 scripts/test_endpoint_configuration.py`，用同一 macOS Command Line Tools 编译真实 `Auth.swift` 和 `tests/macos/EndpointConfigurationTests.swift`，核对 API/更新 URL 校验、内置默认、显式覆盖与恢复默认的组件边界。程序入口已建立不等于检查已运行；保存实际退出码。此检查也不代替第004/006例真实 App UI。
-5. 原生构建使用版本计划固定的 Xcode、项目和 scheme，由 SOP-014 runner 调用真实 `xcodebuild build-for-testing`。尚未具备入口或环境的检查记录具体 BLOCKED。构建与检查必须使用同一候选依赖和配置；记录客户端/服务端版本、产物摘要和工具链。
-6. 失败立即定位；修复后的候选重新执行受影响检查，再进入完整产品 E2E。治理测试通过只说明治理工具有效。
+1. 运行python3 scripts/check_docs.py --mode baseline及python3 scripts/quality_gate.py check，核对文档与完整追踪。
+2. 执行python3 -m unittest discover -s tests/governance -p test_*.py，使用隔离Python执行.local/venv-tm001/bin/python -m pytest tests/server -q；保留原始数量/退出码。
+3. 在apps/desktop按009锁文件安装依赖/运行时，再执行npm run build和npm test。图标SVG改变时在根目录执行node scripts/build_desktop_icon.mjs，检查PNG/ICNS；正式包检查嵌入图标摘要。
+4. 锁定Electron/Playwright与构建工具，核对CSP、IPC、凭据、配置URL、更新验证层基础负测。遗留Swift工具可用于历史回归，不是新客户端验收入口。
+5. 图形界面按当前设计在真实App检查默认/最小尺寸、深浅色、焦点与表单状态并保存截图；执行`.local/venv-tm001/bin/python apps/desktop/tests/visual_fixture.py`生成隔离SQL/服务与10张截图，12项辅助检查由`apps/desktop/tests/hig.visual.cjs`断言，截图审查后自主修复。`scripts/quality_gate.py check`只检查文档和追踪；基础检查通过后按 SOP-014 执行真实桌面全量E2E，正式候选由 SOP-018 使用`scripts/local_gate.py`核验。打包检查使用同一候选源码/依赖，不得以基础检查代替产品PASS。
 
 ## 输出
 
-构建物、摘要、基础检查与产品检查报告，或精确的环境/入口缺失记录。
+构建物和基础原始结果或精确缺项。
 
 ## 成功与失败判据
 
-所有适用检查确实执行且通过、产物可追踪才可进入 E2E；零测试、非零退出码或构建缺失均不能放行。此步骤本身不授予发布资格。
+所有适用基础检查真实通过；失败、零测试、缺构建物都不能放行。
 
 ## 异常恢复
 
-保留首个失败和完整相关日志，区分构建/测试/环境问题后修复；不加 continue-on-error 或隐藏失败输出。
+保留首个失败并修根因，然后受影响基础检查与完整E2E。
 
 ## 证据位置
 
-机器检查报告、构建摘要、实际命令与退出码；06-iteration-record.md 简述结论和下一步。
+本机.local/ci日志与版本06。
 
 ## 下一步
 
-执行 [SOP-014 自动 E2E](SOP-014-e2e.md)；最终发布包由 [SOP-017](SOP-017-package-validation.md) 验证。
+014完整E2E。
+
+具体合同见[Electron本机设计](../docs/architecture/01-electron-local.md)。旧云端/Swift路径仅用于历史查询，不能覆盖用户本机优先规则。

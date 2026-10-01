@@ -86,12 +86,20 @@ class CandidateGateTests(unittest.TestCase):
         self.assertEqual("candidate_context_only", result["scope"])
         self.assertFalse(result["release_eligible"])
 
-    def test_workflows_validate_before_tag(self):
+    def test_workflows_do_not_start_remote_tests_automatically(self):
         regular = (REPO / ".github/workflows/quality.yml").read_text()
-        self.assertNotIn("tags:", regular)
-        self.assertIn("python3 scripts/quality_gate.py iteration", regular)
+        self.assertIn("on:\n  workflow_dispatch:", regular)
+        self.assertNotIn("  pull_request:", regular)
+        self.assertNotIn("  push:", regular)
+        self.assertNotIn("  schedule:", regular)
+        self.assertIn("explicit-environment-required:", regular)
+        self.assertIn("exit 2", regular)
+        self.assertNotIn("product-e2e:", regular)
         dispatch = (REPO / ".github/workflows/release-candidate.yml").read_text()
         self.assertIn("workflow_dispatch:", dispatch)
+        self.assertNotIn("  pull_request:", dispatch)
+        self.assertNotIn("  push:", dispatch)
+        self.assertNotIn("  schedule:", dispatch)
         self.assertIn("environment: release-validation", dispatch)
         self.assertIn("ref: ${{ inputs.candidate_sha }}", dispatch)
         self.assertIn('test "$TM_CANDIDATE_SHA" = "$GITHUB_SHA"', dispatch)
@@ -103,28 +111,14 @@ class CandidateGateTests(unittest.TestCase):
         self.assertNotIn("contents: write", dispatch)
         self.assertNotIn("continue-on-error:", dispatch)
 
-    def test_environment_diagnostic_cannot_replace_pr_gate_or_package(self):
+    def test_manual_environment_placeholder_cannot_qualify_product_or_package(self):
         workflow = (REPO / ".github/workflows/quality.yml").read_text()
-        self.assertIn("environment_probe_only:", workflow)
-        self.assertIn("type: boolean\n        required: false\n        default: false", workflow)
-        product_condition = "github.event_name != 'workflow_dispatch' || inputs.environment_probe_only != true"
-        diagnostic_condition = "github.event_name == 'workflow_dispatch' && inputs.environment_probe_only == true"
-        steps = workflow.split("      - name: ")
-        product = next(step for step in steps if step.startswith("Execute product gate\n"))
-        diagnostic = next(step for step in steps if step.startswith("Diagnose isolated environment only\n"))
-        self.assertIn("if: ${{ " + product_condition + " }}", product)
-        self.assertIn("python3 scripts/quality_gate.py iteration", product)
-        self.assertIn("if: ${{ " + diagnostic_condition + " }}", diagnostic)
-        self.assertIn("python3 scripts/native_environment.py", diagnostic)
-        self.assertNotIn("quality_gate.py", diagnostic)
-        # Test builds now contain a runner-owned credential directory and cannot
-        # be repackaged as an installable local preview on another machine.
+        self.assertIn('echo "BLOCKED: TokenMeter builds, tests and archives DMG locally."', workflow)
+        self.assertIn("exit 2", workflow)
+        self.assertNotIn("quality_gate.py", workflow)
+        self.assertNotIn("native_e2e.py", workflow)
         self.assertNotIn("package_preview_dmg.py", workflow)
-        self.assertIn("python3 scripts/test_device_credentials.py", workflow)
-        # Distinct check and artifact identities prevent READY being mistaken for product PASS.
-        distinct_name = diagnostic_condition + " && 'environment-diagnostic' || 'product-e2e'"
-        self.assertEqual(2, workflow.count(distinct_name))
-        self.assertIn("runner: [macos-15, macos-15-intel]", workflow)
+        self.assertNotIn("upload-artifact", workflow)
         self.assertNotIn("continue-on-error:", workflow)
 
 

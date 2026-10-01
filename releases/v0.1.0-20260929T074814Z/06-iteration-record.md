@@ -300,3 +300,13 @@ BUG-TM001-FIXTURE-006 的只读诊断与清理字段修订现已在未提交工�
 独立审查发现父门禁原先只在自己调用 `xcresulttool` 前核算 `native.xcresult` 完整摘要；若父级解析使 bundle（含 SQLite）变化，单次校验后仍可返回 PASS。先增加模拟父级解析写入 bundle 的治理负测，旧代码真实失败：`.local/ci/loopback-parent-verifier-red.log`，40项中1项失败，未抹除失败证据。随后父级在全部原始解析完成后再次逐文件核算并与子级记录摘要比较，任一次不符均拒绝；SOP-014、04测试计划及测试执行规范同步该判据。整合治理 `python3 -m unittest discover -s tests/governance -p 'test_*.py'` 实际198/198通过，退出0，原始日志`.local/ci/loopback-integrated-governance.log`。
 
 同机回环基础检查实际结果：更新fixture聚焦16/16通过（`.local/ci/loopback-fixture-focused.log`），更新包helper16/16通过（`.local/ci/loopback-integrated-helper.log`），本机Swift凭据组件13/13通过（`.local/ci/loopback-integrated-credentials.log`），本机Swift地址配置组件48项断言0失败（`.local/ci/loopback-integrated-endpoints.log`）。本次文档同步后实跑 `python3 scripts/check_docs.py --mode baseline`、`python3 scripts/quality_gate.py check` 和 `git diff --check` 均退出0：69份文档/436链接、12功能/37场景/6绑定，`release_eligible=false`。这些均为程序/规范基础验证，新候选尚未在两台Mac执行完整六例，PR合并和内部DMG发行仍不具资格。
+
+### 2026-10-01：SOP 独立分支先行整合（纯规范）
+
+用户本轮明确要求将SOP改动作为独立分支提交到远端`master`；此前各需求分支由总控统一整合的常规顺序在本次规范分支上让位于这条明确指令。以当时远端`master` `e011857443b503c2bfafcb9cd1c9e6d52f5ff5f2`为基线创建`codex/v0.1.0-20260929T074814Z/sop-governance`隔离工作树，只承载SOP、使其链接和治理检查可执行的设计/规范附件、目录、AGENTS、Changelog、总表格式快照及关闭旧自动Actions触发的配置；不带入TM001产品实现、原始测试结果、候选包或版本指针。产品分支以后须以新远端基线重新整合并在最终产品树完整回归。
+
+本次SOP-019修订为纯规范先行提供边界：SOP-008结构/基线/治理PASS仅允许源码规范整合，`release_eligible=false`；不生成产品E2E PASS、通行证或Tag。SOP-014/018补明确主run的11条辅助占位BLOCKED必须原样保留，只有同候选辅助、审计、六组及独立重算的78父TC/38变体最终规范化结果均零失败/阻断才可发布。SOP-014/018/024补清晰的两阶段顺序：干净候选先产本机原件、独立结果Excel、通行证和归档，根总表测试批次作为引用被测SHA的后续文档提交，不回写被测树。TM002依据用户已选目录跨重启保存决定，仅允许私有加密locator，撤销删除、失钥停读；不把App访问控制冒充系统授权。
+
+独立树编制期实跑`python3 scripts/check_docs.py --mode structure`和`--mode baseline`均退出0；最终去除不属于纯规范范围的总表数据文件后重查为74文档、441链接。`python3 scripts/quality_gate.py check`退出0（12功能、37场景、6绑定，`release_eligible=false`）。这些为文档/追踪条件，尚未运行本版Electron最终DMG产品E2E；不授予任何产品发布资格。远端PR、合并SHA/tree与候选提交后的治理复核记录在本机`.local/git-sync/`，不得预填在本条。
+
+初次治理单测198项中2项失败：旧`test_candidate_gate.py`仍强制要求PR/push自动运行原生门禁，与用户本机流程冲突；原失败保留在本轮执行记录。调整固定负测为断言工作流仅`workflow_dispatch`、无PR/push/schedule自动触发，手动占位流程明确退出2且不含产品门禁或上传步骤；单文件11/11通过，随后完整治理198/198通过。此处修改的是旧触发要求的测试合同，不更改产品用例预期或借测试通过宣称产品E2E成功。
