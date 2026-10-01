@@ -9,8 +9,8 @@
 | 功能点 | AC | 可交付行为 | 任务 |
 | --- | --- | --- | --- |
 | `FP-TM003-01` Codex 原生来源识别 | `AC-TM003-001`, `AC-TM003-002` | 只接受经核验的原生记录结构，未知结构可见 | `TASK-TM003-SOURCE`, `TASK-TM003-FIXTURE`, `TASK-TM003-PARSE` |
-| `FP-TM003-02` 本地持久采集与去重 | `AC-TM003-001`, `AC-TM003-002`, `AC-TM003-003` | 完整行游标、响应身份、累计核对、重启/移动/分支不重计 | `TASK-TM003-STORE`, `TASK-TM003-SCAN`, `TASK-TM003-IDENTITY`, `TASK-TM003-MIGRATE` |
-| `FP-TM003-03` 权限和状态 | `AC-TM003-001`, `AC-TM003-004` | 已确认授权根才读取，失效即停，重新授权后补扫 | `TASK-TM003-AUTH`, `TASK-TM003-UI` |
+| `FP-TM003-02` 本地持久采集与去重 | `AC-TM003-001`, `AC-TM003-002`, `AC-TM003-003` | 完整行游标、响应身份、累计核对、重启/移动/分支不重计 | `TASK-TM003-STORE`, `TASK-TM003-SCAN`, `TASK-TM003-IDENTITY`, `TASK-TM003-SECRET`, `TASK-TM003-WIRING`, `TASK-TM003-MIGRATE` |
+| `FP-TM003-03` 权限和状态 | `AC-TM003-001`, `AC-TM003-004` | 已确认授权根才读取，失效即停，重新授权后补扫 | `TASK-TM003-AUTH`, `TASK-TM003-IPC`, `TASK-TM003-UI` |
 | `FP-TM003-04` 自动验证与交付 | 全部四个 AC | 固定数据、逐 TC 产品 E2E、同候选全回归与可追踪档案 | `TASK-TM003-E2E`, `TASK-TM003-RELEASE` |
 
 ## 具体 TASK 与验收出口
@@ -23,6 +23,9 @@
 | `TASK-TM003-PARSE` | SOURCE、FIXTURE；可先独立源码准备 | 将完整原生 JSONL 行转换为只含白名单字段的候选用量；检验非负数、子项、UTC、版本、模型 | 增量、累计、未知/损坏及未知模型分别有确定结果；不从累计字段重复算量 | `TC-TM003-PARSE-01`, `TC-TM003-PARSE-02`, `TC-TM003-MODEL-01`, `TC-TM003-CORE-01`, `TC-TM003-CORE-02` |
 | `TASK-TM003-IDENTITY` | PARSE、STORE；独立于 UI | 版本固定的来源域+原生调用 ID 本机 HMAC、同 ID 冲突/不明重用诊断、fork 继承边界与重放处理；共享事件字段与 TM-004 合同一致 | 同来源同 ID 重放计一次，跨来源同字面 ID 不冲突；无可证实的跨 Agent/会话重用标覆盖不完整；方案升级或本机密钥损坏不能使旧日志双计 | `TC-TM003-DEDUP-01`, `TC-TM003-BRANCH-01`, `TC-TM003-NAMESPACE-01`, `TC-TM003-CORE-03` |
 | `TASK-TM003-SCAN` | PARSE、IDENTITY、STORE、AUTH | 限定授权根的可续扫内部分页枚举、完成/截断/取消状态、完整行游标、文件变化/30 秒补扫/手动刷新、移动/截断恢复；不把 UI 预览上限当全量 | 半行不前进、补全一次入库；超预览上限后仍能读到授权根末端用量并仅在全量完成时清除不完整提示；移动/重启/截断不重计，目录外与越界符号链接不可读 | `TC-TM003-SCAN-01`, `TC-TM003-SCAN-02`, `TC-TM003-SCAN-03`, `TC-TM003-WINDOW-01`, `TC-TM003-COVERAGE-OVERFLOW-01`, `TC-TM003-BOUNDARY-01`, `TC-TM003-CORE-05`, `TC-TM003-CORE-06`, `TC-TM003-CORE-07` |
+| `TASK-TM003-SECRET` | IDENTITY/STORE已定合同；可替换加密端口及本例私有profile，独立于真实Keychain产品验证 | TM-003独占私有32字节密钥生命周期、origin+account.id 的 `usage-principal-v1` HMAC、0600密文、缺失/损坏/错键停采集；产品默认系统随机源与macOS系统密钥保护，无明文回退 | 固定公开向量、重启同键、不同主体隔离；既有库缺/坏密文零重键零改库，安全失败；只在owner根测试 | `TC-TM003-CORE-08`，产品`STORE-01/ISOLATION-01`另验 |
+| `TASK-TM003-WIRING` | CORE-07主进程编排、SECRET、TM-002现有SourceAccess可替换端口；真实OS选择/Keychain产品验收仍BLOCKED | TM-003独占主进程来源到Codex collector/UsageStore适配；renderer只传已确认sourceId，完整代际守卫后写库 | 真实SourceAccess类+本例helper/SQLite下确认前零读、A/B=330、撤销零新提交、换主体无串读 | `TC-TM003-CORE-09`，产品`AUTH-01/02/SCAN/STORE`另验 |
+| `TASK-TM003-IPC` | WIRING及TM-001现有单窗口sender检查；不依赖真实Keychain产品结论 | TM-003独占 `index.ts`、受限collection handler、preload/共享Snapshot的采集状态；`collection:getState`无参数、`collection:refresh`仅sourceId | 非主sender/子frame/额外路径或身份字段拒绝；有效刷新/重复/停读/换主体只返回本主体白名单状态 | `TC-TM003-CORE-10`，产品`UI-01/02/ISOLATION-01`另验 |
 | `TASK-TM003-AUTH` | TM-002 稳定提交及接口，**BLOCKED** | 经 TM-002 可替换只读能力获取确认来源及已验证 origin+account.id，接收失效/撤销/身份切换通知；仅主进程读日志 | 确认前/失效/身份切换时无旧能力读取；不同主体事件与游标隔离，重新确认后仅本主体补扫 | `TC-TM003-AUTH-01`, `TC-TM003-AUTH-02`, `TC-TM003-ISOLATION-01` |
 | `TASK-TM003-UI` | STORE、SCAN、AUTH，**BLOCKED** | React 最小采集卡片与诊断，受限 preload/IPC，无任意路径参数 | 显示可信总量、cached 子项、覆盖起点、未知/失效/最后采集；UI 手动刷新真实驱动主进程 | `TC-TM003-UI-01`, `TC-TM003-UI-02` |
 | `TASK-TM003-MIGRATE` | STORE、TM-001 已分发稳定包状态，**BLOCKED** | 新客户端 SQLite schema 的事务迁移、备份/恢复和旧版启动兼容 | 源/目标 schema、聚合和中断恢复由 SOP-016 在隔离库验证；无稳定旧包时记录该事实 | `TC-TM003-MIGRATE-01` |

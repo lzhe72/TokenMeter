@@ -256,6 +256,51 @@
 
 **切片边界：** 当前`CodexGeneration.stage`接收完整Buffer，本辅助例只验证固定小文件和预算超限安全失败；不能据此称真实大日志可完整采集。产品`SOURCE/SCAN/STORE`的真实主进程、IPC、已安装App、TM-002系统能力与Keychain生命周期仍须独立固定TC和原件；不把模块5步PASS移作产品PASS。
 
+## 主进程身份、真实来源适配与受限 IPC 开发切片
+
+固定输入为[tm003-product-loop-slice.json](../../../tests/fixtures/tm003-product-loop-slice.json)及其引用的 CORE-07 两文件原生形状 fixture。公开测试密钥只在本例 owner 根与可替换加密端口中使用；生产入口必须从系统随机源新建32字节密钥，使用与 TM-002 来源 locator 同等级的 macOS 系统密钥保护端口加密后写当前用户私有 profile，不能落明文或从固定向量导入。三个辅助 TC 依次属于 `TASK-TM003-SECRET`、`TASK-TM003-WIRING`、`TASK-TM003-IPC`，只验证源代码边界、真实 `SourceAccess` 类的受控合成 helper、真实 `UsageStore` 与受限处理函数。它们不驱动已安装 Electron App、真实系统目录选择器或真实 Keychain，因此对应产品 `STORE-01/AUTH-01/AUTH-02/UI-01/UI-02/ISOLATION-01` 仍须独立执行。
+
+### TC-TM003-CORE-08 · 私有身份密钥持久性与拒绝重键
+
+**TASK：** `TASK-TM003-SECRET`。**AC：** `AC-TM003-002/004`。**类型：** `source_check`。**输入：** 本例0700 profile、0600空 `collection/usage-v1.sqlite`、公开测试密钥 `00..1f` 作为注入随机源唯一返回值、可替换的加/解密端口、三组规范化 origin+account.id 与预先冻结的 HMAC principal 向量。产品默认仍用系统随机源与系统密钥端口，测试注入不能通过 renderer 调用。
+
+| 步骤 | 固定动作 | 逐步预期与只读 DB 判据 |
+| --- | --- | --- |
+| 1 | 在空 owner profile 中以可用加密端口初始化密钥，求三组 principal 键。 | 随机源仅调用一次、32字节密钥仅在内存；密文记录0600/目录0700，无明文 key。三键逐字节等于 fixture；同账号不同 origin 和同 origin 不同账号各有不同键。尚无事件/游标/覆盖写入。 |
+| 2 | 用第一主体经正式 `UsageStore` 提交 fixture A=110，关闭密钥端口与库，再用同 profile 重开并重放 A。 | 重开只解密原密文、不生成新密钥；第一 principal 键和 `identity_key_state` 标记不变；`usage_event` 始终一行、total110、游标不重计，第二/第三主体只读零行但状态为未核实而非产品已知零。 |
+| 3 | 分别在独立复制的本例已有事件库中删除密文记录和损坏密文，再初始化。 | 两者均返回固定 `identity_secret_unavailable`/`identity_secret_corrupt` 停采集，随机源零调用，不创建新密文、不改事件、游标、覆盖或密钥标记；旧 A 仍可由只读库核对。 |
+| 4 | 恢复原密文后让加密端口不可用，再换成另一有效32字节密钥尝试打开原库。 | 密钥不可用时停采集，不能明文回退；不同有效密钥被 marker 拒绝，A仍一行/110，记录和报告无密钥、密文、完整路径或原生日志正文。 |
+
+**DB与重置：** 本例只通过正式 store 写 A；故障变体各使用自有复制库，不直接 SQL 造事件。以只读 SQL 核对 `usage_event`、`source_cursor`、`coverage` 与 `identity_key_state` 前后行数/摘要；关闭连接后按 owner 收据只删本例目录。密文文件的权限、内容排除测试公开明文值及重启未重键须由固定程序断言。实际 macOS Keychain item 身份/隔离另由产品 E2E 核验。
+
+### TC-TM003-CORE-09 · 已确认来源到本机库的主进程适配
+
+**TASK：** `TASK-TM003-WIRING`。**AC：** `AC-TM003-001/003/004`。**类型：** `source_check`。**输入：** 同 fixture 的第一主体、确定的 `sourceId`、真实 `SourceAccess` 对象与本例合成目录/helper、CORE-07 两文件各410字节；密钥与库由 CORE-08 合同创建。候选页和正文由 TM-002 正式能力方法返回，适配器只接收 `sourceId`，不传路径、账号或密钥。
+
+| 步骤 | 固定动作 | 逐步预期与只读 DB 判据 |
+| --- | --- | --- |
+| 1 | 未经确认直接触发 Codex 采集，再通过 SourceAccess 的选择/预览/确认方法建立本例来源。 | 确认前 `beginCandidateScan/readCandidateChunk/commitScanBatch` 均0次、库空；确认记录只属第一主体，候选元数据不包含正文。 |
+| 2 | 以已确认 sourceId 调用主进程适配器，读取两个完整文件并在末页守卫通过后落库；关闭重开库/来源后重扫。 | 完成前库空；完成后A/B两事件、input300/output30/cached60/total330、各游标410、覆盖仅在全代完成后标记；重启重扫仍两行/330，无原始路径/原生ID落库。 |
+| 3 | 从独立成功库开始新代际，在 file-b 后由 SourceAccess 撤销来源再尝试提交。 | 旧代际被取消，守卫拒绝、提交0次；已提交A/B仍两行/330，原成功代际的coverage行保持原值，本次运行状态须标采集不可用/不完整且不能称新代际完成；旧 sourceId 不再可读。 |
+| 4 | 切到 fixture 的第二主体后尝试旧 sourceId，再为第二主体确认独立来源并扫描。 | 旧 sourceId 在读取前拒绝、第一主体数据不出现在第二主体查询；第二主体成功扫描后各主体各两行/330，HMAC主体键不同，不能共享游标/来源能力。 |
+
+**DB与重置：** 每个故障路径独立 owner 库；只通过真实 `SourceAccess` 与 `UsageStore` 写入，测试 helper 只提供受控字节和系统选择器替身。逐步只读核对主体/来源唯一键、事件聚合、游标、覆盖和提交调用数；仅删除本例拥有目录。合成 helper 不证明真实 macOS 授权、任意大日志流式采集、Keychain 或产品 UI。
+
+### TC-TM003-CORE-10 · 主窗口 IPC 与刷新状态隔离
+
+**TASK：** `TASK-TM003-IPC`。**AC：** `AC-TM003-001/004`。**类型：** `source_check`。**输入：** CORE-09 成功库、第一主体及已确认 sourceId；可注入的主窗口 sender/frame 检查端口与正式 collection handler，固定第二主体。仅允许 `collection:getState` 无参数及 `collection:refresh` 精确 `{sourceId}`；返回结构采用已提交可信事件/诊断/覆盖，不把未知 cached 或覆盖缺口合成零。
+
+| 步骤 | 固定动作 | 逐步预期与只读 DB 判据 |
+| --- | --- | --- |
+| 1 | 分别用非主窗口 sender、子 frame、路径/账号/密钥多余字段和未确认 sourceId 调用 handler。 | 全部拒绝，采集/DB调用0次；不接受任意路径或由 renderer 指定 principal/secret，不返回旧主体状态。 |
+| 2 | 主窗口按固定 sourceId 刷新并取 state。 | 只触发第一主体 Codex 采集一次，返回两事件的 input300/output30/total330、cached已知60、覆盖与诊断代码/数量；库仍两行，序列化状态无密钥、密文、路径、原生ID或正文。 |
+| 3 | 同主体再刷新并取 state，随后将来源暂停/撤销。 | 重扫仍两行/330；暂停/撤销后刷新拒绝、旧可信330只对第一主体保留可见且标采集不可用/覆盖不完整，不能报新已知零。 |
+| 4 | 切换第二主体后由旧 sender/sourceId 取 state/刷新。 | 旧来源被拒绝，第二主体 state 为缺失/未核实且无第一主体330；第一主体持久事件不删除，按主体只读核对隔离。 |
+
+**DB与重置：** handler 测试使用固定主窗口端口替身，不启动真实 Electron；只读核对 `usage_event`/`coverage`，每变体本例 owner profile，清理仅本例目录。真实 `ipcMain` 注册、preload/React 调用、已安装 App 的 sender 约束和 UI 观察仍由原产品 TC 及包级 E2E 独立验证。
+
+**切片边界：** CORE-08/09/10 的输入、异常和数值在实现前固定。实现程序、逐 TC 原始步骤、独立结果 Excel 尚未交付时绑定为 `null`、执行 `unexecuted`。TM-002 的真实目录选择/加密 locator、Keychain item 独立归属，以及任意大文件有界读取仍是产品路径阻断；TM-004 只消费共享密钥/存储适配，不修改 `index.ts` 或 collection IPC；TM-005 只负责同库只读统计查询与 React 统计页，不以本模块状态代替完整双来源统计。
+
 ## 当前执行合同
 
 每个 TC 的输入、步骤和 expected 已在此固定；程序绑定须保留来源版本、具体文件 SHA/SQL 与稳定选择器，不得为适配已有代码改弱独立预期。当前CORE-01～07由`tests/source_check_suites.json`和`scripts/run_source_check.mjs`绑定，命令为`node scripts/run_source_check.mjs --suite <suite> --run-id <新唯一UTC时间>`，每例在对应测试文件内创建并清理owner根。`AC-TM003-001` 至 `004`、四个 E2E 组和全部具体 TC 双向保持。数据与程序未实现时，`tests/feature_matrix.json` 的目标仍为 planned、`tests/datasets.json` 的 `codex_raw` 仍为 planned，产品 E2E 的实际结论只能是 BLOCKED；完成文档结构或单元测试不能改变这一事实。

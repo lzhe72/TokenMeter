@@ -1,5 +1,10 @@
 ## 2026-10-02 · CORE-01～07同树机器绑定
 
+## 2026-10-02 · CORE-08～10主进程闭环准备输入
+
+总控要求优先冻结真实产品链路的最小开发输入。文档会话在既有AC不变前提下新增`TASK-TM003-SECRET/WIRING/IPC`和对应`TC-TM003-CORE-08/09/10`三条辅助source_check（各四步），输入为公开HMAC主体向量、本例0700/0600 profile与SQLite、真实`SourceAccess`类加合成helper、CORE07两文件A/B=330、主窗口handler端口。明确私有密文密钥缺/坏/错键零重键、origin+account.id分域、确认前零读、末页守卫后提交、撤销/换主体零新提交，以及IPC只接受sourceId/返回白名单状态。开发文件所有权由TM003独占主入口/secret/IPC，TM004仅Claude adapter，TM005只读统计及UI。三个程序尚未绑定或执行；真实macOS选择/Keychain、安装App/IPC、任意大日志与原产品27条TC继续BLOCKED/NOT_RUN，整版0.3和正式发行未据此通过。切片就绪须以干净输入提交的独立SOP-008收据核对为准。
+
+
 ## 2026-10-02 · 整合候选七条CORE模块重跑
 
 文档绑定提交`23241734f7821ee7664e3dae5104d68699d990a4`（tree`8c6ccca60b855cf1e43332f38a35c9dcdf770acb`）在干净树执行四套固定`source_check`：`tm003-core-20261001T203711Z` CORE01–03 3/3九步、`tm003-core45-20261001T203711Z` CORE04/05 2/2九步、`tm003-core06-20261001T203711Z` 1/1四步、`tm003-core07-20261001T203711Z` 1/1五步，owner清理及各自独立Excel/verification回读均PASS，登记总表第32–35批次。原始报告、TAP、Excel位于各run的`.local/source-check-runs/`与`.local/test-results/`。同树治理511/511 PASS（初次因本树`.local`目录权限过宽有两例前置失败，恢复owner 0700后完整复核PASS）。这些只验证辅助模块，未运行0.3产品App/IPC/授权/Keychain或正式门禁。

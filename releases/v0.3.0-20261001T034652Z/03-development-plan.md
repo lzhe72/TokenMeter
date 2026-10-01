@@ -38,6 +38,14 @@ SQLite schema 由 `PRAGMA user_version` 驱动；从上一稳定 TM-002 版升�
 
 授权失效、撤销、退出或已验证 origin/account.id 切换时立即关闭句柄、停止对应主体 watcher/补扫并撤销缓存的能力；界面按新主体显示其独立状态。新的确认通知经 TM-002 合同取得新能力再补扫，旧主体事件与游标不混入新主体。文件读取 EACCES、权限撤销、磁盘满、SQLite 损坏都留下结构化诊断，不宣称成功；失败不推进游标。离线网络不影响本地采集。本版不上传、也不请求服务端统计。
 
+### CORE-08～10 主进程闭环准备合同
+
+在现有CORE-01～07模块提交之后，先由TM-003独占`apps/desktop/src/main/index.ts`、collection私有密钥存储、采集IPC/preload共享类型的接线；TM-004只交Claude adapter与同库写入端口，TM-005只交双来源只读查询/统计React页，避免多个需求同时修改主入口。CORE-08固定`collection/identity-secret-v1.json`仅存macOS系统密钥保护的密文、0600私有文件和0700目录，产品默认系统随机32字节生成一次；文件丢失/损坏而库有事件或游标时绝不再生新密钥，Keychain不可用时停读不回退明文。`principal_key`精确定义为同一32字节密钥对严格UTF-8字节长度uint32BE前缀的`["usage-principal-v1",canonicalOrigin(origin),account.id]`做HMAC-SHA256小写hex；固定公开测试向量见[fixture](../../tests/fixtures/tm003-product-loop-slice.json)，生产密钥不得进入fixture/日志/renderer。第一版无已有事件时可新建记录，`identity_key_state`必须与库密钥一致；旧库有事件而无原密钥时保留只读可信事件与不完整覆盖，采集停止。真实Keychain item身份与测试隔离须在产品E2E另验。
+
+CORE-09复用TM-002现有`SourceAccess`正式选择/预览/确认/分页/分块/守卫能力，将已确认Codex `sourceId`送`collectCodex`并同步落`UsageStore`，接口不接收路径、账号、原生ID或renderer秘密。用真实类与本例helper做合成模块测试，固定两文件A/B=330，撤销/身份切换须取消旧代际且不改旧可信事件。当前CORE-07仅证明小文件和注入预算超限安全失败；任意大日志须设计有界流式/暂存并固定测试，仍阻断完整产品扫描。
+
+CORE-10使`collection:getState`仅接受空输入、`collection:refresh`仅接受已确认`{sourceId}`，沿用现有主窗口webContents/mainFrame及`tokenmeter://app/index.html`校验。主进程独占密钥与SQLite，preload/renderer只见白名单数值、诊断代码/数量、覆盖/失效状态；未知cached与未证实历史不能转成0。刷新发生在当前主体和来源守卫之内，身份切换立即不再向新主体返回旧主体状态。固定handler端口辅助测试后仍须由已安装App真实UI/IPC/系统来源及隔离Keychain产品TC单独验收。
+
 ### IPC、界面及可验证观察面
 
 状态结构仅含 `trusted_input/output/total/cached_read/cache_write/reasoning_output`、`unique_responses`、`last_scan_at_utc`、`coverage_start_utc`、`history_incomplete`、授权状态、诊断代码及数量。未知 cached 以 `null` 显示“未知”，不能伪装 0。renderer 无 Node/文件/SQLite 权限，主进程核验 IPC 来源窗口。产品 E2E 可通过 UI 观察总量和诊断、通过测试拥有的 profile SQLite 做只读旁证；不加测试专用 IPC 成功旁路。
