@@ -23,6 +23,7 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 GIT_SHA = re.compile(r"(?:[a-f0-9]{40}|[a-f0-9]{64})\Z")
 SHA256 = re.compile(r"[a-f0-9]{64}\Z")
+RELEASE = re.compile(r"v(\d+)\.(\d+)\.(\d+)-(\d{8}T\d{6}Z)\Z")
 
 
 def timestamp(value: object) -> datetime | None:
@@ -30,16 +31,29 @@ def timestamp(value: object) -> datetime | None:
 
 
 def combine_variants(login: dict, update: dict | None, release_id: str) -> dict:
+    """Combine TM-001 source manifests for a possibly newer candidate release."""
+    if not isinstance(login, dict) or (update is not None and not isinstance(update, dict)):
+        raise results.Invalid("Variant manifests must be objects")
     documents = [login, *([update] if update is not None else [])]
     combined = []
+    source_release = login.get("release_id")
+    source_match = RELEASE.fullmatch(source_release) if isinstance(source_release, str) else None
+    target_match = RELEASE.fullmatch(release_id) if isinstance(release_id, str) else None
+    if source_match is None or target_match is None:
+        raise results.Invalid("Variant manifest or candidate release ID is invalid")
+    if source_release != release_id:
+        source_version = tuple(map(int, source_match.groups()[:3]))
+        target_version = tuple(map(int, target_match.groups()[:3]))
+        if source_version >= target_version or source_match.group(4) >= target_match.group(4):
+            raise results.Invalid("Variant source release is not earlier than the candidate")
     for document in documents:
-        if document.get("release_id") != release_id or not isinstance(document.get("variants"), list):
-            raise results.Invalid("Variant manifest release or shape differs from the catalog")
+        if document.get("release_id") != source_release or not isinstance(document.get("variants"), list):
+            raise results.Invalid("Variant manifests have mixed source releases or invalid shape")
         combined.extend(document["variants"])
     identities = [item.get("id") for item in combined if isinstance(item, dict)]
     if len(identities) != len(combined) or len(set(identities)) != len(identities):
         raise results.Invalid("Variant manifest has foreign or repeated IDs")
-    return {"release_id": release_id, "variants": combined}
+    return {"release_id": source_release, "variants": combined}
 
 
 def test_plan_ready(plan: dict, release_id: str, document_catalog: dict | None, *, fixture: bool) -> bool:
@@ -76,6 +90,10 @@ def verify_candidate(catalog: dict, report: dict, *, run_root: Path, plan: dict,
     reasons = []
     release = catalog.get("release_id")
     current = [case for case in catalog.get("cases", []) if isinstance(case, dict) and case.get("feature_id") == "TM-001"]
+    source_releases = [case.get("release_id", release) for case in current]
+    if (not source_releases or any(not isinstance(value, str) or not value for value in source_releases)
+            or len(set(source_releases)) != 1 or variants.get("release_id") != source_releases[0]):
+        reasons.append("TM-001 变体来源版本与父用例不一致")
     identities = [case.get("id") for case in current]
     variant_ids = [item.get("id") for item in variants.get("variants", []) if isinstance(item, dict)]
     required = identities + variant_ids
