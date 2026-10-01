@@ -13,6 +13,8 @@
 
 SOP 维护由本项目的「SOP」管理会话（thread ID `01a0f5a5-63f7-76b0-aa53-ac6befec91ef`）统一负责。其他会话需要新增、修改或删除 SOP 时，先通知该会话并提供缺口、依据和受影响流程；依赖修订的步骤待规范同步后继续。详见 [SOP-000](sop/SOP-000-maintenance.md)。
 
+除 SOP 外，**所有项目文档的新增、修改和删除统一由「文档」会话**（thread ID `01a0f14b-0888-7e93-bb85-a76b419f2ba7`）实施，范围包括根项目总表及每次测试的独立结果 Excel。开发、测试、总控与 SOP 会话提交变更依据、候选身份和原始证据，由文档会话按 SOP-024 随开发进度更新文档、目录、工作簿和关联引用，再把文档提交交给总控整合。已经在其他分支形成的文档改动先作为待核对输入，不直接继续改写。会话身份、交接字段和当前队列见[项目会话体系](docs/project-sessions.md)。这项分工不改变先文档基线后开发、最终整合树测试及发布门禁。
+
 最高规则：**规范驱动文档，文档驱动设计、开发、测试、发布和迭代；每一步都必须有 SOP。**
 
 ## 项目与阅读入口
@@ -22,6 +24,7 @@ SOP 维护由本项目的「SOP」管理会话（thread ID `01a0f5a5-63f7-76b0-a
 读完对应 SOP 后，再根据输入要求查阅：
 
 - [当前状态](docs/status.md)：实际实现、检查结果和阻塞。
+- [项目会话体系](docs/project-sessions.md)：文档/SOP/开发总控与需求会话的职责、交接和当前队列。
 - [全流程框架](docs/lifecycle.md)、[文档规范](docs/standards/documentation.md)：阶段依赖、文档基线和维护规则。
 - [产品约定](docs/product/README.md)、[架构](docs/architecture/README.md)：验收行为与实现边界。
 - [开发规范](docs/standards/development.md)、[测试策略](docs/testing/strategy.md)、[发布门禁](docs/standards/release.md)：工程约束。

@@ -7,10 +7,11 @@
 | 统一查看项目全流程 | [项目总表Excel](../TokenMeter项目总表.xlsx)、[版本导航](../releases/v0.1.0-20260929T074814Z/README.md) |
 | 查看所有用例集合 | [根目录TEST_CASES](../TEST_CASES.md)、[任务与用例规范](standards/test-cases.md) |
 | 确定文档规范 | [文档标准](standards/documentation.md)、[元数据登记](catalog.json) |
+| 查项目会话和文档交接 | [项目会话体系](project-sessions.md)：文档、SOP、开发总控与需求会话 |
 | 定义和执行任一步骤 | [SOP 总索引](../sop/README.md)：先查工作，再完整读独立文件 |
 | 理解全流程顺序 | [全流程框架](lifecycle.md) |
 | 阅读完整设计 | [总设计计划](design-plan.md) |
-| 查阅问题、决定与经验 | [复盘索引](retrospectives/README.md) |
+| 查阅问题、决定与经验 | [复盘索引](retrospectives/README.md)：9月历史和10月1日接续 |
 | 接续上次任务 | [当前状态](status.md) |
 | 确认产品需求 | [产品约定](product/README.md)、[独立验收登记](../tests/acceptance.json)、[功能矩阵](../tests/feature_matrix.json) |
 | 修改模块/数据/接口 | [架构](architecture/README.md) |

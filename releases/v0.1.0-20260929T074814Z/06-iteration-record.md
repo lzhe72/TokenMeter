@@ -679,3 +679,19 @@ TM-001源码提交`44e3844ce566eb3120f17ee555321434fcac4231`与已合入的SOP�
 按SOP-015复核保留原件。补充003组管理员管理操作通过，但固定脚本仅对撤销后的成员会话请求`/v1/me`并得到预期401，没有有效管理员身份200。只读继续核验发现补充004组的`lsof -Fn`包含一条无文件名的`n`行，固定采集器将其记为空路径，后续发布校验会报`Incomplete restarted-process open-file list`。两者均属于固定测试/证据采集缺口，未发现产品认证或升级的确定性失败。现已在003脚本增加真实App重启、自动恢复管理员身份和服务账号/角色断言；在003及精细更新采集器用同一解析器忽略空名称，保留所有具名路径，并添加解析单元测试及003缺200的门禁负测。修改后基础检查与新候选完整门禁需重新运行，旧FAIL原件不覆盖。
 
 修订后候选前检日志保存在`.local/ci/tm001-gate-fix-preflight-20261001T0837Z/`：文档严格基线与质量追踪均退出0（102文档、904链接；质量检查仍`release_eligible=false`），完整治理426/426、服务端55/55、桌面单元26/26（含`lsof`解析回归）通过，Electron构建退出0。固定精细Playwright注册95/95、补充六组注册6/6，`git diff --check`通过。补充列表首次因预检命令遗漏执行器所需`TM_E2E_JSON`而退出1，补齐隔离输出路径后同一固定六组列表核对通过；该列表检查没有执行App。所有基础与列表检查仅用于新候选前检，不能替代再次完整E2E。
+
+### 2026-10-01：文档会话归口与跨版本门禁附件接管
+
+用户明确指定“文档”会话为除 SOP 外所有项目文档的唯一编写者，新增、修改、删除都由该会话实施，并要求把项目会话体系写入文档。“SOP”会话继续维护 `sop/`，开发总控继续整合本地 `master`，需求会话负责实现、固定测试与原始证据。文档会话先核对 SOP-024、文档规范、可见会话清单及相关会话近况，再通知开发总控、SOP、TM-001、TM-002 停止继续直接改写非 SOP 文档并交接既有差异。新增[会话体系](../../docs/project-sessions.md)，同步 AGENTS、文档规范、导航、状态、Changelog 和机器目录；TM-003/004/005 的工作分支不能误记为已核实的用户可见会话。历史和当前分支中未集成的文档差异保留为待核对输入，不能把草稿改写成已测试通过。
+
+SOP 会话交接独立提交 `3303c0b0a7adf8d92630388d9dadc2946f1085b7`：SOP-006/011/014/017/018 与索引修订跨版本门禁计数，同时含四份非 SOP 附件。文档会话核对其中发布规范、用例规范和 Changelog 的语义后，独立写入当前文档分支。TM-001 固定计数仍用于原来源核对；TM-002/003 的实际集合及门禁执行器必须在最终整合树核实，不能由本次文字修订宣称通过。SOP 规则与文档附件在总控整合时须一并核对。此处不修改 SOP 原文件、不执行 App 或产品 E2E；旧 `3467dc1` 门禁继续为 FAIL，新 `d2db551` 的门禁终态待原始文件交接。
+
+### 2026-10-01：TM-001 独立候选 PASS 与文档/Excel 接续
+
+上述记录写成时 `d2db551` 门禁尚未交接。随后只读核对 `.local/gates/tm001-final-gate-d2db551-20261001T0904Z/gate.json` 和开发会话交接：独立候选 `d2db5514e3dde2abb0b039f6188ae82f1ba3d53e`、tree `3854696e6212aa68aeccfdc720add187a4f92759`，DMG SHA-256 `acc86a9f04ed19fe91f1b63481988d615f5d81680602eed1305b3896bb284492`。完整门禁约 2882 秒，机器 `state=PASS`、`release_eligible=true`；主 116 行为 105 PASS/11 辅助占位 BLOCKED，辅助 11/11、审计 12/12、补充六组 6/6 均 PASS，`final-product-result.json` 规范化 78 父 TC 与 38 变体全 PASS。机器通行证 SHA-256 `193bf39ca6bd2aed5a802f817ba5aa7bcfdaeeb442e272f1d843e381c941de53`；独立 Excel SHA-256 `131a5e4038d5d4a11825e934484ec4e2c895819681bd8f189fbcf2b45e9d76d4`。E2E-003 有有效 `/v1/me` 200，E2E-004 具名打开文件 125 项、零空项。旧 `3467dc1` FAIL 原件不改写。原 DMG 的同摘要便捷副本已以 `CANDIDATE-NOT-RELEASED` 标在根 `dmg/<release_id>/`，不是正式原名包。总控本地 `master` 后续整合形成新树，仍须按 SOP-019 重做适用产品门禁、归档和远端核对；当前不记正式发行。
+
+用户补充明确 Excel 也全部由文档会话负责并随开发进度更新。文档会话把本版 06/07/08、状态、用例导航、复盘 RET-032–038、机器目录和项目登记同步；根总表重导后 11 个 Sheet、109 条用例、12 条**旧批次**，当前 SHA-256 `fa2b4efc47bed36caa67a4c011fdee2968ec36e4764510713bb2af1e9f4c076e`，`python3 scripts/verify_project_workbook.py` 回读退出 0、零错误、`product_tests_executed=false`。版本 Sheet 已记录独立候选 PASS 但未发布，`06测试批次`按 SOP-024 待通行证及原件归档后再以独立文档提交登记本次 run 与被测 SHA，不能把旧 12 批次冒充新 run。根总表生成首次在隔离文档工作树退出 1，原因是该树缺历史 `.local/test-results/.../revisions/02/` 文件；只读链接至主工作区已存在的历史结果文件后重新导出并回读 PASS，未覆盖该原件。
+
+本次独立文档工作树的 `python3 scripts/check_docs.py --mode structure` 与 `--mode baseline` 均退出 0（104 文档、929 链接、103 baselined、1 superseded）；`python3 scripts/quality_gate.py check` 退出 0（12 功能、37 概要场景、6 绑定，`release_eligible=false`）；`python3 scripts/export_test_cases.py --check` 为 109 例/352 步 CURRENT；`git diff --check` 退出 0。完整治理初次执行 426 项有 1 ERROR，固定用例报告隔离文档工作树缺 Playwright 依赖；对照锁文件 SHA 与已验证工作区一致后临时只读复用固定依赖，重跑 426/426 PASS，日志在本树 `.local/docs-checks/20261001-session-governance/governance.log`。总控指出该依赖链接不满足独立环境证据后，本会话只移除自己创建的符号链接，在本工作树按锁文件执行 `npm ci --cache ../../.local/npm-cache` 与 `ELECTRON_CACHE=../../.local/electron-cache npm run runtime:install`，均退出 0；再次完整运行治理 426/426 PASS，退出 0，独立原始日志在同目录 `npm-ci.log`、`runtime-install.log` 与 `governance-independent.log`。没有改动主项目的依赖目录。这些文档、工作簿和治理检查不在本树执行 App，不能替代总控最终整合树的产品 E2E。
+
+SOP 会话最终交付组合 SOP-only 提交 `afee30d28f9952559dacd895b2313298045b635d`，只含根 `sop/` 的跨版本门禁和文档归口规则。文档会话将其中七份 SOP 的修订号与十章节快照同步至 `docs/project-register.json`，工作簿 `09执行SOP` 随之刷新；本次文档分支须与该 SOP 提交在总控整合树一起复核严格基线，不能单独声称全部规则集成完成。

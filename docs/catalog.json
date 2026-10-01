@@ -188,7 +188,7 @@
       "inputs": [
         "docs/standards/documentation.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-024-document-change.md"
     },
     {
@@ -603,6 +603,22 @@
       "sop": "sop/SOP-004-technical-design.md"
     },
     {
+      "doc_id": "DOC-PROJECT-SESSIONS",
+      "path": "docs/project-sessions.md",
+      "type": "standard",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": null,
+      "inputs": [
+        "AGENTS.md",
+        "docs/standards/documentation.md",
+        "docs/status.md",
+        "sop/SOP-024-document-change.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-024-document-change.md"
+    },
+    {
       "doc_id": "DOC-README",
       "path": "readme.md",
       "type": "index",
@@ -613,7 +629,7 @@
         "docs/design-plan.md",
         "docs/status.md"
       ],
-      "updated_at": "2026-09-29",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-024-document-change.md"
     },
     {
@@ -839,6 +855,21 @@
       "sop": "sop/SOP-006-test-plan.md"
     },
     {
+      "doc_id": "DOC-RETRO-20261001",
+      "path": "docs/retrospectives/2026-10-01-development-and-governance.md",
+      "type": "record",
+      "status": "baselined",
+      "applicable_release": "all",
+      "base_release": "v0.1.0-20260929T074814Z",
+      "inputs": [
+        "docs/retrospectives/2026-09-29--2026-09-30-tokenmeter.md",
+        "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
+        "docs/status.md"
+      ],
+      "updated_at": "2026-10-01",
+      "sop": "sop/SOP-023-iteration.md"
+    },
+    {
       "doc_id": "DOC-RETROSPECTIVE-20260929-20260930",
       "path": "docs/retrospectives/2026-09-29--2026-09-30-tokenmeter.md",
       "type": "record",
@@ -849,7 +880,7 @@
         "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
         "releases/v0.0.1-20260929T060944Z/06-iteration-record.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-023-iteration.md"
     },
     {
@@ -863,7 +894,7 @@
         "releases/v0.1.0-20260929T074814Z/06-iteration-record.md",
         "releases/v0.0.1-20260929T060944Z/06-iteration-record.md"
       ],
-      "updated_at": "2026-09-30",
+      "updated_at": "2026-10-01",
       "sop": "sop/SOP-024-document-change.md"
     },
     {

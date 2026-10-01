@@ -4,7 +4,7 @@
 
 macOS 团队模型用量监控工具。产品目标是读取 Codex、Claude Code 本地日志，展示 Token、估算费用和团队统计；当前0.1.0交付账号与更新基础，采集和统计按后续功能迭代。
 
-**当前正在验收第一个功能 TM-001：账号、登录与最小更新器。Electron客户端、FastAPI与SQLite服务及本机开发DMG已建立；最新开发包六组E2E为五组PASS、升级004 FAIL，新增精细TC未执行。实际证据见[当前状态](docs/status.md)。产品尚未发布。**
+**TM-001 正在进行最终候选回归。首次干净候选门禁为 FAIL，修复后候选仍须以原始门禁终态判定；目前没有正式发布通行证。实际运行、证据和后续需求状态以[当前状态](docs/status.md)为准。**
 
 ## 项目查看入口
 
@@ -22,6 +22,7 @@ macOS 团队模型用量监控工具。产品目标是读取 Codex、Claude Code
 - [AGENTS.md](AGENTS.md)：Codex 开发、修复、测试和交接约定。
 - [文档索引](docs/README.md)：产品、架构、版本、测试、发布说明。
 - [当前状态](docs/status.md)：已实现能力和真实阻塞项。
+- [项目会话体系](docs/project-sessions.md)：非 SOP 文档统一由“文档”会话编写，SOP 由“SOP”会话维护，开发总控整合提交。
 - [功能与 E2E 矩阵](tests/feature_matrix.json)：每个功能的用例、数据程序和 SOP。
 - [SQLite 数据库](database/README.md)：测试/生产 DB 的位置、可执行造数 SQL、初始化和生产服务启动。
 
@@ -57,7 +58,7 @@ npm run build
 npm test
 ```
 
-最终包先按SOP-017用local_package.py在干净候选构建，再按SOP-014/018执行local_gate.py。各脚本`--help`提供真实参数；开发包已联调但升级004失败，精细TC绑定和正式候选门禁仍未完成，实际进展见状态页。quality_gate.py在local_electron配置下必须提供`--package-manifest`和新的`--output`，不允许落回旧XCUITest结果。
+最终包先按SOP-017用local_package.py在干净候选构建，再按SOP-014/018执行local_gate.py。各脚本`--help`提供真实参数；TM-001 独立候选 `d2db551` 已通过本机门禁，最终本地 `master` 整合树仍须重测，实际进展见状态页。quality_gate.py在local_electron配置下必须提供`--package-manifest`和新的`--output`，不允许落回旧XCUITest结果。
 
 完整门禁从原DMG安装真实App，贯通UI、IPC、API和SQLite并复核六例原始结果；基础测试不替代E2E。无需完整Xcode，当前验收仅此macOS15 Intel。现有App、生产数据库和49176服务不作为测试资源。
 

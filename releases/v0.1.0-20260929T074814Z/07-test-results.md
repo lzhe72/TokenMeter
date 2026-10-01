@@ -2,15 +2,21 @@
 
 本文按 SOP-014/018/022/024 汇总已保存的真实原件和当前执行结果。它是结果索引，不是手写通过报告。dev07六个聚合场景组属于历史运行，不能回填新增精细TC。首轮精细全量`local-7feea03dd72e4eddba0651cede8fd23d`为BLOCKED；新版全量`local-343e54113b0b442383e80f137013014b`为FAIL。两轮原件均保留，后续定向及新包运行不改写它们。
 
+## 修复后独立候选门禁：PASS（2026-10-01）
+
+只读核对 `.local/gates/tm001-final-gate-d2db551-20261001T0904Z/gate.json`：候选 `d2db5514e3dde2abb0b039f6188ae82f1ba3d53e`，tree `3854696e6212aa68aeccfdc720add187a4f92759`，被测 DMG SHA-256 `acc86a9f04ed19fe91f1b63481988d615f5d81680602eed1305b3896bb284492`、151500334 字节。门禁 `state=PASS`、`release_eligible=true`，执行约 2882 秒；主精细 116 行为 105 PASS、11 条辅助占位 BLOCKED，95 个实际 Playwright 入口全部完成。独立辅助 11/11、审计 12/12、补充六组 6/6 均 PASS；机器 `final-product-result.json` 规范化 78 父 TC、38 变体全部 PASS。主原件的 11 条占位未改写。
+
+同目录通行证 `v0.1.0-20260929T074814Z.passport.json` SHA-256 为 `193bf39ca6bd2aed5a802f817ba5aa7bcfdaeeb442e272f1d843e381c941de53`；独立结果 Excel `granular-reviewed/TokenMeter测试结果-local-1ab724d58a804b56aafd05af7606803e.xlsx` SHA-256 为 `131a5e4038d5d4a11825e934484ec4e2c895819681bd8f189fbcf2b45e9d76d4`。E2E-003 的 service audit 有有效 `/v1/me` 200，E2E-004 的 `lsof` 有 125 个具名路径、零空项。原 DMG 位于 `.local/ci/tm001-final-package-d2db551-20261001T0857Z/`；根 `dmg/<release_id>/` 的同摘要副本文件名含 `CANDIDATE-NOT-RELEASED`，只是便捷入口。**此 PASS 只适用于上述独立候选**；总控最终 `master` 整合树、归档与正式分发仍须按 SOP-019/020 完成，不能把本分支门禁转写成最终发行通过。旧 `3467dc1` FAIL 见下节，未覆盖。
+
 ## 首次干净候选门禁：FAIL（2026-10-01）
 
 候选`3467dc143b2e2fc71f51515f483f0ecff8637947`、DMG SHA-256 `e310a0aa5f05cc08930b4a2f57453c51a564ca16e5f3d756c65e25443ef1ac4d`的原始门禁位于`.local/gates/tm001-final-gate-3467dc1-20261001T0730Z/`。`gate.json`记录**FAIL**、`release_eligible=false`、错误`No actual identity verification`；没有通行证或`final-product-result.json`。精细主批次`local-2330ba0350354fbab6a7329f49512eec`的95个实际Playwright入口全部PASS，116条原始结果为105 PASS/0 FAIL/11辅助占位BLOCKED；辅助`aux-4697bca3e45e4671bb33484c659c0b03`为11/11 PASS，独立审计12/12 PASS，补充`local-82b058cbee2b4051a786eb15e19c53ef`为6/6 PASS。独立逐例Excel`granular-reviewed/TokenMeter测试结果-local-2330ba0350354fbab6a7329f49512eec.xlsx`及`verification.json`导出/回读PASS，但保留主原件的BLOCKED，不构成发布资格。
 
-补充场景`E2E-TM001-003`缺少有效管理员会话的真实`/v1/me` 200；另在已失败报告上进行的只读逐项校验发现`E2E-TM001-004`的`lsof`采集结果含空名称，发布核验也会拒绝。原始请求与进程原件不改写。固定测试已增加真实App重启恢复身份、管理员会话账号/角色断言，并让`lsof`解析忽略无名称行；新候选的完整产品回归尚待执行。
+补充场景`E2E-TM001-003`缺少有效管理员会话的真实`/v1/me` 200；另在已失败报告上进行的只读逐项校验发现`E2E-TM001-004`的`lsof`采集结果含空名称，发布核验也会拒绝。原始请求与进程原件不改写。固定测试随后增加真实App重启恢复身份、管理员会话账号/角色断言，并让`lsof`解析忽略无名称行；修复后候选的实际结果见上节。
 
 ## 首次门禁前的待执行记录（历史）
 
-本机最终门禁代码已将精细主批次、独立辅助11例、证据审计12项和补充六组的原始结果编排为同一候选验证，并另生成由机器复算的`final-product-result.json`及独立逐例Excel。现有开发包的联合逐例复核仍以`local-534748ff47cb44229183a6bd878c1674`等下列原件为依据；它们并非干净提交的最终包。**截至本记录，尚无最终候选的`final-product-result.json`、完整门禁PASS或正式通行证。** 后续正式执行只能在固定SHA/tree和同一DMG上生成新的run，不能把以下开发包记录复制为新证据。
+本机最终门禁代码已将精细主批次、独立辅助11例、证据审计12项和补充六组的原始结果编排为同一候选验证，并另生成由机器复算的`final-product-result.json`及独立逐例Excel。以下段落保留首次门禁前的判断：当时开发包联合复核仍以`local-534748ff47cb44229183a6bd878c1674`等原件为依据，尚无干净候选完整门禁 PASS 或正式通行证。后来 `d2db551` 独立候选产生的新原件已在本页首节单独登记；旧开发包结果不能复制为它的证据。
 
 ## 当前新包回归结果（2026-10-01）
 
@@ -75,7 +81,7 @@ UI-01修复后独立单例Excel为`.local/test-results/aux-ui01-local-343e54113b
 
 每次执行单独输出`.local/test-results/<run_id>/TokenMeter测试结果-<run_id>.xlsx`，保存该次逐例结果、步骤实测、失败、清理及原始证据索引。本次dev07的当前可读文件为`.local/test-results/local-a1b2c3d4e5f60718293a4b5c6d7e8f94/revisions/02/TokenMeter测试结果-local-a1b2c3d4e5f60718293a4b5c6d7e8f94.xlsx`。当前状态：**已生成，桥接校验与回读通过**；含5个Sheet、6个历史场景组、131条事件、14条更新请求、37条证据/缺口记录。这次整理只读取已有原件，不新跑测试、不补造缺失断言，不将原FAIL改成PASS。
 
-根[项目总表](../../TokenMeter项目总表.xlsx)现已重新导出为11个Sheet、109条用例摘要及12条测试批次；`.local/workbook/verification.json`登记当前文件SHA-256 `ef94e5e15c1c6c0b4fe4a0ae8d550728c54ad502e317262b7dc02ffba41c8ae3`。对该SHA的`python3 scripts/verify_project_workbook.py`回读PASS、零错误，且明确`product_tests_executed=false`；旧`.local/workbook/readback.json`是此前5批次文件的收据，不用于当前结论。`05测试用例`只为用例摘要，`06测试批次`汇总12个run及各自独立Excel入口；主run原始BLOCKED与联合复核78父TC、38变体全PASS分别登记，不能用总表更新改写raw或发通行证。逐步事件、逐例结果及SQL详情保留在独立报告，352条设计步骤继续由`tests/test_cases.json`与用例文档保存。
+根[项目总表](../../TokenMeter项目总表.xlsx)本次文档更新后重新导出为11个Sheet、109条用例摘要、12条历史测试批次和38个复盘案例；`.local/workbook/verification.json`登记文件SHA-256 `fa2b4efc47bed36caa67a4c011fdee2968ec36e4764510713bb2af1e9f4c076e`。对该SHA的`python3 scripts/verify_project_workbook.py`回读PASS、零错误，且明确`product_tests_executed=false`；此前SHA `ef94e5e15c1c6c0b4fe4a0ae8d550728c54ad502e317262b7dc02ffba41c8ae3`及旧`.local/workbook/readback.json`是历史收据。`05测试用例`只为用例摘要，`06测试批次`仍汇总旧12个run及各自独立Excel入口；`d2db551` 新门禁结果在原件归档后才作为新批次写入。主run原始BLOCKED与联合复核78父TC、38变体全PASS分别登记，不能用总表更新改写raw或发通行证。逐步事件、逐例结果及SQL详情保留在独立报告，352条设计步骤继续由`tests/test_cases.json`与用例文档保存。
 
 独立导出收据`.local/ci/e2e-dev-probe-07/excel-export-b3c021927550bda4.json`记录`scope=test_result_excel_export`、`state=PASS`和`product_state=FAIL`；修订结果目录中的`verification.json`记录回读清单。源`result.json`的SHA256为`0d165916cee6ed516b142c4c26bc54ec161ea2a5be52fee60e311d101ddfc9d3`，当前可读Excel的SHA256为`2d476b47d1136916ac02ba3a063ea8c4db42b6881ac58f986b8c744f10726032`。原始报告没有修改，表格没有填补缺失升级证据。初次导出的Excel将ISO时间显示为日期序号，原文件及收据保留在原路径；修订02把时间列保存为可读的UTC文本，是同一次运行的显示修正，并非新测试。
 
