@@ -16,6 +16,8 @@ TM-003新固定模块运行`tm003-core-20261001T163807Z`基于候选`ea6b18765ce
 
 TM-003共享runner又提交`d7c3d39ac0a007f0e16f55bbb3cfc9b15fd9fe34`，固定区分`owned_root`与`memory_only`清理原件；新run`tm003-core-20261001T165439Z`同为CORE3/3、九步、逐例拥有目录清理PASS，独立Excel回读PASS，SHA-256`51b6f476b16d255eb29caba77f447e33d4c7efb8f3030239d6b08adf4831d620`。此为第15批次及三条CORE当前最近模块运行，旧第14批次不覆盖；产品E2E仍NOT_RUN。
 
+TM-004代码`7b5aae463a5bad78365cc0397a2a9cc45bb96c69`增加跨文件/chunk父证据与复制fork去重，开发会话保留红测并报告定向7/7、桌面57/57、typecheck PASS；TM-005代码`69d2ccff5dd65d5dd07c11dca6c2f14e79b5953a`报告CORE三例逐步原件、真实`memory_only`清理、桌面29/29及build退出0。两者均未生成可回读独立模块Excel，根总表仍15批次；原产品TC、App E2E和发行资格不受这些模块运行赋予PASS。详细原件见各版本06记录。
+
 TM-002 `TC-TM002-SECURITY-01#ABSOLUTE/#FILE_URL/#DOTDOT`原“向业务IPC提交路径”无法唯一判定结果：`chooseSource`会忽略额外`rootPath`。本轮修订为真实业务`previewSource.selectionId`分别接收短根内B绝对路径、对应file URL和`../B/b.jsonl`，固定预期snapshot错误码`invalid_selection`且B元数据/open/read为零；这是一项文档基线输入纠错，不是产品测试通过。相关机器用例、详细文档、测试计划和Excel已同源更新。
 
 TM-005 纯统计三条辅助 `TC-TM005-CORE-01/02/03` 已冻结合成可信事件、未知诊断和声明式覆盖输入，并在输入提交 `061c759` 上按SOP-008独立判为 `development_slice_ready`（structure、治理457/457、总表回读PASS）。原32条产品父TC及6个变体保留草稿/未执行；三条CORE程序也未绑定和执行。该判定时的根总表为11 Sheet、222父TC、41变体、263行、13旧批次，SHA-256 `4a596813f2fa99fd1473bbaacd743341f9d2ef01e3546f779327e41705b11e65`；后续TM-004辅助输入使当前总表增加三行。具体收据见[0.5执行记录](../releases/v0.5.0-20261001T034729Z/06-iteration-record.md)；其模块代码、完整双来源采集、真实SQLite/IPC/App及产品 E2E 尚不能据此宣称通过。
