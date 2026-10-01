@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "source_version": "Claude Code 2.1.126",
+  "cli_binary_sha256": "49a90c474383a9eda11310bd71f7ea6bb91361ec99443b733cb5003f6e703ccb",
+  "research_run_id": "20261001T1131Z",
+  "source_kind": "isolated CLI with custom agent tools: [Agent] and prewritten synthetic loopback SSE",
+  "request_count": 3,
+  "agent_tool_exposed_by_request": [
+    true,
+    false,
+    true
+  ],
+  "child_native_agent_rows": 2,
+  "fork_context_refs": 0,
+  "nested_agent_native_supported": false,
+  "all_nested_modes_excluded": false,
+  "native_jsonl_sha256": [
+    "b4c2c8d7368cb002b86a141e3b6bf75511be3225913651e449f5924d65aecc29",
+    "3fd9877b11492d23ed0f1771816e513b4f291ee40617d9f8bf6acb8e55ae3c08"
+  ]
+}

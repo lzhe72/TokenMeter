@@ -108,6 +108,7 @@ def run_mode(mode: str, root: Path, evidence: Path) -> dict:
             '(deny file-read* (subpath "/Users/Shared"))\n'
             '(deny file-write* (subpath "/Users/Shared"))\n'
         )
+        profile.chmod(0o600)
         env = {
             "PATH": "/usr/local/bin:/usr/bin:/bin", "CLAUDE_CONFIG_DIR": str(config),
             "TMPDIR": str(root), "ANTHROPIC_API_KEY": "tm004-synthetic-fake-key",
