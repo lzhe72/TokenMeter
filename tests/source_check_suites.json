@@ -70,6 +70,14 @@
       ],
       "reset_kind": "owned_root"
     },
+    "tm005-core06": {
+      "release_id": "v0.5.0-20261001T034729Z",
+      "file": "apps/desktop/tests/tm005-query-view.test.ts",
+      "cases": [
+        "TC-TM005-CORE-06"
+      ],
+      "reset_kind": "owned_root"
+    },
     "tm004-core": {
       "release_id": "v0.4.0-20261001T040433Z",
       "file": "apps/desktop/tests/tm004-core.test.ts",
