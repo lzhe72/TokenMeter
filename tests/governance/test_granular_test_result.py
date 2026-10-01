@@ -61,6 +61,33 @@ def recorded_case(root: Path, run_id: str, case: dict, state: str, count: int | 
 
 
 class GranularResultTests(unittest.TestCase):
+    def test_tm001_variants_match_explicit_case_release_across_catalog_versions(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            report = {"run_id": "cross-release", "release_id": CATALOG["release_id"],
+                      "scope": "granular_targeted_probe", "state": "BLOCKED",
+                      "expected_cases": [CURRENT[0]["id"]], "tc_results": []}
+            self.assertNotEqual(CATALOG["release_id"], VARIANTS["release_id"])
+            self.assertEqual(granular.build_model(CATALOG, report, run_root=root, variants=VARIANTS)["release_id"],
+                             CATALOG["release_id"])
+            wrong_report = {**report, "release_id": VARIANTS["release_id"]}
+            with self.assertRaises(granular.Invalid):
+                granular.build_model(CATALOG, wrong_report, run_root=root, variants=VARIANTS)
+            mixed = json.loads(json.dumps(CATALOG))
+            next(case for case in mixed["cases"] if case["feature_id"] == "TM-001")["release_id"] = CATALOG["release_id"]
+            with self.assertRaises(granular.Invalid):
+                granular.build_model(mixed, report, run_root=root, variants=VARIANTS)
+            rewritten = json.loads(json.dumps(CATALOG))
+            for case in rewritten["cases"]:
+                if case["feature_id"] == "TM-001":
+                    case["release_id"] = CATALOG["release_id"]
+            with self.assertRaises(granular.Invalid):
+                granular.build_model(rewritten, report, run_root=root,
+                                     variants={**VARIANTS, "release_id": CATALOG["release_id"]})
+            wrong_variants = {**VARIANTS, "release_id": CATALOG["release_id"]}
+            with self.assertRaises(granular.Invalid):
+                granular.build_model(CATALOG, report, run_root=root, variants=wrong_variants)
+
     def test_targeted_probe_lists_only_its_parent_and_keeps_rest_out_of_scope(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()

@@ -1,7 +1,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -177,6 +177,33 @@ test('TC-TM002-ACCESS-06#TREE_CHANGED: change in a visited child directory inval
     addFile(join(root, 'a'), 'z.jsonl');
     await assert.rejects(helper.nextCandidatePage(), (error: unknown) => error instanceof SourceHelperError && error.code === 'tree_changed');
   } finally { helper.close(); }
+});
+
+test('TC-TM002-ACCESS-06#STABLE_FILE_ID keeps identity on append and changes it on replacement', async () => {
+  const root = fixture(); addFile(root, 'a.jsonl', 'first\n');
+  const first = await SourceHelper.open(root, {binaryPath: binary});
+  let original: string;
+  try {
+    const page = await first.beginCandidateScan();
+    assert.equal(page.candidates.length, 1);
+    original = page.candidates[0].fileIdentityDigest;
+  } finally { first.close(); await first.waitForExit(); }
+  appendFileSync(join(root, 'a.jsonl'), 'second\n');
+  const appended = await SourceHelper.open(root, {binaryPath: binary});
+  try {
+    const page = await appended.beginCandidateScan();
+    assert.equal(page.candidates[0].fileIdentityDigest, original);
+    assert.equal(page.candidates[0].size, 13);
+  } finally { appended.close(); await appended.waitForExit(); }
+  renameSync(join(root, 'a.jsonl'), join(root, 'old.jsonl'));
+  addFile(root, 'a.jsonl', 'replacement\n');
+  const replaced = await SourceHelper.open(root, {binaryPath: binary});
+  try {
+    const page = await replaced.beginCandidateScan();
+    const current = page.candidates.find(item => item.relativeName === 'a.jsonl');
+    assert.ok(current);
+    assert.notEqual(current.fileIdentityDigest, original);
+  } finally { replaced.close(); await replaced.waitForExit(); }
 });
 
 test('TC-TM002-ACCESS-01: closing a capability blocks queued and future operations', async () => {

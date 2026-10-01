@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -91,6 +93,30 @@ class TM002FixtureTest(unittest.TestCase):
                 connection.execute("UPDATE users SET role='admin' WHERE id=?", (fixture_module.ALICE_ID,))
             with self.assertRaises(ValueError):
                 fixture_module.verify_accounts(database)
+
+    def test_cleanup_refuses_foreign_subdirectory_before_removing_anything(self):
+        with tempfile.TemporaryDirectory(prefix="tm002-foreign-dir-") as temp:
+            fixture = fixture_module.prepare("TC-TM002-SELECT-01", Path(temp) / "owned", "owner-12345678")
+            foreign = fixture.a / "foreign-directory"
+            foreign.mkdir(mode=0o700)
+            sentinel = foreign / "sentinel.txt"
+            sentinel.write_text("keep", encoding="utf-8")
+            original_lstat = Path.lstat
+
+            def foreign_lstat(path: Path, *args, **kwargs):
+                value = original_lstat(path, *args, **kwargs)
+                if path == foreign:
+                    fields = list(value)
+                    fields[4] = os.getuid() + 1
+                    return os.stat_result(fields)
+                return value
+
+            with patch.object(Path, "lstat", foreign_lstat):
+                with self.assertRaisesRegex(ValueError, "owned by another user"):
+                    fixture.cleanup()
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep")
+            fixture.cleanup()
+            self.assertFalse(fixture.root.exists())
 
 
 if __name__ == "__main__":

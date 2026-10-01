@@ -12,6 +12,7 @@ import sys
 import tempfile
 import threading
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from urllib.request import Request, urlopen
@@ -23,6 +24,30 @@ import granular_permissions as subject  # noqa: E402
 
 
 class PermissionsBindingTest(unittest.TestCase):
+    def test_independent_standard_account_is_bound_to_named_excluded_owner(self):
+        test_user = SimpleNamespace(pw_name="tmtest", pw_uid=502, pw_gid=20)
+        owner = SimpleNamespace(pw_name="primary", pw_uid=503, pw_gid=20)
+        admin = SimpleNamespace(gr_gid=80, gr_mem=["primary"])
+        args = SimpleNamespace(keychain_test_user="tmtest", keychain_excluded_user="primary",
+                               keychain_excluded_uid=503)
+        with (patch.object(subject.pwd, "getpwnam", side_effect=lambda name:
+                           {"tmtest": test_user, "primary": owner}[name]),
+              patch.object(subject.grp, "getgrnam", return_value=admin),
+              patch.object(subject.os, "getuid", return_value=502),
+              patch.object(subject.os, "getgid", return_value=20),
+              patch.object(subject.os, "getgroups", return_value=[20])):
+            # The code may be copied into the test account: source-tree ownership
+            # cannot substitute for the explicitly named primary account.
+            subject.verify_test_account(args)
+            with self.assertRaises(subject.base.Blocked):
+                subject.verify_test_account(SimpleNamespace(**{**vars(args), "keychain_excluded_uid": 501}))
+            with patch.object(subject.os, "getgroups", return_value=[20, 80]):
+                with self.assertRaises(subject.base.Blocked):
+                    subject.verify_test_account(args)
+            with patch.object(subject.os, "getuid", return_value=503):
+                with self.assertRaises(subject.base.Blocked):
+                    subject.verify_test_account(args)
+
     def test_development_dmg_requires_scope_digest_and_not_released_marker(self):
         candidate = "a" * 40
         tree = "b" * 40

@@ -551,9 +551,9 @@ static void hex_bytes(const unsigned char *input, size_t length, char *output) {
 
 static void file_digest(const struct stat *metadata, char output[65]) {
   char input[160];
-  int length = snprintf(input, sizeof(input), "%" PRIu64 ":%" PRIu64 ":%" PRId64 ":%" PRId64 ":%ld",
-    (uint64_t)metadata->st_dev, (uint64_t)metadata->st_ino, (int64_t)metadata->st_size,
-    (int64_t)metadata->st_mtimespec.tv_sec, metadata->st_mtimespec.tv_nsec);
+  int length = snprintf(input, sizeof(input), "tm002-file-id-v1:%" PRIu64 ":%" PRIu64 ":%" PRIu64 ":%" PRIu64,
+    (uint64_t)root_dev, (uint64_t)root_ino,
+    (uint64_t)metadata->st_dev, (uint64_t)metadata->st_ino);
   unsigned char digest[CC_SHA256_DIGEST_LENGTH];
   CC_SHA256(input, (CC_LONG)length, digest);
   hex_bytes(digest, sizeof(digest), output);

@@ -539,7 +539,7 @@ def verify_granular_run(gate_dir: Path, manifest_path: Path, *, run_id: str,
     login=read_json(ROOT/'tests/granular_login_variants.json')
     update=read_json(ROOT/'tests/granular_update_variants.json')
     docs=read_json(ROOT/'docs/catalog.json')
-    variants=granular_gate.combine_variants(login,update,release_id)
+    variants=granular_gate.combine_variants(login,update,results.tm001_case_release(catalog))
     require(primary.get('schema_version')==3 and primary.get('scope')=='granular_final_package' and
             primary.get('run_id')==run_id and primary.get('release_id')==release_id==package['release_id'] and
             primary.get('release_eligible') is False,'Wrong detailed report identity or scope')
@@ -701,7 +701,7 @@ def derive_final_product_result(gate_dir: Path, *, run_id: str,
     catalog=read_json(ROOT/'tests/test_cases.json')
     login=read_json(ROOT/'tests/granular_login_variants.json')
     update=read_json(ROOT/'tests/granular_update_variants.json')
-    variants=granular_gate.combine_variants(login,update,release_id)
+    variants=granular_gate.combine_variants(login,update,results.tm001_case_release(catalog))
     parents=[case for case in catalog['cases'] if isinstance(case,dict) and case.get('feature_id')=='TM-001']
     parent_ids=[case['id'] for case in parents]
     variant_items=variants['variants']

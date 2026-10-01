@@ -137,9 +137,13 @@ async function finishPickerSelect(label: 'A' | 'B', tool: Tool = 'codex'):
       '--path', sourcePath(label), '--event', evidenceFile], {timeout: 60_000, stdio: 'pipe'});
   } catch { throw new Error('Real native picker selection failed; private command omitted'); }
   const event = JSON.parse(readFileSync(evidenceFile, 'utf8')) as {operation: string;
+    owner_pid: number; panel_role: string; chooser_confirm_button: string; native_button: string;
     selection_label: string; selection_path_sha256: string; real_ax_action: boolean};
   expect(event).toMatchObject({operation: 'select', selection_label: label, real_ax_action: true,
-    selection_path_sha256: sha(sourcePath(label))});
+    owner_pid: app!.process().pid, selection_path_sha256: sha(sourcePath(label))});
+  expect(['AXSheet', 'AXDialog']).toContain(event.panel_role);
+  expect(['Choose', 'Open', 'Select', '选择', '打开']).toContain(event.chooser_confirm_button);
+  expect(['Choose', 'Open', 'Select', '选择', '打开']).toContain(event.native_button);
   await expect.poll(() => readAudit().filter(item => item.operation === 'picker_result').length).toBe(pickerIndex);
   const appResult = readAudit().filter(item => item.operation === 'picker_result').at(-1);
   expect(appResult).toMatchObject({reason: 'selected', tool, root_digest: rootDigest(label)});
@@ -157,8 +161,12 @@ async function finishPickerCancel(): Promise<void> {
     execFileSync('swift', [c.picker_driver_path, 'cancel', '--pid', String(app!.process().pid),
       '--event', evidenceFile], {timeout: 60_000, stdio: 'pipe'});
   } catch { throw new Error('Real native picker cancellation failed; private command omitted'); }
-  const event = JSON.parse(readFileSync(evidenceFile, 'utf8')) as {operation: string; real_ax_action: boolean};
-  expect(event).toMatchObject({operation: 'cancel', real_ax_action: true});
+  const event = JSON.parse(readFileSync(evidenceFile, 'utf8')) as {operation: string; real_ax_action: boolean;
+    owner_pid: number; panel_role: string; chooser_confirm_button: string; native_button: string};
+  expect(event).toMatchObject({operation: 'cancel', owner_pid: app!.process().pid, real_ax_action: true});
+  expect(['AXSheet', 'AXDialog']).toContain(event.panel_role);
+  expect(['Choose', 'Open', 'Select', '选择', '打开']).toContain(event.chooser_confirm_button);
+  expect(['Cancel', '取消']).toContain(event.native_button);
   await expect.poll(() => readAudit().filter(item => item.operation === 'picker_result').length).toBe(pickerIndex);
   const appResult = readAudit().filter(item => item.operation === 'picker_result').at(-1);
   expect(appResult).toMatchObject({reason: 'canceled', root_digest: null});

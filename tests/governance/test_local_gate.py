@@ -114,7 +114,7 @@ class EvidenceTests(unittest.TestCase):
         catalog=json.loads((ROOT/'tests/test_cases.json').read_text())
         login=json.loads((ROOT/'tests/granular_login_variants.json').read_text())
         update=json.loads((ROOT/'tests/granular_update_variants.json').read_text())
-        variants=granular_gate.combine_variants(login,update,catalog['release_id'])['variants']
+        variants=granular_gate.combine_variants(login,update,login['release_id'])['variants']
         parents=[case['id'] for case in catalog['cases'] if case.get('feature_id')=='TM-001']
         auxiliary_ids={identity for identity in parents if identity.startswith(granular_gate.results.AUX_PREFIXES)}
         audited=list(audit_granular_evidence.AUDITED_CASES)

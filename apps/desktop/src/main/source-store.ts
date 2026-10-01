@@ -73,6 +73,9 @@ export class SourceStore {
     return {path: join(privateDirectory(join(privateDirectory(this.#profile), 'sources')), `${hash}.json`), hash};
   }
   async load(identity: SourceIdentity, tool: SourceTool): Promise<StoredSource> {
+    return this.#load(identity, tool, 0);
+  }
+  async #load(identity: SourceIdentity, tool: SourceTool, retryCount: number): Promise<StoredSource> {
     const {path, hash} = this.#path(identity, tool);
     let raw: string | null;
     try { raw = privateRead(path); }
@@ -98,18 +101,28 @@ export class SourceStore {
     if (item.state === 'needs_reselect')
       return {kind: 'needs_reselect', reason: item.disable_reason!, sourceId};
     if (!await this.#available()) return {kind: 'needs_reselect', reason: 'key_unavailable', sourceId};
-    try {
-      const decrypted = await this.#cipher.decryptStringAsync(bytes);
-      const source: ConfirmedSource = {
-        sourceId, tool, rootPath: decrypted.result, rootDev: item.root_dev,
-        rootIno: item.root_ino, collectAllowed: item.collect_allowed, syncIntent: item.sync_intent
-      };
-      if (!validSource(source)) return {kind: 'needs_reselect', reason: 'corrupt_locator', sourceId};
-      if (decrypted.shouldReEncrypt) await this.commit(identity, source);
-      return {kind: 'ready', source};
-    } catch { return {kind: 'needs_reselect', reason: 'decrypt_failed', sourceId}; }
+    let decrypted: {result: string; shouldReEncrypt: boolean};
+    try { decrypted = await this.#cipher.decryptStringAsync(bytes); }
+    catch { return {kind: 'needs_reselect', reason: 'decrypt_failed', sourceId}; }
+    const source: ConfirmedSource = {
+      sourceId, tool, rootPath: decrypted.result, rootDev: item.root_dev,
+      rootIno: item.root_ino, collectAllowed: item.collect_allowed, syncIntent: item.sync_intent
+    };
+    if (!validSource(source)) return {kind: 'needs_reselect', reason: 'corrupt_locator', sourceId};
+    if (decrypted.shouldReEncrypt) {
+      try { await this.commit(identity, source, () => true, raw); }
+      catch (cause) {
+        if (cause instanceof ClientError && cause.code === 'source_operation_stale') {
+          if (retryCount === 0) return this.#load(identity, tool, 1);
+          throw cause;
+        }
+        return {kind: 'needs_reselect', reason: 'decrypt_failed', sourceId};
+      }
+    }
+    return {kind: 'ready', source};
   }
-  async commit(identity: SourceIdentity, source: ConfirmedSource, stillCurrent: () => boolean = () => true): Promise<void> {
+  async commit(identity: SourceIdentity, source: ConfirmedSource, stillCurrent: () => boolean = () => true,
+               expectedRecord?: string): Promise<void> {
     if (!validSource(source)) throw new ClientError('invalid_source_record', '来源记录无效');
     const {path, hash} = this.#path(identity, source.tool);
     if (!await this.#available()) throw new ClientError('source_key_unavailable', '本机密钥暂不可用');
@@ -119,6 +132,10 @@ export class SourceStore {
     if (!stillCurrent()) throw new ClientError('source_operation_stale', '来源操作已失效');
     if (!Buffer.isBuffer(ciphertext) || !ciphertext.length || ciphertext.length > 24576)
       throw new ClientError('source_key_unavailable', '本机密钥暂不可用');
+    // This synchronous comparison and the following write have no event-loop yield.
+    // A rotation must never recreate a record removed or replaced while encryption awaited.
+    if (expectedRecord !== undefined && privateRead(path) !== expectedRecord)
+      throw new ClientError('source_operation_stale', '来源操作已失效');
     const item: DiskSource = {
       schema_version: 1, identity_hash: hash, source_id: source.sourceId, tool: source.tool,
       root_dev: source.rootDev, root_ino: source.rootIno,

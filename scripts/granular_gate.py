@@ -34,7 +34,7 @@ def combine_variants(login: dict, update: dict | None, release_id: str) -> dict:
     combined = []
     for document in documents:
         if document.get("release_id") != release_id or not isinstance(document.get("variants"), list):
-            raise results.Invalid("Variant manifest release or shape differs from the catalog")
+            raise results.Invalid("Variant manifest release or shape differs from the TM-001 cases")
         combined.extend(document["variants"])
     identities = [item.get("id") for item in combined if isinstance(item, dict)]
     if len(identities) != len(combined) or len(set(identities)) != len(identities):
@@ -76,6 +76,13 @@ def verify_candidate(catalog: dict, report: dict, *, run_root: Path, plan: dict,
     reasons = []
     release = catalog.get("release_id")
     current = [case for case in catalog.get("cases", []) if isinstance(case, dict) and case.get("feature_id") == "TM-001"]
+    try:
+        tm001_release = results.tm001_case_release(catalog)
+    except results.Invalid as error:
+        reasons.append(str(error))
+        tm001_release = None
+    if tm001_release is None or variants.get("release_id") != tm001_release:
+        reasons.append("参数变体版本与 TM-001 用例版本不一致")
     identities = [case.get("id") for case in current]
     variant_ids = [item.get("id") for item in variants.get("variants", []) if isinstance(item, dict)]
     required = identities + variant_ids
@@ -213,7 +220,7 @@ def main(argv: list[str] | None = None) -> int:
         auxiliary, _ = results.read_json(args.aux_report) if args.aux_report else (None, None)
         audit, _ = results.read_json(args.audit_report) if args.audit_report else (None, None)
         document_catalog, _ = results.read_json(ROOT / "docs/catalog.json") if not args.governance_fixture else (None, None)
-        combined = combine_variants(login, update, catalog.get("release_id"))
+        combined = combine_variants(login, update, results.tm001_case_release(catalog))
         outcome = verify_candidate(catalog, report, run_root=args.report.parent, plan=plan, variants=combined,
                                    auxiliary=auxiliary, auxiliary_root=args.aux_report.parent if args.aux_report else None,
                                    audit=audit, audit_root=args.audit_report.parent if args.audit_report else None,

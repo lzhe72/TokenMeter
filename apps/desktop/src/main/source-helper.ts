@@ -214,6 +214,7 @@ export class SourceHelper {
   private closed = false;
   private readonly child: ChildProcess;
   private readonly timeoutMs: number;
+  private readonly exitPromise: Promise<void>;
 
   private constructor(child: ChildProcess, identity: RootIdentity, lines: LineReader, timeoutMs: number) {
     this.child = child;
@@ -221,6 +222,10 @@ export class SourceHelper {
     this.lines = lines;
     this.body = new ByteReader(child.stdio[3] as Readable);
     this.timeoutMs = timeoutMs;
+    this.exitPromise = new Promise(resolve => {
+      if (child.exitCode !== null || child.signalCode !== null) { resolve(); return; }
+      child.once('exit', () => resolve());
+    });
   }
 
   static async open(rootPath: string, options: {
@@ -247,22 +252,27 @@ export class SourceHelper {
         expectedBytes.writeBigUInt64BE(dev, 0); expectedBytes.writeBigUInt64BE(ino, 8);
       } catch { throw new SourceHelperError('invalid_root_identity'); }
     }
+    const timeoutMs = options.timeoutMs ?? HELPER_TIMEOUT_MS;
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > HELPER_TIMEOUT_MS) {
+      throw new SourceHelperError('invalid_request');
+    }
     const child = spawn(binaryPath, [], { stdio: ['pipe', 'pipe', 'ignore', 'pipe'], windowsHide: true });
     child.on('error', () => {});
     child.stdin?.on('error', () => {});
+    const exited = new Promise<void>(resolve => {
+      if (child.exitCode !== null || child.signalCode !== null) { resolve(); return; }
+      child.once('exit', () => resolve());
+      child.once('error', () => resolve());
+    });
     const lines = new LineReader(child.stdout as Readable);
     const header = Buffer.alloc(4);
     header.writeUInt32BE(pathBytes.length, 0);
     const init = Buffer.concat([header, pathBytes, Buffer.from([expected ? 1 : 0]), expectedBytes]);
-    const timeoutMs = options.timeoutMs ?? HELPER_TIMEOUT_MS;
-    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > HELPER_TIMEOUT_MS) {
-      lines.close(); child.kill('SIGTERM'); throw new SourceHelperError('invalid_request');
-    }
     try {
       const reply = await bounded((async () => {
         await new Promise<void>((resolve, reject) => child.stdin!.write(init, error => error ? reject(error) : resolve()));
         return lines.next();
-      })(), () => { lines.close(); child.kill('SIGTERM'); }, timeoutMs);
+      })(), () => { lines.close(); child.kill('SIGKILL'); }, timeoutMs);
       if (reply.startsWith('ERR ')) throw new SourceHelperError(reply.slice(4));
       const parts = reply.split(' ');
       if (parts.length !== 3 || parts[0] !== 'OK' || !/^\d+$/.test(parts[1]) || !/^\d+$/.test(parts[2])) protocolError();
@@ -276,7 +286,8 @@ export class SourceHelper {
       catch { /* Observer failure cannot grant or deny access. */ }
       return helper;
     } catch (error) {
-      lines.close(); child.kill('SIGTERM');
+      lines.close(); child.kill('SIGKILL');
+      await bounded(exited, () => child.kill('SIGKILL'), timeoutMs);
       if (error instanceof SourceHelperError) throw error;
       throw new SourceHelperError('helper_unavailable');
     }
@@ -352,6 +363,11 @@ export class SourceHelper {
     this.lines.close();
     this.body.close();
     this.child.stdin?.destroy();
-    this.child.kill('SIGTERM');
+    this.child.kill('SIGKILL');
+  }
+
+  waitForExit(): Promise<void> {
+    if (!this.closed) throw new SourceHelperError('invalid_scan');
+    return bounded(this.exitPromise, () => this.child.kill('SIGKILL'), this.timeoutMs);
   }
 }

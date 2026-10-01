@@ -10,9 +10,14 @@ import { privateWrite } from '../src/main/storage.ts';
 class TestCipher implements SourceCipher {
   available = true;
   decryptFails = false;
+  rotateOnDecrypt = false;
+  pauseNextEncrypt: {entered: () => void; wait: Promise<void>} | null = null;
   private plaintext = new Map<string, string>();
   async isAsyncEncryptionAvailable(): Promise<boolean> { return this.available; }
   async encryptStringAsync(value: string): Promise<Buffer> {
+    const pause = this.pauseNextEncrypt;
+    this.pauseNextEncrypt = null;
+    if (pause) { pause.entered(); await pause.wait; }
     if (!this.available) throw new Error('key_unavailable');
     const token = Buffer.from(`cipher:${randomUUID()}`);
     this.plaintext.set(token.toString('base64'), value);
@@ -22,7 +27,7 @@ class TestCipher implements SourceCipher {
     if (!this.available || this.decryptFails) throw new Error('key_unavailable');
     const result = this.plaintext.get(value.toString('base64'));
     if (!result) throw new Error('unknown_ciphertext');
-    return { result, shouldReEncrypt: false };
+    return { result, shouldReEncrypt: this.rotateOnDecrypt };
   }
 }
 
@@ -126,5 +131,43 @@ test('TC-TM002-ACCESS-04 failed invalidation write removes only its owned record
     await store.commit(alice, source); fail = true;
     assert.equal(store.markNeedsReselect(alice, 'codex', source.sourceId, 'access_denied'), 'removed');
     assert.deepEqual(await new SourceStore(root, cipher).load(alice, 'codex'), {kind: 'none'});
+  } finally { rmSync(root, {recursive: true, force: true}); }
+});
+
+test('TC-TM002-STORE-01 rotation cannot revive a source revoked during encryption', async () => {
+  const root = profile(); const cipher = new TestCipher(); const store = new SourceStore(root, cipher);
+  try {
+    await store.commit(alice, sample(join(root, 'A')));
+    let entered!: () => void; let release!: () => void;
+    const encrypting = new Promise<void>(resolve => { entered = resolve; });
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    cipher.rotateOnDecrypt = true;
+    cipher.pauseNextEncrypt = {entered, wait: gate};
+    const loading = store.load(alice, 'codex');
+    await encrypting;
+    store.revoke(alice, 'codex');
+    release();
+    assert.deepEqual(await loading, {kind: 'none'});
+    assert.deepEqual(await store.load(alice, 'codex'), {kind: 'none'});
+    assert.deepEqual(readdirSync(join(root, 'sources')), []);
+  } finally { rmSync(root, {recursive: true, force: true}); }
+});
+
+test('TC-TM002-STORE-01 rotation cannot overwrite a newly confirmed replacement', async () => {
+  const root = profile(); const cipher = new TestCipher(); const store = new SourceStore(root, cipher);
+  const a = sample(join(root, 'A')); const b = sample(join(root, 'B'));
+  try {
+    await store.commit(alice, a);
+    let entered!: () => void; let release!: () => void;
+    const encrypting = new Promise<void>(resolve => { entered = resolve; });
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    cipher.rotateOnDecrypt = true;
+    cipher.pauseNextEncrypt = {entered, wait: gate};
+    const loading = store.load(alice, 'codex');
+    await encrypting;
+    await store.commit(alice, b);
+    release();
+    assert.deepEqual(await loading, {kind: 'ready', source: b});
+    assert.deepEqual(await store.load(alice, 'codex'), {kind: 'ready', source: b});
   } finally { rmSync(root, {recursive: true, force: true}); }
 });

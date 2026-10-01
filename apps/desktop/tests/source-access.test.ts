@@ -16,9 +16,13 @@ const publicCandidate = {relativeName: candidate.relativeName, size: candidate.s
 
 class Cipher implements SourceCipher {
   available = true;
+  pauseNextEncrypt: null | {entered(): void; wait: Promise<void>} = null;
   readonly values = new Map<string, string>();
   async isAsyncEncryptionAvailable(): Promise<boolean> { return this.available; }
   async encryptStringAsync(value: string): Promise<Buffer> {
+    const pause = this.pauseNextEncrypt;
+    this.pauseNextEncrypt = null;
+    if (pause) { pause.entered(); await pause.wait; }
     if (!this.available) throw new Error('key_unavailable');
     const token = Buffer.from(`cipher:${randomUUID()}`);
     this.values.set(token.toString('base64'), value);
@@ -37,6 +41,7 @@ class FakeHelper implements SourceHelperLike {
   readonly rootPath: string;
   readonly audit?: (event: SourceAuditEvent) => void;
   closed = false;
+  exitBarrier: null | {entered(): void; wait: Promise<void>} = null;
   previewBarrier: null | {entered(): void; wait: Promise<void>} = null;
   constructor(rootPath: string, ino: string, audit?: (event: SourceAuditEvent) => void) {
     this.rootPath = rootPath; this.rootIdentity = {dev: '17', ino}; this.audit = audit;
@@ -63,6 +68,11 @@ class FakeHelper implements SourceHelperLike {
     return Buffer.from('fixture');
   }
   close(): void { this.closed = true; }
+  async waitForExit(): Promise<void> {
+    if (!this.closed) throw new Error('helper_not_closed');
+    const barrier = this.exitBarrier;
+    if (barrier) { barrier.entered(); await barrier.wait; }
+  }
 }
 
 function fixture() {
@@ -81,9 +91,12 @@ function fixture() {
   let inoA = '29';
   let picker: null | (() => Promise<{canceled: boolean; rootPath?: string}>) = null;
   let nextPreviewBarrier: FakeHelper['previewBarrier'] = null;
+  let nextOpenBarrier: FakeHelper['previewBarrier'] = null;
+  let changeListener: null | (() => void) = null;
+  let identityListener: null | (() => void) = null;
   const opened: FakeHelper[] = [];
   const audit: SourceAccessAudit[] = [];
-  const access = new SourceAccess({store, getIdentity: () => identity,
+  const access = new SourceAccess({store, getIdentity: () => { identityListener?.(); return identity; },
     chooseDirectory: async () => picker ? picker() : {canceled: false, rootPath: chosen},
     openHelper: async (path, options) => {
       const rootIdentity = {dev: '17', ino: path === a ? inoA : '30'};
@@ -94,14 +107,20 @@ function fixture() {
       helper.previewBarrier = nextPreviewBarrier;
       nextPreviewBarrier = null;
       opened.push(helper);
+      const openBarrier = nextOpenBarrier;
+      nextOpenBarrier = null;
+      if (openBarrier) { openBarrier.entered(); await openBarrier.wait; }
       return helper;
-    }, onChange: () => {}, onAudit: event => audit.push(event)});
+    }, onChange: () => changeListener?.(), onAudit: event => audit.push(event)});
   return {profile, a, b, cipher, store, access, opened, audit,
     setIdentity(value: SourceAccessIdentity) { identity = value; },
     replaceRootA() { inoA = '45'; },
     select(value: string) { chosen = value; },
     setPicker(value: typeof picker) { picker = value; },
     setNextPreviewBarrier(value: FakeHelper['previewBarrier']) { nextPreviewBarrier = value; },
+    setNextOpenBarrier(value: FakeHelper['previewBarrier']) { nextOpenBarrier = value; },
+    onChange(value: typeof changeListener) { changeListener = value; },
+    onIdentity(value: typeof identityListener) { identityListener = value; },
     failWrites(value: boolean) { failWrite = value; },
     cleanup() { access.dispose(); rmSync(profile, {recursive: true, force: true}); }};
 }
@@ -191,6 +210,278 @@ test('TC-TM002-SECURITY-01#REVOKE_DURING_REFRESH discards result and closes old 
   } finally { f.cleanup(); }
 });
 
+test('TC-TM002-SECURITY-01#REPLACE_EXIT_BARRIER keeps A committed until its reader exits', async () => {
+  const f = fixture();
+  try {
+    const sourceA = await confirmA(f);
+    const scan = await f.access.beginCandidateScan(sourceA);
+    const oldReader = f.opened.at(-1);
+    assert.ok(oldReader);
+    f.select(f.b);
+    await f.access.choose('codex');
+    const pendingB = f.access.snapshot().codex.pending?.selectionId;
+    assert.ok(pendingB);
+    let reached!: () => void; let release!: () => void;
+    const entered = new Promise<void>(resolve => { reached = resolve; });
+    const wait = new Promise<void>(resolve => { release = resolve; });
+    oldReader.exitBarrier = {entered: reached, wait};
+    let committed = false;
+    const replacement = f.access.confirm(pendingB, true, false).then(() => { committed = true; });
+    await entered;
+    assert.equal(oldReader.closed, true);
+    assert.equal(committed, false);
+    assert.equal(f.access.snapshot().codex.confirmed?.sourceId, sourceA);
+    const storedBefore = await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'alice-id'}, 'codex');
+    assert.equal(storedBefore.kind, 'ready');
+    if (storedBefore.kind === 'ready') assert.equal(storedBefore.source.sourceId, sourceA);
+    release(); await replacement;
+    assert.equal(committed, true);
+    assert.notEqual(f.access.snapshot().codex.confirmed?.sourceId, sourceA);
+    await assert.rejects(f.access.nextCandidatePage(scan.scanId), (cause: unknown) =>
+      cause instanceof ClientError && cause.code === 'invalid_scan');
+  } finally { f.cleanup(); }
+});
+
+test('TC-TM002-SECURITY-01#OVERLAPPING_STOP_BARRIER does not finish revoke before a prior stop exits', async () => {
+  const f = fixture();
+  try {
+    const sourceId = await confirmA(f);
+    await f.access.beginCandidateScan(sourceId);
+    const oldReader = f.opened.at(-1);
+    assert.ok(oldReader);
+    let entered!: () => void; let release!: () => void;
+    const stopping = new Promise<void>(resolve => { entered = resolve; });
+    const exitWait = new Promise<void>(resolve => { release = resolve; });
+    oldReader.exitBarrier = {entered, wait: exitWait};
+    const consentResult = f.access.updateConsent(sourceId, false, false).then(() => null, cause => cause);
+    await stopping;
+    assert.equal(oldReader.closed, true);
+    let revokedLocally!: () => void;
+    const localRevocation = new Promise<void>(resolve => { revokedLocally = resolve; });
+    f.onChange(() => {
+      if (f.access.snapshot().codex.confirmed === null) revokedLocally();
+    });
+    let completed = false;
+    const revocation = f.access.revoke(sourceId).then(() => { completed = true; });
+    await localRevocation;
+    await new Promise<void>(resolve => setImmediate(resolve));
+    assert.equal(completed, false);
+    release();
+    await revocation;
+    assert.equal(completed, true);
+    const cause = await consentResult;
+    assert.equal(cause instanceof ClientError, true);
+    assert.deepEqual(await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'alice-id'}, 'codex'),
+      {kind: 'none'});
+  } finally { f.cleanup(); }
+});
+
+test('TC-TM002-SECURITY-01#IDENTITY_STOP_BARRIER waits for an earlier retiring reader', async () => {
+  const f = fixture();
+  try {
+    const sourceId = await confirmA(f);
+    await f.access.beginCandidateScan(sourceId);
+    const oldReader = f.opened.at(-1);
+    assert.ok(oldReader);
+    let entered!: () => void; let release!: () => void;
+    const stopping = new Promise<void>(resolve => { entered = resolve; });
+    const exitWait = new Promise<void>(resolve => { release = resolve; });
+    oldReader.exitBarrier = {entered, wait: exitWait};
+    const consentResult = f.access.updateConsent(sourceId, false, false).then(() => null, cause => cause);
+    await stopping;
+    f.setIdentity({origin: 'http://127.0.0.1:59431', accountId: 'bob-id', verified: true, epoch: 2});
+    let switched = false;
+    const switching = f.access.syncIdentity().then(() => { switched = true; });
+    await new Promise<void>(resolve => setImmediate(resolve));
+    assert.equal(switched, false);
+    assert.equal(f.access.snapshot().codex.confirmed, null);
+    release();
+    await switching;
+    assert.equal(switched, true);
+    assert.equal((await consentResult) instanceof ClientError, true);
+    assert.deepEqual(await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'bob-id'}, 'codex'),
+      {kind: 'none'});
+  } finally { f.cleanup(); }
+});
+
+test('TC-TM002-SECURITY-01#REPLACEMENT_OWNER keeps a new identity replacement locked', async () => {
+  const f = fixture();
+  let releaseOld = () => {}; let releaseNew = () => {};
+  try {
+    await confirmA(f);
+    f.select(f.b); await f.access.choose('codex');
+    const oldPending = f.access.snapshot().codex.pending?.selectionId;
+    assert.ok(oldPending);
+    let oldEntered!: () => void;
+    const oldEncrypting = new Promise<void>(resolve => { oldEntered = resolve; });
+    const oldGate = new Promise<void>(resolve => { releaseOld = resolve; });
+    f.cipher.pauseNextEncrypt = {entered: oldEntered, wait: oldGate};
+    const oldResult = f.access.confirm(oldPending, true, false).then(() => null, cause => cause);
+    await oldEncrypting;
+    f.setIdentity({origin: 'http://127.0.0.1:59431', accountId: 'bob-id', verified: true, epoch: 2});
+    await f.access.syncIdentity();
+    await f.access.choose('codex');
+    const bobPending = f.access.snapshot().codex.pending?.selectionId;
+    const bobHelper = f.opened.at(-1);
+    assert.ok(bobPending); assert.ok(bobHelper);
+    let bobEntered!: () => void;
+    const bobStopping = new Promise<void>(resolve => { bobEntered = resolve; });
+    const bobGate = new Promise<void>(resolve => { releaseNew = resolve; });
+    bobHelper.exitBarrier = {entered: bobEntered, wait: bobGate};
+    const bobResult = f.access.confirm(bobPending, true, false).then(() => null, cause => cause);
+    await bobStopping;
+    releaseOld();
+    const stale = await oldResult;
+    assert.equal(stale instanceof ClientError && stale.code === 'source_operation_stale', true);
+    await assert.rejects(f.access.choose('codex'), (cause: unknown) =>
+      cause instanceof ClientError && cause.code === 'operation_busy');
+    releaseNew();
+    assert.equal(await bobResult, null);
+    assert.equal(f.access.snapshot().codex.confirmed?.status, 'confirmed_enabled');
+  } finally { releaseOld(); releaseNew(); f.cleanup(); }
+});
+
+test('TC-TM002-SECURITY-01#UPDATE_OWNER keeps a new identity consent update locked', async () => {
+  const f = fixture();
+  let releaseOld = () => {}; let releaseNew = () => {};
+  try {
+    const aliceSourceId = await confirmA(f);
+    const bobSourceId = randomUUID();
+    await f.store.commit({origin: 'http://127.0.0.1:59431', accountId: 'bob-id'},
+      {sourceId: bobSourceId, tool: 'codex', rootPath: f.b, rootDev: '17', rootIno: '30',
+        collectAllowed: true, syncIntent: false});
+    let oldEntered!: () => void;
+    const oldEncrypting = new Promise<void>(resolve => { oldEntered = resolve; });
+    const oldGate = new Promise<void>(resolve => { releaseOld = resolve; });
+    f.cipher.pauseNextEncrypt = {entered: oldEntered, wait: oldGate};
+    const oldResult = f.access.updateConsent(aliceSourceId, true, true).then(() => null, cause => cause);
+    await oldEncrypting;
+    f.setIdentity({origin: 'http://127.0.0.1:59431', accountId: 'bob-id', verified: true, epoch: 2});
+    await f.access.syncIdentity();
+    assert.equal(f.access.snapshot().codex.confirmed?.sourceId, bobSourceId);
+    let bobEntered!: () => void;
+    const bobEncrypting = new Promise<void>(resolve => { bobEntered = resolve; });
+    const bobGate = new Promise<void>(resolve => { releaseNew = resolve; });
+    f.cipher.pauseNextEncrypt = {entered: bobEntered, wait: bobGate};
+    const bobResult = f.access.updateConsent(bobSourceId, true, true).then(() => null, cause => cause);
+    await bobEncrypting;
+    releaseOld();
+    const stale = await oldResult;
+    assert.equal(stale instanceof ClientError && stale.code === 'source_operation_stale', true);
+    await assert.rejects(f.access.choose('codex'), (cause: unknown) =>
+      cause instanceof ClientError && cause.code === 'operation_busy');
+    releaseNew();
+    assert.equal(await bobResult, null);
+    assert.equal(f.access.snapshot().codex.confirmed?.sourceId, bobSourceId);
+    assert.equal(f.access.snapshot().codex.confirmed?.syncIntent, true);
+  } finally { releaseOld(); releaseNew(); f.cleanup(); }
+});
+
+test('TC-TM002-CONSENT-03#PENDING_EXIT_BARRIER stops an in-flight preview before paused consent commits', async () => {
+  const f = fixture();
+  try {
+    await f.access.syncIdentity();
+    await f.access.choose('codex');
+    const pending = f.access.snapshot().codex.pending?.selectionId;
+    assert.ok(pending);
+    const pendingHelper = f.opened.at(-1);
+    assert.ok(pendingHelper);
+    let previewReached!: () => void; let releasePreview!: () => void;
+    const previewEntered = new Promise<void>(resolve => { previewReached = resolve; });
+    const previewWait = new Promise<void>(resolve => { releasePreview = resolve; });
+    pendingHelper.previewBarrier = {entered: previewReached, wait: previewWait};
+    const previewResult = f.access.preview(pending).then(() => null, cause => cause);
+    await previewEntered;
+    let exitReached!: () => void; let releaseExit!: () => void;
+    const exitEntered = new Promise<void>(resolve => { exitReached = resolve; });
+    const exitWait = new Promise<void>(resolve => { releaseExit = resolve; });
+    pendingHelper.exitBarrier = {entered: exitReached, wait: exitWait};
+    let confirmed = false;
+    const confirmation = f.access.confirm(pending, false, false).then(() => { confirmed = true; });
+    await exitEntered;
+    assert.equal(pendingHelper.closed, true);
+    assert.equal(confirmed, false);
+    assert.deepEqual(await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'alice-id'}, 'codex'),
+      {kind: 'none'});
+    releaseExit(); await confirmation;
+    assert.equal(f.access.snapshot().codex.confirmed?.status, 'confirmed_paused');
+    releasePreview();
+    const cause = await previewResult;
+    assert.equal(cause instanceof ClientError && cause.code === 'source_operation_stale', true);
+    assert.deepEqual(f.audit.filter(event => event.operation === 'enumerate'), []);
+  } finally { f.cleanup(); }
+});
+
+test('TC-TM002-CONSENT-04#UPDATE_REPLACE_SERIAL keeps A update and B confirmation from racing', async () => {
+  const f = fixture();
+  try {
+    const sourceA = await confirmA(f);
+    const scan = await f.access.beginCandidateScan(sourceA);
+    const oldReader = f.opened.at(-1);
+    assert.ok(oldReader);
+    f.select(f.b); await f.access.choose('codex');
+    const pendingB = f.access.snapshot().codex.pending?.selectionId;
+    assert.ok(pendingB);
+    let reached!: () => void; let release!: () => void;
+    const entered = new Promise<void>(resolve => { reached = resolve; });
+    const wait = new Promise<void>(resolve => { release = resolve; });
+    oldReader.exitBarrier = {entered: reached, wait};
+    const update = f.access.updateConsent(sourceA, true, true);
+    await entered;
+    await assert.rejects(f.access.confirm(pendingB, true, false), (cause: unknown) =>
+      cause instanceof ClientError && cause.code === 'operation_busy');
+    assert.equal(f.access.snapshot().codex.confirmed?.sourceId, sourceA);
+    const storedBefore = await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'alice-id'}, 'codex');
+    assert.equal(storedBefore.kind, 'ready');
+    if (storedBefore.kind === 'ready') assert.equal(storedBefore.source.sourceId, sourceA);
+    release(); await update;
+    assert.equal(f.access.snapshot().codex.confirmed?.status, 'confirmed_enabled');
+    assert.equal(f.access.snapshot().codex.confirmed?.syncIntent, true);
+    await assert.rejects(f.access.nextCandidatePage(scan.scanId));
+    assert.equal(f.access.snapshot().codex.pending?.selectionId, pendingB);
+    await f.access.confirm(pendingB, true, false);
+    const sourceB = f.access.snapshot().codex.confirmed?.sourceId;
+    assert.ok(sourceB); assert.notEqual(sourceB, sourceA);
+    const storedAfter = await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'alice-id'}, 'codex');
+    assert.equal(storedAfter.kind, 'ready');
+    if (storedAfter.kind === 'ready') assert.equal(storedAfter.source.sourceId, sourceB);
+  } finally { f.cleanup(); }
+});
+
+test('TC-TM002-SECURITY-01#REVOKE_OPEN_BARRIER waits for an in-flight reader to close', async () => {
+  const f = fixture();
+  try {
+    const sourceId = await confirmA(f);
+    let openReached!: () => void; let releaseOpen!: () => void;
+    const opening = new Promise<void>(resolve => { openReached = resolve; });
+    const openWait = new Promise<void>(resolve => { releaseOpen = resolve; });
+    f.setNextOpenBarrier({entered: openReached, wait: openWait});
+    const scan = f.access.beginCandidateScan(sourceId);
+    const scanResult = scan.then(() => null, cause => cause);
+    await opening;
+    const openingReader = f.opened.at(-1);
+    assert.ok(openingReader);
+    let revokedLocally!: () => void;
+    const localRevocation = new Promise<void>(resolve => { revokedLocally = resolve; });
+    f.onChange(() => {
+      if (f.access.snapshot().codex.confirmed === null) revokedLocally();
+    });
+    let revoked = false;
+    const revocation = f.access.revoke(sourceId).then(() => { revoked = true; });
+    await localRevocation;
+    assert.equal(revoked, false);
+    assert.equal(f.access.snapshot().codex.confirmed, null);
+    releaseOpen();
+    await revocation;
+    assert.equal(openingReader.closed, true);
+    assert.equal(revoked, true);
+    const cause = await scanResult;
+    assert.equal(cause instanceof ClientError && cause.code === 'source_operation_stale', true);
+    assert.deepEqual(await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'alice-id'}, 'codex'),
+      {kind: 'none'});
+  } finally { f.cleanup(); }
+});
+
 test('TC-TM002-CONSENT-03#FALSE_TRUE persists independent choices and invalidates scan', async () => {
   const f = fixture();
   try {
@@ -207,6 +498,24 @@ test('TC-TM002-CONSENT-03#FALSE_TRUE persists independent choices and invalidate
     const stored = await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'alice-id'}, 'codex');
     assert.equal(stored.kind, 'ready');
     if (stored.kind === 'ready') assert.deepEqual([stored.source.collectAllowed, stored.source.syncIntent], [false, true]);
+  } finally { f.cleanup(); }
+});
+
+test('TC-TM002-ACCESS-06#COMMIT_GUARD invalidates synchronous commit after revoke or scan close', async () => {
+  const f = fixture();
+  try {
+    const sourceId = await confirmA(f);
+    const first = await f.access.beginCandidateScan(sourceId);
+    const guard = await f.access.commitGuard(first.scanId);
+    assert.doesNotThrow(guard);
+    await f.access.cancelScan(first.scanId);
+    assert.throws(guard, (cause: unknown) =>
+      cause instanceof ClientError && cause.code === 'source_operation_stale');
+    const second = await f.access.beginCandidateScan(sourceId);
+    const revokedGuard = await f.access.commitGuard(second.scanId);
+    await f.access.revoke(sourceId);
+    assert.throws(revokedGuard, (cause: unknown) =>
+      cause instanceof ClientError && cause.code === 'source_operation_stale');
   } finally { f.cleanup(); }
 });
 
@@ -271,6 +580,35 @@ test('TC-TM002-SECURITY-01#SWITCH_DURING_REFRESH discards Alice result after swi
     assert.deepEqual(await f.store.load({origin: 'http://127.0.0.1:59431', accountId: 'bob-id'}, 'codex'), {kind: 'none'});
     await assert.rejects(f.access.refresh(sourceId), (error: unknown) =>
       error instanceof ClientError && error.code === 'source_access_denied');
+  } finally { f.cleanup(); }
+});
+
+test('TC-TM002-SECURITY-01#SWITCH_BEFORE_OPEN cannot start an old-root helper after invalidation', async () => {
+  const f = fixture();
+  try {
+    const sourceId = await confirmA(f);
+    const openedBefore = f.opened.length;
+    const originalLoad = f.store.load.bind(f.store);
+    let armSwitch = false;
+    let switched: Promise<void> | null = null;
+    f.store.load = async (identity, tool) => {
+      const record = await originalLoad(identity, tool);
+      if (identity.accountId === 'alice-id' && tool === 'codex') armSwitch = true;
+      return record;
+    };
+    f.onIdentity(() => {
+      if (!armSwitch) return;
+      armSwitch = false;
+      queueMicrotask(() => {
+        f.setIdentity({origin: 'http://127.0.0.1:59431', accountId: 'bob-id', verified: true, epoch: 2});
+        switched = f.access.syncIdentity();
+      });
+    });
+    await assert.rejects(f.access.refresh(sourceId), (cause: unknown) =>
+      cause instanceof ClientError && cause.code === 'source_operation_stale');
+    if (switched) await switched;
+    assert.equal(f.opened.length, openedBefore);
+    assert.equal(f.access.snapshot().codex.confirmed, null);
   } finally { f.cleanup(); }
 });
 

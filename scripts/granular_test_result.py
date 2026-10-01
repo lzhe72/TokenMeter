@@ -35,6 +35,7 @@ NODE = Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/n
 RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
 SHA = re.compile(r"[a-f0-9]{64}\Z")
 STATES = {"PASS", "FAIL", "BLOCKED"}
+TM001_RELEASE_ID = "v0.1.0-20260929T074814Z"
 AUX_PREFIXES = ("TC-TM001-UI-", "TC-TM001-CATALOG-", "TC-TM001-RECORDS-", "TC-TM001-GATE-")
 SPEC_BY_GROUP = {"LOGIN": "granular-login.spec.ts", "PASSWORD": "granular-login.spec.ts",
                  "SESSION": "granular-account.spec.ts", "ADMIN": "granular-account.spec.ts",
@@ -48,6 +49,24 @@ class Invalid(ValueError):
 
 class Blocked(Invalid):
     """A required export runtime or input is unavailable."""
+
+
+def tm001_case_release(catalog: dict) -> str:
+    """Return the explicit, single release of the frozen TM-001 cases."""
+    cases = catalog.get("cases")
+    if not isinstance(cases, list):
+        raise Invalid("Test catalog has no cases list")
+    releases = []
+    for case in cases:
+        if not isinstance(case, dict) or case.get("feature_id") != "TM-001":
+            continue
+        release = case.get("release_id")
+        if not isinstance(release, str) or not release:
+            raise Invalid("TM-001 cases differ from their fixed explicit release")
+        releases.append(release)
+    if not releases or len(set(releases)) != 1 or releases[0] != TM001_RELEASE_ID:
+        raise Invalid("TM-001 cases differ from their fixed explicit release")
+    return releases[0]
 
 
 def sha(data: bytes) -> str:
@@ -709,10 +728,11 @@ def build_model(catalog: dict, report: dict, *, run_root: Path, checks: dict | N
     future = [case for case in all_cases if case.get("feature_id") != "TM-001"]
     if not all_current:
         raise Invalid("No TM-001 detailed cases in the catalog")
+    tm001_release = tm001_case_release(catalog)
     current_map = {case["id"]: case for case in all_current}
     variant_list = variants.get("variants", []) if variants is not None else []
-    if variants is not None and (variants.get("release_id") != report.get("release_id") or not isinstance(variant_list, list)):
-        raise Invalid("Variant catalog release or shape differs from this run")
+    if variants is not None and (variants.get("release_id") != tm001_release or not isinstance(variant_list, list)):
+        raise Invalid("Variant catalog release or shape differs from the TM-001 cases")
     variant_map = {}
     variants_by_parent = defaultdict(list)
     for variant in variant_list:
@@ -1012,6 +1032,9 @@ def export(report_path: Path, output_dir: Path, checks_path: Path | None = None,
         raise Invalid("Catalog or login variant manifest is unavailable")
     catalog, catalog_bytes = read_json(catalog_path)
     variants, variants_bytes = read_json(variants_path)
+    tm001_release = tm001_case_release(catalog)
+    if variants.get("release_id") != tm001_release:
+        raise Invalid("Login variant manifest differs from the TM-001 case release")
     if not isinstance(variants.get("variants"), list):
         raise Invalid("Login variant manifest has no variants list")
     update_variants = None
@@ -1021,9 +1044,9 @@ def export(report_path: Path, output_dir: Path, checks_path: Path | None = None,
         if update_variants_path == variants_path:
             raise Invalid("Login and update variant manifests must be separate files")
         update_variants, update_variants_bytes = read_json(update_variants_path)
-        if (update_variants.get("release_id") != catalog.get("release_id")
+        if (update_variants.get("release_id") != tm001_release
                 or not isinstance(update_variants.get("variants"), list)):
-            raise Invalid("Update variant manifest differs from the catalog release")
+            raise Invalid("Update variant manifest differs from the TM-001 case release")
         variants = {**variants, "variants": [*variants.get("variants", []), *update_variants["variants"]]}
     checks = None
     source_hashes = {display_path(report_path): sha(report_bytes), display_path(catalog_path): sha(catalog_bytes),

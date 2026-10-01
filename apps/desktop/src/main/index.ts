@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { Accounts } from './accounts';
 import { UpdateDiscovery } from './discovery';
 import { keychainApplicationName, privateDirectory, privateRead, resolveProfile } from './storage';
-import { ClientError, record, string, boolean } from './validation';
+import { ClientError, record, string } from './validation';
 import { createUpdater, validateUpdateURL } from './updater';
 import type { BuildInfo, Updater } from './updater';
 import type { Snapshot } from '../shared/types';
@@ -14,6 +14,7 @@ import type { SourceTool } from './source-store';
 import { SourceStore } from './source-store';
 import { SourceHelper } from './source-helper';
 import { SourceAudit } from './source-audit';
+import {handleSourceIpcMethod, isSourceMethod} from './source-ipc';
 
 const UI = 'tokenmeter://app/index.html';
 protocol.registerSchemesAsPrivileged([{scheme: 'tokenmeter', privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: false}}]);
@@ -150,9 +151,8 @@ function startup(): void {
     window.webContents.on('will-attach-webview', event => event.preventDefault());
     ipcMain.handle('tokenmeter:invoke', async (event, method: unknown, input: unknown) => {
       if (!window || event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame || event.senderFrame.url !== UI) throw new Error('ipc_sender_rejected');
-      const sourceMethod = typeof method === 'string' && ['chooseSource', 'previewSource', 'confirmSource',
-        'updateSourceConsent', 'refreshSource', 'revokeSource'].includes(method);
-      let sourceTool: SourceTool | null = null;
+      const sourceMethod = isSourceMethod(method);
+      const sourceSelection: {tool: SourceTool | null} = {tool: null};
       try {
         switch (method) {
           case 'snapshot': break;
@@ -172,42 +172,15 @@ function startup(): void {
           case 'checkUpdates': await updater.check(); break;
           case 'installUpdate': await updater.install(); break;
           case 'cancelUpdate': updater.cancel(); break;
-          case 'chooseSource': {
-            const data = record(input); sourceTool = string(data.tool, 32) as SourceTool;
-            if (!['codex', 'claude_code'].includes(sourceTool)) throw new ClientError('invalid_source_tool', '来源类型无效');
-            await sourceAccess!.choose(sourceTool); sourceErrors[sourceTool] = null; break;
-          }
-          case 'previewSource': {
-            const data = record(input); const selectionId = string(data.selectionId, 64);
-            sourceTool = (['codex', 'claude_code'] as SourceTool[]).find(tool => sourceAccess!.snapshot()[tool].pending?.selectionId === selectionId) ?? null;
-            await sourceAccess!.preview(selectionId); if (sourceTool) sourceErrors[sourceTool] = null; break;
-          }
-          case 'confirmSource': {
-            const data = record(input); const selectionId = string(data.selectionId, 64);
-            sourceTool = (['codex', 'claude_code'] as SourceTool[]).find(tool => sourceAccess!.snapshot()[tool].pending?.selectionId === selectionId) ?? null;
-            await sourceAccess!.confirm(selectionId, boolean(data.collectAllowed), boolean(data.syncIntent));
-            if (sourceTool) sourceErrors[sourceTool] = null; break;
-          }
-          case 'updateSourceConsent': {
-            const data = record(input); const sourceId = string(data.sourceId, 64);
-            sourceTool = (['codex', 'claude_code'] as SourceTool[]).find(tool => sourceAccess!.snapshot()[tool].confirmed?.sourceId === sourceId) ?? null;
-            await sourceAccess!.updateConsent(sourceId, boolean(data.collectAllowed), boolean(data.syncIntent));
-            if (sourceTool) sourceErrors[sourceTool] = null; break;
-          }
-          case 'refreshSource': {
-            const sourceId = string(record(input).sourceId, 64);
-            sourceTool = (['codex', 'claude_code'] as SourceTool[]).find(tool => sourceAccess!.snapshot()[tool].confirmed?.sourceId === sourceId) ?? null;
-            await sourceAccess!.refresh(sourceId); if (sourceTool) sourceErrors[sourceTool] = null; break;
-          }
-          case 'revokeSource': {
-            const sourceId = string(record(input).sourceId, 64);
-            sourceTool = (['codex', 'claude_code'] as SourceTool[]).find(tool => sourceAccess!.snapshot()[tool].confirmed?.sourceId === sourceId) ?? null;
-            await sourceAccess!.revoke(sourceId); if (sourceTool) sourceErrors[sourceTool] = null; break;
-          }
+          case 'chooseSource': case 'previewSource': case 'confirmSource':
+          case 'updateSourceConsent': case 'refreshSource': case 'revokeSource':
+            await handleSourceIpcMethod(method, input, sourceAccess!, tool => { sourceSelection.tool = tool; });
+            if (sourceSelection.tool) sourceErrors[sourceSelection.tool] = null;
+            break;
           default: throw new ClientError('invalid_operation', '操作无效');
         }
       } catch (error) {
-        if (sourceMethod && sourceTool) sourceErrors[sourceTool] = sourceErrorCode(error);
+        if (sourceMethod && sourceSelection.tool) sourceErrors[sourceSelection.tool] = sourceErrorCode(error);
         else accounts.fail(error);
       }
       if (sourceMethod) pushSnapshot(); else changed();

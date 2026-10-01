@@ -55,14 +55,25 @@ func descendants(_ root: AXUIElement, maxDepth: Int = 12) -> [AXUIElement] {
     return result
 }
 
+let chooserConfirmTitles: Set<String> = ["Choose", "Open", "Select", "选择", "打开"]
+let chooserCancelTitles: Set<String> = ["Cancel", "取消"]
+
+func chooserWitness(_ element: AXUIElement) -> String? {
+    let titles = Set(descendants(element)
+        .filter { string($0, kAXRoleAttribute as CFString) == "AXButton" }
+        .map { string($0, kAXTitleAttribute as CFString).trimmingCharacters(in: .whitespacesAndNewlines) })
+    guard !titles.isDisjoint(with: chooserCancelTitles),
+          let confirmation = chooserConfirmTitles.sorted().first(where: { titles.contains($0) }) else { return nil }
+    return confirmation
+}
+
 func panel(_ application: AXUIElement) -> AXUIElement? {
     let windows = attribute(application, kAXWindowsAttribute as CFString) as? [AXUIElement] ?? []
     for window in windows {
         for item in descendants(window, maxDepth: 4) {
             let role = string(item, kAXRoleAttribute as CFString)
             if role == "AXSheet" || role == "AXDialog" {
-                let buttons = descendants(item).filter { string($0, kAXRoleAttribute as CFString) == "AXButton" }
-                if !buttons.isEmpty { return item }
+                if chooserWitness(item) != nil { return item }
             }
         }
     }
@@ -154,11 +165,14 @@ func main() throws {
     let application = AXUIElementCreateApplication(pid)
     let initial = try waitPanel(application)
     let role = string(initial, kAXRoleAttribute as CFString)
+    guard let confirmWitness = chooserWitness(initial) else {
+        throw DriverError("Visible sheet is not a native directory chooser")
+    }
     var button = ""
     var label = ""
     var pathHash = ""
     if operation == "cancel" {
-        button = try press(initial, titles: ["Cancel", "取消"])
+        button = try press(initial, titles: chooserCancelTitles)
     } else {
         guard let path = options["path"], path.hasPrefix("/"), !path.contains("\0"),
               FileManager.default.fileExists(atPath: path) else {
@@ -170,9 +184,10 @@ func main() throws {
         pathHash = SHA256.hash(data: Data(path.utf8)).map { String(format: "%02x", $0) }.joined()
         try goToFolder(path, application: application)
         let chooser = try waitPanel(application)
-        button = try press(chooser, titles: ["Choose", "Open", "Select", "选择", "打开"])
+        button = try press(chooser, titles: chooserConfirmTitles)
     }
     try writeEvent(eventPath, ["operation": operation, "owner_pid": pid, "panel_role": role,
+                               "chooser_confirm_button": confirmWitness,
                                "native_button": button, "selection_label": label,
                                "selection_path_sha256": pathHash,
                                "completed_at": ISO8601DateFormatter().string(from: Date()),

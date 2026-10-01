@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import hashlib
+import grp
 import http.client
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import secrets
@@ -33,6 +34,7 @@ from urllib.parse import urlsplit
 import local_e2e as base
 from granular_service_fixture import ServiceFixture
 import tm002_fixture as sources
+import verify_tm002_evidence as evidence_audit
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -288,18 +290,24 @@ def ax_preflight() -> dict:
 
 
 def verify_test_account(args) -> None:
-    """Refuse to start the native probe or App under the repository owner's UID."""
-    if not args.keychain_test_user or args.keychain_excluded_uid is None:
-        raise base.Blocked("An explicit independent standard Keychain test account and excluded UID are required")
-    if not re.fullmatch(r"[a-z_][a-z0-9_-]{2,63}", args.keychain_test_user):
-        raise base.Failed("Keychain test account name is malformed")
-    if args.keychain_excluded_uid != ROOT.stat().st_uid or args.keychain_excluded_uid <= 0:
-        raise base.Blocked("Excluded UID does not identify this repository owner")
-    try: account = pwd.getpwnam(args.keychain_test_user)
-    except KeyError: raise base.Blocked("Independent Keychain test account does not exist") from None
-    if (os.getuid() == 0 or os.getuid() == args.keychain_excluded_uid
-            or account.pw_uid != os.getuid()):
-        raise base.Blocked("Runner is not executing in the independent Keychain test account")
+    """Bind the excluded owner and this process to two distinct local accounts."""
+    if not args.keychain_test_user or not args.keychain_excluded_user or args.keychain_excluded_uid is None:
+        raise base.Blocked("Explicit independent test and excluded owner accounts are required")
+    for name in (args.keychain_test_user, args.keychain_excluded_user):
+        if not re.fullmatch(r"[a-z_][a-z0-9_-]{2,63}", name):
+            raise base.Failed("Keychain account name is malformed")
+    try:
+        account = pwd.getpwnam(args.keychain_test_user)
+        excluded = pwd.getpwnam(args.keychain_excluded_user)
+        admin = grp.getgrnam("admin")
+    except KeyError:
+        raise base.Blocked("An explicitly named local account or admin group is absent") from None
+    if excluded.pw_uid <= 0 or excluded.pw_uid != args.keychain_excluded_uid:
+        raise base.Blocked("Excluded UID does not match the named primary account")
+    if (os.getuid() == 0 or os.getuid() == excluded.pw_uid or account.pw_uid != os.getuid()
+            or account.pw_uid == excluded.pw_uid or os.getgid() == admin.gr_gid
+            or admin.gr_gid in os.getgroups() or account.pw_name in admin.gr_mem):
+        raise base.Blocked("Runner is not executing in a separate standard test account")
 
 
 def keychain_probe_stage(mode: str, *, args, installed: Path, profile: Path,
@@ -646,6 +654,13 @@ def one_case(case: dict, args, package: dict, mounted: Path, private_root: Path,
         if item["state"] == "PASS" and not all(cleanup.values()):
             item["state"], item["reason"] = "FAIL", "Owned resource cleanup was incomplete"
         item["finished_at"] = now()
+    if item["state"] == "PASS":
+        audit = evidence_audit.verify_case(case, item, output, args.package_manifest, run_id=args.run_id)
+        audit_path = case_out / "evidence-audit.json"
+        base.write_json(audit_path, audit)
+        item["evidence"]["structure_audit"] = base.descriptor(audit_path, output)
+        if audit["state"] != "PASS":
+            item["state"], item["reason"] = "FAIL", "Fixed TM-002 evidence audit failed: " + "; ".join(audit["errors"])
     return item
 
 
@@ -663,7 +678,8 @@ def execute(args) -> int:
               "keychain_expectations": {case["id"]: case["id"] not in NO_KEYCHAIN_ITEM_EXPECTED
                                         for case in cases if case["id"] not in variants_by_parent},
               "state": "BLOCKED", "release_eligible": False, "cleanup_completed": False}
-    code_paths = [ROOT / path for path in ("scripts/granular_permissions.py", "scripts/tm002_fixture.py",
+    code_paths = [ROOT / path for path in ("scripts/granular_permissions.py", "scripts/verify_tm002_evidence.py",
+                 "scripts/tm002_fixture.py",
                  "scripts/tm002_keychain_probe.swift",
                  "scripts/local_e2e.py", "scripts/granular_service_fixture.py",
                  "scripts/bootstrap_sqlite.py", "tests/server/fixtures.py",
@@ -672,7 +688,8 @@ def execute(args) -> int:
                  "apps/desktop/e2e/native_picker_driver.swift",
                  "apps/desktop/e2e/playwright.config.ts", "tests/test_cases.json",
                  "apps/desktop/native/source-helper.c", "apps/desktop/src/main/source-audit.ts",
-                 "apps/desktop/src/main/source-access.ts", "apps/desktop/src/main/source-helper.ts",
+                 "apps/desktop/src/main/source-access.ts", "apps/desktop/src/main/source-ipc.ts",
+                 "apps/desktop/src/main/source-helper.ts",
                  "apps/desktop/src/main/source-store.ts")]
     code_paths.extend((ROOT / "server").rglob("*.py"))
     report["test_inputs_sha256"] = {path.relative_to(ROOT).as_posix(): base.digest(path)
@@ -780,6 +797,14 @@ def execute(args) -> int:
         else:
             report["state"] = "BLOCKED"
         base.write_json(output / "result.json", report)
+        if report["state"] == "PASS":
+            audit = evidence_audit.verify_report(output / "result.json", package_manifest=args.package_manifest)
+            base.write_json(output / "evidence-audit.json", audit)
+            report["evidence_audit"] = base.descriptor(output / "evidence-audit.json", output)
+            if audit["state"] != "PASS":
+                report["state"] = "FAIL"
+                report["evidence_audit_reason"] = "Fixed TM-002 report evidence audit failed: " + "; ".join(audit["errors"])
+            base.write_json(output / "result.json", report)
     return 0 if report["state"] == "PASS" else 1
 
 
@@ -794,8 +819,10 @@ def main(argv=None) -> int:
                         help="Run only this requirement's fixed TC against the marked development DMG")
     parser.add_argument("--keychain-test-user",
                         help="Explicit separate non-admin macOS test account; required for product execution")
+    parser.add_argument("--keychain-excluded-user",
+                        help="Explicit primary macOS account whose Keychain must remain untouched")
     parser.add_argument("--keychain-excluded-uid", type=int,
-                        help="Repository owner's UID, excluded from Keychain probing and App execution")
+                        help="Primary account UID, checked against --keychain-excluded-user")
     parser.add_argument("--private-base", type=Path,
                         help="Existing or creatable owned 0700 work base for the separate test account")
     parser.add_argument("--case-id", action="append")

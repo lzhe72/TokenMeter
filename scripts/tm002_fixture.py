@@ -167,15 +167,22 @@ class Fixture:
     def cleanup(self) -> None:
         """Delete only the unchanged, marked root. Never follow fixture links."""
         self.verify_owner()
-        for current, directories, files in os.walk(self.root, topdown=False, followlinks=False):
+        # Finish ownership validation before changing permissions or removing any entry.
+        # A foreign directory must not be passed to rmtree merely because its parent
+        # has this run's marker.
+        def refuse_walk_error(error: OSError) -> None:
+            raise error
+
+        for current, directories, files in os.walk(self.root, topdown=True, followlinks=False,
+                                                   onerror=refuse_walk_error):
+            for name in directories + files:
+                entry = Path(current) / name
+                if entry.lstat().st_uid != os.getuid():
+                    raise ValueError("Fixture contains an entry owned by another user")
             for name in directories:
                 entry = Path(current) / name
-                if not entry.is_symlink() and entry.stat(follow_symlinks=False).st_uid == os.getuid():
+                if not entry.is_symlink():
                     os.chmod(entry, 0o700)
-            for name in files:
-                entry = Path(current) / name
-                if not entry.is_symlink() and entry.stat(follow_symlinks=False).st_uid != os.getuid():
-                    raise ValueError("Fixture contains a file owned by another user")
         shutil.rmtree(self.root)
         if self.root.exists() or self.root.is_symlink():
             raise ValueError("Fixture cleanup did not remove its root")

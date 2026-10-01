@@ -22,12 +22,32 @@ MANIFEST = json.loads((ROOT / "releases" / CATALOG["release_id"] / "00-manifest.
 DOCS = json.loads((ROOT / "docs/catalog.json").read_text())
 LOGIN = json.loads((ROOT / "tests/granular_login_variants.json").read_text())
 UPDATE = json.loads((ROOT / "tests/granular_update_variants.json").read_text())
-VARIANTS = granular_gate.combine_variants(LOGIN, UPDATE, CATALOG["release_id"])
+VARIANTS = granular_gate.combine_variants(LOGIN, UPDATE, LOGIN["release_id"])
 CURRENT = [case for case in CATALOG["cases"] if case.get("feature_id") == "TM-001"]
 AUX = {case["id"] for case in CURRENT if case["id"].startswith(granular_gate.results.AUX_PREFIXES)}
 
 
 class GranularGateTests(unittest.TestCase):
+    def test_historical_tm001_variants_keep_their_release_under_current_catalog(self):
+        self.assertNotEqual(CATALOG["release_id"], LOGIN["release_id"])
+        self.assertEqual(LOGIN["release_id"], granular_gate.results.TM001_RELEASE_ID)
+        self.assertEqual({case["release_id"] for case in CURRENT}, {LOGIN["release_id"]})
+        self.assertEqual(VARIANTS["release_id"], LOGIN["release_id"])
+        with self.assertRaises(granular_gate.results.Invalid):
+            granular_gate.combine_variants(LOGIN, UPDATE, CATALOG["release_id"])
+        wrong_update = {**UPDATE, "release_id": CATALOG["release_id"]}
+        with self.assertRaises(granular_gate.results.Invalid):
+            granular_gate.combine_variants(LOGIN, wrong_update, LOGIN["release_id"])
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            _, primary, auxiliary, audit, plan, model = self.fixture(root)
+            wrong_variants = {**VARIANTS, "release_id": CATALOG["release_id"]}
+            with patch.object(granular_gate.results, "build_model", return_value=model):
+                decision = granular_gate.verify_candidate(CATALOG, primary, run_root=root, plan=plan,
+                    variants=wrong_variants, auxiliary=auxiliary, auxiliary_root=root,
+                    audit=audit, audit_root=root, document_catalog=DOCS)
+            self.assertEqual(decision["state"], "FAIL")
+
     def fixture(self, root: Path):
         now = datetime.now(timezone.utc) - timedelta(minutes=2)
         later = now + timedelta(minutes=1)
