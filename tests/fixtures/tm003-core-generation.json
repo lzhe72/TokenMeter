@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "release_id": "v0.3.0-20261001T034652Z",
+  "seed": 303,
+  "input_fixture": "tests/fixtures/tm003-core-storage-cursor.json",
+  "generation_id": "tm003-core06-generation-1",
+  "source_files": [
+    {
+      "synthetic_file_id": "file-a",
+      "bytes_from": [
+        "header",
+        "a"
+      ],
+      "size_bytes": 410,
+      "sha256": "2b6b23ce690faea8f90a5bff4f789de2f804f8dfdce76edced023f3cda690edd",
+      "event_id": "core-a",
+      "input_tokens": 100,
+      "output_tokens": 10,
+      "cached_input_tokens": 20
+    },
+    {
+      "synthetic_file_id": "file-b",
+      "bytes_from": [
+        "header",
+        "b"
+      ],
+      "size_bytes": 410,
+      "sha256": "ce2552cd054d52d0f13ab43a3e547956e37657d8ecc4df96a989376c625e8670",
+      "event_id": "core-b",
+      "input_tokens": 200,
+      "output_tokens": 20,
+      "cached_input_tokens": 40
+    }
+  ],
+  "scan_pages": [
+    {
+      "page": 1,
+      "file_ids": [
+        "file-a"
+      ],
+      "complete": false
+    },
+    {
+      "page": 2,
+      "file_ids": [
+        "file-b"
+      ],
+      "complete": true
+    }
+  ],
+  "expected_after_complete": {
+    "event_count": 2,
+    "input_tokens": 300,
+    "output_tokens": 30,
+    "cached_input_tokens": 60,
+    "total_tokens": 330,
+    "source_cursor_count": 2,
+    "cursor_offsets": {
+      "file-a": 410,
+      "file-b": 410
+    },
+    "scan_incomplete": 0
+  },
+  "expected_after_abort": {
+    "event_count": 0,
+    "source_cursor_count": 0,
+    "diagnostic_count": 0,
+    "coverage_row_count": 0
+  },
+  "fault_injection": "owner SQLite source_cursor BEFORE INSERT trigger aborts on second inserted row",
+  "revocation_phase": "after final file bytes verified, before commitGuard and synchronous commit"
+}

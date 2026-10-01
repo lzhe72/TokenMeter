@@ -16720,7 +16720,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 238,
+        "line": 251,
         "heading": "TC-TM003-SOURCE-01"
       },
       "missing": [
@@ -16773,7 +16773,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 242,
+        "line": 255,
         "heading": "TC-TM003-DATA-01"
       },
       "missing": [
@@ -16828,7 +16828,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 246,
+        "line": 259,
         "heading": "TC-TM003-PARSE-01"
       },
       "missing": [
@@ -16891,7 +16891,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 250,
+        "line": 263,
         "heading": "TC-TM003-SCAN-01"
       },
       "missing": [
@@ -16976,7 +16976,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 254,
+        "line": 267,
         "heading": "TC-TM003-STORE-01"
       },
       "missing": [
@@ -17039,7 +17039,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 258,
+        "line": 271,
         "heading": "TC-TM003-UI-01"
       },
       "missing": [
@@ -17092,7 +17092,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 262,
+        "line": 275,
         "heading": "TC-TM003-SOURCE-02"
       },
       "missing": [
@@ -17147,7 +17147,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 266,
+        "line": 279,
         "heading": "TC-TM003-PARSE-02"
       },
       "missing": [
@@ -17214,7 +17214,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 270,
+        "line": 283,
         "heading": "TC-TM003-MODEL-01"
       },
       "missing": [
@@ -17285,7 +17285,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 274,
+        "line": 287,
         "heading": "TC-TM003-DEDUP-01"
       },
       "missing": [
@@ -17356,7 +17356,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 278,
+        "line": 291,
         "heading": "TC-TM003-BRANCH-01"
       },
       "missing": [
@@ -17427,7 +17427,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 282,
+        "line": 295,
         "heading": "TC-TM003-NAMESPACE-01"
       },
       "missing": [
@@ -17482,7 +17482,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 286,
+        "line": 299,
         "heading": "TC-TM003-PRIVACY-01"
       },
       "missing": [
@@ -17542,7 +17542,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 290,
+        "line": 303,
         "heading": "TC-TM003-DATA-02"
       },
       "missing": [
@@ -17605,7 +17605,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 294,
+        "line": 307,
         "heading": "TC-TM003-SCAN-02"
       },
       "missing": [
@@ -17672,7 +17672,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 298,
+        "line": 311,
         "heading": "TC-TM003-SCAN-03"
       },
       "missing": [
@@ -17739,7 +17739,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 302,
+        "line": 315,
         "heading": "TC-TM003-WINDOW-01"
       },
       "missing": [
@@ -17822,7 +17822,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 306,
+        "line": 319,
         "heading": "TC-TM003-COVERAGE-OVERFLOW-01"
       },
       "missing": [
@@ -17877,7 +17877,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 310,
+        "line": 323,
         "heading": "TC-TM003-UI-02"
       },
       "missing": [
@@ -17932,7 +17932,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 314,
+        "line": 327,
         "heading": "TC-TM003-BOUNDARY-01"
       },
       "missing": [
@@ -17995,7 +17995,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 318,
+        "line": 331,
         "heading": "TC-TM003-AUTH-01"
       },
       "missing": [
@@ -18066,7 +18066,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 322,
+        "line": 335,
         "heading": "TC-TM003-AUTH-02"
       },
       "missing": [
@@ -18150,7 +18150,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 326,
+        "line": 339,
         "heading": "TC-TM003-ISOLATION-01"
       },
       "missing": [
@@ -18219,7 +18219,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 330,
+        "line": 343,
         "heading": "TC-TM003-MIGRATE-01"
       },
       "missing": [
@@ -18289,7 +18289,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 334,
+        "line": 347,
         "heading": "TC-TM003-E2E-01"
       },
       "missing": [
@@ -18355,7 +18355,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 338,
+        "line": 351,
         "heading": "TC-TM003-E2E-02"
       },
       "missing": [
@@ -18418,7 +18418,7 @@
       "binding": null,
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 342,
+        "line": 355,
         "heading": "TC-TM003-GOV-01"
       },
       "missing": [
@@ -18484,7 +18484,7 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 346,
+        "line": 359,
         "heading": "TC-TM003-CORE-01"
       }
     },
@@ -18546,7 +18546,7 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 350,
+        "line": 363,
         "heading": "TC-TM003-CORE-02"
       }
     },
@@ -18606,7 +18606,7 @@
       ],
       "source": {
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
-        "line": 354,
+        "line": 367,
         "heading": "TC-TM003-CORE-03"
       }
     },
@@ -18763,6 +18763,81 @@
         "path": "docs/testing/cases/03-TM-003-codex-collection.md",
         "line": 216,
         "heading": "TC-TM003-CORE-05 · 追加、半行、前缀改写与截短游标"
+      }
+    },
+    {
+      "feature_id": "TM-003",
+      "requirement_id": "REQ-TM003",
+      "release_id": "v0.3.0-20261001T034652Z",
+      "scenario_group": "E2E-TM003-003",
+      "type": "source_check",
+      "preconditions": "seed303；固定tests/fixtures/tm003-core-storage-cursor.json；本例0700 owner根和0600空SQLite；仅公开32字节测试密钥；不调用TM-002授权、产品profile/Keychain、真实App或服务",
+      "data_program": null,
+      "design_status": "draft",
+      "execution_status": "unexecuted",
+      "binding": null,
+      "aggregate_planned": false,
+      "evidence": null,
+      "id": "TC-TM003-CORE-06",
+      "title": "多文件代际一次提交与全回滚",
+      "task_ids": [
+        "TASK-TM003-SCAN",
+        "TASK-TM003-STORE"
+      ],
+      "ac_ids": [
+        "AC-TM003-001",
+        "AC-TM003-003"
+      ],
+      "input": "固定tm003-core-generation.json：同一generation两页file-a/file-b，各header+完整LF调用、各410字节；第1页complete=false，末页complete=true；owner空SQLite、公开key1、假scan capability/guard；四步各新空库。",
+      "steps": [
+        {
+          "step": 1,
+          "action": "只读第1页file-a并验证LF/版本/SHA，末页未到达",
+          "expected": "A仅内存暂存；commitScanBatch调用0次，事件/游标/诊断/覆盖无本代际行，complete=false不称完整",
+          "expected_ui": "",
+          "expected_api_db": "四表本代际行均0；无完整覆盖"
+        },
+        {
+          "step": 2,
+          "action": "新库重建完整两页及稳定正文；在owner库对第二条source_cursor INSERT注入RAISE(ABORT)，guard通过后同步commitScanBatch",
+          "expected": "批次失败并全回滚：A/B事件、两个游标、诊断、覆盖、首次key标记均0或不存在；重开库仍空",
+          "expected_ui": "",
+          "expected_api_db": "usage_event/source_cursor/collection_diagnostic/coverage行0、identity_key_state无新标记"
+        },
+        {
+          "step": 3,
+          "action": "新库验证完整两页，file-b字节复核后在guard/事务前模拟capability撤权或cancel",
+          "expected": "guard拒绝或取消，cancelScan调用1次，commitScanBatch调用0次；暂存清空，事件/两个游标/诊断/覆盖/密钥标记均未提交",
+          "expected_ui": "",
+          "expected_api_db": "全部本代际行0，未生成完整覆盖"
+        },
+        {
+          "step": 4,
+          "action": "新库/新generation保持两文件稳定且末页complete=true，guard通过后同步提交一次；重启同库重扫",
+          "expected": "A/B唯一两行，(count,input,output,cached,total)=(2,300,30,60,330)；两游标各410及prefixMAC、coverage.scan_incomplete=0；重启不重复，不输出路径/正文/密钥",
+          "expected_ui": "",
+          "expected_api_db": "usage_event两行、source_cursor两行各410、coverage完整；重扫无新事件"
+        }
+      ],
+      "db_operations": {
+        "prepare": "每路径独立owner 0700根/0600空SQLite；事件只由正式模块API提交；步骤2仅创建本例游标失败触发器",
+        "expected_changes": "未完成无提交；第二游标失败或guard撤权全代际回滚；完整稳定代际原子提交A/B两个事件、两个游标和覆盖",
+        "verification": "逐步只读usage_event唯一键/聚合、source_cursor数量及偏移/prefixMAC、collection_diagnostic、coverage和identity_key_state；重开验证失败仍空、成功不重计；owner清理",
+        "read_only_checks": [
+          "usage_event count/input/output/cached/total",
+          "source_cursor count/offset/prefix_mac",
+          "collection_diagnostic count",
+          "coverage scan_incomplete",
+          "identity_key_state marker"
+        ]
+      },
+      "missing": [
+        "固定source_check程序未绑定；假capability不证明TM002真实授权或产品App/IPC E2E"
+      ],
+      "source": {
+        "path": "docs/testing/cases/03-TM-003-codex-collection.md",
+        "line": 230,
+        "heading": "TC-TM003-CORE-06 · 多文件代际一次提交与全回滚"
       }
     },
     {
