@@ -1,5 +1,10 @@
 ## 2026-10-02 · CORE-01～07同树机器绑定
 
+## 2026-10-02 · CORE-08～10主进程闭环准备输入
+
+总控要求优先冻结真实产品链路的最小开发输入。文档会话在既有AC不变前提下新增`TASK-TM003-SECRET/WIRING/IPC`和对应`TC-TM003-CORE-08/09/10`三条辅助source_check（各四步），输入为公开HMAC主体向量、本例0700/0600 profile与SQLite、真实`SourceAccess`类加合成helper、CORE07两文件A/B=330、主窗口handler端口。明确私有密文密钥缺/坏/错键零重键、origin+account.id分域、确认前零读、末页守卫后提交、撤销/换主体零新提交，以及IPC只接受sourceId/返回白名单状态。开发文件所有权由TM003独占主入口/secret/IPC，TM004仅Claude adapter，TM005只读统计及UI。三个程序尚未绑定或执行；真实macOS选择/Keychain、安装App/IPC、任意大日志与原产品27条TC继续BLOCKED/NOT_RUN，整版0.3和正式发行未据此通过。切片就绪须以干净输入提交的独立SOP-008收据核对为准。
+
+
 ## 2026-10-02 · 整合候选七条CORE模块重跑
 
 文档绑定提交`23241734f7821ee7664e3dae5104d68699d990a4`（tree`8c6ccca60b855cf1e43332f38a35c9dcdf770acb`）在干净树执行四套固定`source_check`：`tm003-core-20261001T203711Z` CORE01–03 3/3九步、`tm003-core45-20261001T203711Z` CORE04/05 2/2九步、`tm003-core06-20261001T203711Z` 1/1四步、`tm003-core07-20261001T203711Z` 1/1五步，owner清理及各自独立Excel/verification回读均PASS，登记总表第32–35批次。原始报告、TAP、Excel位于各run的`.local/source-check-runs/`与`.local/test-results/`。同树治理511/511 PASS（初次因本树`.local`目录权限过宽有两例前置失败，恢复owner 0700后完整复核PASS）。这些只验证辅助模块，未运行0.3产品App/IPC/授权/Keychain或正式门禁。
@@ -117,3 +122,7 @@ SOP-008对干净输入提交`ff668d0de1fef3dfc162c0d2bc71825df6425511`（tree`20
 干净输入提交`a3e99dafa8948cdf91d733c374d25a132dc60df2`（tree`8c87e094e037caca1057a954244681f10855e305`）的SOP-008收据`.local/docs-checks/20261002-tm003-core07-slice/receipt.json`判仅`CORE-07`为`development_slice_ready`：structure PASS、治理477/477、机器目录233父/744步、总表233父+42变体/20批次回读PASS（SHA-256 `2ce91c32397a2be9bf668e312a7181f63dbc099f6b37e743789fd80b6a332549`），diff检查无错误。该结论只准其固定辅助红测/实现；程序和产品结果仍未运行，整版严格基线/quality及正式门禁NOT_RUN。
 
 开发分支干净代码提交`33b1ee1636fc8e92ecba834856769df9f112c509`（tree`3ad0cc5b5a054a8f1f011dbb2496f2d33babf77b`）的run`tm003-core07-20261001T200438Z`对冻结机器目录SHA-256 `58634134d220097666d8251e7fd3d5d277b69f779be6508a2e4ec6e21da9f177`执行CORE07固定五步，1/1和owner清理PASS；此前`collector_not_implemented`红测FAIL原件保留。原报告SHA-256 `7c717f0e2a09937f93f2b09e973ee7aa032bdc17c3751cf99c456879b05b5398`，独立Excel SHA-256 `d96b274d2caa2991cca8ba8a11b6c6205aea4b80b6bfe00285de2aa4c1bb0f29`、verification回读PASS，登记总表第27批次。开发树结构PASS、治理511/511、桌面构建PASS；结构首测因缺本机SOP-008收据失败，复制原收据并核摘要后才通过。此为假TM-002端口与小文件模块，真实App/IPC、Keychain、任意大文件及产品E2E未运行，整版/发行仍不可通过；程序尚未进入本文档树，机器绑定保持null。
+
+## 2026-10-02 · CORE-08～10独立产品接线输入核对
+
+干净输入提交`8107a063d8c24f303e2db2ca1294cfc343fe6a3e`（tree`32e64493ef823e2efa058f40440f0b13730aaa1d`）按SOP-008仅对`TASK-TM003-SECRET/WIRING/IPC`和`TC-TM003-CORE-08/09/10`出具`.local/docs-checks/20261002-tm003-product-loop-slice/receipt.json`。三例各四步，固定私有密钥、真实SourceAccess类配合合成helper至UsageStore、受限主窗口IPC；公开三组principal HMAC向量已独立重算一致。结构136文档/1294链接PASS，治理531/531 PASS，机器目录236父TC/756步CURRENT，总表11 Sheet/236父+42变体/35批次回读PASS（SHA-256`ddc2d04b4119481f48969265cf84e87e4e01dcdb272e47367064ca9690d76de8`）。三项任务、验收条件、fixture、重置、逐步预期和原产品边界均已核对，故仅本切片`development_slice_ready`；程序绑定为空、实际运行`unexecuted`，0.3整版draft，真实OS授权/Keychain/App/大日志及产品E2E、正式门禁均NOT_RUN。

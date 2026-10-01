@@ -12,7 +12,7 @@
     "observed_source_commit": "6e80dd12d60ee5dad641bca030445a2153a269c9",
     "observed_working_tree_dirty": true,
     "production_initial_password_reference": "scripts/bootstrap_sqlite.py::PRODUCTION_INITIAL_PASSWORD（本机配置引用；总表不保存取值）",
-    "notes": "2026-10-02文档同步：恢复的新主仓库本地master d606fbd 已含文档基线，旧Git对象丢失与历史c291门禁FAIL不变。TM003独立代码分支311deedf的CORE模块3/3 PASS原件已核对，但未进本文档树且不是产品E2E；模块结果Excel导出规范待SOP补齐。TM005新增3条纯统计CORE辅助TC，原32条产品父TC/6变体不变；总目录225父TC/41变体。正式跨需求产品门禁NOT_RUN，根Excel保存固定输入与历史13批次。 TM004新增3条reader CORE辅助TC，原20产品TC不变，切片核对待提交。 SOP会话模块结果修订4cca918/本地master整合6bbab2e已同步至项目登记和总表；TM003/TM005模块原始3/3与模块Excel/批次BLOCKED分别记录。 TM002 SECURITY-01三个路径变体明确previewSource.selectionId、短根和invalid_selection；TM005 CORE-01明确调用方传固定UTC界，不验证IANA换算。TM004 reader CORE-01/02/03独立切片在干净文档候选ebbcfd0就绪。 TM003新不可覆盖模块run tm003-core-20261001T163807Z的独立Excel已回读并作为第14批次登记；仅模块3/3，产品E2E NOT_RUN。 共享模块runner支持owned_root/memory_only清理类型；TM003新run tm003-core-20261001T165439Z第15批次已回读，最新模块3/3，旧ea6批次保留。 TM003新增CORE-04/05固定模块输入，原27条产品TC不变；两例未执行，root Excel候选行随设计同步。 TM001 709d的UPDATE-05定向14/14在de081a6固定导出器生成独立Excel并回读后登记第16批次；77父TC范围外，旧c291完整门禁FAIL仍保留。 TM002 EVIDENCE-01新增MISSING_CHOOSER_WITNESS第七变体，SECURITY-01 profile改私有目录，原28父TC保留；新变体未执行。 TM003 CORE04/05在9efc6fa候选新run2/2/9步及Excel回读PASS，登记第17批次；新增CORE06输入尚未执行。 TM001 709d新增LOGIN-AUTH五父例/11步真实App定向PASS与独立Excel第19批次；前置误加--development的另一次预检BLOCKED保留，旧c291完整门禁FAIL不变。 BOOTSTRAP-03额外成员固定provision数据绑定已核实，机器目录只更正过时前置文字。 TM001 709d另有LOGIN-SESSION六父例/14步独立产品run PASS/Excel回读，登记第20批次；不与LOGIN-AUTH或旧完整门禁合并。 TM002 0cc4f3e产品包预检run local-6ece8e342b514683a64d1cc0a9bf5282 原始33/33 BLOCKED，App未启动，独立Excel尚缺，故不列为总表批次；早先格式预检FAIL保留。 TM003 CORE07主进程编排五步辅助切片已设计，程序未绑定、真实运行与产品E2E均未执行。 TM001 709d LOGIN-VALIDATION十父/十二变体22行36步及LOGIN-RATE单父3步各独立run/Excel回读，登记第21/22批次；709d登录功能合计22父与12变体在四个定向run PASS，非TM001全功能/正式发行。 TM005 CORE04/05在259cf768候选各1/1、三/四步与独立Excel回读PASS，登记第23/24批次；仅source_check，产品E2E NOT_RUN。 TM001 709d CHANGE-PASSWORD十一父/六变体17行32步独立产品run及Excel回读PASS、PASSWORD-05单项审计PASS，登记第25批次；未完成全功能/完整审计。 TM001 709d SESSION十父/两变体12行44步独立产品run与Excel回读PASS、SESSION-04单项审计PASS，登记第26批次；未完成全功能/完整审计。 TM003 CORE07在33b1ee1候选source_check 1/1五步及Excel回读PASS，登记第27批次；仅fake来源能力与小文件，不移作产品E2E。 TM001 709d ADMIN六父/五变体11行33步独立产品run与Excel回读PASS、ADMIN-03单项审计PASS，登记第28批次；未完成全功能/完整审计。 TM003 CORE01-07程序已随本地master合入文档树并绑定机器目录；旧模块批次仍属旧候选，本整合树待新run，产品E2E仍NOT_RUN。 TM001 CONFIG六父、UPDATE-01..04四父、UPDATE-06..08三父三次709d产品定向PASS，独立Excel/审计回读，列第29–31批次；各审计仅覆盖所列项目。 TM003整合候选2324173的CORE01–07四套固定模块新run与独立Excel回读PASS，列第32–35批次；产品E2E、正式门禁NOT_RUN。 TM004 CORE01–05同树固定TAP程序/三套source_check registry与机器绑定已就绪，待新run/独立Excel；原20产品TC和发行NOT_RUN。",
+    "notes": "2026-10-02文档同步：恢复的新主仓库本地master d606fbd 已含文档基线，旧Git对象丢失与历史c291门禁FAIL不变。TM003独立代码分支311deedf的CORE模块3/3 PASS原件已核对，但未进本文档树且不是产品E2E；模块结果Excel导出规范待SOP补齐。TM005新增3条纯统计CORE辅助TC，原32条产品父TC/6变体不变；总目录225父TC/41变体。正式跨需求产品门禁NOT_RUN，根Excel保存固定输入与历史13批次。 TM004新增3条reader CORE辅助TC，原20产品TC不变，切片核对待提交。 SOP会话模块结果修订4cca918/本地master整合6bbab2e已同步至项目登记和总表；TM003/TM005模块原始3/3与模块Excel/批次BLOCKED分别记录。 TM002 SECURITY-01三个路径变体明确previewSource.selectionId、短根和invalid_selection；TM005 CORE-01明确调用方传固定UTC界，不验证IANA换算。TM004 reader CORE-01/02/03独立切片在干净文档候选ebbcfd0就绪。 TM003新不可覆盖模块run tm003-core-20261001T163807Z的独立Excel已回读并作为第14批次登记；仅模块3/3，产品E2E NOT_RUN。 共享模块runner支持owned_root/memory_only清理类型；TM003新run tm003-core-20261001T165439Z第15批次已回读，最新模块3/3，旧ea6批次保留。 TM003新增CORE-04/05固定模块输入，原27条产品TC不变；两例未执行，root Excel候选行随设计同步。 TM001 709d的UPDATE-05定向14/14在de081a6固定导出器生成独立Excel并回读后登记第16批次；77父TC范围外，旧c291完整门禁FAIL仍保留。 TM002 EVIDENCE-01新增MISSING_CHOOSER_WITNESS第七变体，SECURITY-01 profile改私有目录，原28父TC保留；新变体未执行。 TM003 CORE04/05在9efc6fa候选新run2/2/9步及Excel回读PASS，登记第17批次；新增CORE06输入尚未执行。 TM001 709d新增LOGIN-AUTH五父例/11步真实App定向PASS与独立Excel第19批次；前置误加--development的另一次预检BLOCKED保留，旧c291完整门禁FAIL不变。 BOOTSTRAP-03额外成员固定provision数据绑定已核实，机器目录只更正过时前置文字。 TM001 709d另有LOGIN-SESSION六父例/14步独立产品run PASS/Excel回读，登记第20批次；不与LOGIN-AUTH或旧完整门禁合并。 TM002 0cc4f3e产品包预检run local-6ece8e342b514683a64d1cc0a9bf5282 原始33/33 BLOCKED，App未启动，独立Excel尚缺，故不列为总表批次；早先格式预检FAIL保留。 TM003 CORE07主进程编排五步辅助切片已设计，程序未绑定、真实运行与产品E2E均未执行。 TM001 709d LOGIN-VALIDATION十父/十二变体22行36步及LOGIN-RATE单父3步各独立run/Excel回读，登记第21/22批次；709d登录功能合计22父与12变体在四个定向run PASS，非TM001全功能/正式发行。 TM005 CORE04/05在259cf768候选各1/1、三/四步与独立Excel回读PASS，登记第23/24批次；仅source_check，产品E2E NOT_RUN。 TM001 709d CHANGE-PASSWORD十一父/六变体17行32步独立产品run及Excel回读PASS、PASSWORD-05单项审计PASS，登记第25批次；未完成全功能/完整审计。 TM001 709d SESSION十父/两变体12行44步独立产品run与Excel回读PASS、SESSION-04单项审计PASS，登记第26批次；未完成全功能/完整审计。 TM003 CORE07在33b1ee1候选source_check 1/1五步及Excel回读PASS，登记第27批次；仅fake来源能力与小文件，不移作产品E2E。 TM001 709d ADMIN六父/五变体11行33步独立产品run与Excel回读PASS、ADMIN-03单项审计PASS，登记第28批次；未完成全功能/完整审计。 TM003 CORE01-07程序已随本地master合入文档树并绑定机器目录；旧模块批次仍属旧候选，本整合树待新run，产品E2E仍NOT_RUN。 TM001 CONFIG六父、UPDATE-01..04四父、UPDATE-06..08三父三次709d产品定向PASS，独立Excel/审计回读，列第29–31批次；各审计仅覆盖所列项目。 TM003整合候选2324173的CORE01–07四套固定模块新run与独立Excel回读PASS，列第32–35批次；产品E2E、正式门禁NOT_RUN。 TM003新增CORE08–10三条各四步辅助输入与三个具体TASK，公开principal向量已独立核对；程序未绑定、未运行，0.3产品E2E/正式门禁NOT_RUN。 TM004 CORE01–05同树固定TAP程序/三套source_check registry与机器绑定已就绪，待新run/独立Excel；原20产品TC和发行NOT_RUN。",
     "observed_raw_state": "BLOCKED",
     "observed_raw_report": ".local/ci/local-534748ff47cb44229183a6bd878c1674/result.json",
     "observed_review_model": ".local/test-results/local-534748ff47cb44229183a6bd878c1674-reviewed/granular-source.json",
@@ -1491,7 +1491,7 @@
       "dependencies": "TM-002 稳定提交及接口，**BLOCKED**",
       "historical_test_mapping": "",
       "status": "planned",
-      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:26"
+      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:29"
     },
     {
       "task_id": "TASK-TM003-UI",
@@ -1504,7 +1504,7 @@
       "dependencies": "STORE、SCAN、AUTH，**BLOCKED**",
       "historical_test_mapping": "",
       "status": "planned",
-      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:27"
+      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:30"
     },
     {
       "task_id": "TASK-TM003-MIGRATE",
@@ -1517,7 +1517,7 @@
       "dependencies": "STORE、TM-001 已分发稳定包状态，**BLOCKED**",
       "historical_test_mapping": "",
       "status": "planned",
-      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:28"
+      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:31"
     },
     {
       "task_id": "TASK-TM003-E2E",
@@ -1530,7 +1530,7 @@
       "dependencies": "FIXTURE、UI、TM-001/002 稳定产品与隔离 GUI 资源，**BLOCKED**",
       "historical_test_mapping": "",
       "status": "planned",
-      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:29"
+      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:32"
     },
     {
       "task_id": "TASK-TM003-RELEASE",
@@ -1543,7 +1543,7 @@
       "dependencies": "全部任务、SOP-013/014/017/018",
       "historical_test_mapping": "",
       "status": "planned",
-      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:30"
+      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:33"
     },
     {
       "task_id": "TASK-TM004-SOURCE",
@@ -1726,6 +1726,45 @@
       "historical_test_mapping": "",
       "status": "baseline_pending",
       "source": "releases/v0.5.0-20261001T034729Z/02-breakdown.md:15"
+    },
+    {
+      "task_id": "TASK-TM003-SECRET",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM003-02",
+      "requirement_id": "REQ-TM003",
+      "ac_ids": "AC-TM003-002\nAC-TM003-004",
+      "input": "IDENTITY/STORE已定合同；可替换加密端口及本例私有profile，独立于真实Keychain产品验证",
+      "output_and_done": "产物：TM-003独占私有32字节密钥生命周期、origin+account.id 的 `usage-principal-v1` HMAC、0600密文、缺失/损坏/错键停采集；产品默认系统随机源与macOS系统密钥保护，无明文回退\n完成条件：固定公开向量、重启同键、不同主体隔离；既有库缺/坏密文零重键零改库，安全失败；只在owner根测试",
+      "dependencies": "IDENTITY/STORE已定合同；可替换加密端口及本例私有profile，独立于真实Keychain产品验证",
+      "historical_test_mapping": "",
+      "status": "planned",
+      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:26"
+    },
+    {
+      "task_id": "TASK-TM003-WIRING",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM003-02",
+      "requirement_id": "REQ-TM003",
+      "ac_ids": "AC-TM003-001\nAC-TM003-003\nAC-TM003-004",
+      "input": "CORE-07主进程编排、SECRET、TM-002现有SourceAccess可替换端口；真实OS选择/Keychain产品验收仍BLOCKED",
+      "output_and_done": "产物：TM-003独占主进程来源到Codex collector/UsageStore适配；renderer只传已确认sourceId，完整代际守卫后写库\n完成条件：真实SourceAccess类+本例helper/SQLite下确认前零读、A/B=330、撤销零新提交、换主体无串读",
+      "dependencies": "CORE-07主进程编排、SECRET、TM-002现有SourceAccess可替换端口；真实OS选择/Keychain产品验收仍BLOCKED",
+      "historical_test_mapping": "",
+      "status": "planned",
+      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:27"
+    },
+    {
+      "task_id": "TASK-TM003-IPC",
+      "level": "concrete_task",
+      "feature_point_id": "FP-TM003-03",
+      "requirement_id": "REQ-TM003",
+      "ac_ids": "AC-TM003-001\nAC-TM003-004",
+      "input": "WIRING及TM-001现有单窗口sender检查；不依赖真实Keychain产品结论",
+      "output_and_done": "产物：TM-003独占 `index.ts`、受限collection handler、preload/共享Snapshot的采集状态；`collection:getState`无参数、`collection:refresh`仅sourceId\n完成条件：非主sender/子frame/额外路径或身份字段拒绝；有效刷新/重复/停读/换主体只返回本主体白名单状态",
+      "dependencies": "WIRING及TM-001现有单窗口sender检查；不依赖真实Keychain产品结论",
+      "historical_test_mapping": "",
+      "status": "planned",
+      "source": "releases/v0.3.0-20261001T034652Z/02-breakdown.md:28"
     }
   ],
   "sops": [
