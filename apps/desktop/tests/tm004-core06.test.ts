@@ -335,7 +335,8 @@ test('TC-TM004-CORE-06 confirmed Claude SourceAccess commits owned SQLite genera
       };
       else if (mode === 'early_eof_in_agent_sub') fault.earlyEof = true;
       else assert.fail(`Unexpected frozen fault: ${mode}`);
-      await assert.rejects(fault.run(sourceId));
+      await assert.rejects(fault.run(sourceId),
+        mode === 'early_eof_in_agent_sub' ? /collection_failed/ : /collection_stale/);
       assert.equal(fault.counts.commits, 0);
       assert.ok(fault.counts.scannedClosed >= 1);
       assert.ok(fault.audits.some(event => event.operation === 'cancel' && event.tool === 'claude_code'));

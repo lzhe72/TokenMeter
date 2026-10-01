@@ -17,7 +17,7 @@ export async function runClaudeCollection(
 ): Promise<ClaudeTriggerResult> {
   const principalKey = runtime.account()?.principalKey ?? '';
   return triggerClaudeCollection({sourceId}, {
-    account: runtime.account,
+    account: () => runtime.account(),
     sourceFor: candidatePrincipal => {
       if (runtime.account()?.principalKey !== candidatePrincipal) return null;
       const source = runtime.access.snapshot().claude_code.confirmed;
