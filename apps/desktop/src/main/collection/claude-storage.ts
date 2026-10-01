@@ -29,6 +29,11 @@ export function commitClaudePreparedBatch(
 ): {inserted: number; duplicate: number; conflict: number} {
   const rootKey = claudeRootKey(sourceId, secret);
   if (!Array.isArray(batch.files) || batch.files.length === 0) throw new Error('claude_batch_invalid');
+  if (!batch.coverage.scanIncomplete && batch.events.length === 0
+      && batch.diagnostics.length === 0 && batch.files.every(file => !file.changed)) {
+    guard();
+    return {inserted: 0, duplicate: 0, conflict: 0};
+  }
   const files = batch.files.map(file => {
     if (file.sourceKey !== file.fileIdentity || file.cursor.fileIdentity !== file.fileIdentity)
       throw new Error('claude_batch_invalid');

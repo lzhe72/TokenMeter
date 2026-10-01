@@ -45,7 +45,7 @@ test(CASE + ' mapped generation calls the atomic store port once', t => {
       };
       return {sourceKey: item.source_key_and_file_identity,
         fileIdentity: item.source_key_and_file_identity,
-        events: [event], diagnostics: item.diagnostic_codes.map(code => ({code: code as
+        changed: true, events: [event], diagnostics: item.diagnostic_codes.map(code => ({code: code as
           ClaudePreparedBatch['diagnostics'][number]['code'], count: 1})),
         cursor: {fileIdentity: item.source_key_and_file_identity,
           committedByteOffset: item.committed_byte_offset, prefixMac: item.prefix_mac}};
