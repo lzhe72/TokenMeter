@@ -739,3 +739,6 @@ TM-001开发会话的代码提交`fbab99b13022d7178a96dc344fb5ff9db8dd85f0`已�
 ## 2026-10-02 · UPDATE-05定向批次结果Excel回读
 
 TM-001开发会话交接`709d21253a0f88bc703a431cbf3adba3df17e508`原始`local-65796d0033704e3988cd7174dec93c81`：范围仅UPDATE-05父例与13固定变体，14/14 PASS、26步骤、清理完成、77父TC范围外、`release_eligible=false`。后置独立导出修复`de081a67734316381d598929ddd5a7814de7e264`生成12 Sheet结果Excel并回读PASS；复制到文档会话本机`.local/test-results/<run_id>/`保存原结果与旁证，报告SHA-256`63068b93a6959fee58acbeb00dde9d6da062726df9b8de6aa0dd757b63403e48`、Excel SHA-256`579dbfde25149265a97ab12bf85846b5e128d62cf4f94df7ff03b376eda16c16`。本轮仅索引第16个批次，被测候选仍709d；初次导出版本错配与空审计的FAIL原件、旧c291完整门禁FAIL均保留。定向PASS不满足全部产品E2E或发行门禁，正式发行NOT_RUN；详细见[07测试结果](07-test-results.md)。
+## 2026-10-02 文档会话增量核对
+
+`BOOTSTRAP-03`详细用例已写固定额外成员provision，机器目录仍误写“数据绑定待补”；只读核对`apps/desktop/e2e/granular-account.spec.ts`在`TC-TM001-BOOTSTRAP-03`第4步用本例库调用`server.tokenmeter_server.provision`创建尾0007的test-extra，并在owned重启、拒绝重首建后核对成员和改后管理员。已同步更正机器目录前置/数据库准备文字，不变动步骤预期、程序、执行状态或旧结果。709d另有登录定向run`local-2aa05fb7b2754289a1d77b9ef89bd321`五父例/11步真实App PASS及独立Excel回读，详见07；该定向结果不解除旧c291完整门禁FAIL。

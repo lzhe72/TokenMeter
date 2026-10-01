@@ -2,6 +2,9 @@
 
 ## 2026-10-02 恢复后源码与文档同步
 
+TM-001候选`709d2125`安装原DMG的`LOGIN-01/02/03/04/08`定向真实App run`local-2aa05fb7b2754289a1d77b9ef89bd321`为5/5、11步、清理PASS，独立结果Excel回读PASS，作为总表第19批次。前次误带`--development`的独立run在清单预检处五例BLOCKED且App未启动；其原件保留。709d其余TM-001父例未运行，旧c291完整门禁FAIL与正式发行NOT_RUN。`BOOTSTRAP-03`额外合成成员的固定provision和重启绑定已在代码核实，机器目录过时的“待补”文字已修正，未改测试预期或运行结果。
+
+
 TM-005新增尚未运行的`CORE-04/05`固定辅助输入，分别为IANA日界/纽约23与25小时和合成双来源SQLite同窗只读快照；0.5原32条产品TC及6变体不缩减。干净输入提交`986e0d382f5dbb09025460f5b041a0089797f213`（tree`ac5d73e5b697bc25ee9d8468dd1cc73345ff3318`）的[SOP-008切片收据](../.local/docs-checks/20261002-tm005-iana-sqlite-slice/receipt.json)判`development_slice_ready`：structure、治理477/477、机器目录232父/739步、总表11 Sheet/232父/42变体/274行/18批次回读PASS；总表SHA-256 `20c539a9ab8137ce4022f4e0bd2fb8b0d60ebd09c5929ab1cf4391a3cef0bc94`。TM-003当前coverage表不能证明任意历史当地日两来源连续完整覆盖，故TM-005产品`STATE-02/04`的真零判据和安装App E2E保持BLOCKED/NOT_RUN；切片仅允许固定辅助红测及实现，程序绑定和实际运行仍空。
 
 TM-003 `CORE-06`先在`408ebf8`固定红测的第二步失败，修复提交`eef956b`（tree`802e6c9`）的新run`tm003-core06-20261001T182500Z`为`source_check` 1/1、四步和清理PASS；报告SHA-256 `b6a2a8586ffbb14626858263638a7f13c690e3cf5503741bd2526cda3ea24e87`，独立结果Excel SHA-256 `4bfb058e0d0d9779a90ae61ebb207bdf0f8cec2dc6d55e813e33fcd4920f49a5`，verification回读PASS。原始红/绿报告与Excel均已复制到本工作树`.local/`，根总表登记第18批次；原27条产品TC及正式发行仍NOT_RUN。

@@ -145,6 +145,10 @@ UI-01修复后独立单例Excel为`.local/test-results/aux-ui01-local-343e54113b
 
 ## 4. 精细用例的固定代码与执行缺口
 
+### 2026-10-02 · 709d 登录定向五例
+
+候选`709d21253a0f88bc703a431cbf3adba3df17e508`（tree`6309bb70540407d90c8b059b4faef15879e691f9`）从SHA-256 `c2f079452746d86397bb395450c4e46cec3e26a9eaa71217ca22dbfbb45257fb`的原DMG安装真实App，对`TASK-TM001-LOGIN-AUTH`固定`LOGIN-01/02/03/04/08`执行独立run`local-2aa05fb7b2754289a1d77b9ef89bd321`：五父例PASS、零FAIL/BLOCKED、11步，`cleanup_completed=true`。原报告`.local/ci/local-2aa05fb7b2754289a1d77b9ef89bd321/result.json` SHA-256 `2b27d3c2a6582d679a204166bacb0b033580928c7e6904b01b0d6a3d64301f40`；固定后置导出的独立结果Excel在同run的`.local/test-results/`，SHA-256 `35bb159ff87c81726f002134264bdb8a7a2d92d3ba3da57783e0cbc7ca29d47a`，verification回读PASS。前一次误带`--development`的run`local-7ce07b71ca1240de93c16a437ab7e292`在包清单预检时五例BLOCKED、App未启动，其原件仍独立保留，不并入这五个PASS。709d其余TM-001固定父例未运行；旧`c2911bc`完整门禁FAIL和正式发行NOT_RUN保持。
+
 [登录与改密01a](../../docs/testing/cases/01a-TM-001-login-scenarios.md)、[会话/管理/配置/升级01b](../../docs/testing/cases/01b-TM-001-session-admin-release-scenarios.md)、[交付检查01c](../../docs/testing/cases/01c-TM-001-delivery-checks.md)中的TC/变体均为本轮需求阶段基线修订。原代码先于这些精细条目存在，不能追认为先设计后开发已经完成。
 
 - `tests/test_cases.json`当前有78条本版TC：67条产品父TC具备逐编号Playwright程序，另11条交付、目录和门禁辅助TC具备固定程序并已在独立批次执行。其余31条属于后续功能规划，不能纳入本版通过数。

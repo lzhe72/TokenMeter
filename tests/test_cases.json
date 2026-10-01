@@ -4924,7 +4924,7 @@
       ],
       "type": "集成及E2E/负向/数据保留",
       "input": "改后密码、重复首建/seed；额外合成成员变体",
-      "preconditions": "新D-PROD，在真实UI改密；保留用户/credential_version/审计快照。新增成员变体只可由批准的离线provision程序向本例合成库添加，生成与重置绑定待补。SOP-010/016/014；RESET。\n每TC独立拥有的安装/profile/动态回环服务/SQLite，不访问用户49176或真实生产库。D-A42=seed42四账号：test-admin/admin/UUID尾0001，test-alice/member/尾0002，test-bob/member/尾0003，test-disabled/member/尾0004且停用；初始均需改密，合成密码TEST-ONLY-<admin|alice|bob|disabled>-42!。D-A43=相同角色的独立seed43服务B，alice密码TEST-ONLY-alice-43!。P-NEW=TEST-ONLY-Changed-42!；P-RESET=TEST-ONLY-Reset-42!。SETUP-MEMBER/ADMIN=在真实UI改连本例服务A，以对应初始账号登录、强制改为P-NEW并等待/v1/me；不依赖上一TC。D-PROD=新私有根由bootstrap_sqlite.initialize_production创建的首建同构测试库，仅admin/UUID尾0005、强制改密，初始口令从本机首建配置引用，不使用用户生产库。D-UPDATE=同次0.1.0/build100原DMG与0.1.1/build101受控ZIP、固定证书/Ed25519公钥；同一owned动态回环源的idle/forbidden/redirect/invalid/valid阶段。RESET=保留原件后按owner/run_id清理本例App/服务/挂载/profile/库，未知资源不删除。",
+      "preconditions": "新D-PROD，在真实UI改密；保留用户/credential_version/审计快照。新增成员变体由固定Playwright程序调用离线server.tokenmeter_server.provision，仅向本例拥有的D-PROD合成库添加尾0007的test-extra成员；固定重启/拒绝首建及owner清理已绑定，实际结果仍须独立运行。SOP-010/016/014；RESET。\n每TC独立拥有的安装/profile/动态回环服务/SQLite，不访问用户49176或真实生产库。D-A42=seed42四账号：test-admin/admin/UUID尾0001，test-alice/member/尾0002，test-bob/member/尾0003，test-disabled/member/尾0004且停用；初始均需改密，合成密码TEST-ONLY-<admin|alice|bob|disabled>-42!。D-A43=相同角色的独立seed43服务B，alice密码TEST-ONLY-alice-43!。P-NEW=TEST-ONLY-Changed-42!；P-RESET=TEST-ONLY-Reset-42!。SETUP-MEMBER/ADMIN=在真实UI改连本例服务A，以对应初始账号登录、强制改为P-NEW并等待/v1/me；不依赖上一TC。D-PROD=新私有根由bootstrap_sqlite.initialize_production创建的首建同构测试库，仅admin/UUID尾0005、强制改密，初始口令从本机首建配置引用，不使用用户生产库。D-UPDATE=同次0.1.0/build100原DMG与0.1.1/build101受控ZIP、固定证书/Ed25519公钥；同一owned动态回环源的idle/forbidden/redirect/invalid/valid阶段。RESET=保留原件后按owner/run_id清理本例App/服务/挂载/profile/库，未知资源不删除。",
       "steps": [
         {
           "step": 1,
@@ -4956,7 +4956,7 @@
         }
       ],
       "db_operations": {
-        "prepare": "D-PROD先真实改密；额外成员用批准provision输入，数据绑定待补",
+        "prepare": "D-PROD先在真实UI改密；固定Playwright程序以离线provision向本例拥有的库添加尾0007的test-extra成员，再读回与重启核对；不接触用户生产库。",
         "read_only_checks": [
           {
             "id": "Q-OWNER",
