@@ -27,6 +27,7 @@ class TM004CatalogTests(unittest.TestCase):
         document_ids = set(re.findall(r"^### (TC-TM004-[A-Z0-9-]+)\b", DETAIL.read_text(), re.M))
         manifest = json.loads((ROOT / "releases" / RELEASE / "00-manifest.json").read_text())
         tracked = {row["test"] for row in manifest["traceability"] if row["test"].startswith("TC-TM004-")}
+        suites = json.loads((ROOT / "tests/source_check_suites.json").read_text())["suites"]
         self.assertEqual(set(rows), EXPECTED)
         self.assertEqual(document_ids, EXPECTED)
         self.assertEqual(tracked, EXPECTED)
@@ -37,10 +38,27 @@ class TM004CatalogTests(unittest.TestCase):
             if case_id in CORE_EXPECTED:
                 self.assertEqual(row["type"], "source_check")
                 self.assertEqual(row["design_status"], "draft")
+                binding = row["binding"]
+                self.assertIsInstance(binding, dict)
+                self.assertEqual(binding["tc_identity"], case_id)
+                self.assertEqual(binding["execution_type"], "source_check")
+                self.assertEqual(binding["runner"], "scripts/run_source_check.mjs")
+                self.assertEqual(binding["suite_registry"], "tests/source_check_suites.json")
+                suite = suites[binding["suite"]]
+                self.assertEqual(suite["release_id"], RELEASE)
+                self.assertIn(case_id, suite["cases"])
+                self.assertEqual(binding["program"], suite["file"])
+                self.assertEqual(row["data_program"], suite["file"])
+                self.assertEqual(binding["reset_kind"], suite["reset_kind"])
+                self.assertEqual(binding["status"], "implemented_pending_integrated_run")
+                program = (ROOT / suite["file"]).read_text()
+                if binding["test_name"] not in program:
+                    self.assertIn(f"const CASE = '{case_id}'", program)
+                    self.assertIn(binding["test_name"].removeprefix(case_id), program)
             else:
                 self.assertEqual(row["design_status"], "baseline_pending")
+                self.assertIsNone(row["binding"])
             self.assertEqual(row["execution_status"], "unexecuted")
-            self.assertIsNone(row["binding"])
             self.assertIsNone(row["evidence"])
             self.assertGreaterEqual(len(row["steps"]), 3)
             if row["type"] == "product_e2e":

@@ -19216,9 +19216,20 @@
       },
       "design_status": "draft",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "tc_identity": "TC-TM004-CORE-01",
+        "execution_type": "source_check",
+        "program": "apps/desktop/tests/tm004-core.test.ts",
+        "test_name": "TC-TM004-CORE-01 complete LF, half-line and bounded continuation",
+        "runner": "scripts/run_source_check.mjs",
+        "suite_registry": "tests/source_check_suites.json",
+        "suite": "tm004-core",
+        "command_template": "node scripts/run_source_check.mjs --suite tm004-core --run-id tm004-core-<新唯一UTC时间>",
+        "reset_kind": "owned_root",
+        "status": "implemented_pending_integrated_run"
+      },
       "missing": [
-        "SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行"
+        "同树固定source_check程序/逐步TAP与重置已绑定；须在干净整合候选新run并生成独立Excel/verification，现无该候选真实结果；原20条产品TC/真实App与正式发行另验。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -19267,7 +19278,8 @@
         "line": 170,
         "heading": "TC-TM004-CORE-01 · 完整LF、半行与限额续读"
       },
-      "overall_expected": "1. 读未写完的前半行；调用0、偏移0、scanIncomplete=true，不作可信零结论\n2. 补齐LF、重复读取；补齐后一次13/7=20、偏移746、前缀MAC匹配；重复读取0调用且游标不变\n3. 两完整行首读754字节后续读；首读只第一条、偏移746、read_limit且未完成；续读只第二条、偏移为总字节长、完成"
+      "overall_expected": "1. 读未写完的前半行；调用0、偏移0、scanIncomplete=true，不作可信零结论\n2. 补齐LF、重复读取；补齐后一次13/7=20、偏移746、前缀MAC匹配；重复读取0调用且游标不变\n3. 两完整行首读754字节后续读；首读只第一条、偏移746、read_limit且未完成；续读只第二条、偏移为总字节长、完成",
+      "data_program": "apps/desktop/tests/tm004-core.test.ts"
     },
     {
       "feature_id": "TM-004",
@@ -19283,9 +19295,20 @@
       },
       "design_status": "draft",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "tc_identity": "TC-TM004-CORE-02",
+        "execution_type": "source_check",
+        "program": "apps/desktop/tests/tm004-core.test.ts",
+        "test_name": "TC-TM004-CORE-02 keyed prefix, source changes and secret failures",
+        "runner": "scripts/run_source_check.mjs",
+        "suite_registry": "tests/source_check_suites.json",
+        "suite": "tm004-core",
+        "command_template": "node scripts/run_source_check.mjs --suite tm004-core --run-id tm004-core-<新唯一UTC时间>",
+        "reset_kind": "owned_root",
+        "status": "implemented_pending_integrated_run"
+      },
       "missing": [
-        "SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行"
+        "同树固定source_check程序/逐步TAP与重置已绑定；须在干净整合候选新run并生成独立Excel/verification，现无该候选真实结果；原20条产品TC/真实App与正式发行另验。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -19335,7 +19358,8 @@
         "line": 178,
         "heading": "TC-TM004-CORE-02 · 前缀MAC、变更和密钥失败"
       },
-      "overall_expected": "1. 首行后追加第二完整行；size/mtime变化但TM-002 dev/ino摘要和前缀MAC相同，续读只第二调用，无cursor_reset\n2. 同长度前缀改写、截短及稳定身份变更；分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符\n3. 秘密无效或读中源变化；拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密"
+      "overall_expected": "1. 首行后追加第二完整行；size/mtime变化但TM-002 dev/ino摘要和前缀MAC相同，续读只第二调用，无cursor_reset\n2. 同长度前缀改写、截短及稳定身份变更；分别报cursor_reset并从0重扫；同inode/size/mtime也不能忽略MAC不符\n3. 秘密无效或读中源变化；拒绝且没有可提交新游标/可信调用/成功零；输出不含路径正文秘密",
+      "data_program": "apps/desktop/tests/tm004-core.test.ts"
     },
     {
       "feature_id": "TM-004",
@@ -19351,9 +19375,20 @@
       },
       "design_status": "draft",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "tc_identity": "TC-TM004-CORE-03",
+        "execution_type": "source_check",
+        "program": "apps/desktop/tests/tm004-core.test.ts",
+        "test_name": "TC-TM004-CORE-03 invalid UTF-8 and unknown version stay diagnostic",
+        "runner": "scripts/run_source_check.mjs",
+        "suite_registry": "tests/source_check_suites.json",
+        "suite": "tm004-core",
+        "command_template": "node scripts/run_source_check.mjs --suite tm004-core --run-id tm004-core-<新唯一UTC时间>",
+        "reset_kind": "owned_root",
+        "status": "implemented_pending_integrated_run"
+      },
       "missing": [
-        "SOP-011逐步固定模块程序尚未绑定；原20条产品TC和四组E2E仍BLOCKED或未执行"
+        "同树固定source_check程序/逐步TAP与重置已绑定；须在干净整合候选新run并生成独立Excel/verification，现无该候选真实结果；原20条产品TC/真实App与正式发行另验。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -19403,7 +19438,8 @@
         "line": 186,
         "heading": "TC-TM004-CORE-03 · 损坏完整行与未知结构"
       },
-      "overall_expected": "1. 读三条完整LF行；仅合法2.1.126一条调用13/7=20；invalid_utf8及unsupported_version各一次\n2. 核对游标、重复读取及隐私；游标到三行LF末，MAC匹配且完成；重复读取0；输出无路径、正文、秘密\n3. 追加无LF坏字节再补LF；未补LF前偏移不动且未完成；补LF后仅诊断推进，无伪调用"
+      "overall_expected": "1. 读三条完整LF行；仅合法2.1.126一条调用13/7=20；invalid_utf8及unsupported_version各一次\n2. 核对游标、重复读取及隐私；游标到三行LF末，MAC匹配且完成；重复读取0；输出无路径、正文、秘密\n3. 追加无LF坏字节再补LF；未补LF前偏移不动且未完成；补LF后仅诊断推进，无伪调用",
+      "data_program": "apps/desktop/tests/tm004-core.test.ts"
     },
     {
       "feature_id": "TM-004",
@@ -19419,9 +19455,20 @@
       },
       "design_status": "draft",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "tc_identity": "TC-TM004-CORE-04",
+        "execution_type": "source_check",
+        "program": "apps/desktop/tests/tm004-core04.test.ts",
+        "test_name": "TC-TM004-CORE-04 authorized main-process trigger and transaction barrier",
+        "runner": "scripts/run_source_check.mjs",
+        "suite_registry": "tests/source_check_suites.json",
+        "suite": "tm004-core04",
+        "command_template": "node scripts/run_source_check.mjs --suite tm004-core04 --run-id tm004-core04-<新唯一UTC时间>",
+        "reset_kind": "memory_only",
+        "status": "implemented_pending_integrated_run"
+      },
       "missing": [
-        "SOP-011固定模块程序尚未绑定；真实TM-002/003与原20条产品TC仍BLOCKED或未执行"
+        "同树固定source_check程序/逐步TAP与重置已绑定；须在干净整合候选新run并生成独立Excel/verification，现无该候选真实结果；原20条产品TC/真实App与正式发行另验。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -19472,7 +19519,8 @@
         "line": 198,
         "heading": "TC-TM004-CORE-04 · 授权主体与扫描事务触发"
       },
-      "overall_expected": "1. 拒绝路径字段、无效主体/来源和预先取消的请求；路径字段/坏UUID为invalid_collection_request；账号不可用为collection_unavailable；异主体来源为source_not_authorized；预先取消为collection_cancelled；均扫描0、提交0\n2. 扫描开始后在固定屏障分别换账号、撤权和取消；换账号/撤权为collection_stale，取消为collection_cancelled；每次cancelScan、commitSync=0、缓冲不外露\n3. 健康主体和授权世代扫描完整M并通过提交守卫；commitSync恰一次；返回summary{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]，无私密哨兵/原生标识"
+      "overall_expected": "1. 拒绝路径字段、无效主体/来源和预先取消的请求；路径字段/坏UUID为invalid_collection_request；账号不可用为collection_unavailable；异主体来源为source_not_authorized；预先取消为collection_cancelled；均扫描0、提交0\n2. 扫描开始后在固定屏障分别换账号、撤权和取消；换账号/撤权为collection_stale，取消为collection_cancelled；每次cancelScan、commitSync=0、缓冲不外露\n3. 健康主体和授权世代扫描完整M并通过提交守卫；commitSync恰一次；返回summary{callCount:1,inputTokens:100,outputTokens:10,totalTokens:110,scanIncomplete:false},diagnostics:[]，无私密哨兵/原生标识",
+      "data_program": "apps/desktop/tests/tm004-core04.test.ts"
     },
     {
       "feature_id": "TM-004",
@@ -19488,9 +19536,20 @@
       },
       "design_status": "draft",
       "execution_status": "unexecuted",
-      "binding": null,
+      "binding": {
+        "tc_identity": "TC-TM004-CORE-05",
+        "execution_type": "source_check",
+        "program": "apps/desktop/tests/tm004-core05.test.ts",
+        "test_name": "TC-TM004-CORE-05 three-file generation is atomic and replay-safe in isolated SQLite",
+        "runner": "scripts/run_source_check.mjs",
+        "suite_registry": "tests/source_check_suites.json",
+        "suite": "tm004-core05",
+        "command_template": "node scripts/run_source_check.mjs --suite tm004-core05 --run-id tm004-core05-<新唯一UTC时间>",
+        "reset_kind": "owned_root",
+        "status": "implemented_pending_integrated_run"
+      },
       "missing": [
-        "SOP-011固定存储适配程序与真实TM-002/003集成尚未绑定；原20条产品TC仍BLOCKED或未执行"
+        "同树固定source_check程序/逐步TAP与重置已绑定；须在干净整合候选新run并生成独立Excel/verification，现无该候选真实结果；原20条产品TC/真实App与正式发行另验。"
       ],
       "aggregate_planned": false,
       "evidence": null,
@@ -19549,7 +19608,8 @@
         "line": 206,
         "heading": "TC-TM004-CORE-05 · 多文件来源键与整代持久映射"
       },
-      "overall_expected": "1. 计算三个文件来源键、根键及换源/追加/替换向量；64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名\n2. 构造完整三文件generation并核对文件归属与turnId代号；a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交\n3. 分别在新库注入第二游标写失败与guard撤权；每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲\n4. 稳定末页通过guard后一次同步commitScanBatch并重扫；唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识"
+      "overall_expected": "1. 计算三个文件来源键、根键及换源/追加/替换向量；64hex键逐一等于fixture；普通追加键不变，换sourceId/文件摘要改变；数据库不收原摘要/相对名\n2. 构造完整三文件generation并核对文件归属与turnId代号；a/b/c各有自己的M/S/Q、游标和诊断；c异常model_id置null并增加invalid_model_id，SQLite/WAL无哨兵；turn代号仅进scope HMAC；未到末页/正文不稳零提交\n3. 分别在新库注入第二游标写失败与guard撤权；每次整代回滚或零开始，事件/游标/诊断/覆盖/密钥标记全空；取消并清缓冲\n4. 稳定末页通过guard后一次同步commitScanBatch并重扫；唯一3调用、input350/output35/total385、3游标/4诊断按文件归属、scan_incomplete=1；scope键匹配向量，重扫不增；SQLite/WAL无模型哨兵/原生标识",
+      "data_program": "apps/desktop/tests/tm004-core05.test.ts"
     },
     {
       "feature_id": "TM-005",
