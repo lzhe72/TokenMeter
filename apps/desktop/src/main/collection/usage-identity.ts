@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto';
 
 export type UsageSource = 'codex' | 'claude_code';
 export type ProviderCallScope = 'provider-response' | 'provider-message';
+import {canonicalOrigin} from '../validation.ts';
 
 function strictUtf8(value: string): Buffer {
   if (typeof value !== 'string' || value.length === 0) throw new Error('invalid_identity_field');
@@ -17,6 +18,17 @@ function strictUtf8(value: string): Buffer {
   const bytes = Buffer.from(value, 'utf8');
   if (bytes.length > 0xffffffff) throw new Error('identity_field_too_long');
   return bytes;
+}
+
+/** Stable HMAC principal for one canonical server origin and account ID. */
+export function usagePrincipalKey(secret: Buffer, origin: string, accountId: string): string {
+  if (!Buffer.isBuffer(secret) || secret.length !== 32) throw new Error('invalid_identity_secret');
+  const hmac = createHmac('sha256', secret);
+  for (const part of ['usage-principal-v1', canonicalOrigin(origin), accountId].map(strictUtf8)) {
+    const length = Buffer.allocUnsafe(4); length.writeUInt32BE(part.length);
+    hmac.update(length).update(part);
+  }
+  return hmac.digest('hex');
 }
 
 /** Version one uses byte lengths, including the domain string, before HMAC-SHA256. */

@@ -31,6 +31,12 @@ function locationKey(secret: Buffer, fields: string[]): string {
   return hmac.digest('hex');
 }
 
+export function codexRootKey(secret: Buffer, sourceId: string): string {
+  if (!Buffer.isBuffer(secret) || secret.length !== 32 || !UUID.test(sourceId))
+    throw new Error('invalid_source_id');
+  return locationKey(secret, ['codex-root-v1', sourceId]);
+}
+
 function checkCandidate(value: {candidateToken: string; relativeName: string; size: number;
   fileIdentityDigest: string}): void {
   if (!TOKEN.test(value.candidateToken) || !Number.isSafeInteger(value.size) || value.size < 0 ||
@@ -70,7 +76,7 @@ export async function collectCodex(input: CodexCollectionInput): Promise<void> {
       !confirmed.collectAllowed)
     throw new Error('source_access_denied');
 
-  const rootKey = locationKey(input.secret, ['codex-root-v1', input.sourceId]);
+  const rootKey = codexRootKey(input.secret, input.sourceId);
   const first = await input.access.beginCandidateScan(input.sourceId);
   const scanId = first.scanId;
   if (!UUID.test(scanId)) throw new Error('invalid_scan');
