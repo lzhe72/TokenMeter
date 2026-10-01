@@ -108,3 +108,7 @@ SOP-008在干净输入提交`0c4f2604657484ae29cc601b6246bbc232e49450`（tree`70
 ## 2026-10-02 · 产品包预检实际阻断
 
 开发会话固定候选`0cc4f3e6cad0c4308668c25c52756bb378f4f2fd`（tree`3c6ce9fdf4172dbc950b489483b09a5c8618e0fb`）的run`local-6ece8e342b514683a64d1cc0a9bf5282`已写原始`result.json`，SHA-256 `8aef59fc4082699843ff4a5c4af72e683598d1f4fad7a0ea51e91e116ad0f960`：33条预期TC均`BLOCKED`、零步骤，预检理由为`Explicit independent test and excluded owner accounts are required`，`cleanup_completed=true`。预检时App未启动、Keychain未触及；AX探针未信任。更早`tm002preflight20261001T183024Z`因run ID/候选SHA格式错误为`FAIL`（原报告SHA-256 `8d12a06bd933600a512c9daec5ab1cebd201e68bab10a19ebf16b9bd2b7d9f2a`），原失败不改写。新run目录尚无固定产品导出器生成的独立Excel/verification，按SOP-014/024保留真实BLOCKED原件，但根总表批次登记暂BLOCKED；不能手工填报或将预检算作产品App执行。0.2功能验收及正式发行仍BLOCKED/NOT_RUN。
+
+## 2026-10-02 · 七父25精确辅助程序绑定收据
+
+干净候选提交`dccf1f3d1dd3f8fff675ccca766e7d3c7821d091`（tree`cb13be3ee68f33f34e333f5e775dfc3b1b872a57`）把已提交代码`5fe7100`的固定`tm002_source_check.py`入口逐ID登记到机器用例，七父映射25个精确ID，第七个chooser见证负例包含在内。开发映射`tm002-source-binding-map-5fe7100.json` SHA-256`3dfdb7d896a132f0622584b696c4c913e3bc5841d61789ac203b93f5107583bd`的25个源码摘要/测试名与本树逐项一致。SOP-008收据`.local/docs-checks/20261002-tm002-source-binding/receipt.json`保存输入摘要、结构/当前baseline/quality PASS、治理557/557 PASS、机器目录236父/756步CURRENT、总表236父/42变体/39批次回读PASS（SHA-256`c8b3aa301c35697836a195a77eed3a3bf09c1c82aaf55657ddb28afa2daaf631`）。仅本辅助程序绑定切片`development_slice_ready`；25例当前全部`unexecuted`、无真实report/Excel，原21产品父TC、真实原生选择/Keychain/安装App E2E和发行门禁仍BLOCKED/NOT_RUN。
