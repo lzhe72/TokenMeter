@@ -4,7 +4,9 @@
 
 **更正后续设计输入：** 早期reader记录称TM-002候选`fileIdentityDigest`含size/mtime，已由TM-002提交`63fe465cf00ed64620da0ef8e8b30625f0c1ddbc`的C helper源码反证：`tm002-file-id-v1`只编码根dev/ino与文件dev/ino，普通追加不改摘要。旧句作为当时判断保留；当前02/03、详细CORE-02及机器预期改为稳定摘要+keyed prefixMAC。TM-003 `eef956b`现有`commitScanBatch`合同要求每文件独立64hex`sourceKey`、`fileIdentity`、事件/诊断/游标与独立`rootKey`，整代一次同步事务；下一辅助TC将固定这层映射及只作scope的Claude`turnId`代号，产品权限和App验收仍另测。
 
-`TC-TM004-CORE-05`已新增：三文件合成输入的根/文件HMAC向量、M/S/Q各文件归属、主/Agent/缺agent的scope代号、第二游标失败和guard拒绝全代际零提交、稳定末页一次`commitScanBatch`后3调用/385 Token/三游标/四诊断以及SQLite/WAL无模型字段哨兵。`CORE-04`各拒绝码与成功返回结构亦已从笼统描述固定到fixture和机器逐步预期。两条都是未执行的source_check辅助用例，程序绑定null；原20条产品TC、四组摘要、真实授权、App/服务与整版0.4基线未由此改变。当前总表230父+42变体/18批次，SHA-256 `7088db53f08bfd2391e7d93112bfa0995c7c38807eda261cb576f20dd6850525`，回读PASS；本轮干净输入提交与SOP-008收据待补。
+`TC-TM004-CORE-05`已新增：三文件合成输入的根/文件HMAC向量、M/S/Q各文件归属、主/Agent/缺agent的scope代号、第二游标失败和guard拒绝全代际零提交、稳定末页一次`commitScanBatch`后3调用/385 Token/三游标/四诊断以及SQLite/WAL无模型字段哨兵。`CORE-04`各拒绝码与成功返回结构亦已从笼统描述固定到fixture和机器逐步预期。两条都是未执行的source_check辅助用例，程序绑定null；原20条产品TC、四组摘要、真实授权、App/服务与整版0.4基线未由此改变。当前总表230父+42变体/18批次，SHA-256 `7088db53f08bfd2391e7d93112bfa0995c7c38807eda261cb576f20dd6850525`，回读PASS；干净输入提交与SOP-008收据见下一段。
+
+SOP-008仅对`CORE-04/05`及其`TASK-TM004-SOURCE/INCREMENTAL/LINEAGE`合成端口部分判`development_slice_ready`。干净输入提交`33fd7c30f6d63b11a5c43820db57c7c572dc5ba0`、tree`aa644aa09314a0bbcd2b5105e60eeb1ac3e830bc`，收据`.local/docs-checks/20261002-tm004-trigger-slice/receipt.json`列出fixture、详细用例、机器目录、任务/设计/计划/manifest和总表SHA；structure退出0、治理477/477退出0、用例230/732 CURRENT、总表230父+42变体/18批次回读PASS、工作树clean。逐TC核对CORE04请求/错误码/取消守卫/隐私返回和CORE05根/文件键、每文件归属、scope代号、模型哨兵、整代回滚；剩余原20产品TC/四组摘要、真实TM-002授权/Keychain、TM-003产品SQLite与IPC/App服务、0.4整版baseline/quality及正式发行均未由此判PASS。已向TM-004开发会话与总控发送输入SHA和收据。
 
 收到开发会话关于主进程触发、账号/授权世代守卫和同步提交边界的交接，文档会话按SOP-024、SOP-002–008新增`TC-TM004-CORE-04`。固定合成fixture只含UUID来源、假已验证主体、M100/10、路径注入反例、未验证/停用/强制改密和来源不匹配反例，以及扫描中换账号/撤权/取消屏障；三步分别要求扫描前拒绝且零端口调用、屏障取消且零提交、健康场景一次同步提交并只返回1/100/10/110与覆盖状态。每个负例重置假端口，不访问真实TM-002、TM-003 SQLite、App或用户日志。原20条产品TC和四组E2E摘要保持draft/unexecuted；程序绑定为空，本新增辅助TC亦未运行，正式发行NOT_RUN。
 
