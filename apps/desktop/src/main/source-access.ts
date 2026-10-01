@@ -38,6 +38,7 @@ export type SourceAccessOptions = {
     onAudit?: (event: SourceAuditEvent) => void}): Promise<SourceHelperLike>;
   onChange(): void;
   onAudit?(event: SourceAccessAudit): void;
+  createSourceId?(): string;
 };
 
 type Context = SourceIdentity & {epoch: number; key: string};
@@ -406,7 +407,9 @@ export class SourceAccess {
     value.active.delete(verifier); this.#close(verifier);
     await this.#waitStopped([verifier], tool); this.#assert(ticket);
     if (value.pending !== pending || !this.#context) throw error('source_operation_stale');
-    const source: ConfirmedSource = {sourceId: randomUUID(), tool, rootPath: pending.rootPath,
+    const newSourceId = this.#options.createSourceId?.() ?? randomUUID();
+    if (!UUID.test(newSourceId)) throw error('invalid_source_id');
+    const source: ConfirmedSource = {sourceId: newSourceId, tool, rootPath: pending.rootPath,
       rootDev: pending.helper.rootIdentity.dev, rootIno: pending.helper.rootIdentity.ino,
       collectAllowed, syncIntent};
     let finish!: () => void;

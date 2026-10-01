@@ -113,6 +113,18 @@ export class UsageStore {
       .run(wanted);
   }
 
+  /** Refuse a replacement key before any scanner can read or write this database. */
+  assertIdentitySecret(secret: Buffer): void { this.checkMarker(secret, false); }
+
+  hasPersistedIdentity(): boolean {
+    const row = this.db.prepare(`SELECT
+      (SELECT COUNT(*) FROM identity_key_state) AS markers,
+      (SELECT COUNT(*) FROM usage_event) AS events,
+      (SELECT COUNT(*) FROM source_cursor) AS cursors,
+      (SELECT COUNT(*) FROM coverage) AS coverages`).get()!;
+    return [row.markers, row.events, row.cursors, row.coverages].some(value => Number(value) > 0);
+  }
+
   loadCursor(principalKey: string, sourceKey: string, secret: Buffer): UsageCursor | null {
     hexKey(principalKey); hex64(sourceKey, 'invalid_source_key'); this.checkMarker(secret, false);
     const row = this.db.prepare(`SELECT file_identity, committed_byte_offset, prefix_mac
@@ -231,6 +243,7 @@ export class UsageStore {
     const usage = event.usage;
     this.db.exec('BEGIN IMMEDIATE');
     try {
+      this.checkMarker(secret, true);
       const existing = this.db.prepare(`SELECT source_scope_key, model_id, input_tokens, output_tokens,
         cached_input_tokens, cache_write_input_tokens, reasoning_output_tokens
         FROM usage_event WHERE principal_key = ? AND source = ? AND source_event_key = ?`)
@@ -280,6 +293,33 @@ export class UsageStore {
     return this.db.prepare(`SELECT code, SUM(count) AS count FROM collection_diagnostic
       WHERE principal_key = ? GROUP BY code ORDER BY code`).all(principalKey)
       .map(row => ({code: String(row.code), count: Number(row.count)}));
+  }
+
+  /** Sanitized Codex state. A missing row stays unknown to the caller. */
+  codexState(principalKey: string, rootKey: string | null): {
+    usage: null | {calls: number; inputTokens: number; outputTokens: number; totalTokens: number;
+      cachedInput: {knownTokens: number; unknownRows: number}};
+    coverage: {complete: boolean; missingBefore: boolean; scanIncomplete: boolean};
+    diagnostics: Array<{code: string; count: number}>;
+  } {
+    hexKey(principalKey);
+    if (rootKey !== null) hex64(rootKey, 'invalid_root_key');
+    const row = this.db.prepare(`SELECT COUNT(*) calls, COALESCE(SUM(input_tokens),0) input,
+      COALESCE(SUM(output_tokens),0) output, COALESCE(SUM(cached_input_tokens),0) cached,
+      SUM(CASE WHEN cached_input_tokens IS NULL THEN 1 ELSE 0 END) unknown_cached
+      FROM usage_event WHERE principal_key=? AND source='codex'`).get(principalKey)!;
+    const calls = Number(row.calls), input = Number(row.input), output = Number(row.output);
+    const cached = Number(row.cached), unknown = Number(row.unknown_cached ?? 0);
+    if (![calls,input,output,cached,unknown,input + output].every(Number.isSafeInteger))
+      throw new Error('invalid_usage_database');
+    const coverage = rootKey === null ? undefined : this.db.prepare(`SELECT missing_before, scan_incomplete
+      FROM coverage WHERE principal_key=? AND root_key=?`).get(principalKey, rootKey);
+    const missingBefore = coverage ? Boolean(coverage.missing_before) : true;
+    const scanIncomplete = coverage ? Boolean(coverage.scan_incomplete) : true;
+    return {usage: calls ? {calls, inputTokens: input, outputTokens: output, totalTokens: input + output,
+      cachedInput: {knownTokens: cached, unknownRows: unknown}} : null,
+      coverage: {complete: !!coverage && !missingBefore && !scanIncomplete,
+        missingBefore, scanIncomplete}, diagnostics: this.diagnostics(principalKey)};
   }
 
   close(): void { this.db.close(); }
