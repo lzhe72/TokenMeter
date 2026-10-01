@@ -4,9 +4,9 @@
 
 主要查看入口：[TokenMeter项目总表.xlsx](TokenMeter项目总表.xlsx)。本页提供 Git 可审查索引，详细前置、SQL、逐步观察面和缺项见机器清单及各来源文档。
 
-当前主目录共 **237 条父用例、42 条内嵌稳定变体、761 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
+当前主目录共 **238 条父用例、42 条内嵌稳定变体、766 个父用例步骤**；其中29条是未来功能聚合计划，进入开发前还需具体任务与逐步细化。父用例与内嵌变体各占一行；独立参数清单另由对应固定门禁核对，不在这里重计。
 
-设计状态：baseline_pending 52、baselined 30、designed 78、draft 48、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
+设计状态：baseline_pending 52、baselined 30、designed 78、draft 49、planned 29。执行状态与设计状态分别列出；未执行不代表通过，本索引不授予发布资格。
 
 本页保存用例设计，不回填运行结果；每批次实际PASS/FAIL/BLOCKED见独立测试结果Excel。新增TC不能继承旧聚合场景的结果。
 
@@ -471,7 +471,7 @@
 | TM-004 / REQ-TM004 | [TC-TM004-CORE-06](docs/testing/cases/04-TM-004-claude-collection.md) · 真实SourceAccess到私有库的多文件贯通 | TASK-TM004-SOURCE、TASK-TM004-INCREMENTAL | source_check | tests/fixtures/tm004-sourceaccess-store-slice.json；四个2.1.126原生来源去敏投影文件、独立合成追加行；两页2+2/97字节分块与固定UUID参考向量及真实确认随机UUID的独立参考HMAC判据 | 1. 未确认时扫描，再经真实SourceAccess选择/预览/确认并核对四文件/root键<br>2. 真实主进程采集按两页2+2及97字节片段读完四文件，末页守卫后提交<br>3. 关闭重开owner来源/库/helper，重扫相同四文件<br>4. 向主文件仅追加固定合成50/5完整LF行，续扫并重扫<br>5. 从成功库独立副本分别在第一页后撤权、换主体、子文件提前EOF | 1. 确认前扫描/读取/库提交均0、库空；真实确认只绑定第一主体并生成随机UUID，不注入固定sourceId；fixture固定UUID的四文件/root向量核参考算法，实际UUID的键等于独立参考HMAC输出；不把路径/原摘要当库键<br>2. 只一次同步commitScanBatch；M+fork新+Agent父/子共5唯一调用、input85/output32/total117，四游标到LF末、coverage.scan_incomplete=0，复制fork不重计、子父归属已核验，DB/WAL无原生标识或正文<br>3. 本轮随机sourceId与主体/root/文件键不变、事件5行/117，四游标和覆盖稳定，零新增调用；不自动读取未经确认来源<br>4. 只新增一调用，6行、input135/output37/total172，主游标推进追加字节数，其余三游标不变，无cursor_reset，复制fork不重计<br>5. 每次取消scan、commitScanBatch=0；旧6行/172、四游标/覆盖原值不变，新主体无旧事件，本轮不可用/不完整而非已知零；SQLite/WAL与owner清理核对 | 准备：每故障从本例成功owner库复制；无生产库；只经UsageStore写入<br>变更：成功首次5行/117、追加后6行/172、四游标及覆盖；故障零新写<br>核验：只读usage_event/source_cursor/coverage/identity_key_state与SQLite/WAL隐私扫描；逐代际表摘要比较 | draft / unexecuted<br>缺项：SOP-011固定程序/重置绑定与实际原始结果未交付；真实OS目录选择、Keychain、IPC/App、原20产品TC另验 |
 
 
-## TM-005 · 45 行
+## TM-005 · 46 行
 
 | 功能 / 需求 | 用例及详情 | 开发任务 | 类型 | 输入 | 操作步骤 | 独立预期 | DB 准备、变更与核验 | 设计 / 执行状态 |
 
@@ -566,6 +566,8 @@
 | TM-005 / REQ-TM005 | [TC-TM005-CORE-04](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · IANA当地日半开UTC界 | TASK-TM005-RANGE-QUERY | source_check | tests/fixtures/tm005-iana-core-slice.json；上海/UTC与纽约春秋四日、三种无效输入 | 1. 转换上海与UTC固定当地日<br>2. 转换纽约春秋DST当地日及四类边界时刻<br>3. 分别提交无效时区、无效日和非规范日期 | 1. 分别得到fixture固定24小时UTC半开界，传入事件UTC时刻不变<br>2. 春23小时/秋25小时；before/at_end排除，at_start/before_end纳入<br>3. invalid_timezone或invalid_local_day；无默认UTC范围/成功零 | 准备：无DB<br>变更：无DB或系统时间变化<br>核验：固定IANA各日UTC半开界、23/25小时、边界包含关系及错误码；无SQL | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
 
 | TM-005 / REQ-TM005 | [TC-TM005-CORE-05](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 双来源隔离SQLite同窗只读快照 | TASK-TM005-EVENT-CONTRACT、TASK-TM005-RANGE-QUERY | source_check | tests/fixtures/tm005-sqlite-snapshot-slice.json；A/B双来源330、C异主体、D/E界外、F并发后新快照+55 | 1. 固定插入A–E并开启同一读事务<br>2. 在同一读事务取来源、模型、明细与逐日点<br>3. 另一连接提交F后复查旧快照，再开新快照<br>4. 查询空日及隐私边界 | 1. 选A/B两调用，input300/output30/total330；C/D/E分别被主体或半开界排除，查询零写<br>2. Codex110/Claude220；未知模型110/sonnet-test220；明细A/B和日点330；缓存读known20+unknown1，子项不加总<br>3. 旧事务各视图仍A/B和330；新事务A/B/F三调用、input350/output35/total385、Codex165/Claude220<br>4. 现有coverage不证明当地空日完整，不能报产品零；库/WAL/输出无原生ID、路径、正文或秘密 | 准备：固定准备程序仅在本例owner SQLite经UsageStore.commitBatch提交A–E；启用WAL并记录前态<br>变更：查询零写入；另一连接固定提交F后旧读事务仍330，新读事务385<br>核验：只读usage_event按主体/source/UTC半开界核对事件、来源/模型/明细/日点与子项未知数；coverage不能证明完整空日 | draft / unexecuted<br>缺项：SOP-011固定模块程序尚未绑定；原32条产品TC和6变体仍BLOCKED或未执行 |
+
+| TM-005 / REQ-TM005 | [TC-TM005-CORE-06](releases/v0.5.0-20261001T034729Z/04a-test-cases.md) · 同快照双来源查询视图与模型身份 | TASK-TM005-RANGE-QUERY | source_check | tests/fixtures/tm005-query-view-slice.json引用CORE05物理库种子；上海当地09-29半开UTC、A–H合成事件、字面unknown_model及99字符含冒号模型 | 1. A–E仅经真实UsageStore提交到owner库，再在上海09-29 UTC半开窗开启同一只读查询事务<br>2. 同一事务读模型/明细/当地日趋势及三类未知子项<br>3. 第一事务保持时另一连接写F50/5，再分别查旧事务与新事务<br>4. 独立A–E库经UsageStore增加字面unknown_model的G及99字符含冒号模型H，重查同一日<br>5. 查询当地10-01无事件日并核对隐私、只读与owner清理 | 1. 仅A/B两行、calls2、input300/output30、known330；Codex110/Claude220；state partial、total null；C异主体、D界前、E上界排除，查询零写<br>2. 模型null110与sonnet-test220分离，明细A/B，趋势partial/known330/total null；cached read20/未知1、cache write0/未知2、reasoning2/未知1，不加总；输出白名单无原生标识或秘密<br>3. 旧事务仍A/B330；新事务A/B/F三调用input350/output35/known385、Codex165/Claude220且partial/total null；WAL不可用则BLOCKED<br>4. A/B/G/H四行input370/output37/known407、Codex110/Claude297；modelId null110、sonnet-test220、字面unknown_model33、长冒号模型44互异且原值保留；仍partial/total null<br>5. missing/known0/total null，绝不成功完整零；库/WAL与输出无原生ID/路径/正文/secret/密文，仅清理本例拥有目录 | 准备：真实UsageStore.commitBatch只写本例owner空库；并发、模型补充与空日各独立副本<br>变更：查询零写；基础A/B已知330，F后新事务385，G/H独立分支407<br>核验：只读usage_event集合/模型原值/来源/时间及SQLite/WAL隐私；事务前后表摘要与owner清理 | draft / unexecuted<br>缺项：SOP-011固定查询适配器/逐步TAP和清理绑定未交付；真实App/IPC/UI、原生双来源和产品覆盖证明另验 |
 
 
 ## TM-006 · 2 行

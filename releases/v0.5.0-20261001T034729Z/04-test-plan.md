@@ -70,3 +70,7 @@ TM-001 候选 `3467dc1` 虽已有 `scripts/run_test_case.py`、`scripts/granular
 | `TC-TM005-E2E-01` | `TASK-TM005-E2E` | 安装包逐 TC 执行、原始结果和清理完整，完整回归精确集合 | 固定程序与最终候选包 |
 
 以上产品部分仍为设计草案，尚不满足每步 UI/API/DB 预期和可执行绑定。原32条产品父TC、6个变体与新增5条辅助模块TC进入 `tests/test_cases.json`、根 `TEST_CASES.md` 及项目总表；`python3 scripts/check_tm005_bindings.py` 在TM-005开发分支的固定预检核对原产品集合并如实报告38个产品绑定缺失，不能把辅助模块绑定算作产品补齐。原稳定场景组 `E2E-TM005-001` 与 `E2E-TM005-002` 继续保留，且必须同时包含 Codex 和 Claude Code 的真实采集输入；待依赖 schema 稳定后补齐数据清单、逐项程序绑定和真实产品结果。新CORE程序同样未绑定/执行，不得记录 PASS。
+
+## CORE-06查询视图辅助输入
+
+`TASK-TM005-RANGE-QUERY`的`TC-TM005-CORE-06`固定5步：真实UsageStore种A–E→同事务双来源330/partial→模型null/未知子项和当地日点→WAL并发F新旧快照330/385→独立G/H的字面`unknown_model`与合法99字符冒号模型分组407→空日missing/null及隐私清理。详细逐步预期和数据/SQL/重置见[04a](04a-test-cases.md)及[fixture](../../tests/fixtures/tm005-query-view-slice.json)；程序绑定、实际结果均为空。其输出未通过共享IPC/React或安装App，原产品RANGE/MODEL/STATE子集仍按原TC另验。

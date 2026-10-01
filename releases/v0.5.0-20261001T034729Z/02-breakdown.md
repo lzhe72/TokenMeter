@@ -21,3 +21,5 @@
 ## 顺序及边界
 
 双来源范围已确定。先完成 TM-003/004 的采集合同，再完成事件与覆盖设计、逐 TASK 的 TC 和独立数据预期，形成文档基线；随后按照 SOP-009→010→011→012→013→014 开发和验证。当前任务仅完成草案，不把尚未交付的依赖标为已交付。
+
+`TASK-TM005-RANGE-QUERY`另拆出`TC-TM005-CORE-06`最小辅助查询切片：在CORE05真实UsageStore双来源物理库上，同一只读事务返回summary/sources/models/details/当地日点；固定partial/known330/total null、缺失日null、缓存子项未知行，以及`modelId:null`与字面`unknown_model`分离和合法99字符冒号Claude模型。固定输入见[查询fixture](../../tests/fixtures/tm005-query-view-slice.json)及[逐步用例](04a-test-cases.md)。独立React展示、共享IPC/App接线后续单独切片；原32产品父TC/6变体保持未通过。

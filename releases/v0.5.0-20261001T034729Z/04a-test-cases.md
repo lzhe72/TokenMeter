@@ -367,3 +367,19 @@
 2. 在**同一读事务**依次取来源汇总`codex=110,claude_code=220`、模型分组`unknown_model=110,sonnet-test=220`、明细A/B和逐日点330；缓存读已知20但B为null，须同时返回未知行数1，缓存写/推理未知同理不得`COALESCE`成完整零或另加到总量。所有视图来自同一事件集合和UTC窗口，只返回HMAC键、数值和受限模型标识。
 3. 第一读事务取得初始快照后，另一连接按固定准备程序提交F50/5；第一事务的后续来源/模型/明细/逐日仍为A/B、330。结束后新开读事务才见A/B/F三调用、input350/output35/total385、`codex=165,claude_code=220`。若环境无法让WAL并发提交，记录BLOCKED而不是修改一致性预期。
 4. 对同库另查一个无事件当地日，既有`coverage`仅有`missing_before/scan_incomplete/last_scan_at_utc`，不能据空集合或本例种子声称双来源连续完整覆盖；返回无覆盖证明/未知而非产品已确认零。只读核对库/WAL与输出无合成原生ID、路径、正文或秘密；本例SQL种子不作为产品`STATE-02/04`的原生日志/真实授权旁证，产品`CONTRACT/RANGE/MODEL`亦未通过。
+
+## 双来源查询视图独立辅助切片
+
+`CORE-06`只冻结自包含查询适配器，使用真实`UsageStore.commitBatch`物理库与同一`UsageReadSnapshot`只读事务，不修改共享`main/index.ts`、preload/共享类型或现有renderer入口。固定[CORE05物理库种子](../../tests/fixtures/tm005-sqlite-snapshot-slice.json)及[本切片新增预期](../../tests/fixtures/tm005-query-view-slice.json)分别标明原始A–F与新增G/H；G是字面合法模型名`unknown_model`，H是99字符、含冒号且符合上游允许`^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$`的Claude模型。`modelId:null`未知组须和字面名G分开；不能沿用旧查询的单个`unknown_model`字符串键。仅查本例0700目录中的0600 SQLite，真实原生日志、App/IPC/React、服务、Keychain和产品覆盖证明仍缺。
+
+### TC-TM005-CORE-06 · 同快照双来源查询视图与模型身份
+
+**TASK：** `TASK-TM005-RANGE-QUERY`；**AC：** `AC-TM005-001/002`；**类型：** `source_check`辅助模块。**输入：** 固定`Asia/Shanghai`当地2026-09-29对应UTC半开`[2026-09-28T16:00:00Z,2026-09-29T16:00:00Z)`；CORE05的A/B当前主体、C异主体、D界前、E排除上界、F并发写，以及独立G/H模型边界。每组从本例新建owner库或固定基线副本开始，事件仅经真实`UsageStore.commitBatch`提交，WAL供并发快照；查询不写库。
+
+1. 准备A–E并只读确认五行与来源/主体键，查询适配器在同一只读事务内取主视图。只选当前主体A/B两行，calls2、input300/output30、可信已知330；来源Codex110、Claude Code220；`state=partial,knownTokens=330,totalTokens=null`，因为现有coverage只存`missing_before/scan_incomplete/last_scan_at_utc`，不能证明当地日完整。C、D、E各按主体或半开界排除，查询零写入。
+2. 在步骤1的同一事务读模型、明细、趋势和子项：模型数组以`modelId:null`未知110和`sonnet-test`220分组，明细只含A/B的HMAC键、来源、UTC、受限模型和数字；当地09-29趋势点`partial/known330/total null`。cached read已知20且未知行1；cache write已知0/未知2，reasoning已知2/未知1，均不得补零或再加到总量。输出不含原生ID、路径、正文、secret或密文，四视图来自同一事件集合。
+3. 保持步骤1读事务不结束，由另一连接提交F50/5：第一事务再次查询仍只见A/B、330及相同来源/模型/明细/趋势；结束该事务后新开事务才见A/B/F三调用、input350/output35/known385、Codex165/Claude220，状态仍partial、total null。WAL并发条件缺失时BLOCKED，不改预期。
+4. 在独立A–E基线库提交G30/3与H40/4，再查同一当地日：四行A/B/G/H、input370/output37、已知407但总额仍null；来源Codex110/Claude297；模型必须为四个互异`modelId`：null110、`sonnet-test`220、字面`unknown_model`33、fixture中99字符含冒号标识44。H原值保留，不因旧80字符/无冒号过滤器拒绝；非法模型仍由入库合同拒绝/诊断，不合并到未知组。
+5. 另查当地2026-10-01空日（UTC`[2026-09-30T16:00:00Z,2026-10-01T16:00:00Z)`）：`state=missing,knownTokens=0,totalTokens=null`，不得出现“已完整零”成功状态；只读核对库/WAL与查询输出的允许字段、连接和owner清理。真实产品RANGE/MODEL/STATE用例仍需要已安装App、真实服务、原生双来源日志、隔离SQLite及Keychain归属证明。
+
+**DB/重置：** 只由`UsageStore`写入本例独占SQLite，查询适配器在同一事务只读`usage_event`，并发版本各建独立owner库副本；逐步保存SQL行集/哈希、事务边界和原始模块报告。关闭所有句柄、核对owner marker后清理本例库及WAL，不访问生产库。**程序准备：** SOP-011固定测试与suite/重置绑定尚未提交，机器目录`binding=null`、实际`unexecuted`；产品E2E与发行未通过。

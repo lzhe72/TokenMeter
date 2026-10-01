@@ -4,7 +4,7 @@
 
 ## 主表摘要与独立结果表
 
-当前根项目总表已随开发输入重生并回读：11个Sheet、279行用例摘要（237条父用例、42个稳定变体）和40次已核实测试批次；SHA-256为`c532adeecf5a260414fcfd88367d5281a85c84acad62b51af87e490e059f7f6f`，本机回读收据在`.local/workbook/verification.json`。`05测试用例`汇总功能、任务、输入、独立预期、DB操作、类型和状态；`06测试批次`保存run_id、候选、范围、结果摘要及独立结果Excel入口。TM-001 独立候选 `d2db551` 的门禁 PASS 与结果 Excel 已生成，其批次若缺原始结果表读回/候选身份核对就保持未登记；不能把历史批次当成本次结果。完整动作、SQL及绑定设计保存在[tests/test_cases.json](../../../tests/test_cases.json)和下列详细文档。
+当前根项目总表已随开发输入重生并回读：11个Sheet、280行用例摘要（238条父用例、42个稳定变体）和40次已核实测试批次；SHA-256为`5eebbe4f3875d054b65c5d4557cb4e1c9d72d0eae57e92b702a8f39a517c1d5f`，本机回读收据在`.local/workbook/verification.json`。`05测试用例`汇总功能、任务、输入、独立预期、DB操作、类型和状态；`06测试批次`保存run_id、候选、范围、结果摘要及独立结果Excel入口。TM-001 独立候选 `d2db551` 的门禁 PASS 与结果 Excel 已生成，其批次若缺原始结果表读回/候选身份核对就保持未登记；不能把历史批次当成本次结果。完整动作、SQL及绑定设计保存在[tests/test_cases.json](../../../tests/test_cases.json)和下列详细文档。
 
 每次真实执行单独生成`.local/test-results/<run_id>/TokenMeter测试结果-<run_id>.xlsx`，包括该次逐例/逐步实测、失败和证据索引，只留本机。dev07当前可读表位于同run目录的`revisions/02/`，时间列已修正并经桥接和回读校验，含5个Sheet、6个历史场景组、131条事件、14条更新请求及37条证据/缺口记录；原表保留。Excel导出PASS与产品FAIL分别保留。表格是原始证据的可读整理，不替代原件或发布门禁；未执行TC仍标未执行。
 
@@ -31,7 +31,7 @@
 | 02 | [TM-002 首次授权](02-TM-002-permissions.md) | E2E-TM002-001–002，2组；28条父TC、36个稳定变体 | 0cc4候选33条产品预检均BLOCKED；固定模块程序已在TM002分支提交，整合后待运行；产品E2E未通过 |
 | 03 | [TM-003 Codex采集](03-TM-003-codex-collection.md) | E2E-TM003-001–004，4组；原27条产品TC加CORE-01～10十条辅助TC | 整版draft；CORE-01～07固定模块旧/整合候选有PASS原件，CORE-08有开发候选模块PASS原件待同树绑定，CORE-09/10未绑定/执行；产品E2E未通过 |
 | 04 | [TM-004 Claude Code采集](04-TM-004-claude-collection.md) | 4组、原20条产品细TC与6条辅助TC | 整版draft；CORE-01～05整合候选三套固定模块5/5、16步与独立Excel回读PASS；CORE-06输入未绑定/执行；原20产品TC未通过 |
-| 05 | [TM-005 用量统计](05-TM-005-usage-statistics.md) | 2组、原32条产品细TC与5条辅助TC、6变体 | 整版draft；CORE-04/05在开发候选的独立模块Excel已PASS；双来源原生、App/IPC/UI产品绑定待建 |
+| 05 | [TM-005 用量统计](05-TM-005-usage-statistics.md) | 2组、原32条产品细TC与6条辅助TC、6变体 | 整版draft；CORE-04/05独立模块Excel已PASS，CORE-06查询输入未绑定/执行；双来源原生、App/IPC/UI产品绑定待建 |
 | 06 | [TM-006 费用估算](06-TM-006-cost-estimates.md) | E2E-TM006-001–002，2例 | planned，基础价格样例可生成，扩展数据待建 |
 | 07 | [TM-007 团队同步](07-TM-007-team-sync.md) | E2E-TM007-001–004，4例 | planned，缺故障fixture/同步与权限绑定 |
 | 08 | [TM-008 CSV导出](08-TM-008-csv-export.md) | E2E-TM008-001–002，2例 | planned，缺导出数据/自动化 |
